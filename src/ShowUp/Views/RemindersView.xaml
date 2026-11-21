@@ -94,6 +94,10 @@
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
+                                    <controls:ProGateHint
+                                        Command="{x:Bind OpenProCommand}"
+                                        Text="{markup:Localize Key=ReminderProLink}"
+                                        Visibility="{x:Bind ShowGate, Mode=OneWay}" />
                                 </StackPanel>
                                 <StackPanel
                                     Grid.Column="1"
@@ -104,6 +108,7 @@
                                         MinWidth="0"
                                         AutomationProperties.AutomationId="ReminderEnabledToggle"
                                         AutomationProperties.Name="{markup:Localize Key=ReminderEnabledName}"
+                                        IsEnabled="{x:Bind CanEnable, Mode=OneWay}"
                                         IsOn="{x:Bind IsEnabled, Mode=TwoWay}"
                                         OffContent=""
                                         OnContent="" />
@@ -161,8 +166,10 @@
                                         Padding="0,6"
                                         HorizontalAlignment="Stretch"
                                         AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                                        AutomationProperties.Name="{x:Bind FullName}"
                                         Content="{x:Bind Label}"
-                                        IsChecked="{x:Bind IsChecked, Mode=TwoWay}" />
+                                        IsChecked="{x:Bind IsChecked, Mode=TwoWay}"
+                                        ToolTipService.ToolTip="{x:Bind FullName}" />
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>

@@ -14,9 +14,8 @@ public static class ReminderPlanner
         TimeZoneInfo zone,
         int days,
         Func<DateOnly, ReminderDay> dayInfo,
-        ReminderMessageBuilder? messages = null)
+        ReminderMessageBuilder messages)
     {
-        messages ??= ReminderMessageBuilder.English;
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(nowLocal, zone).DateTime);
         List<PlannedReminder> planned = [];
         for (var offset = 0; offset < days; offset++)

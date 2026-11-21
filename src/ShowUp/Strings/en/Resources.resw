@@ -991,4 +991,10 @@
   <data name="ReminderProLink" xml:space="preserve">
     <value>Unlock Pro for up to 20 reminders</value>
   </data>
+  <data name="ReminderErrorTitle" xml:space="preserve">
+    <value>Could not update the reminder</value>
+  </data>
+  <data name="ReminderErrorText" xml:space="preserve">
+    <value>Something went wrong saving your reminders. The list shows what is stored.</value>
+  </data>
 </root>

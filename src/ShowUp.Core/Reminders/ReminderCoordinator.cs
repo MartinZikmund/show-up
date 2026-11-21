@@ -11,7 +11,7 @@ namespace ShowUp.Core.Reminders;
 /// When Pro lapses with several reminders on, the earliest-created one stays on and the rest are
 /// disabled but kept; regaining Pro doesn't switch them back on, the user decides.
 /// </summary>
-public sealed class ReminderCoordinator
+public sealed class ReminderCoordinator : IDisposable
 {
     public const int PlanDays = 14;
 
@@ -25,7 +25,7 @@ public sealed class ReminderCoordinator
     private readonly ILogger<ReminderCoordinator> _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Task? _firstRefresh;
-    private bool _started;
+    private int _started;
     private long _requested;
     private long _covered;
 
@@ -52,16 +52,26 @@ public sealed class ReminderCoordinator
     /// <summary>Starts listening and plans once. Call at app start.</summary>
     public Task StartAsync()
     {
-        if (!_started)
+        if (Interlocked.Exchange(ref _started, 1) == 0)
         {
-            _started = true;
-            _messenger.Register<ReminderCoordinator, TrackingChangedMessage>(this, static (r, m) => _ = r.ReplanAsync());
-            _messenger.Register<ReminderCoordinator, RemindersChangedMessage>(this, static (r, m) => _ = r.ReplanAsync());
-            _entitlements.Changed += (_, _) => _ = ReplanAsync();
+            _messenger.Register<ReminderCoordinator, TrackingChangedMessage>(this, static (r, m) => r.ReplanInBackground());
+            _messenger.Register<ReminderCoordinator, RemindersChangedMessage>(this, static (r, m) => r.ReplanInBackground());
+            _entitlements.Changed += OnEntitlementsChanged;
         }
 
         return ReplanAsync();
     }
+
+    public void Dispose()
+    {
+        _messenger.UnregisterAll(this);
+        _entitlements.Changed -= OnEntitlementsChanged;
+    }
+
+    private void OnEntitlementsChanged(object? sender, EventArgs e) => ReplanInBackground();
+
+    // ReplanAsync logs its own failures, so nothing is left unobserved.
+    private async void ReplanInBackground() => await ReplanAsync();
 
     /// <summary>The app came back to the foreground.</summary>
     public Task ResumeAsync() => ReplanAsync();

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Localization;
 using ShowUp.Core.Reminders;
 using ShowUp.Core.Storage;
 
@@ -83,4 +84,24 @@ internal sealed class FakeDayProvider : IReminderDayProvider
         Loads++;
         return Task.FromResult(Day);
     }
+}
+
+/// <summary>The reminder texts as the English resources have them.</summary>
+internal sealed class EnglishReminderLocalizer : IStringLocalizer
+{
+    private static readonly Dictionary<string, string> _texts = new()
+    {
+        ["ReminderTitle"] = "Show Up",
+        ["ReminderWorkoutBody"] = "{0} is waiting. Show up.",
+        ["ReminderRestBody"] = "Rest day. You earned it.",
+    };
+
+    public static ReminderMessageBuilder Messages { get; } = new(new EnglishReminderLocalizer());
+
+    public LocalizedString this[string name] => this[name, []];
+
+    public LocalizedString this[string name, params object[] arguments] =>
+        _texts.TryGetValue(name, out var text) ? new(name, string.Format(text, arguments)) : new(name, name, resourceNotFound: true);
+
+    public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
 }

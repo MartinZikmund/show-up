@@ -36,7 +36,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_TimePassedToday_StartsTomorrow()
     {
-        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 14, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 14, _workout, EnglishReminderLocalizer.Messages);
 
         plan.Should().HaveCount(13);
         plan[0].FireAt.Should().Be(Prague(2026, 11, 22, 8));
@@ -45,7 +45,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_TimeStillAheadToday_IncludesToday()
     {
-        var plan = ReminderPlanner.Plan([Reminder(18)], Prague(2026, 11, 21, 10), _prague, 14, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(18)], Prague(2026, 11, 21, 10), _prague, 14, _workout, EnglishReminderLocalizer.Messages);
 
         plan[0].FireAt.Should().Be(Prague(2026, 11, 21, 18));
         plan.Should().HaveCount(14);
@@ -54,7 +54,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_DstSpringForward_KeepsWallClock()
     {
-        var plan = ReminderPlanner.Plan([Reminder(7, 30)], Prague(2026, 3, 27, 12), _prague, 4, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(7, 30)], Prague(2026, 3, 27, 12), _prague, 4, _workout, EnglishReminderLocalizer.Messages);
 
         plan.Select(p => (p.FireAt.Hour, p.FireAt.Minute)).Should().AllBeEquivalentTo((7, 30));
         plan.Select(p => p.FireAt.Offset.TotalHours).Should().Equal(1, 2, 2);
@@ -63,7 +63,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_SkippedSpringForwardTime_MovesToNextValidMinute()
     {
-        var plan = ReminderPlanner.Plan([Reminder(2, 30)], Prague(2026, 3, 28, 12), _prague, 3, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(2, 30)], Prague(2026, 3, 28, 12), _prague, 3, _workout, EnglishReminderLocalizer.Messages);
 
         plan[0].FireAt.Should().Be(new DateTimeOffset(2026, 3, 29, 3, 0, 0, TimeSpan.FromHours(2)));
         plan[1].FireAt.Should().Be(Prague(2026, 3, 30, 2, 30));
@@ -72,7 +72,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_DstFallBack_KeepsWallClockAndTakesFirstOccurrenceWhenRepeated()
     {
-        var plan = ReminderPlanner.Plan([Reminder(2, 30), Reminder(8)], Prague(2026, 10, 24, 12), _prague, 3, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(2, 30), Reminder(8)], Prague(2026, 10, 24, 12), _prague, 3, _workout, EnglishReminderLocalizer.Messages);
 
         var repeated = plan.Single(p => p.FireAt.Day == 25 && p.FireAt.Hour == 2);
         repeated.FireAt.Offset.Should().Be(TimeSpan.FromHours(2), "02:30 happens twice and the first one counts");
@@ -84,7 +84,7 @@ public sealed class ReminderPlannerTests
     {
         var done = new DateOnly(2026, 11, 23);
 
-        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 5, d => new ReminderDay(d == done, "Run", false));
+        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 5, d => new ReminderDay(d == done, "Run", false), EnglishReminderLocalizer.Messages);
 
         plan.Select(p => p.FireAt.Day).Should().Equal(22, 24, 25);
     }
@@ -92,7 +92,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_RestDay_RestMessage()
     {
-        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 2, _ => new ReminderDay(false, null, true));
+        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 2, _ => new ReminderDay(false, null, true), EnglishReminderLocalizer.Messages);
 
         plan.Should().ContainSingle().Which.Body.Should().Be("Rest day. You earned it.");
     }
@@ -100,7 +100,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_WorkoutDay_NamesTheWorkout()
     {
-        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 2, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(8)], Prague(2026, 11, 21, 10), _prague, 2, _workout, EnglishReminderLocalizer.Messages);
 
         plan[0].Body.Should().Be("Plyometric Cardio Circuit is waiting. Show up.");
         plan[0].Title.Should().Be("Show Up");
@@ -110,7 +110,7 @@ public sealed class ReminderPlannerTests
     public void Plan_WeekdayMask_OnlyThoseDays()
     {
         // Bit 0 = Monday, bit 6 = Sunday: Monday and Sunday.
-        var plan = ReminderPlanner.Plan([Reminder(8, mask: 0b1000001)], Prague(2026, 11, 21, 10), _prague, 14, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(8, mask: 0b1000001)], Prague(2026, 11, 21, 10), _prague, 14, _workout, EnglishReminderLocalizer.Messages);
 
         plan.Select(p => p.FireAt.DayOfWeek).Should().OnlyContain(d => d == DayOfWeek.Monday || d == DayOfWeek.Sunday);
         plan.Should().HaveCount(4);
@@ -119,7 +119,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_DisabledReminder_IsIgnored()
     {
-        var plan = ReminderPlanner.Plan([Reminder(8, enabled: false)], Prague(2026, 11, 21, 10), _prague, 14, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(8, enabled: false)], Prague(2026, 11, 21, 10), _prague, 14, _workout, EnglishReminderLocalizer.Messages);
 
         plan.Should().BeEmpty();
     }
@@ -127,7 +127,7 @@ public sealed class ReminderPlannerTests
     [TestMethod]
     public void Plan_SeveralReminders_SoonestFirst()
     {
-        var plan = ReminderPlanner.Plan([Reminder(20), Reminder(7)], Prague(2026, 11, 21, 6), _prague, 1, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(20), Reminder(7)], Prague(2026, 11, 21, 6), _prague, 1, _workout, EnglishReminderLocalizer.Messages);
 
         plan.Select(p => p.FireAt.Hour).Should().Equal(7, 20);
     }
@@ -138,7 +138,7 @@ public sealed class ReminderPlannerTests
         // 23:30 UTC on the 20th is already the 21st in Prague.
         var now = new DateTimeOffset(2026, 11, 20, 23, 30, 0, TimeSpan.Zero);
 
-        var plan = ReminderPlanner.Plan([Reminder(8)], now, _prague, 1, _workout);
+        var plan = ReminderPlanner.Plan([Reminder(8)], now, _prague, 1, _workout, EnglishReminderLocalizer.Messages);
 
         plan.Should().ContainSingle().Which.FireAt.Should().Be(Prague(2026, 11, 21, 8));
     }

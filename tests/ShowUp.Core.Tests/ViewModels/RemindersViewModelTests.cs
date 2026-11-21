@@ -17,6 +17,7 @@ public sealed class RemindersViewModelTests
     private readonly FakeReminderScheduler _scheduler = new();
     private readonly FakeEntitlementService _entitlements = new() { IsPro = true };
     private readonly FakeConfirmationDialogService _confirmation = new();
+    private readonly RecordingDialogService _dialogs = new();
     private readonly RecordingNavigationService _navigation = new();
     private readonly WeakReferenceMessenger _messenger = new();
     private readonly List<RemindersChangedMessage> _changes = [];
@@ -25,7 +26,7 @@ public sealed class RemindersViewModelTests
 
     private async Task<RemindersViewModel> OpenAsync(CultureInfo? culture = null)
     {
-        RemindersViewModel viewModel = new(_repository, _scheduler, _entitlements, _confirmation, _navigation, new FakeStringLocalizer(), _messenger, NullLogger<RemindersViewModel>.Instance)
+        RemindersViewModel viewModel = new(_repository, _scheduler, _entitlements, _confirmation, _dialogs, _navigation, new FakeStringLocalizer(), _messenger, NullLogger<RemindersViewModel>.Instance)
         {
             Culture = culture ?? CultureInfo.GetCultureInfo("en-US"),
         };
@@ -215,21 +216,6 @@ public sealed class RemindersViewModelTests
 
         viewModel.CanAdd.Should().BeFalse();
         viewModel.ShowGate.Should().BeFalse("Pro is at its own limit, there is nothing to unlock");
-    }
-
-    [TestMethod]
-    public async Task Free_EnablingASecondOne_IsRefusedAndStaysOff()
-    {
-        _entitlements.IsPro = false;
-        await _repository.AddAsync(8 * 60, 127);
-        await _repository.AddAsync(9 * 60, 127, enabled: false);
-        var viewModel = await OpenAsync();
-
-        viewModel.Items[1].IsEnabled = true;
-        await Task.Delay(50);
-
-        viewModel.Items[1].IsEnabled.Should().BeFalse();
-        (await _repository.ListAsync()).Single(r => r.MinutesOfDay == 540).Enabled.Should().BeFalse();
     }
 
     [TestMethod]

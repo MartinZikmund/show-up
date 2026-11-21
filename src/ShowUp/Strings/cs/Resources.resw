@@ -991,4 +991,10 @@
   <data name="ReminderProLink" xml:space="preserve">
     <value>Odemkněte Pro a mějte až 20 připomínek</value>
   </data>
+  <data name="ReminderErrorTitle" xml:space="preserve">
+    <value>Připomínku se nepodařilo upravit</value>
+  </data>
+  <data name="ReminderErrorText" xml:space="preserve">
+    <value>Při ukládání připomínek se něco pokazilo. Seznam ukazuje, co je uložené.</value>
+  </data>
 </root>

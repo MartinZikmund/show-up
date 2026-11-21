@@ -22,7 +22,7 @@ public sealed class ReminderCoordinatorTests
     public ReminderCoordinatorTests()
     {
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
-        _coordinator = new(_repository, _scheduler, _days, _entitlements, _messenger, _time, ReminderMessageBuilder.English, NullLogger<ReminderCoordinator>.Instance);
+        _coordinator = new(_repository, _scheduler, _days, _entitlements, _messenger, _time, EnglishReminderLocalizer.Messages, NullLogger<ReminderCoordinator>.Instance);
     }
 
     private async Task WaitForPlansAsync(int count)

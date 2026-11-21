@@ -12,11 +12,14 @@ using ShowUp.Services.Dialogs;
 namespace ShowUp.Core.ViewModels;
 
 /// <summary>One weekday toggle in the editor; <see cref="Bit"/> is the <see cref="ReminderEntity.DaysMask"/> bit (0 = Monday).</summary>
-public sealed partial class WeekdayToggle(int bit, string label, Action changed) : ObservableObject
+public sealed partial class WeekdayToggle(int bit, string label, string fullName, Action changed) : ObservableObject
 {
     public int Bit { get; } = bit;
 
     public string Label { get; } = label;
+
+    /// <summary>"Monday": the short label alone is not enough for a screen reader.</summary>
+    public string FullName { get; } = fullName;
 
     public string AutomationId => $"ReminderDay{Bit}";
 
@@ -29,7 +32,6 @@ public sealed partial class WeekdayToggle(int bit, string label, Action changed)
 /// <summary>A reminder row: time, the weekdays it fires on and an on/off switch.</summary>
 public sealed partial class ReminderItemViewModel : ObservableObject
 {
-    private readonly Func<ReminderItemViewModel, Task> _toggled;
     private bool _syncing;
 
     internal ReminderItemViewModel(
@@ -38,17 +40,19 @@ public sealed partial class ReminderItemViewModel : ObservableObject
         IReadOnlyList<string> days,
         Func<ReminderItemViewModel, Task> toggled,
         Func<ReminderItemViewModel, Task> edit,
-        Func<ReminderItemViewModel, Task> delete)
+        Func<ReminderItemViewModel, Task> delete,
+        Action openPro)
     {
         Id = reminder.Id;
         MinutesOfDay = reminder.MinutesOfDay;
         DaysMask = reminder.DaysMask;
         TimeText = timeText;
         Days = days;
-        _toggled = toggled;
         _syncing = true;
         IsEnabled = reminder.Enabled;
         _syncing = false;
+        ToggleCommand = new AsyncRelayCommand(() => toggled(this));
+        OpenProCommand = new RelayCommand(openPro);
         EditCommand = new AsyncRelayCommand(() => edit(this));
         DeleteCommand = new AsyncRelayCommand(() => delete(this));
     }
@@ -65,6 +69,10 @@ public sealed partial class ReminderItemViewModel : ObservableObject
 
     public string AutomationId => $"Reminder_{Id:N}";
 
+    public IAsyncRelayCommand ToggleCommand { get; }
+
+    public IRelayCommand OpenProCommand { get; }
+
     public IAsyncRelayCommand EditCommand { get; }
 
     public IAsyncRelayCommand DeleteCommand { get; }
@@ -72,19 +80,20 @@ public sealed partial class ReminderItemViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsEnabled { get; set; }
 
+    /// <summary>False for a reminder that is off and would go over the limit; the switch is disabled instead of bouncing back.</summary>
+    [ObservableProperty]
+    public partial bool CanEnable { get; set; } = true;
+
+    /// <summary>The disabled switch is because of Free, so offer Pro.</summary>
+    [ObservableProperty]
+    public partial bool ShowGate { get; set; }
+
     partial void OnIsEnabledChanged(bool value)
     {
         if (!_syncing)
         {
-            _ = _toggled(this);
+            ToggleCommand.Execute(null);
         }
-    }
-
-    internal void SetEnabledSilently(bool value)
-    {
-        _syncing = true;
-        IsEnabled = value;
-        _syncing = false;
     }
 }
 
@@ -97,6 +106,7 @@ public partial class RemindersViewModel : ViewModelBase
     private readonly IReminderScheduler _scheduler;
     private readonly IEntitlementService _entitlements;
     private readonly IConfirmationDialogService _confirmation;
+    private readonly IDialogService _dialogs;
     private readonly INavigationService _navigation;
     private readonly IStringLocalizer _localizer;
     private readonly IMessenger _messenger;
@@ -104,12 +114,14 @@ public partial class RemindersViewModel : ViewModelBase
     private SynchronizationContext? _context;
     private Guid? _editingId;
     private bool _listening;
+    private int _sending;
 
     public RemindersViewModel(
         IReminderRepository repository,
         IReminderScheduler scheduler,
         IEntitlementService entitlements,
         IConfirmationDialogService confirmation,
+        IDialogService dialogs,
         INavigationService navigation,
         IStringLocalizer localizer,
         IMessenger messenger,
@@ -119,6 +131,7 @@ public partial class RemindersViewModel : ViewModelBase
         _scheduler = scheduler;
         _entitlements = entitlements;
         _confirmation = confirmation;
+        _dialogs = dialogs;
         _navigation = navigation;
         _localizer = localizer;
         _messenger = messenger;
@@ -168,11 +181,16 @@ public partial class RemindersViewModel : ViewModelBase
             _listening = true;
             _context = SynchronizationContext.Current;
             _entitlements.Changed += OnEntitlementsChanged;
-            _messenger.Register<RemindersViewModel, RemindersChangedMessage>(this, static (r, m) => r.Post(() => _ = r.LoadAsync()));
+            _messenger.Register<RemindersViewModel, RemindersChangedMessage>(this, static (r, m) => r.OnRemindersChanged());
+        }
+
+        if (IsEditing)
+        {
+            return;
         }
 
         BuildWeekdays();
-        _ = LoadAsync();
+        RunInBackground(LoadAsync);
     }
 
     public override void OnNavigatedFrom()
@@ -194,7 +212,7 @@ public partial class RemindersViewModel : ViewModelBase
             Items.Clear();
             foreach (var reminder in stored.OrderBy(r => r.MinutesOfDay).ThenBy(r => r.CreatedAt))
             {
-                Items.Add(new ReminderItemViewModel(reminder, TimeText(reminder.MinutesOfDay), DayLabels(reminder.DaysMask), ToggleAsync, EditAsync, DeleteAsync));
+                Items.Add(new ReminderItemViewModel(reminder, TimeText(reminder.MinutesOfDay), DayLabels(reminder.DaysMask), ToggleAsync, EditAsync, DeleteAsync, OpenPro));
             }
         }
         catch (Exception ex)
@@ -226,7 +244,8 @@ public partial class RemindersViewModel : ViewModelBase
     {
         var minutes = (int)EditTime.TotalMinutes;
         var mask = Weekdays.Where(d => d.IsChecked).Sum(d => 1 << d.Bit);
-        try
+        IsEditing = false;
+        await GuardAsync(async () =>
         {
             if (_editingId is { } id)
             {
@@ -237,15 +256,10 @@ public partial class RemindersViewModel : ViewModelBase
                 await _repository.AddAsync(minutes, mask);
                 await AskPermissionAsync();
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Saving the reminder failed.");
-        }
 
-        IsEditing = false;
-        await LoadAsync();
-        _messenger.Send(new RemindersChangedMessage());
+            await LoadAsync();
+            SendChanged();
+        });
     }
 
     [RelayCommand]
@@ -270,29 +284,69 @@ public partial class RemindersViewModel : ViewModelBase
             return;
         }
 
-        await _repository.DeleteAsync(item.Id);
-        await LoadAsync();
-        _messenger.Send(new RemindersChangedMessage());
+        await GuardAsync(async () =>
+        {
+            await _repository.DeleteAsync(item.Id);
+            await LoadAsync();
+            SendChanged();
+        });
     }
 
-    private async Task ToggleAsync(ReminderItemViewModel item)
+    private Task ToggleAsync(ReminderItemViewModel item) => GuardAsync(async () =>
     {
-        if (item.IsEnabled && Items.Count(i => i.IsEnabled) > FeatureGate.MaxReminders(_entitlements.IsPro))
-        {
-            // Lapsed: the extra reminders stay off until Pro is back. Yield so the switch finishes its own update first.
-            await Task.Yield();
-            item.SetEnabledSilently(false);
-            RaiseLimitChanged();
-            return;
-        }
-
         await _repository.SetEnabledAsync(item.Id, item.IsEnabled);
+        RefreshLimits();
         if (item.IsEnabled)
         {
             await AskPermissionAsync();
         }
 
-        _messenger.Send(new RemindersChangedMessage());
+        SendChanged();
+    });
+
+    /// <summary>Runs a write; a failure is logged, shown, and the list reloaded so it matches what is stored.</summary>
+    private async Task GuardAsync(Func<Task> write)
+    {
+        try
+        {
+            await write();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Changing the reminders failed.");
+            try
+            {
+                await _dialogs.ShowAsync(_localizer["ReminderErrorTitle"], _localizer["ReminderErrorText"]);
+            }
+            catch (Exception dialogEx)
+            {
+                _logger.LogWarning(dialogEx, "Showing the reminder error failed.");
+            }
+
+            await LoadAsync();
+        }
+    }
+
+    // The coordinator and this page both send it; skip our own echo, we already reloaded.
+    private void SendChanged()
+    {
+        Interlocked.Increment(ref _sending);
+        try
+        {
+            _messenger.Send(new RemindersChangedMessage());
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _sending);
+        }
+    }
+
+    private void OnRemindersChanged()
+    {
+        if (Volatile.Read(ref _sending) == 0)
+        {
+            Post(() => RunInBackground(LoadAsync));
+        }
     }
 
     private async Task AskPermissionAsync()
@@ -327,7 +381,7 @@ public partial class RemindersViewModel : ViewModelBase
     {
         Weekdays =
         [
-            .. WeekOrder().Select(dow => new WeekdayToggle(Bit(dow), Culture.DateTimeFormat.AbbreviatedDayNames[(int)dow], OnWeekdayChanged))
+            .. WeekOrder().Select(dow => new WeekdayToggle(Bit(dow), Culture.DateTimeFormat.AbbreviatedDayNames[(int)dow], Culture.DateTimeFormat.DayNames[(int)dow], OnWeekdayChanged))
         ];
         OnPropertyChanged(nameof(Weekdays));
     }
@@ -360,15 +414,27 @@ public partial class RemindersViewModel : ViewModelBase
 
     private string TimeText(int minutes) => DateTime.Today.AddMinutes(minutes).ToString("t", Culture);
 
+    private void RefreshLimits()
+    {
+        var max = FeatureGate.MaxReminders(_entitlements.IsPro);
+        var full = Items.Count(i => i.IsEnabled) >= max;
+        foreach (var item in Items)
+        {
+            item.CanEnable = item.IsEnabled || !full;
+            item.ShowGate = !item.CanEnable && !_entitlements.IsPro;
+        }
+    }
+
     private void RaiseLimitChanged()
     {
+        RefreshLimits();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(CanAdd));
         OnPropertyChanged(nameof(ShowGate));
         StartAddCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnEntitlementsChanged(object? sender, EventArgs e) => Post(() => _ = LoadAsync());
+    private void OnEntitlementsChanged(object? sender, EventArgs e) => Post(() => RunInBackground(LoadAsync));
 
     private void Post(Action action)
     {
@@ -379,6 +445,19 @@ public partial class RemindersViewModel : ViewModelBase
         else
         {
             _context.Post(_ => action(), null);
+        }
+    }
+
+    // Fire-and-forget loads must never take the app down.
+    private async void RunInBackground(Func<Task> work)
+    {
+        try
+        {
+            await work();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Loading the reminders failed.");
         }
     }
 }
