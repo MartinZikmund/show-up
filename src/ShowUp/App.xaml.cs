@@ -109,13 +109,15 @@ public partial class App : Application, IApplication
         }
 
         var entitlements = Host.Services.GetRequiredService<IEntitlementService>();
+        RefreshThrottle activationRefresh = new(TimeProvider.System, RefreshThrottle.ActivationInterval);
         MainWindow.Activated += (_, e) =>
         {
-            if (e.WindowActivationState != WindowActivationState.Deactivated)
+            if (e.WindowActivationState != WindowActivationState.Deactivated && activationRefresh.TryEnter())
             {
                 _ = entitlements.RefreshAsync();
             }
         };
+        activationRefresh.TryEnter();
         _ = entitlements.RefreshAsync();
 
 #if !HAS_UNO
