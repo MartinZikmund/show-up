@@ -19,6 +19,8 @@ public sealed class UnlockedEntitlementService : IEntitlementService
 
     public Task RefreshAsync() => Task.CompletedTask;
 
+    public Task SetUserAsync(string? userId) => Task.CompletedTask;
+
     public Task<IReadOnlyList<ProOffer>> GetOffersAsync() => Task.FromResult<IReadOnlyList<ProOffer>>([]);
 
     public Task<PurchaseOutcome> PurchaseAsync(ProOffer offer) => Task.FromResult(PurchaseOutcome.Unavailable);

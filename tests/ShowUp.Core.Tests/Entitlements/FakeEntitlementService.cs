@@ -41,6 +41,14 @@ internal sealed class FakeEntitlementService : IEntitlementService
 
     public int RefreshCalls { get; private set; }
 
+    public List<string?> Users { get; } = [];
+
+    public Task SetUserAsync(string? userId)
+    {
+        Users.Add(userId);
+        return Task.CompletedTask;
+    }
+
     public Task RefreshAsync()
     {
         RefreshCalls++;

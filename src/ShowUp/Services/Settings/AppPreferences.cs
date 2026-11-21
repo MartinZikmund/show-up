@@ -1,4 +1,5 @@
 using MZikmund.Toolkit.WinUI.Services;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Tracking;
 
@@ -7,10 +8,12 @@ namespace ShowUp.Services.Settings;
 public sealed class AppPreferences : IAppPreferences
 {
     private readonly IPreferences _preferences;
+    private readonly AccountProCache _proCache;
 
     public AppPreferences(IPreferences preferences)
     {
         _preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
+        _proCache = new(preferences);
     }
 
     private const string DataVersionKey = "AppDataVersion";
@@ -90,19 +93,18 @@ public sealed class AppPreferences : IAppPreferences
         set => _preferences.Set(MarkerColorKey, (int)value);
     }
 
-    private const string LastKnownProKey = "LastKnownPro";
+    public void UseProAccount(string? userId) => _proCache.UseAccount(userId);
+
     public bool LastKnownPro
     {
-        get => _preferences.Get(LastKnownProKey, false);
-        set => _preferences.Set(LastKnownProKey, value);
+        get => _proCache.LastKnownPro;
+        set => _proCache.LastKnownPro = value;
     }
 
-    // Ticks of the UTC expiry; 0 means none.
-    private const string LastKnownProExpiresKey = "LastKnownProExpires";
     public DateTimeOffset? LastKnownProExpires
     {
-        get => _preferences.Get(LastKnownProExpiresKey, 0L) is var ticks and > 0 ? new DateTimeOffset(ticks, TimeSpan.Zero) : null;
-        set => _preferences.Set(LastKnownProExpiresKey, value?.UtcTicks ?? 0L);
+        get => _proCache.LastKnownProExpires;
+        set => _proCache.LastKnownProExpires = value;
     }
 
     private const string SelectedEnrollmentIdKey = "SelectedEnrollmentId";

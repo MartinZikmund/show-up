@@ -40,6 +40,8 @@ public sealed class DebugEntitlementOverride : IEntitlementService
 
     public Task RefreshAsync() => _inner.RefreshAsync();
 
+    public Task SetUserAsync(string? userId) => _inner.SetUserAsync(userId);
+
     public Task<IReadOnlyList<ProOffer>> GetOffersAsync() => _inner.GetOffersAsync();
 
     public Task<PurchaseOutcome> PurchaseAsync(ProOffer offer) => _inner.PurchaseAsync(offer);

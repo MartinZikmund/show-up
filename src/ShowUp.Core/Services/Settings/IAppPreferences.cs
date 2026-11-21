@@ -28,6 +28,9 @@ public interface IAppPreferences
     /// <summary>Kg/km or lb/mi for logged results; seeded from the region the first time it's read.</summary>
     UnitSystem UnitSystem { get; set; }
 
+    /// <summary>Points <see cref="LastKnownPro"/> and <see cref="LastKnownProExpires"/> at the user's own cache (null: anonymous).</summary>
+    void UseProAccount(string? userId);
+
     /// <summary>Last Pro state the store reported, so offline launches keep it.</summary>
     bool LastKnownPro { get; set; }
 

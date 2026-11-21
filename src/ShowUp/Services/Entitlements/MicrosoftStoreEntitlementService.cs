@@ -91,6 +91,9 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         }
     });
 
+    // Store licenses belong to the Microsoft account, not the app account.
+    public Task SetUserAsync(string? userId) => Task.CompletedTask;
+
     public async Task<IReadOnlyList<ProOffer>> GetOffersAsync()
     {
         OffersLoadFailed = false;

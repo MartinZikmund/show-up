@@ -20,6 +20,12 @@ public interface IEntitlementService
 
     Task RefreshAsync();
 
+    /// <summary>
+    /// Tells the store who is signed in (null: nobody) and switches the cached Pro state to that account's.
+    /// Only account-based stores (RevenueCat) act on it; the Microsoft Store and the unlocked platforms ignore it.
+    /// </summary>
+    Task SetUserAsync(string? userId);
+
     Task<IReadOnlyList<ProOffer>> GetOffersAsync();
 
     Task<PurchaseOutcome> PurchaseAsync(ProOffer offer);

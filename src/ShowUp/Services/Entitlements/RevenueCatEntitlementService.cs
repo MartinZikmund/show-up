@@ -27,6 +27,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     private readonly ExpiryWatch _expiry;
     private volatile bool _recheckingExpiry;
     private bool _initialized;
+    private string? _userId;
     private volatile bool _confirmed;
 
     public RevenueCatEntitlementService(
@@ -80,6 +81,40 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
             _logger.LogWarning(ex, "Refreshing the Pro entitlement failed.");
         }
     });
+
+    public async Task SetUserAsync(string? userId)
+    {
+        if (userId == _userId)
+        {
+            return;
+        }
+
+        var before = IsPro;
+        _userId = userId;
+        _preferences.UseProAccount(userId);
+        _confirmed = false;
+        WatchExpiry();
+        if (_initialized)
+        {
+            try
+            {
+                var result = userId is null ? await _billing.LogoutAsync() : await _billing.LoginAsync(userId);
+                if (result.IsSuccess)
+                {
+                    Apply(result.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Switching the RevenueCat user failed.");
+            }
+        }
+
+        if (before != IsPro)
+        {
+            UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));
+        }
+    }
 
     public async Task<IReadOnlyList<ProOffer>> GetOffersAsync()
     {
@@ -210,7 +245,15 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
 
         if (!_initialized)
         {
-            _billing.Initialize(_apiKey);
+            if (_userId is null)
+            {
+                _billing.Initialize(_apiKey);
+            }
+            else
+            {
+                _billing.Initialize(_apiKey, _userId);
+            }
+
             _initialized = true;
         }
 

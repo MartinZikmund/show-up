@@ -313,6 +313,13 @@ public sealed class SettingsViewModelTests
 
         public bool LastKnownPro { get; set; }
 
+
+        public void UseProAccount(string? userId)
+
+        {
+
+        }
+
         public Guid? SelectedEnrollmentId { get; set; }
 
         public DateTimeOffset? LastKnownProExpires { get; set; }
