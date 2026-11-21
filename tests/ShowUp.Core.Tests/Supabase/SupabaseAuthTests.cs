@@ -275,6 +275,141 @@ public sealed class SupabaseAuthTests
         (await act.Should().ThrowAsync<SupabaseException>()).Which.Kind.Should().Be(SupabaseErrorKind.InvalidResponse);
     }
 
+    [TestMethod]
+    public async Task RefreshAsync_TwiceInARow_SendsTwoRequests()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-2", "refresh-2"));
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-3", "refresh-3"));
+
+        await auth.RefreshAsync();
+        Session? second = await auth.RefreshAsync();
+
+        second!.AccessToken.Should().Be("access-3");
+        _handler.Requests.Should().HaveCount(3);
+        _handler.Requests[2].Body.Should().Be("""{"refresh_token":"refresh-2"}""");
+    }
+
+    [TestMethod]
+    public async Task RefreshAsync_OneCallerCancels_OthersStillGetTheResult()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-2", "refresh-2"));
+        TaskCompletionSource gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _handler.Gate = gate;
+        using CancellationTokenSource cts = new();
+
+        Task<Session?> cancelled = auth.RefreshAsync(cts.Token);
+        Task<Session?> patient = auth.RefreshAsync();
+        await _handler.WaitForRequestsAsync(2);
+        await cts.CancelAsync();
+        Func<Task> act = () => cancelled;
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        gate.SetResult();
+
+        (await patient)!.AccessToken.Should().Be("access-2");
+    }
+
+    [TestMethod]
+    public async Task RefreshAsync_SignedOutWhileInFlight_StaysSignedOut()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.NoContent);
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-2", "refresh-2"));
+        TaskCompletionSource gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _handler.Gate = gate;
+
+        Task<Session?> refresh = auth.RefreshAsync();
+        await _handler.WaitForRequestsAsync(2);
+        await auth.SignOutAsync();
+        gate.SetResult();
+        Session? result = await refresh;
+
+        result.Should().BeNull();
+        auth.Current.Should().BeNull();
+        _store.Value.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task RefreshAsync_OtherUserSignedInWhileInFlight_KeepsTheNewSession()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-b", "refresh-b", id: "22222222-2222-2222-2222-222222222222", email: "b@example.com"));
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-2", "refresh-2"));
+        TaskCompletionSource gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _handler.Gate = gate;
+
+        Task<Session?> refresh = auth.RefreshAsync();
+        await _handler.WaitForRequestsAsync(2);
+        await auth.VerifyCodeAsync("b@example.com", "123456");
+        gate.SetResult();
+        await refresh;
+
+        auth.Current!.UserId.Should().Be("22222222-2222-2222-2222-222222222222");
+        auth.Current.AccessToken.Should().Be("access-b");
+        _store.Value.Should().Contain("refresh-b").And.NotContain("refresh-2");
+    }
+
+    [TestMethod]
+    [DataRow(HttpStatusCode.RequestTimeout, "")]
+    [DataRow(HttpStatusCode.Forbidden, "<html>proxy says no</html>")]
+    [DataRow(HttpStatusCode.Forbidden, """{"error_code":"user_banned"}""")]
+    [DataRow(HttpStatusCode.BadRequest, """{"error_code":"validation_failed","msg":"nope"}""")]
+    [DataRow(HttpStatusCode.TooManyRequests, """{"error_code":"over_request_rate_limit"}""")]
+    public async Task RefreshAsync_NotARealRejection_KeepsTheSession(HttpStatusCode status, string body)
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(status, body);
+
+        Func<Task> act = () => auth.RefreshAsync();
+
+        await act.Should().ThrowAsync<SupabaseException>();
+        auth.Current.Should().NotBeNull();
+        _store.Value.Should().NotBeNull();
+    }
+
+    [TestMethod]
+    [DataRow(HttpStatusCode.BadRequest, """{"error_code":"refresh_token_not_found"}""")]
+    [DataRow(HttpStatusCode.Unauthorized, """{"error_code":"session_expired"}""")]
+    [DataRow(HttpStatusCode.BadRequest, """{"error":"invalid_grant","error_description":"Invalid Refresh Token"}""")]
+    public async Task RefreshAsync_RealRejection_SignsOut(HttpStatusCode status, string body)
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(status, body);
+
+        (await auth.RefreshAsync()).Should().BeNull();
+
+        auth.Current.Should().BeNull();
+        _store.Value.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task SignOutAsync_CancelledToken_StillClearsLocally()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        using CancellationTokenSource cts = new();
+        await cts.CancelAsync();
+
+        await auth.SignOutAsync(cts.Token);
+
+        auth.Current.Should().BeNull();
+        _store.Value.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task SignOutAsync_ServerHangsAndCallerCancels_StillClears()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.NoContent);
+        _handler.Gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenSource cts = new(TimeSpan.FromMilliseconds(100));
+
+        await auth.SignOutAsync(cts.Token);
+
+        auth.Current.Should().BeNull();
+        _store.Value.Should().BeNull();
+    }
+
     private async Task<SupabaseAuth> SignedInAsync()
     {
         _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token());

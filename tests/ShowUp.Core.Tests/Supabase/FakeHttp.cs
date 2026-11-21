@@ -12,7 +12,16 @@ internal sealed class FakeHandler : HttpMessageHandler
 
     public List<SentRequest> Requests { get; } = [];
 
+    /// <summary>Holds the next request until completed.</summary>
     public TaskCompletionSource? Gate { get; set; }
+
+    public async Task WaitForRequestsAsync(int count)
+    {
+        for (int i = 0; i < 200 && Requests.Count < count; i++)
+        {
+            await Task.Delay(10);
+        }
+    }
 
     public Exception? Throw { get; set; }
 
@@ -29,6 +38,7 @@ internal sealed class FakeHandler : HttpMessageHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         Dictionary<string, string> headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value));
         string? body = request.Content is null ? null : await request.Content.ReadAsStringAsync(cancellationToken);
         if (request.Content?.Headers.ContentType is { } type)
@@ -46,9 +56,11 @@ internal sealed class FakeHandler : HttpMessageHandler
             throw Throw;
         }
 
-        if (Gate is not null)
+        TaskCompletionSource? gate = Gate;
+        Gate = null;
+        if (gate is not null)
         {
-            await Gate.Task;
+            await gate.Task.WaitAsync(cancellationToken);
         }
 
         return _responses.Dequeue()();

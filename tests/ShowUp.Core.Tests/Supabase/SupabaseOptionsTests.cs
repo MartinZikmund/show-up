@@ -13,6 +13,9 @@ public sealed class SupabaseOptionsTests
     [DataRow("https://abc.supabase.co", "", false)]
     [DataRow("", "sb_publishable_x", false)]
     [DataRow("not a url", "sb_publishable_x", false)]
+    [DataRow("http://abc.supabase.co", "sb_publishable_x", false)]
+    [DataRow("http://localhost:54321", "sb_publishable_x", true)]
+    [DataRow("http://127.0.0.1:54321", "sb_publishable_x", true)]
     public void IsConfigured_Values_RequiresBothAndAValidUrl(string url, string key, bool expected) =>
         new SupabaseOptions { Url = url, PublishableKey = key }.IsConfigured.Should().Be(expected);
 

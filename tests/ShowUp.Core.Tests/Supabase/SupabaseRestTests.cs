@@ -82,6 +82,17 @@ public sealed class SupabaseRestTests
     }
 
     [TestMethod]
+    [DataRow(0)]
+    [DataRow(-5)]
+    public async Task SelectPageAsync_NonPositiveLimit_Throws(int limit)
+    {
+        Func<Task> act = () => Create().SelectPageAsync("notes", null, null, limit, TestRowContext.Default.TestRow);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        _handler.Requests.Should().BeEmpty();
+    }
+
+    [TestMethod]
     public async Task SelectPageAsync_CursorOnly_UsesGteWithMicrosecondTimestamp()
     {
         _handler.Enqueue(HttpStatusCode.OK, "[]");

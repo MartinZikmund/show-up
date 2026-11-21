@@ -31,7 +31,7 @@ public sealed class FileTokenStoreTests
         await store.WriteAsync("secret-value");
 
         (await store.ReadAsync()).Should().Be("secret-value");
-        File.Exists(FilePath + ".tmp").Should().BeFalse();
+        Directory.GetFiles(_dir).Should().Equal(FilePath);
     }
 
     [TestMethod]
