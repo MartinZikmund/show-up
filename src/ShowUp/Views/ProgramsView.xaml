@@ -58,12 +58,14 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:ProgramCardViewModel">
                         <Button
+                            Padding="0"
                             HorizontalAlignment="Stretch"
                             AutomationProperties.AutomationId="{x:Bind Id}"
                             AutomationProperties.Name="{x:Bind Name}"
                             Click="Card_Click"
                             CornerRadius="{ThemeResource OverlayCornerRadius}"
-                            Style="{StaticResource CardButtonStyle}">
+                            Style="{StaticResource CardButtonStyle}"
+                            Tag="{x:Bind}">
                             <Border
                                 Background="{ThemeResource CalendarCellBackgroundBrush}"
                                 BorderBrush="{ThemeResource CalendarCellBorderBrush}"

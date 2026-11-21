@@ -12,7 +12,7 @@ public sealed partial class ProgramsView : ProgramsViewBase
 
     private void Card_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: ProgramCardViewModel card })
+        if (sender is FrameworkElement { Tag: ProgramCardViewModel card })
         {
             ViewModel?.OpenCommand.Execute(card);
         }
