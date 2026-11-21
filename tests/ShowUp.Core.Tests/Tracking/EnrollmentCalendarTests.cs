@@ -9,6 +9,14 @@ public class EnrollmentCalendarTests
     private static readonly DateOnly _start = new(2026, 12, 1);
 
     [TestMethod]
+    public void DayCount_MatchesConstructorArgument()
+    {
+        EnrollmentCalendar calendar = new(_start, 42, [new ScheduleShift(_start.AddDays(3), 2)]);
+
+        calendar.DayCount.Should().Be(42);
+    }
+
+    [TestMethod]
     public void DateOf_NoShifts_IsStartPlusIndex()
     {
         EnrollmentCalendar calendar = new(_start, 90, []);
