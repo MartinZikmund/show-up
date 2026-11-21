@@ -14,7 +14,7 @@
         <!--  Paper (or chalkboard) fills the whole window, safe-area insets included  -->
         <controls:PaperBackground />
 
-        <Grid toolkit:VisibleBoundsPadding.PaddingMask="Top,Left,Right">
+        <Grid x:Name="ShellContent" toolkit:VisibleBoundsPadding.PaddingMask="Top,Left,Right">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />

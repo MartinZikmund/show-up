@@ -9,6 +9,7 @@
     AutomationProperties.Name="{markup:Localize Key=CrossMomentName}"
     IsTabStop="True"
     KeyDown="Overlay_KeyDown"
+    TabFocusNavigation="Cycle"
     UseSystemFocusVisuals="False"
     Visibility="Collapsed">
 

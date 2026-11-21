@@ -19,6 +19,7 @@ public sealed partial class WindowShell : Page, IWindowShell
     public WindowShell(IServiceProvider serviceProvider, Window associatedWindow)
     {
         InitializeComponent();
+        CrossMomentOverlay.ShellContent = ShellContent;
 
         _windowScope = serviceProvider.CreateScope();
         var windowShellProvider = (WindowShellProvider)ServiceProvider.GetRequiredService<IWindowShellProvider>();
