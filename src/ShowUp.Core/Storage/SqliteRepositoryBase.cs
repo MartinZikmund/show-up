@@ -6,6 +6,12 @@ namespace ShowUp.Core.Storage;
 /// <summary>User scoping, stamping and tombstones shared by the notes and metrics repositories.</summary>
 public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time, IUserScope user, IDeviceIdProvider device)
 {
+    protected DateTimeOffset UtcNow => time.GetUtcNow();
+
+    protected DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
+
+    protected bool IsVisible(SyncableEntity e) => e.DeletedAt is null && e.UserId == user.CurrentUserId;
+
     protected Task<SQLiteAsyncConnection> ConnectAsync() => db.GetConnectionAsync();
 
     protected T Stamp<T>(T entity)
