@@ -41,4 +41,10 @@ public abstract class StorageTestBase
     internal SqliteNotesRepository CreateNotesRepository() => new(Db, Time, User, Device);
 
     internal SqliteMetricsRepository CreateMetricsRepository() => new(Db, Time, User, Device);
+
+    internal SqliteReminderRepository CreateReminders() => new(Db, Time, User, Device);
+
+    internal SqliteCustomProgramRepository CreateCustomPrograms() => new(Db, Time, User, Device);
+
+    internal SqliteSyncedSettings CreateSettings() => new(Db, Time, User, Device);
 }

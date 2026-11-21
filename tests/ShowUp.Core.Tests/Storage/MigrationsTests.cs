@@ -14,7 +14,7 @@ public class MigrationsTests : StorageTestBase
 
         int version = await connection.ExecuteScalarAsync<int>("PRAGMA user_version");
 
-        version.Should().Be(Migrations.LatestVersion).And.Be(3);
+        version.Should().Be(Migrations.LatestVersion).And.Be(4);
     }
 
     [TestMethod]
@@ -70,13 +70,55 @@ public class MigrationsTests : StorageTestBase
 
             await Migrations.ApplyAsync(connection);
 
-            (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(3);
+            (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(Migrations.LatestVersion);
             (await connection.ExecuteScalarAsync<string>("""SELECT "InkJson" FROM "CompletionEntity" WHERE "Id" = 'c1'""")).Should().Be("[]");
             (await connection.ExecuteScalarAsync<string>("""SELECT "ProgramId" FROM "EnrollmentEntity" WHERE "Id" = 'e1'""")).Should().Be("insanity");
             var noteColumns = await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('NoteEntity')""");
             noteColumns.Should().Contain(["Id", "UserId", "UpdatedAt", "DeletedAt", "DeviceId", "EnrollmentId", "DayIndex", "SessionIndex", "Text"]);
             var metricColumns = await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('MetricEntryEntity')""");
             metricColumns.Should().Contain(["EnrollmentId", "DayIndex", "SessionIndex", "BonusWorkoutId", "WorkoutId", "MetricId", "Value", "TextValue"]);
+        }
+        finally
+        {
+            await connection.CloseAsync();
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task Migrate_Fresh_IsV4()
+    {
+        var connection = await Db.GetConnectionAsync();
+
+        (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(4);
+        foreach (string table in new[] { "ReminderEntity", "CustomProgramEntity", "SyncedSettingEntity" })
+        {
+            (await connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM pragma_table_info('{table}')")).Should().BeGreaterThan(0);
+        }
+    }
+
+    [TestMethod]
+    public async Task Migrate_V3Db_ToV4_KeepsData()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"showup-v3-{Guid.NewGuid():N}.db");
+        SQLiteAsyncConnection connection = new(path);
+        try
+        {
+            await Migrations.ApplyAsync(connection, targetVersion: 3);
+            await connection.ExecuteAsync("""INSERT INTO "NoteEntity" ("Id", "SubjectKey", "Text") VALUES ('n1', 'p:e1', 'hello')""");
+            await connection.ExecuteAsync("""INSERT INTO "EnrollmentEntity" ("Id", "ProgramId") VALUES ('e1', 'insanity')""");
+
+            await Migrations.ApplyAsync(connection);
+
+            (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(4);
+            (await connection.ExecuteScalarAsync<string>("""SELECT "Text" FROM "NoteEntity" WHERE "Id" = 'n1'""")).Should().Be("hello");
+            (await connection.ExecuteScalarAsync<string>("""SELECT "ProgramId" FROM "EnrollmentEntity" WHERE "Id" = 'e1'""")).Should().Be("insanity");
+            var reminderColumns = await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('ReminderEntity')""");
+            reminderColumns.Should().Contain(["Id", "UserId", "UpdatedAt", "DeletedAt", "DeviceId", "MinutesOfDay", "DaysMask", "Enabled"]);
+            var programColumns = await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('CustomProgramEntity')""");
+            programColumns.Should().Contain(["SubjectKey", "Revision", "ProgramJson"]);
+            var settingColumns = await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('SyncedSettingEntity')""");
+            settingColumns.Should().Contain(["SubjectKey", "Key", "Value"]);
         }
         finally
         {
