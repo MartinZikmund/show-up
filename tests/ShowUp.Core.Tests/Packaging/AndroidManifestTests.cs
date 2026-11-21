@@ -19,6 +19,17 @@ public class AndroidManifestTests
         permissions.Should().Contain("android.permission.INTERNET");
     }
 
+    [TestMethod]
+    public void Manifest_DeclaresVibratePermission()
+    {
+        // VibrationDevice throws a SecurityException on Android without it.
+        var manifest = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "ShowUp", "Platforms", "Android", "AndroidManifest.xml"));
+
+        var permissions = manifest.Root!.Elements("uses-permission").Select(e => (string?)e.Attribute(_android + "name"));
+
+        permissions.Should().Contain("android.permission.VIBRATE");
+    }
+
     private static string FindRepoRoot()
     {
         DirectoryInfo? dir = new(AppContext.BaseDirectory);

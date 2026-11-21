@@ -1,4 +1,7 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls">
 
     <Thickness x:Key="PagePadding">24,16,24,24</Thickness>
 
@@ -162,6 +165,49 @@
                                 </VisualState>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--  Hand-drawn marker X; geometry and animation live in code (MarkerCrossControl.cs)  -->
+    <Style TargetType="controls:MarkerCrossControl">
+        <Setter Property="MarkerBrush" Value="{ThemeResource MarkerBrush}" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:MarkerCrossControl">
+                    <Grid>
+                        <Path
+                            x:Name="PART_First"
+                            Opacity="0.9"
+                            Stroke="{TemplateBinding MarkerBrush}"
+                            StrokeDashCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round" />
+                        <Path
+                            x:Name="PART_FirstUnder"
+                            Opacity="0.35"
+                            Stroke="{TemplateBinding MarkerBrush}"
+                            StrokeDashCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round" />
+                        <Path
+                            x:Name="PART_Second"
+                            Opacity="0.9"
+                            Stroke="{TemplateBinding MarkerBrush}"
+                            StrokeDashCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round" />
+                        <Path
+                            x:Name="PART_SecondUnder"
+                            Opacity="0.35"
+                            Stroke="{TemplateBinding MarkerBrush}"
+                            StrokeDashCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

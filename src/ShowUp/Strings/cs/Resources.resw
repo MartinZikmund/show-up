@@ -193,4 +193,57 @@
   <data name="SectionsTabBarName" xml:space="preserve">
     <value>Sekce</value>
   </data>
+  <data name="CrossingOff" xml:space="preserve">
+    <value>Od&#353;krt&#225;v&#225;n&#237;</value>
+  </data>
+  <data name="MarkerSound" xml:space="preserve">
+    <value>Zvuk fixy</value>
+  </data>
+  <data name="MarkerSoundDescription" xml:space="preserve">
+    <value>Kr&#225;tk&#233; zask&#345;&#237;p&#225;n&#237; p&#345;i ka&#382;d&#233;m tahu</value>
+  </data>
+  <data name="MarkerHaptics" xml:space="preserve">
+    <value>Haptick&#225; odezva</value>
+  </data>
+  <data name="MarkerHapticsDescription" xml:space="preserve">
+    <value>Kr&#225;tk&#233; zavibrov&#225;n&#237; p&#345;i ka&#382;d&#233;m tahu (telefony)</value>
+  </data>
+  <data name="CrossMoment" xml:space="preserve">
+    <value>Velk&#233; od&#353;krtnut&#237;</value>
+  </data>
+  <data name="CrossMomentDescription" xml:space="preserve">
+    <value>Velk&#233; X po dokon&#269;en&#237; tr&#233;ninku</value>
+  </data>
+  <data name="CrossMomentMode_Always" xml:space="preserve">
+    <value>V&#382;dy</value>
+  </data>
+  <data name="CrossMomentMode_OnlyToday" xml:space="preserve">
+    <value>Jen dne&#353;ek</value>
+  </data>
+  <data name="CrossMomentMode_Never" xml:space="preserve">
+    <value>Nikdy</value>
+  </data>
+  <data name="CrossMomentCaptionFormat" xml:space="preserve">
+    <value>Den {0} z {1} &#183; 🔥 v &#345;ad&#283;: {2}</value>
+    <comment>{0} day number, {1} total days, {2} current streak in days.</comment>
+  </data>
+  <data name="CrossMomentProgressFormat" xml:space="preserve">
+    <value>Hotovo {0} z {1}</value>
+    <comment>{0} sessions done today, {1} sessions required.</comment>
+  </data>
+  <data name="CrossMomentDayComplete" xml:space="preserve">
+    <value>Den je od&#353;krtnut&#253;. Z&#237;tra zas!</value>
+  </data>
+  <data name="CrossMomentName" xml:space="preserve">
+    <value>Tr&#233;nink od&#353;krtnut</value>
+  </data>
+  <data name="DebugCrossMoment" xml:space="preserve">
+    <value>N&#225;hled velk&#233;ho od&#353;krtnut&#237;</value>
+  </data>
+  <data name="DebugMarkerSample" xml:space="preserve">
+    <value>Uk&#225;zka fixy: klepnut&#237;m od&#353;krtni</value>
+  </data>
+  <data name="DebugSlowMotion" xml:space="preserve">
+    <value>Zpomalen&#237; (25&#215;)</value>
+  </data>
 </root>

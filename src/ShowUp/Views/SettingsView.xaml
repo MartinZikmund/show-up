@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ShowUp.Views"
+    xmlns:marking="using:ShowUp.Core.Marking"
     xmlns:markup="using:ShowUp.Markup"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
 
@@ -32,6 +33,46 @@
                     SelectedItem="{x:Bind ViewModel.Theme, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="ElementTheme">
+                            <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </toolkit:SettingsCard>
+
+            <!--  Crossing off section  -->
+            <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="{markup:Localize Key=CrossingOff}" />
+
+            <toolkit:SettingsCard Description="{markup:Localize Key=MarkerSoundDescription}" Header="{markup:Localize Key=MarkerSound}">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE767;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch
+                    AutomationProperties.AutomationId="MarkerSoundToggle"
+                    AutomationProperties.Name="{markup:Localize Key=MarkerSound}"
+                    IsOn="{x:Bind ViewModel.MarkerSoundEnabled, Mode=TwoWay}" />
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard Description="{markup:Localize Key=MarkerHapticsDescription}" Header="{markup:Localize Key=MarkerHaptics}">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8EA;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch
+                    AutomationProperties.AutomationId="MarkerHapticsToggle"
+                    AutomationProperties.Name="{markup:Localize Key=MarkerHaptics}"
+                    IsOn="{x:Bind ViewModel.MarkerHapticsEnabled, Mode=TwoWay}" />
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard Description="{markup:Localize Key=CrossMomentDescription}" Header="{markup:Localize Key=CrossMoment}">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE73E;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox
+                    AutomationProperties.AutomationId="CrossMomentModeComboBox"
+                    AutomationProperties.Name="{markup:Localize Key=CrossMoment}"
+                    ItemsSource="{x:Bind ViewModel.CrossMomentModeOptions}"
+                    SelectedItem="{x:Bind ViewModel.CrossMomentMode, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="marking:CrossMomentMode">
                             <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

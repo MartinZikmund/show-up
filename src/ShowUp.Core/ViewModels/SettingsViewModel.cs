@@ -1,4 +1,5 @@
 using ShowUp.Core.Infrastructure;
+using ShowUp.Core.Marking;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
 using MZikmund.Toolkit.WinUI.Services;
@@ -36,6 +37,9 @@ public partial class SettingsViewModel : ViewModelBase
         {
             _isInitializing = true;
             Theme = _appPreferences.Theme;
+            MarkerSoundEnabled = _appPreferences.MarkerSoundEnabled;
+            MarkerHapticsEnabled = _appPreferences.MarkerHapticsEnabled;
+            CrossMomentMode = _appPreferences.CrossMomentMode;
         }
         finally
         {
@@ -57,6 +61,41 @@ public partial class SettingsViewModel : ViewModelBase
 
         _themeManager.SetTheme(value);
         _appPreferences.Theme = value;
+    }
+
+    [ObservableProperty]
+    public partial bool MarkerSoundEnabled { get; set; }
+
+    partial void OnMarkerSoundEnabledChanged(bool value)
+    {
+        if (!_isInitializing)
+        {
+            _appPreferences.MarkerSoundEnabled = value;
+        }
+    }
+
+    [ObservableProperty]
+    public partial bool MarkerHapticsEnabled { get; set; }
+
+    partial void OnMarkerHapticsEnabledChanged(bool value)
+    {
+        if (!_isInitializing)
+        {
+            _appPreferences.MarkerHapticsEnabled = value;
+        }
+    }
+
+    public CrossMomentMode[] CrossMomentModeOptions { get; } = [CrossMomentMode.OnlyToday, CrossMomentMode.Always, CrossMomentMode.Never];
+
+    [ObservableProperty]
+    public partial CrossMomentMode CrossMomentMode { get; set; }
+
+    partial void OnCrossMomentModeChanged(CrossMomentMode value)
+    {
+        if (!_isInitializing)
+        {
+            _appPreferences.CrossMomentMode = value;
+        }
     }
 
     public string AppVersion => _application.AppVersion;
