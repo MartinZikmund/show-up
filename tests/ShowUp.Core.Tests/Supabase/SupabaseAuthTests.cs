@@ -353,7 +353,6 @@ public sealed class SupabaseAuthTests
     [TestMethod]
     [DataRow(HttpStatusCode.RequestTimeout, "")]
     [DataRow(HttpStatusCode.Forbidden, "<html>proxy says no</html>")]
-    [DataRow(HttpStatusCode.Forbidden, """{"error_code":"user_banned"}""")]
     [DataRow(HttpStatusCode.BadRequest, """{"error_code":"validation_failed","msg":"nope"}""")]
     [DataRow(HttpStatusCode.TooManyRequests, """{"error_code":"over_request_rate_limit"}""")]
     public async Task RefreshAsync_NotARealRejection_KeepsTheSession(HttpStatusCode status, string body)
@@ -372,6 +371,7 @@ public sealed class SupabaseAuthTests
     [DataRow(HttpStatusCode.BadRequest, """{"error_code":"refresh_token_not_found"}""")]
     [DataRow(HttpStatusCode.Unauthorized, """{"error_code":"session_expired"}""")]
     [DataRow(HttpStatusCode.BadRequest, """{"error":"invalid_grant","error_description":"Invalid Refresh Token"}""")]
+    [DataRow(HttpStatusCode.Forbidden, """{"error_code":"user_banned"}""")]
     public async Task RefreshAsync_RealRejection_SignsOut(HttpStatusCode status, string body)
     {
         SupabaseAuth auth = await SignedInAsync();

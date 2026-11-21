@@ -53,7 +53,7 @@ public sealed class SupabaseAuth(
             StoredSession? saved = JsonSerializer.Deserialize(json, SupabaseJsonContext.Default.StoredSession);
             if (saved is not null)
             {
-                SetSession(new Session(saved.AccessToken, saved.RefreshToken, DateTimeOffset.FromUnixTimeSeconds(saved.ExpiresAtUnix), saved.UserId, saved.Email), notify: false);
+                SetSession(new Session(saved.AccessToken, saved.RefreshToken, DateTimeOffset.FromUnixTimeSeconds(saved.ExpiresAtUnix), saved.UserId, saved.Email));
             }
         }
         catch (JsonException)
@@ -80,8 +80,9 @@ public sealed class SupabaseAuth(
         await EnsureSuccessAsync(response, ct);
 
         Session session = await ReadSessionAsync(response, email, ct);
-        SetSession(session, notify: true);
+        SetSession(session);
         await PersistAsync();
+        RaiseSessionChanged(session);
         return session;
     }
 
@@ -189,8 +190,9 @@ public sealed class SupabaseAuth(
         }
         finally
         {
-            SetSession(null, notify: true);
+            SetSession(null);
             await PersistAsync();
+            RaiseSessionChanged(null);
         }
     }
 
@@ -221,12 +223,13 @@ public sealed class SupabaseAuth(
         }
 
         await PersistAsync();
+        RaiseSessionChanged(next);
         return next;
     }
 
-    // Only the server saying the refresh token is dead signs the device out; a proxy 403 or a 408 does not.
+    // Only a GoTrue error code saying the refresh token is dead signs the device out; a bare proxy 403 or a 408 does not.
     private static bool IsRefreshRejection(SupabaseException error) =>
-        error.StatusCode is 400 or 401
+        error.StatusCode is 400 or 401 or 403
         && error.ErrorCode is "refresh_token_not_found" or "refresh_token_already_used" or "session_not_found"
             or "session_expired" or "bad_jwt" or "user_not_found" or "user_banned" or "invalid_grant";
 
@@ -242,20 +245,30 @@ public sealed class SupabaseAuth(
             _current = next;
         }
 
-        SessionChanged?.Invoke(this, next);
         return true;
     }
 
-    private void SetSession(Session? session, bool notify)
+    private void SetSession(Session? session)
     {
         lock (_gate)
         {
             _current = session;
         }
+    }
 
-        if (notify)
+    // After the save, and one throwing subscriber must neither skip the others nor fault the shared refresh.
+    private void RaiseSessionChanged(Session? session)
+    {
+        foreach (Delegate handler in SessionChanged?.GetInvocationList() ?? [])
         {
-            SessionChanged?.Invoke(this, session);
+            try
+            {
+                ((EventHandler<Session?>)handler)(this, session);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning("A SessionChanged handler threw ({ExceptionType}).", ex.GetType().Name);
+            }
         }
     }
 
