@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<title>Show Up — marker cross playground</title>
+<style>
+  :root { --ui-bg:#16171a; --ui-panel:#1e2024; --ui-line:#2c2f35; --ui-text:#e7e7ea; --ui-dim:#9a9ca3; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, "Segoe UI Variable", "Segoe UI", sans-serif; background:var(--ui-bg); color:var(--ui-text); }
+  .app { display:grid; grid-template-columns: 300px 1fr; min-height:100vh; }
+  @media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
+  aside { background:var(--ui-panel); border-right:1px solid var(--ui-line); padding:20px; display:flex; flex-direction:column; gap:18px; }
+  h1 { font-size:18px; margin:0; font-weight:600; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--ui-dim); margin:0 0 8px; font-weight:600; }
+  label { display:flex; justify-content:space-between; font-size:13px; margin:6px 0 2px; }
+  label span:last-child { font-family: ui-monospace, Consolas, monospace; color:var(--ui-dim); }
+  input[type=range] { width:100%; accent-color:#e2463c; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; }
+  button.chip { background:#2a2d33; color:var(--ui-text); border:1px solid var(--ui-line); border-radius:4px; padding:6px 10px; font-size:13px; cursor:pointer; }
+  button.chip.on { border-color:#e2463c; background:#3a2624; }
+  .swatch { width:28px; height:28px; border-radius:50%; border:2px solid transparent; cursor:pointer; }
+  .swatch.on { border-color:#fff; }
+  .toggle { display:flex; align-items:center; gap:8px; font-size:13px; }
+  main { padding:24px; display:flex; flex-direction:column; gap:20px; }
+  .hint { color:var(--ui-dim); font-size:13px; }
+
+  /* Paper / chalkboard calendar */
+  .board { border-radius:8px; padding:24px; transition:background .3s; }
+  .board.paper { background:#f6f1e6; color:#2b2a27;
+    background-image: linear-gradient(#e6dfcf 1px, transparent 1px), linear-gradient(90deg, #e6dfcf 1px, transparent 1px);
+    background-size: 24px 24px; }
+  .board.chalk { background:#22262a; color:#e9e6dc;
+    background-image: radial-gradient(rgba(255,255,255,.03) 1px, transparent 1px); background-size: 6px 6px; }
+  .board header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .title { font-family: "Barlow Condensed", "Barlow Condensed", "Bahnschrift", "Arial Narrow", sans-serif; font-stretch: condensed; font-weight:700; font-size:32px; letter-spacing:.02em; text-transform:uppercase; }
+  .streak { font-family: "Barlow Condensed", "Bahnschrift", "Arial Narrow", sans-serif; font-size:16px; font-weight:600; }
+  .phase { font-size:12px; text-transform:uppercase; letter-spacing:.1em; opacity:.7; margin:16px 0 8px; font-weight:600; }
+  .grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+  .cell { position:relative; aspect-ratio: 1 / 1.05; border-radius:4px; padding:8px; cursor:pointer; user-select:none; overflow:hidden;
+    display:flex; flex-direction:column; gap:4px; transition: transform .08s; }
+  .paper .cell { background:#fffdf7; border:1.5px solid #cfc6b2; }
+  .chalk .cell { background:#2b3035; border:1.5px solid #454b52; }
+  .cell:active { transform: scale(.97); }
+  .cell.today { box-shadow: 0 0 0 2px currentColor inset; }
+  .cell.future { opacity:.55; cursor:not-allowed; }
+  .num { font-family: "Barlow Condensed", "Bahnschrift", "Arial Narrow", sans-serif; font-weight:700; font-size:22px; line-height:1; }
+  .ses { font-size:11px; line-height:1.2; display:flex; gap:4px; align-items:flex-start; }
+  .ses .tick { width:12px; flex:none; font-weight:700; }
+  .rest { opacity:.6; font-style:italic; }
+  .bonus { position:absolute; right:6px; top:6px; width:22px; height:22px; border-radius:50%; font-size:11px; font-weight:700;
+    display:none; align-items:center; justify-content:center; background:#f2c14e; color:#2b2a27; transform: rotate(-12deg); }
+  svg.ink { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+
+  .prompt { background:var(--ui-panel); border:1px solid var(--ui-line); border-radius:8px; padding:16px; }
+  .prompt pre { white-space:pre-wrap; font-family: ui-monospace, Consolas, monospace; font-size:13px; margin:0 0 12px; color:#d8d8dc; }
+  .copy { background:#e2463c; color:#fff; border:0; border-radius:4px; padding:8px 14px; cursor:pointer; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Marker cross</h1>
+    <div>
+      <h2>Presets</h2>
+      <div class="row" id="presets"></div>
+    </div>
+    <div>
+      <h2>Surface</h2>
+      <div class="row">
+        <button class="chip" data-theme="paper">Paper (light)</button>
+        <button class="chip" data-theme="chalk">Chalkboard (dark)</button>
+      </div>
+    </div>
+    <div>
+      <h2>Marker color</h2>
+      <div class="row" id="swatches"></div>
+    </div>
+    <div>
+      <h2>Stroke</h2>
+      <label><span>Duration per stroke</span><span id="durV"></span></label>
+      <input type="range" id="dur" min="80" max="500" step="10">
+      <label><span>Width</span><span id="widV"></span></label>
+      <input type="range" id="wid" min="3" max="16" step="1">
+      <label><span>Wobble (hand-drawn)</span><span id="wobV"></span></label>
+      <input type="range" id="wob" min="0" max="12" step="1">
+      <label><span>Overshoot</span><span id="ovV"></span></label>
+      <input type="range" id="ov" min="0" max="20" step="1">
+      <label><span>Gap between strokes</span><span id="gapV"></span></label>
+      <input type="range" id="gap" min="0" max="300" step="10">
+    </div>
+    <div>
+      <h2>Sensation</h2>
+      <div class="toggle"><input type="checkbox" id="snd"><label for="snd" style="margin:0">Marker sound</label></div>
+      <label><span>Squeak</span><span id="sqV"></span></label>
+      <input type="range" id="sq" min="0" max="10" step="1">
+      <div class="toggle"><input type="checkbox" id="hap"><label for="hap" style="margin:0">Haptic tick (phones)</label></div>
+      <div class="toggle"><input type="checkbox" id="rm"><label for="rm" style="margin:0">Reduced motion (instant X)</label></div>
+    </div>
+    <button class="chip" id="reset">Clear all crosses</button>
+  </aside>
+
+  <main>
+    <div class="hint">Tap a day to cross off its next session. Two-session days draw “/” then complete the X. Three+ sessions tick each one, then the X lands. Right-click / long-press to un-cross. Days after “today” are locked.</div>
+    <section class="board" id="board">
+      <header>
+        <div class="title">Insanity · Month 1</div>
+        <div class="streak" id="streak">🔥 0-day streak</div>
+      </header>
+      <div class="phase">Week 1–2 (sample; day 10 = today)</div>
+      <div class="grid" id="grid"></div>
+    </section>
+    <section class="prompt">
+      <h2>Settings for MarkerCrossControl</h2>
+      <pre id="prompt"></pre>
+      <button class="copy" id="copy">Copy</button>
+    </section>
+  </main>
+</div>
+
+<script>
+const COLORS = { "Marker red":"#d9372b", "Ink blue":"#2457c5", "Sharp black":"#1f1f1f", "Gym green":"#1d8f4e", "Highlighter":"#f4d03f", "Chalk white":"#f3efe4" };
+const DEFAULTS = { theme:"paper", color:"Marker red", dur:180, wid:9, wob:4, ov:8, gap:90, snd:true, sq:4, hap:true, rm:false };
+const PRESETS = {
+  "Classic marker": { ...DEFAULTS },
+  "Chalkboard": { ...DEFAULTS, theme:"chalk", color:"Chalk white", wid:10, wob:6, dur:220, sq:1 },
+  "Fine liner": { ...DEFAULTS, color:"Ink blue", wid:4, wob:2, ov:4, dur:140, sq:6 },
+  "Fat highlighter": { ...DEFAULTS, color:"Highlighter", wid:16, wob:3, ov:12, dur:260, sq:0 },
+  "Angry Sharpie": { ...DEFAULTS, color:"Sharp black", wid:11, wob:9, ov:16, dur:110, gap:40, sq:8 },
+};
+const state = { ...DEFAULTS };
+
+const DAYS = [
+  ["Fit Test"], ["Plyometric Cardio Circuit"], ["Cardio Power & Resistance"], ["Cardio Recovery"],
+  ["Pure Cardio", "Cardio Abs"], ["Plyometric Cardio Circuit"], [],
+  ["Cardio Power & Resistance"], ["Pure Cardio", "Cardio Abs"], ["Plyometric Cardio Circuit", "Cardio Abs", "Stretch (demo 3rd)"],
+  ["Cardio Recovery"], ["Pure Cardio", "Cardio Abs"], ["Plyometric Cardio Circuit"], [],
+];
+const TODAY = 9;
+const done = DAYS.map(() => new Set());
+
+// Deterministic per-cell randomness, like seeding by completion id in the app.
+function rng(seed) { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); }
+
+function strokePath(x1, y1, x2, y2, r) {
+  const w = state.wob, ov = state.ov;
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+  const sx = x1 - ux * ov * r() + (r() - .5) * w, sy = y1 - uy * ov * r() + (r() - .5) * w;
+  const ex = x2 + ux * ov * r() + (r() - .5) * w, ey = y2 + uy * ov * r() + (r() - .5) * w;
+  const bow = (r() - .5) * w * 3;
+  const cx = (sx + ex) / 2 - uy * bow, cy = (sy + ey) / 2 + ux * bow;
+  return `M${sx.toFixed(1)},${sy.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+}
+
+let audio;
+function squeak(ms) {
+  if (!state.snd) { return; }
+  try { audio ??= new AudioContext(); } catch { return; }
+  const t = audio.currentTime, d = ms / 1000;
+  const buf = audio.createBuffer(1, Math.ceil(audio.sampleRate * d), audio.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) { data[i] = (Math.random() * 2 - 1); }
+  const noise = audio.createBufferSource(); noise.buffer = buf;
+  const bp = audio.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(1800, t); bp.frequency.linearRampToValueAtTime(3400, t + d);
+  const g = audio.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.35, t + .02); g.gain.setValueAtTime(.3, t + d * .7); g.gain.linearRampToValueAtTime(0, t + d);
+  noise.connect(bp).connect(g).connect(audio.destination); noise.start(t); noise.stop(t + d);
+  if (state.sq > 0) {
+    const o = audio.createOscillator(), og = audio.createGain();
+    o.type = "triangle"; o.frequency.setValueAtTime(900 + Math.random() * 300, t);
+    o.frequency.linearRampToValueAtTime(1500 + Math.random() * 500, t + d);
+    og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(.012 * state.sq, t + .03); og.gain.linearRampToValueAtTime(0, t + d);
+    o.connect(og).connect(audio.destination); o.start(t); o.stop(t + d);
+  }
+}
+
+function strokesFor(i) {
+  const n = DAYS[i].length || 1, c = done[i].size;
+  if (c >= n) { return 2; }
+  return n === 2 && c === 1 ? 1 : 0;
+}
+
+function drawStroke(svg, d, animate, delay) {
+  const color = COLORS[state.color];
+  const mk = (opacity, widthMul) => {
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", color);
+    p.setAttribute("stroke-width", state.wid * widthMul); p.setAttribute("stroke-linecap", "round");
+    p.setAttribute("opacity", opacity); p.setAttribute("filter", "url(#rough)");
+    svg.appendChild(p);
+    if (animate) {
+      const L = p.getTotalLength();
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }],
+        { duration: state.dur, delay, easing: "cubic-bezier(.3,.7,.4,1)", fill: "forwards" });
+    }
+  };
+  mk(.9, 1); mk(.35, 1.35);
+  if (animate) { setTimeout(() => { squeak(state.dur); if (state.hap && navigator.vibrate) { navigator.vibrate(12); } }, delay); }
+}
+
+function renderInk(i, cell, animateFrom) {
+  let svg = cell.querySelector("svg.ink");
+  if (!svg) { svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.classList.add("ink"); cell.appendChild(svg); }
+  svg.innerHTML = `<defs><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${i}"/><feDisplacementMap in="SourceGraphic" scale="${1 + state.wob / 3}"/></filter></defs>`;
+  const { width: W, height: H } = cell.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const r = rng(i + 1), m = Math.min(W, H) * .16;
+  const s1 = strokePath(m, m, W - m, H - m, r), s2 = strokePath(W - m, m, m, H - m, r);
+  const n = strokesFor(i);
+  const anim = !state.rm && animateFrom !== undefined;
+  if (n >= 1) { drawStroke(svg, s1, anim && animateFrom < 1, 0); }
+  if (n >= 2) { drawStroke(svg, s2, anim && animateFrom < 2, animateFrom < 1 ? state.dur + state.gap : 0); }
+}
+
+function render() {
+  const board = document.getElementById("board");
+  board.className = "board " + state.theme;
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  DAYS.forEach((sessions, i) => {
+    const cell = document.createElement("div");
+    cell.className = "cell" + (i === TODAY ? " today" : "") + (i > TODAY ? " future" : "");
+    const list = sessions.length
+      ? sessions.map((s, k) => `<div class="ses"><span class="tick">${sessions.length >= 3 && done[i].has(k) ? "✓" : ""}</span><span>${s}</span></div>`).join("")
+      : `<div class="ses rest"><span class="tick"></span><span>Rest</span></div>`;
+    cell.innerHTML = `<div class="num">${i + 1}</div>${list}<div class="bonus">+1</div>`;
+    cell.onclick = () => cross(i, cell);
+    cell.oncontextmenu = e => { e.preventDefault(); done[i].clear(); render(); };
+    grid.appendChild(cell);
+    renderInk(i, cell);
+  });
+  updateStreak();
+}
+
+function cross(i, cell) {
+  if (i > TODAY) { cell.animate([{ transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "none" }], { duration: 160 }); return; }
+  const n = DAYS[i].length || 1;
+  if (done[i].size >= n) { return; }
+  const before = strokesFor(i);
+  done[i].add([...Array(n).keys()].find(k => !done[i].has(k)));
+  const sesList = cell.querySelectorAll(".ses .tick");
+  if (n >= 3) { sesList.forEach((t, k) => t.textContent = done[i].has(k) ? "✓" : ""); }
+  if (strokesFor(i) !== before) { renderInk(i, cell, before); }
+  else { squeak(70); if (state.hap && navigator.vibrate) { navigator.vibrate(8); } }
+  updateStreak();
+}
+
+function updateStreak() {
+  let s = 0;
+  for (let i = TODAY; i >= 0; i--) {
+    const rest = DAYS[i].length === 0, complete = done[i].size >= (DAYS[i].length || 1);
+    if (rest) { continue; }
+    if (complete) { s++; } else if (i < TODAY) { break; }
+  }
+  document.getElementById("streak").textContent = `🔥 ${s}-day streak`;
+}
+
+function updatePrompt() {
+  const parts = [];
+  if (state.theme !== DEFAULTS.theme) { parts.push(`default to the dark "chalkboard" surface`); }
+  if (state.color !== DEFAULTS.color) { parts.push(`default marker color ${state.color} (${COLORS[state.color]})`); }
+  if (state.dur !== DEFAULTS.dur) { parts.push(`${state.dur} ms per stroke (${state.dur < 150 ? "snappy" : state.dur > 260 ? "slow and deliberate" : "medium"})`); }
+  if (state.gap !== DEFAULTS.gap) { parts.push(`${state.gap} ms pause between the two strokes`); }
+  if (state.wid !== DEFAULTS.wid) { parts.push(`stroke width ${state.wid} (${state.wid > 11 ? "fat marker" : state.wid < 6 ? "fine pen" : "regular marker"})`); }
+  if (state.wob !== DEFAULTS.wob) { parts.push(`${state.wob > 6 ? "very wobbly, scribbly" : state.wob < 3 ? "almost straight" : "slightly wobbly"} strokes (wobble ${state.wob})`); }
+  if (state.ov !== DEFAULTS.ov) { parts.push(`stroke overshoot ${state.ov}`); }
+  if (state.snd !== DEFAULTS.snd) { parts.push(state.snd ? "marker sound on" : "no sound by default"); }
+  if (state.sq !== DEFAULTS.sq) { parts.push(`squeak level ${state.sq}/10`); }
+  if (state.hap !== DEFAULTS.hap) { parts.push(state.hap ? "haptic tick on" : "no haptics by default"); }
+  const base = "MarkerCrossControl: two hand-drawn quadratic-Bezier strokes per X, seeded by completion id, a faint wider under-stroke for ink bleed, animated via StrokeDashOffset with ease-out, marker sound + haptic tick per stroke; 2-session days draw '/' first then complete the X; 3+ sessions tick each and draw the X when all are done; reduced-motion shows the X instantly.";
+  document.getElementById("prompt").textContent = parts.length ? `${base}\nTune it to: ${parts.join("; ")}.` : `${base}\nKeep the defaults (marker red, 180 ms strokes, 90 ms gap, width 9, wobble 4, overshoot 8, sound + haptics on, paper surface).`;
+}
+
+function sync() {
+  for (const k of ["dur", "wid", "wob", "ov", "gap", "sq"]) { document.getElementById(k).value = state[k]; document.getElementById(k + "V").textContent = state[k]; }
+  for (const k of ["snd", "hap", "rm"]) { document.getElementById(k).checked = state[k]; }
+  document.querySelectorAll("[data-theme]").forEach(b => b.classList.toggle("on", b.dataset.theme === state.theme));
+  document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("on", b.dataset.c === state.color));
+}
+function updateAll() { sync(); render(); updatePrompt(); }
+
+const presets = document.getElementById("presets");
+for (const [name, p] of Object.entries(PRESETS)) {
+  const b = document.createElement("button"); b.className = "chip"; b.textContent = name;
+  b.onclick = () => { Object.assign(state, p); updateAll(); }; presets.appendChild(b);
+}
+const sw = document.getElementById("swatches");
+for (const [name, c] of Object.entries(COLORS)) {
+  const b = document.createElement("button"); b.className = "swatch"; b.style.background = c; b.title = name; b.dataset.c = name;
+  b.onclick = () => { state.color = name; updateAll(); }; sw.appendChild(b);
+}
+document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => { state.theme = b.dataset.theme; updateAll(); });
+for (const k of ["dur", "wid", "wob", "ov", "gap", "sq"]) { document.getElementById(k).oninput = e => { state[k] = +e.target.value; updateAll(); }; }
+for (const k of ["snd", "hap", "rm"]) { document.getElementById(k).onchange = e => { state[k] = e.target.checked; updateAll(); }; }
+document.getElementById("reset").onclick = () => { done.forEach(s => s.clear()); render(); };
+document.getElementById("copy").onclick = async e => { try { await navigator.clipboard.writeText(document.getElementById("prompt").textContent); e.target.textContent = "Copied!"; } catch { e.target.textContent = "Select the text above to copy"; } setTimeout(() => e.target.textContent = "Copy", 1600); };
+// Pre-cross a few past days so the board doesn't start empty.
+[0, 1, 2, 3].forEach(i => DAYS[i].forEach((_, k) => done[i].add(k)));
+done[4].add(0);
+window.addEventListener("resize", render);
+updateAll();
+</script>
+</body>
+</html>

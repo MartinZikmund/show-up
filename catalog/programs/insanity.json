@@ -1,0 +1,551 @@
+{
+  "id": "insanity",
+  "revision": 1,
+  "name": "Insanity",
+  "family": "Insanity",
+  "description": "The original 60-day Shaun T cardio program: two months of max-effort intervals with a recovery week between them and Fit Tests along the way.",
+  "heroImage": null,
+  "accentColor": "#E8590C",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2017/12/INSANITY-Workout-Calendar.pdf",
+      "confirms": "Official Beachbody 60-day calendar (SANCAL1201): all days of Month 1, Recovery Week, Month 2 including two-workout days. Base-kit workouts used (Cardio Abs / Core Cardio & Balance; Deluxe swaps ignored)."
+    },
+    {
+      "url": "https://www.bodi.com/blog/insanity-workout-calendars",
+      "confirms": "Official Bodi page hosting the calendar PDF links; describes 60-day program."
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "phases": [
+        {
+          "name": "Month 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-fit-test"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-power-resistance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-pure-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-power-resistance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-pure-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-power-resistance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-pure-cardio"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-fit-test"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-pure-cardio"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-power-resistance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-pure-cardio"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-power-resistance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-cardio-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-pure-cardio"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-plyometric-cardio-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Recovery Week",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Month 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-fit-test"
+                    },
+                    {
+                      "workoutId": "insanity-max-interval-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-cardio-conditioning"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-cardio-conditioning"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-cardio-conditioning"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-fit-test"
+                    },
+                    {
+                      "workoutId": "insanity-max-interval-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-cardio-conditioning"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-recovery"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-cardio-conditioning"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-circuit"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-core-cardio-balance"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-interval-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-cardio-conditioning"
+                    },
+                    {
+                      "workoutId": "insanity-cardio-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

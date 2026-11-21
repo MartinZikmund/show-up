@@ -1,0 +1,889 @@
+{
+  "id": "p90x",
+  "revision": 1,
+  "name": "P90X",
+  "family": "P90X",
+  "description": "The original 13-week muscle-confusion program: resistance, plyometrics, yoga and martial-arts cardio, rotated in three blocks that each end with a recovery week.",
+  "heroImage": null,
+  "accentColor": "#C8102E",
+  "verification": "community",
+  "sources": [
+    {
+      "url": "https://soreyfitness.com/fitness/p90x-workout-schedule",
+      "confirms": "Classic and Lean, every day of weeks 1-13"
+    },
+    {
+      "url": "https://www.amandaseghetti.com/?p=6936",
+      "confirms": "Classic and Lean, every day of weeks 1-13 (matches the first source on every day) (verbatim copy of the Sorey text incl. the \"Bicpes\" typo, so not an independent source)"
+    },
+    {
+      "url": "https://www.bodi.com/blog/p90x-workout-schedule",
+      "confirms": "Official structure only: three 4-week blocks (3 weeks + recovery week); tracks Classic/Lean/Doubles"
+    },
+    {
+      "url": "https://workoutscheduler.net/calendar/p90x-classic/",
+      "confirms": "Classic weeks 1-13, every day (independent of Sorey/Seghetti); Day 7 shown as X Stretch"
+    },
+    {
+      "url": "https://www.amandakjones.com/p90x-recovery-week-schedule-and-workouts.php",
+      "confirms": "Classic recovery weeks 4, 8, 13"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "phases": [
+        {
+          "name": "Phase 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Recovery Week 4",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-core-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-x-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-core-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Phase 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-shoulders-triceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-back-biceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-shoulders-triceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-back-biceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-shoulders-triceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-back-biceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Recovery Week 8",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-core-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-x-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-core-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Phase 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-shoulders-triceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-back-biceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-chest-shoulders-triceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-plyometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-back-biceps"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-legs-back"
+                    },
+                    {
+                      "workoutId": "p90x-ab-ripper-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Recovery Week 13",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-core-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-kenpo-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-x-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-core-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x-yoga-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x-x-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,551 @@
+{
+  "revision": 1,
+  "heroImage": null,
+  "verifiedOn": "2026-11-21",
+  "id": "couch-to-5k",
+  "name": "Couch to 5K",
+  "family": "Couch to 5K",
+  "description": "A free nine-week walk-to-run plan: three sessions a week with rest days between, building up to 30 minutes of non-stop running.",
+  "accentColor": "#005EB8",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://www.nhs.uk/better-health/get-active/get-running-with-couch-to-5k/couch-to-5k-running-plan/",
+      "confirms": "All nine weeks: intervals, totals, 3 runs/week, rest day between runs"
+    },
+    {
+      "url": "https://www.nhs.uk/live-well/exercise/running-and-aerobic-exercises/get-running-with-couch-to-5k/",
+      "confirms": "9 weeks, 3 runs a week, Week 1 1 min run / 1 min 30 s walk"
+    }
+  ],
+  "tracks": [
+    {
+      "id": "main",
+      "name": "Main",
+      "phases": [
+        {
+          "name": "Week 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-1-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-1-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-1-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-2-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-2-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-2-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-3-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-3-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-3-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 4",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-4-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-4-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-4-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 5",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-5-run-1"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-5-run-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-5-run-3"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 6",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-6-run-1"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-6-run-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-6-run-3"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 7",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-7-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-7-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-7-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 8",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-8-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-8-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-8-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 9",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-9-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-9-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "c25k-week-9-run"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

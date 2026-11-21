@@ -1,0 +1,522 @@
+{
+  "id": "hip-hop-abs",
+  "revision": 1,
+  "name": "Hip Hop Abs",
+  "family": "Hip Hop Abs",
+  "description": "Shaun T's dance-based ab program, run as the official eight-week schedule with cardio, ab sculpting, and from week three the Total Body Burn and Hips, Buns, and Thighs workouts.",
+  "heroImage": null,
+  "accentColor": "#FF7A00",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://images.beachbody.com/coach-office/downloads/toolkit/hha/hha_weekly_coaching_guide.pdf",
+      "confirms": "Official Team Beachbody Hip Hop Abs Challenge Group Daily Coaching Guide: Week 1-8 day-by-day workout lists (Mon-Sun)"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "challenge-8-week",
+      "name": "8-Week Challenge Group",
+      "phases": [
+        {
+          "name": "Month 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-hips-buns-and-thighs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-hips-buns-and-thighs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-hips-buns-and-thighs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Month 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-hips-buns-and-thighs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-hips-buns-and-thighs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-total-body-burn"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-ab-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "hip-hop-abs-fat-burning-cardio"
+                    },
+                    {
+                      "workoutId": "hip-hop-abs-hips-buns-and-thighs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

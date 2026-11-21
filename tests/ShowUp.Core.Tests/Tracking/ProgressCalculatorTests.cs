@@ -59,4 +59,18 @@ public class ProgressCalculatorTests
 
         act.Should().Throw<ArgumentException>();
     }
+
+    [TestMethod]
+    public void Build_OptionalSession_IsReportedAndDoesNotBlockCompletion()
+    {
+        ProgramTrack track = new(
+            "t",
+            "Track",
+            [new ProgramPhase("P", [new ScheduleWeek([new ScheduleDay([new ScheduledSession("run"), new ScheduledSession("run", null, true)])])])]);
+
+        IReadOnlyList<DayStatus> result = Build(track, (0, 0));
+
+        result[0].OptionalSessions.Should().Equal(1);
+        result[0].Progress.Should().Be(DayProgress.Complete);
+    }
 }

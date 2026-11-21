@@ -1,0 +1,313 @@
+{
+  "id": "core-de-force",
+  "revision": 1,
+  "name": "Core De Force",
+  "family": "Core De Force",
+  "description": "Joel Freeman and Jericho McMatthews' MMA-inspired 30-day program: punch-and-kick cardio rounds mixed with bodyweight strength, core finishers, and an active recovery day every week.",
+  "heroImage": null,
+  "accentColor": "#1FA5D6",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2017/12/CORE-DE-FORCE-Calendar-Workout-Schedule.pdf",
+      "confirms": "Official Beachbody 30-Day Calendar (Original), days 1-30"
+    },
+    {
+      "url": "https://www.bodi.com/blog/workout-logs-and-schedules",
+      "confirms": "Bodi blog page that links the calendar PDFs"
+    },
+    {
+      "url": "https://soreyfitness.com/wp-content/uploads/2016/07/Core-de-Force-30-Day-Calendar.pdf",
+      "confirms": "Coach copy of the same calendar, identical days (corroboration only)"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "original",
+      "name": "Original 30-Day",
+      "phases": [
+        {
+          "name": "Round 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-speed"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-dynamic-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-speed"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-power-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-shred"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-dynamic-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-active-recovery"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-shred"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-power-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-shred"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-dynamic-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-power-sculpt"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-active-recovery"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-power"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-dynamic-strength"
+                    },
+                    {
+                      "workoutId": "core-de-force-5-min-core-on-the-floor"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-power"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-power-sculpt"
+                    },
+                    {
+                      "workoutId": "core-de-force-5-min-core-on-the-floor"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-dynamic-strength"
+                    },
+                    {
+                      "workoutId": "core-de-force-5-min-core-on-the-floor"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-active-recovery"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-plyo"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-power-sculpt"
+                    },
+                    {
+                      "workoutId": "core-de-force-5-min-core-on-the-floor"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-plyo"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-dynamic-strength"
+                    },
+                    {
+                      "workoutId": "core-de-force-5-min-core-on-the-floor"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-speed"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-shred"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-active-recovery"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-power"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "core-de-force-mma-plyo"
+                    },
+                    {
+                      "workoutId": "core-de-force-core-kinetics"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

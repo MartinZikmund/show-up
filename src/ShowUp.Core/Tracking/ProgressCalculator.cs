@@ -29,7 +29,8 @@ public static class ProgressCalculator
                 }
             }
 
-            result.Add(new DayStatus(i, calendar.DateOf(i), sessionCount, done, days[i].IsRestDay(workouts)));
+            HashSet<int> optional = [.. days[i].Sessions.Select((s, idx) => (s, idx)).Where(t => t.s.Optional).Select(t => t.idx)];
+            result.Add(new DayStatus(i, calendar.DateOf(i), sessionCount, done, days[i].IsRestDay(workouts), optional));
         }
 
         return result;

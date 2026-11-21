@@ -81,4 +81,43 @@ public class DayStatusTests
     {
         Status(1, 1).IsMissed(_date.AddDays(1)).Should().BeFalse();
     }
+
+    private static DayStatus WithOptional(int sessions, int[] done, int[] optional) =>
+        new(0, _date, sessions, done.ToHashSet(), false, optional.ToHashSet());
+
+    [TestMethod]
+    public void MarkStrokes_OptionalSecondSessionUndone_IsTwo()
+    {
+        DayStatus status = WithOptional(2, [0], [1]);
+
+        status.MarkStrokes.Should().Be(2);
+        status.Progress.Should().Be(DayProgress.Complete);
+    }
+
+    [TestMethod]
+    public void Progress_OnlyOptionalDone_IsEmpty()
+    {
+        DayStatus status = WithOptional(2, [1], [1]);
+
+        status.Progress.Should().Be(DayProgress.Empty);
+        status.MarkStrokes.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void MarkStrokes_TwoRequiredOneOptionalOneRequiredDone_IsOne()
+    {
+        DayStatus status = WithOptional(3, [0], [2]);
+
+        status.MarkStrokes.Should().Be(1);
+        status.Progress.Should().Be(DayProgress.Partial);
+        status.ShowsSessionTicks.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void IsMissed_AllSessionsOptional_IsFalse()
+    {
+        DayStatus status = WithOptional(1, [], [0]);
+
+        status.IsMissed(_date.AddDays(1)).Should().BeFalse();
+    }
 }

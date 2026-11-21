@@ -1,0 +1,431 @@
+{
+  "id": "21-day-fix",
+  "revision": 1,
+  "name": "21 Day Fix",
+  "family": "21 Day Fix",
+  "description": "Three weeks of a different 30-minute workout every day, paired with a portion-container eating plan. The same seven-day rotation repeats each week, with an optional doubles week at the end.",
+  "heroImage": null,
+  "accentColor": "#2E9E6B",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bod-cms-assets.prod.cd.beachbodyondemand.com/bod-cms/wp-content/uploads/2017/03/21D_Calendar.pdf",
+      "confirms": "Official Beachbody 'At a Glance' calendar: weekly rotation Mon-Sun, Lower Fix/Barre Legs and Pilates Fix/Flat Abs Fix swaps, doubles option Days 15-21 incl. 10-Minute Fix for Abs on Day 17"
+    },
+    {
+      "url": "https://d2rxohj08n82d5.cloudfront.net/wp-content/uploads/2017/06/21D_StartHere06062017.pdf",
+      "confirms": "Official Start Here guide: Day 1-21 calendar (same 7-day rotation x3) and doubles table for Days 15-21"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "standard",
+      "name": "Standard",
+      "phases": [
+        {
+          "name": "Week 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-lower-fix",
+                      "alternates": [
+                        "21-day-fix-barre-legs"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-pilates-fix",
+                      "alternates": [
+                        "21-day-fix-flat-abs-fix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-dirty-30"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-yoga-fix"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-lower-fix",
+                      "alternates": [
+                        "21-day-fix-barre-legs"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-pilates-fix",
+                      "alternates": [
+                        "21-day-fix-flat-abs-fix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-dirty-30"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-yoga-fix"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-lower-fix",
+                      "alternates": [
+                        "21-day-fix-barre-legs"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-pilates-fix",
+                      "alternates": [
+                        "21-day-fix-flat-abs-fix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-dirty-30"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-yoga-fix"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "doubles",
+      "name": "With Doubles (Days 15-21)",
+      "phases": [
+        {
+          "name": "Week 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-lower-fix",
+                      "alternates": [
+                        "21-day-fix-barre-legs"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-pilates-fix",
+                      "alternates": [
+                        "21-day-fix-flat-abs-fix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-dirty-30"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-yoga-fix"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-lower-fix",
+                      "alternates": [
+                        "21-day-fix-barre-legs"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-pilates-fix",
+                      "alternates": [
+                        "21-day-fix-flat-abs-fix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-dirty-30"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-yoga-fix"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    },
+                    {
+                      "workoutId": "21-day-fix-pilates-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    },
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-lower-fix"
+                    },
+                    {
+                      "workoutId": "21-day-fix-10-minute-fix-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-pilates-fix"
+                    },
+                    {
+                      "workoutId": "21-day-fix-total-body-cardio-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-cardio-fix"
+                    },
+                    {
+                      "workoutId": "21-day-fix-upper-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-dirty-30"
+                    },
+                    {
+                      "workoutId": "21-day-fix-pilates-fix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-yoga-fix"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

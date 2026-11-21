@@ -1,0 +1,3535 @@
+{
+  "id": "p90x3",
+  "revision": 1,
+  "name": "P90X3",
+  "family": "P90X",
+  "description": "Thirty-minute workouts in three 4-week blocks plus a Victory Week, with an optional Elite block of complex training after.",
+  "heroImage": null,
+  "accentColor": "#F28C28",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://www.bodi.com/blog/p90x-workout-schedule",
+      "confirms": "Official BODi page linking the P90X3 calendar PDF; tracks Classic/Lean/Mass/Doubles; 30-minute workouts"
+    },
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2024/11/P90X3-workout-schedule-pdf.pdf",
+      "confirms": "Official calendar: Classic grid plus per-track day lists for Classic, Lean, Mass, Doubles and the Elite block (Classic/Lean)"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "phases": [
+        {
+          "name": "Block 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 4",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 8",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge",
+                      "alternates": [
+                        "p90x3-complex-upper"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics",
+                      "alternates": [
+                        "p90x3-complex-lower"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge",
+                      "alternates": [
+                        "p90x3-complex-upper"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics",
+                      "alternates": [
+                        "p90x3-complex-lower"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Victory Week",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lean",
+      "name": "Lean",
+      "phases": [
+        {
+          "name": "Block 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 4",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 8",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower",
+                      "alternates": [
+                        "p90x3-complex-lower"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper",
+                      "alternates": [
+                        "p90x3-complex-upper"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower",
+                      "alternates": [
+                        "p90x3-complex-lower"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper",
+                      "alternates": [
+                        "p90x3-complex-upper"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Victory Week",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mass",
+      "name": "Mass",
+      "phases": [
+        {
+          "name": "Block 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 4",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 8",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Victory Week",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "doubles",
+      "name": "Doubles",
+      "phases": [
+        {
+          "name": "Block 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    },
+                    {
+                      "workoutId": "p90x3-cold-start"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    },
+                    {
+                      "workoutId": "p90x3-cold-start"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    },
+                    {
+                      "workoutId": "p90x3-cold-start"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    },
+                    {
+                      "workoutId": "p90x3-cold-start"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics"
+                    },
+                    {
+                      "workoutId": "p90x3-cold-start"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge"
+                    },
+                    {
+                      "workoutId": "p90x3-cold-start"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-warrior"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 4",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    },
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    },
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    },
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-incinerator"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Transition Week 8",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    },
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge",
+                      "alternates": [
+                        "p90x3-complex-upper"
+                      ]
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    },
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics",
+                      "alternates": [
+                        "p90x3-complex-lower"
+                      ]
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    },
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    },
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-mmx"
+                    },
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-the-challenge",
+                      "alternates": [
+                        "p90x3-complex-upper"
+                      ]
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    },
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-total-synergistics",
+                      "alternates": [
+                        "p90x3-complex-lower"
+                      ]
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-decelerator"
+                    },
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    },
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-mmx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-triometrics"
+                    },
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    },
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-eccentric-lower"
+                    },
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Victory Week",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-accelerator"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elite",
+      "name": "Elite (Classic / Lean)",
+      "phases": [
+        {
+          "name": "Elite Block",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-upper"
+                    },
+                    {
+                      "workoutId": "p90x3-x3-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-complex-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x3-dynamix"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Elite Week",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-agility-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-x3-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-cvx"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-pilates-x"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-isometrix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-dynamix"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x3-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
