@@ -163,6 +163,12 @@ public sealed class SqliteTrackingRepository(
 
     public async Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        if (!CrossingPolicy.CanCross(date, Today))
+        {
+            throw new ArgumentOutOfRangeException(nameof(date), date, "A bonus workout can't be logged for a future day.");
+        }
+
         var connection = await db.GetConnectionAsync();
         var entity = Stamp(new BonusWorkoutEntity
         {
