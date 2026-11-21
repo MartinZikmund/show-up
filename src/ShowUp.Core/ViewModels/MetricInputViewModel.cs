@@ -25,7 +25,6 @@ public sealed partial class MetricInputViewModel : ObservableObject
             MetricUnit.Reps => localizer["MetricUnitReps"],
             MetricUnit.Count => localizer["MetricUnitCount"],
             MetricUnit.Seconds => localizer["MetricUnitSeconds"],
-            MetricUnit.Duration => localizer["MetricUnitDuration"],
             MetricUnit.Weight => localizer[usesMetricSystem ? "MetricUnitKg" : "MetricUnitLb"],
             MetricUnit.Distance => localizer[usesMetricSystem ? "MetricUnitKm" : "MetricUnitMi"],
             _ => "",

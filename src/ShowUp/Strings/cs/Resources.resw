@@ -655,9 +655,6 @@
   <data name="MetricUnitSeconds" xml:space="preserve">
     <value>s</value>
   </data>
-  <data name="MetricUnitDuration" xml:space="preserve">
-    <value>mm:ss</value>
-  </data>
   <data name="MetricUnitKg" xml:space="preserve">
     <value>kg</value>
   </data>
