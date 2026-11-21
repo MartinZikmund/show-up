@@ -104,6 +104,32 @@ public sealed class ActiveEnrollmentServiceTests
     }
 
     [TestMethod]
+    public async Task ReplaceAsync_Succeeds_SwitchesTheActiveEnrollment()
+    {
+        await _repository.EnrollAsync("p", 1, "t", _today);
+        var program = (await _catalog.GetProgramAsync("p", 2))!;
+
+        var replaced = await _service.ReplaceAsync(EnrollmentEndReason.Abandoned, program, program.Tracks[0], _today);
+
+        replaced.Program.Revision.Should().Be(2);
+        (await _service.GetAsync())!.Enrollment.Id.Should().Be(replaced.Enrollment.Id);
+    }
+
+    [TestMethod]
+    public async Task ReplaceAsync_EnrollFails_OldEnrollmentStaysActive()
+    {
+        await _repository.EnrollAsync("p", 1, "t", _today);
+        var oldId = (await _service.GetAsync())!.Enrollment.Id;
+        var program = (await _catalog.GetProgramAsync("p", 2))!;
+        _repository.FailEnroll = true;
+
+        Func<Task> act = () => _service.ReplaceAsync(EnrollmentEndReason.Abandoned, program, program.Tracks[0], _today);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        (await _service.GetAsync())!.Enrollment.Id.Should().Be(oldId);
+    }
+
+    [TestMethod]
     public async Task EndAsync_ActiveEnrollment_LeavesNoActiveEnrollment()
     {
         await _repository.EnrollAsync("p", 1, "t", _today);
