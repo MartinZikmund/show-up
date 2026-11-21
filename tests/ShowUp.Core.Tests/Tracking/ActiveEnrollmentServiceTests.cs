@@ -42,6 +42,29 @@ public sealed class ActiveEnrollmentServiceTests
     }
 
     [TestMethod]
+    public async Task GetAll_RepositoryWrittenBehindItsBack_IsStaleUntilInvalidated()
+    {
+        (await _service.GetAllAsync()).Should().BeEmpty();
+        await _repository.EnrollAsync("p", 1, "t", _today);
+
+        (await _service.GetAllAsync()).Should().BeEmpty("the snapshot is cached");
+        _service.Invalidate();
+
+        (await _service.GetAllAsync()).Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task DataChanged_DropsTheSnapshot()
+    {
+        await _service.GetAllAsync();
+        await _repository.EnrollAsync("p", 1, "t", _today);
+
+        _messenger.Send(new DataChangedMessage());
+
+        (await _service.GetAllAsync()).Should().ContainSingle();
+    }
+
+    [TestMethod]
     public async Task GetSelected_PinnedRevision_ResolvesThatRevision()
     {
         await _repository.EnrollAsync("p", 1, "t", _today);
