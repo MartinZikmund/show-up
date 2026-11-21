@@ -165,6 +165,190 @@ public class ProStorageRepositoriesTests : StorageTestBase
         (await CreateSettings().GetAsync("marker")).Should().Be("merged");
     }
 
+    [TestMethod]
+    public async Task CustomPrograms_TwoDevicesOffline_ProduceDistinctRevisions()
+    {
+        var phone = CreateCustomPrograms();
+        var (id, shared) = await phone.SaveNewRevisionAsync("base");
+        Device.DeviceId = "laptop";
+        Time.Advance(TimeSpan.FromSeconds(30));
+        var (_, laptopRevision) = await phone.SaveNewRevisionAsync("laptop edit", id);
+        Device.DeviceId = "phone";
+        Time.Advance(TimeSpan.FromSeconds(30));
+
+        var (_, phoneRevision) = await phone.SaveNewRevisionAsync("phone edit", id);
+
+        new[] { shared, laptopRevision, phoneRevision }.Should().OnlyHaveUniqueItems().And.BeInAscendingOrder();
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_PinnedOldRevision_ResolvesAfterOtherDevicesRevisionArrives()
+    {
+        var programs = CreateCustomPrograms();
+        var (id, pinned) = await programs.SaveNewRevisionAsync("v1");
+        var connection = await Db.GetConnectionAsync();
+        await connection.InsertAsync(Program("c:" + id, pinned + 500, "from the laptop", Time.GetUtcNow().AddMinutes(5)));
+
+        (await programs.GetAsync(id, pinned))!.ProgramJson.Should().Be("v1");
+        (await programs.GetAsync(id))!.ProgramJson.Should().Be("from the laptop");
+    }
+
+    [TestMethod]
+    public async Task Settings_TieOnUpdatedAt_HigherIdWinsOnEveryDevice()
+    {
+        var connection = await Db.GetConnectionAsync();
+        var at = Time.GetUtcNow();
+        var low = Setting("low", at);
+        low.Id = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var high = Setting("high", at);
+        high.Id = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
+        await connection.InsertAsync(high);
+        await connection.InsertAsync(low);
+
+        (await CreateSettings().GetAsync("marker")).Should().Be("high");
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_TieOnUpdatedAt_HigherIdWins()
+    {
+        var connection = await Db.GetConnectionAsync();
+        var at = Time.GetUtcNow();
+        var low = Program("c:custom-x", 1, "low", at);
+        low.Id = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var high = Program("c:custom-x", 1, "high", at);
+        high.Id = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
+        await connection.InsertAsync(low);
+        await connection.InsertAsync(high);
+
+        (await CreateCustomPrograms().GetAsync("custom-x", 1))!.ProgramJson.Should().Be("high");
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_Deleted_StaysHiddenWhenOlderRevisionSyncsIn()
+    {
+        var programs = CreateCustomPrograms();
+        var (id, first) = await programs.SaveNewRevisionAsync("a");
+        Time.Advance(TimeSpan.FromMinutes(1));
+        await programs.DeleteAsync(id);
+        var connection = await Db.GetConnectionAsync();
+        await connection.InsertAsync(Program("c:" + id, first + 5, "late arrival", Time.GetUtcNow().AddSeconds(-30)));
+
+        (await programs.GetAllAsync()).Should().BeEmpty();
+        (await programs.GetAsync(id)).Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_Deleted_RevisionSavedAfterTheMarkerIsVisible()
+    {
+        var programs = CreateCustomPrograms();
+        var (id, first) = await programs.SaveNewRevisionAsync("a");
+        await programs.DeleteAsync(id);
+        var connection = await Db.GetConnectionAsync();
+        await connection.InsertAsync(Program("c:" + id, first + 5, "newer", Time.GetUtcNow().AddMinutes(1)));
+
+        (await programs.GetAsync(id))!.ProgramJson.Should().Be("newer");
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_SaveToDeletedId_Throws()
+    {
+        var programs = CreateCustomPrograms();
+        var (id, _) = await programs.SaveNewRevisionAsync("a");
+        await programs.DeleteAsync(id);
+
+        Func<Task> act = () => programs.SaveNewRevisionAsync("again", id);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_GetAll_OrdersByCreationAcrossPrograms()
+    {
+        var programs = CreateCustomPrograms();
+        var (first, _) = await programs.SaveNewRevisionAsync("one");
+        Time.Advance(TimeSpan.FromMinutes(1));
+        var (second, _) = await programs.SaveNewRevisionAsync("two");
+        Time.Advance(TimeSpan.FromMinutes(1));
+        await programs.SaveNewRevisionAsync("one v2", first);
+
+        (await programs.GetAllAsync()).Select(p => p.ProgramId).Should().Equal(first, second);
+    }
+
+    [TestMethod]
+    public void CustomProgramEntity_ProgramId_IsNullForMalformedKey()
+    {
+        new CustomProgramEntity { SubjectKey = "x:custom-1" }.ProgramId.Should().BeNull();
+        new CustomProgramEntity { SubjectKey = "c:custom-1" }.ProgramId.Should().Be("custom-1");
+    }
+
+    [TestMethod]
+    [DataRow(-1, 1)]
+    [DataRow(1440, 1)]
+    [DataRow(480, 0)]
+    [DataRow(480, 128)]
+    public async Task Reminders_OutOfRange_Throws(int minutes, int mask)
+    {
+        var reminders = CreateReminders();
+        var existing = await reminders.AddAsync(480, 1);
+
+        Func<Task> add = () => reminders.AddAsync(minutes, mask);
+        Func<Task> update = () => reminders.UpdateAsync(existing.Id, minutes, mask);
+
+        await add.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await update.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_UnreadableDeleteMarker_HidesProgramAndRefusesSaves()
+    {
+        var programs = CreateCustomPrograms();
+        var (id, _) = await programs.SaveNewRevisionAsync("a");
+        await CreateSettings().SetAsync("custom-deleted:" + id, "garbage");
+
+        (await programs.GetAllAsync()).Should().BeEmpty();
+        (await programs.GetAsync(id)).Should().BeNull();
+        Func<Task> act = () => programs.SaveNewRevisionAsync("again", id);
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_DeleteUnknownId_WritesNoMarker()
+    {
+        await CreateCustomPrograms().DeleteAsync("custom-nope");
+
+        (await CreateSettings().GetAsync("custom-deleted:custom-nope")).Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task CustomPrograms_Delete_LeavesOtherProgramsVisible()
+    {
+        var programs = CreateCustomPrograms();
+        var (gone, _) = await programs.SaveNewRevisionAsync("a");
+        var (kept, _) = await programs.SaveNewRevisionAsync("b");
+        Time.Advance(TimeSpan.FromMinutes(1));
+
+        await programs.DeleteAsync(gone);
+
+        (await programs.GetAllAsync()).Select(p => p.ProgramId).Should().Equal(kept);
+    }
+
+    [TestMethod]
+    public async Task Settings_GetByPrefix_ReturnsNewestPerKeyForCurrentUser()
+    {
+        var settings = CreateSettings();
+        await settings.SetAsync("p:a", "1");
+        await settings.SetAsync("p:b", "2");
+        await settings.SetAsync("other", "3");
+        await settings.SetAsync("p:a", "4");
+        User.CurrentUserId = "someone-else";
+        await settings.SetAsync("p:c", "5");
+        User.CurrentUserId = null;
+
+        var result = await settings.GetByPrefixAsync("p:");
+
+        result.Should().BeEquivalentTo(new Dictionary<string, string> { ["p:a"] = "4", ["p:b"] = "2" });
+    }
+
     private int Stamp() => (int)(Time.GetUtcNow() - new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds;
 
     private CustomProgramEntity Program(string key, int revision, string json, DateTimeOffset updatedAt) => new()
