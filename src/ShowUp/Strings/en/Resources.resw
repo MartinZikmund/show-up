@@ -241,15 +241,6 @@
   <data name="CrossMomentName" xml:space="preserve">
     <value>Workout crossed off</value>
   </data>
-  <data name="DebugCrossMoment" xml:space="preserve">
-    <value>Preview cross moment</value>
-  </data>
-  <data name="DebugMarkerSample" xml:space="preserve">
-    <value>Marker sample: tap to cross</value>
-  </data>
-  <data name="DebugSlowMotion" xml:space="preserve">
-    <value>Slow motion (25&#215;)</value>
-  </data>
   <data name="CrossOffStyle" xml:space="preserve">
     <value>Cross-off style</value>
   </data>
@@ -285,9 +276,6 @@
   </data>
   <data name="DrawDone" xml:space="preserve">
     <value>Done</value>
-  </data>
-  <data name="DebugDrawMoment" xml:space="preserve">
-    <value>Preview draw it yourself</value>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>

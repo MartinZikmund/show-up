@@ -241,15 +241,6 @@
   <data name="CrossMomentName" xml:space="preserve">
     <value>Tr&#233;nink od&#353;krtnut</value>
   </data>
-  <data name="DebugCrossMoment" xml:space="preserve">
-    <value>N&#225;hled velk&#233;ho od&#353;krtnut&#237;</value>
-  </data>
-  <data name="DebugMarkerSample" xml:space="preserve">
-    <value>Uk&#225;zka fixy: klepnut&#237;m od&#353;krtn&#283;te</value>
-  </data>
-  <data name="DebugSlowMotion" xml:space="preserve">
-    <value>Zpomalen&#237; (25&#215;)</value>
-  </data>
   <data name="CrossOffStyle" xml:space="preserve">
     <value>Zp&#367;sob od&#353;krtnut&#237;</value>
   </data>
@@ -285,9 +276,6 @@
   </data>
   <data name="DrawDone" xml:space="preserve">
     <value>Hotovo</value>
-  </data>
-  <data name="DebugDrawMoment" xml:space="preserve">
-    <value>N&#225;hled kreslen&#237; vlastn&#237; rukou</value>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>Zru&#353;it</value>

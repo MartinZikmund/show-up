@@ -22,21 +22,8 @@ namespace ShowUp.Controls;
 [TemplatePart(Name = InkPartName, Type = typeof(InkView))]
 public sealed partial class MarkerCrossControl : Control
 {
-    private static readonly TimeSpan BaseStrokeDuration = TimeSpan.FromMilliseconds(180);
-    private static readonly TimeSpan BaseStrokeGap = TimeSpan.FromMilliseconds(90);
-
-#if DEBUG
-    /// <summary>Slow motion for eyeballing and capturing frames (debug tools on the Today page).</summary>
-    public static double DebugTimeScale { get; set; } = 1;
-
-    private static TimeSpan StrokeDuration => BaseStrokeDuration * DebugTimeScale;
-
-    private static TimeSpan StrokeGap => BaseStrokeGap * DebugTimeScale;
-#else
-    private static TimeSpan StrokeDuration => BaseStrokeDuration;
-
-    private static TimeSpan StrokeGap => BaseStrokeGap;
-#endif
+    private static readonly TimeSpan StrokeDuration = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan StrokeGap = TimeSpan.FromMilliseconds(90);
 
     private const string FirstPartName = "PART_First";
     private const string FirstUnderPartName = "PART_FirstUnder";
