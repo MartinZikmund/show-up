@@ -179,6 +179,36 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task GetCompletions_DuplicateRows_KeepsEarliestDeterministically()
+    {
+        var (repo, e) = await EnrolledAsync();
+        Guid low = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid high = Guid.Parse("ffffffff-0000-0000-0000-000000000000");
+        Guid later = Guid.Parse("00000000-0000-0000-0000-000000000000");
+        await InsertCompletionAsync(e.Id, "a", high, Time.GetUtcNow());
+        await InsertCompletionAsync(e.Id, "b", low, Time.GetUtcNow());
+        await InsertCompletionAsync(e.Id, "c", later, Time.GetUtcNow().AddMinutes(5));
+
+        var completions = await repo.GetCompletionsAsync(e.Id);
+
+        completions.Should().ContainSingle().Which.CompletionId.Should().Be(low);
+    }
+
+    [TestMethod]
+    public async Task GetCompletions_ReturnsCompletedOnDate()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 3, 1, _today.AddDays(-2));
+
+        var completions = await repo.GetCompletionsAsync(e.Id);
+
+        completions.Should().ContainSingle();
+        completions[0].DayIndex.Should().Be(3);
+        completions[0].SessionIndex.Should().Be(1);
+        completions[0].CompletedOn.Should().Be(_today);
+    }
+
+    [TestMethod]
     public async Task Writes_SetUpdatedAtAndDeviceId()
     {
         Device.DeviceId = "dev-x";
@@ -198,17 +228,20 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
         row.EndedAt.Should().Be(Time.GetUtcNow());
     }
 
-    private async Task InsertCompletionAsync(Guid enrollmentId, string deviceId)
+    private Task InsertCompletionAsync(Guid enrollmentId, string deviceId) =>
+        InsertCompletionAsync(enrollmentId, deviceId, Guid.NewGuid(), Time.GetUtcNow());
+
+    private async Task InsertCompletionAsync(Guid enrollmentId, string deviceId, Guid id, DateTimeOffset completedAt)
     {
         var connection = await Db.GetConnectionAsync();
         await connection.InsertAsync(new CompletionEntity
         {
-            Id = Guid.NewGuid(),
+            Id = id,
             EnrollmentId = enrollmentId,
             DayIndex = 1,
             SessionIndex = 0,
             CompletedOnDayNumber = _today.DayNumber,
-            CompletedAt = Time.GetUtcNow(),
+            CompletedAt = completedAt,
             CreatedAt = Time.GetUtcNow(),
             UpdatedAt = Time.GetUtcNow(),
             DeviceId = deviceId,
