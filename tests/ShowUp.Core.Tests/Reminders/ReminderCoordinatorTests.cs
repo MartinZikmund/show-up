@@ -132,6 +132,38 @@ public sealed class ReminderCoordinatorTests
     }
 
     [TestMethod]
+    public async Task Replan_LapseSeenOnlyInTheCache_KeepsEveryReminderOn()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        var second = await _repository.AddAsync(9 * 60, 127);
+        _entitlements.IsPro = false;
+        _entitlements.IsConfirmed = false;
+
+        await _coordinator.StartAsync();
+
+        (await _repository.ListAsync()).Single(r => r.Id == second.Id).Enabled.Should().BeTrue("the store never answered, so the lapse isn't proven");
+        _repository.SetEnabledCalls.Should().Be(0);
+    }
+
+    [TestMethod]
+    public async Task Replan_LapseTheStoreConfirmsAfterRefresh_Disables()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        var second = await _repository.AddAsync(9 * 60, 127);
+        _entitlements.IsPro = false;
+        _entitlements.IsConfirmed = false;
+        _entitlements.OnRefresh = () =>
+        {
+            _entitlements.IsConfirmed = true;
+            return Task.CompletedTask;
+        };
+
+        await _coordinator.StartAsync();
+
+        (await _repository.ListAsync()).Single(r => r.Id == second.Id).Enabled.Should().BeFalse();
+    }
+
+    [TestMethod]
     public async Task Replan_PaidAgain_DoesNotSwitchDisabledOnesBackOn()
     {
         var first = await _repository.AddAsync(8 * 60, 127);
