@@ -5,7 +5,7 @@ namespace ShowUp.Core.Storage;
 // Each version is frozen DDL, never the live entity classes, so later versions can ALTER safely.
 public static class Migrations
 {
-    public const int LatestVersion = 3;
+    public const int LatestVersion = 4;
 
     /// <param name="targetVersion">Stop after this version (tests build older schemas with it).</param>
     public static async Task ApplyAsync(SQLiteAsyncConnection connection, int targetVersion = LatestVersion)
@@ -25,6 +25,11 @@ public static class Migrations
         if (version < 3 && targetVersion >= 3)
         {
             await connection.RunInTransactionAsync(V3);
+        }
+
+        if (version < 4 && targetVersion >= 4)
+        {
+            await connection.RunInTransactionAsync(V4);
         }
     }
 
@@ -143,5 +148,53 @@ public static class Migrations
         c.Execute("""CREATE INDEX IF NOT EXISTS "IX_MetricEntry_Bonus" ON "MetricEntryEntity" ("BonusWorkoutId")""");
         c.Execute("""CREATE INDEX IF NOT EXISTS "IX_MetricEntry_Subject" ON "MetricEntryEntity" ("SubjectKey", "MetricId")""");
         c.Execute("PRAGMA user_version = 3");
+    }
+
+    // Reminders, user-built programs (one row per revision) and settings that sync.
+    private static void V4(SQLiteConnection c)
+    {
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "ReminderEntity" (
+                "Id" varchar(36) primary key not null,
+                "UserId" varchar,
+                "CreatedAt" bigint,
+                "UpdatedAt" bigint,
+                "DeletedAt" bigint,
+                "DeviceId" varchar,
+                "MinutesOfDay" integer,
+                "DaysMask" integer,
+                "Enabled" integer
+            )
+            """);
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_Reminder_User" ON "ReminderEntity" ("UserId")""");
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "CustomProgramEntity" (
+                "Id" varchar(36) primary key not null,
+                "UserId" varchar,
+                "CreatedAt" bigint,
+                "UpdatedAt" bigint,
+                "DeletedAt" bigint,
+                "DeviceId" varchar,
+                "SubjectKey" varchar,
+                "Revision" integer,
+                "ProgramJson" varchar
+            )
+            """);
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_CustomProgram_Subject" ON "CustomProgramEntity" ("SubjectKey", "Revision")""");
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "SyncedSettingEntity" (
+                "Id" varchar(36) primary key not null,
+                "UserId" varchar,
+                "CreatedAt" bigint,
+                "UpdatedAt" bigint,
+                "DeletedAt" bigint,
+                "DeviceId" varchar,
+                "SubjectKey" varchar,
+                "Key" varchar,
+                "Value" varchar
+            )
+            """);
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_SyncedSetting_Subject" ON "SyncedSettingEntity" ("SubjectKey")""");
+        c.Execute("PRAGMA user_version = 4");
     }
 }

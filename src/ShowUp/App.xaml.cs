@@ -135,6 +135,9 @@ public partial class App : Application, IApplication
         services.AddSingleton<ITrackingRepository, SqliteTrackingRepository>();
         services.AddSingleton<INotesRepository, SqliteNotesRepository>();
         services.AddSingleton<IMetricsRepository, SqliteMetricsRepository>();
+        services.AddSingleton<IReminderRepository, SqliteReminderRepository>();
+        services.AddSingleton<ICustomProgramRepository, SqliteCustomProgramRepository>();
+        services.AddSingleton<ISyncedSettings, SqliteSyncedSettings>();
         services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
