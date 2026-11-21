@@ -132,6 +132,33 @@ public sealed class AccountServiceTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task SignIn_AgainWithSignedOutRows_OffersThemAgain()
+    {
+        await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+        await _account.SignOutAsync();
+        await _tracking.LogBonusAsync(null, "Walk", new DateOnly(2026, 12, 2), 20);
+
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+
+        _offers.Should().HaveCount(2);
+        _offers[1].Should().Be(new AnonymousProgress(0, 0, 1), "only what was made since signing out");
+        (await AllRowsAsync<BonusWorkoutEntity>()).Should().OnlyContain(b => b.UserId == FakeSupabaseAuth.UserIdOf(Alice));
+    }
+
+    [TestMethod]
+    public async Task SignIn_AgainWithNothingSignedOut_DoesNotAsk()
+    {
+        await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+        await _account.SignOutAsync();
+
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+
+        _offers.Should().ContainSingle();
+    }
+
+    [TestMethod]
     public async Task SignIn_DifferentAccount_DoesNotUploadOthersRows()
     {
         var alices = await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
@@ -165,6 +192,41 @@ public sealed class AccountServiceTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task Cross_WhileTheStoreTakesTheNewUser_UsesTheNewScope()
+    {
+        var signedOut = await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+        (await _enrollments.GetAllAsync()).Should().ContainSingle();
+        TaskCompletionSource store = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _entitlements.SetUserGate = store.Task;
+
+        var signIn = _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: false));
+        await WaitUntilAsync(() => _entitlements.Users.Count == 1);
+
+        (await _enrollments.GetAllAsync()).Should().BeEmpty("the cache dropped together with the scope, not after the store answered");
+        var cross = () => _enrollments.CrossAsync(signedOut.Id, 0, 0);
+        await cross.Should().ThrowAsync<InvalidOperationException>("the signed-out program isn't Alice's");
+        store.SetResult();
+        await signIn;
+        (await _tracking.GetCompletedSessionsAsync(signedOut.Id)).Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task SignIn_StoreNeverTakesTheUser_CarriesOnAfterTheTimeout()
+    {
+        _entitlements.SetUserGate = new TaskCompletionSource().Task;
+        var changes = 0;
+        _messenger.Register<DataChangedMessage>(this, (_, _) => changes++);
+
+        var signIn = _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+        await WaitUntilAsync(() => _entitlements.Users.Count == 1);
+        Time.Advance(AccountService.StoreUserTimeout + TimeSpan.FromSeconds(1));
+        await signIn.WaitAsync(TimeSpan.FromSeconds(5));
+
+        changes.Should().Be(1);
+        _scope.CurrentUserId.Should().Be(FakeSupabaseAuth.UserIdOf(Alice));
+    }
+
+    [TestMethod]
     public async Task SignOut_ReturnsToAnonymousAndKeepsEveryRow()
     {
         await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
@@ -182,6 +244,18 @@ public sealed class AccountServiceTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task SignOut_PendingPersonalizationWrite_LandsInTheAccountThatMadeIt()
+    {
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+        _personalization.MarkerColor = MarkerColor.Blue;
+
+        await _account.SignOutAsync();
+
+        (await AllRowsAsync<SyncedSettingEntity>()).Should().ContainSingle(s => s.Key == "MarkerColor")
+            .Which.UserId.Should().Be(FakeSupabaseAuth.UserIdOf(Alice));
+    }
+
+    [TestMethod]
     public async Task SessionRevokedByTheServer_SwitchesToAnonymous()
     {
         await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
@@ -193,6 +267,17 @@ public sealed class AccountServiceTests : StorageTestBase
         _scope.CurrentUserId.Should().BeNull();
         _entitlements.Users.Should().EndWith((string?)null);
         changed.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task SessionRevokedDuringSignIn_IsAppliedAfterwards()
+    {
+        await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: false, meanwhile: _auth.ForceSignOut));
+
+        _account.Current.Should().BeNull();
+        _scope.CurrentUserId.Should().BeNull("the revocation arrived mid sign-in and must not be lost");
     }
 
     [TestMethod]
@@ -222,6 +307,21 @@ public sealed class AccountServiceTests : StorageTestBase
         _scope.CurrentUserId.Should().BeNull();
         await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
         _offers.Should().HaveCount(2);
+    }
+
+    [TestMethod]
+    public async Task SignIn_ClaimAndUndoBothFail_ReportsTheClaimFailure()
+    {
+        _auth.SignOutError = new HttpRequestException("offline");
+        var account = Create(new ThrowingClaim());
+        TaskCompletionSource reloaded = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _messenger.Register<PersonalizationReloadedMessage>(this, (_, _) => reloaded.TrySetResult());
+
+        var act = () => account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("database is locked");
+        _scope.CurrentUserId.Should().Be(FakeSupabaseAuth.UserIdOf(Alice), "the session survived, so the scope follows it");
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     private static async Task WaitUntilAsync(Func<bool> condition)

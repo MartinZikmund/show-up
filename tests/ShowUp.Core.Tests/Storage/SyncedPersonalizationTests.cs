@@ -164,6 +164,25 @@ public sealed class SyncedPersonalizationTests
         painted.Should().Be(0);
     }
 
+    [TestMethod]
+    public async Task DataChanged_AfterAnAccountSwitch_FallsBackToTheDefaultsNotThePreviousAccount()
+    {
+        UserScope scope = new();
+        SyncedPersonalization personalization = new(_settings, _legacy, _messenger, NullLogger<SyncedPersonalization>.Instance, scope);
+        await personalization.InitializeAsync();
+        personalization.MarkerColor = MarkerColor.Blue;
+        await personalization.FlushAsync();
+        scope.Set("bob");
+        _settings.Values.Clear();
+        var reloaded = Reloaded();
+
+        _messenger.Send(new DataChangedMessage());
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        personalization.MarkerColor.Should().Be(MarkerColor.Auto, "Alice's blue is not Bob's");
+        _settings.Values.Should().BeEmpty();
+    }
+
     private TaskCompletionSource Reloaded()
     {
         TaskCompletionSource done = new(TaskCreationOptions.RunContinuationsAsynchronously);

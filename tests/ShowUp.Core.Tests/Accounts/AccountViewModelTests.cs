@@ -166,6 +166,34 @@ public sealed class AccountViewModelTests
     }
 
     [TestMethod]
+    [DataRow(1, 0, 0, "AccountClaimPrograms_One(1)")]
+    [DataRow(0, 0, 7, "AccountClaimEntries_Other(7)")]
+    [DataRow(0, 23, 7, "AccountClaimJoinTwo(AccountClaimCrossed_Other(23),AccountClaimOtherEntries_Other(7))")]
+    [DataRow(1, 1, 1, "AccountClaimJoinThree(AccountClaimPrograms_One(1),AccountClaimCrossed_One(1),AccountClaimOtherEntries_One(1))")]
+    public void DescribeProgress_LeavesOutWhatThereIsNoneOf(int programs, int crossed, int other, string expected) =>
+        _viewModel.DescribeProgress(new(programs, crossed, other)).Should().Be(expected);
+
+    [TestMethod]
+    public async Task ResendCode_RightAfterSending_WaitsForTheCooldown()
+    {
+        FakeTimeProvider time = new();
+        var viewModel = AccountTestFactory.CreateViewModel(AccountTestFactory.CreateService(_auth), time: time);
+        viewModel.Email = "alice@example.com";
+        await viewModel.SendCodeCommand.ExecuteAsync(null);
+
+        viewModel.ResendCodeCommand.CanExecute(null).Should().BeFalse();
+        var raised = 0;
+        viewModel.ResendCodeCommand.CanExecuteChanged += (_, _) => raised++;
+        time.Advance(AccountViewModel.ResendCooldown);
+
+        raised.Should().BeGreaterThan(0, "the button comes back by itself");
+        viewModel.ResendCodeCommand.CanExecute(null).Should().BeTrue();
+        await viewModel.ResendCodeCommand.ExecuteAsync(null);
+        _auth.CodesSentTo.Should().HaveCount(2);
+        viewModel.ResendCodeCommand.CanExecute(null).Should().BeFalse("the cooldown starts again");
+    }
+
+    [TestMethod]
     [DataRow("123456", "123456")]
     [DataRow("123-456", "123456")]
     [DataRow("Your code: 123456", "123456")]

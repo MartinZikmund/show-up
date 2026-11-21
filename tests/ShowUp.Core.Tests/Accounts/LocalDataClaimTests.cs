@@ -55,6 +55,38 @@ public sealed class LocalDataClaimTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task Claim_Settings_KeepTheirOwnTimeSoTheAccountsNewerOnesWin()
+    {
+        await CreateSettings().SetAsync("MarkerColor", "2");
+        var connection = await Db.GetConnectionAsync();
+        var before = (await connection.Table<SyncedSettingEntity>().ToListAsync()).Single().UpdatedAt;
+        Time.Advance(TimeSpan.FromHours(1));
+
+        await new SqliteLocalDataClaim(Db, Time, Device).ClaimAsync("alice");
+
+        var row = (await connection.Table<SyncedSettingEntity>().ToListAsync()).Single();
+        row.UserId.Should().Be("alice");
+        row.UpdatedAt.Should().Be(before);
+    }
+
+    [TestMethod]
+    public async Task GetAnonymousProgress_CountsProgramsCrossesAndTheRest()
+    {
+        var tracking = CreateRepository();
+        var enrollment = await tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+        await tracking.CrossSessionAsync(enrollment.Id, 0, 0, new DateOnly(2026, 12, 1));
+        await tracking.CrossSessionAsync(enrollment.Id, 1, 0, new DateOnly(2026, 12, 2));
+        var programs = CreateCustomPrograms();
+        var (id, _) = await programs.SaveNewRevisionAsync("{\"v\":1}");
+        await programs.SaveNewRevisionAsync("{\"v\":2}", id);
+        await CreateReminders().AddAsync(420, 127);
+
+        var progress = await new SqliteLocalDataClaim(Db, Time, Device).GetAnonymousProgressAsync();
+
+        progress.Should().Be(new AnonymousProgress(Programs: 1, CrossedWorkouts: 2, OtherEntries: 2), "a custom program counts once, whatever its revisions");
+    }
+
+    [TestMethod]
     public async Task GetAnonymousProgress_SettingsOrOtherAccountsOnly_IsEmpty()
     {
         await CreateSettings().SetAsync("UnitSystem", "0");
@@ -68,4 +100,13 @@ public sealed class LocalDataClaimTests : StorageTestBase
         (await claim.GetAnonymousProgressAsync()).IsEmpty.Should().BeFalse();
     }
 
+    [TestMethod]
+    public void SyncedTables_CoverEverySyncableEntity()
+    {
+        var entities = typeof(SyncableEntity).Assembly.GetTypes()
+            .Where(t => t.IsSubclassOf(typeof(SyncableEntity)) && !t.IsAbstract)
+            .Select(t => t.Name);
+
+        SqliteLocalDataClaim.SyncedTables.Should().BeEquivalentTo(entities, "a new synced table must be claimable too");
+    }
 }
