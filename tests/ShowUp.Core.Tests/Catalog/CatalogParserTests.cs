@@ -32,5 +32,20 @@ public class CatalogParserTests
         catalog.WorkoutsById["rest"].DurationMinutes.Should().BeNull();
     }
 
+    [TestMethod]
+    public void Locate_SecondPhaseFirstDay_ReturnsPhaseAndWeek()
+    {
+        ScheduleDay day = new([new ScheduledSession("rest")]);
+        ProgramTrack track = new("t", "T",
+        [
+            new ProgramPhase("One", [new ScheduleWeek([day, day, day]), new ScheduleWeek([day, day])]),
+            new ProgramPhase("Two", [new ScheduleWeek([day, day, day])]),
+        ]);
+
+        track.Locate(5).Should().Be(("Two", 3, 1));
+        track.Locate(4).Should().Be(("One", 2, 2));
+        track.Locate(0).Should().Be(("One", 1, 1));
+    }
+
     private static string Fixture(string name) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", "Fixtures", name));
 }
