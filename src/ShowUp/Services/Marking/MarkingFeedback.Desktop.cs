@@ -1,5 +1,6 @@
 #if __DESKTOP__
 using System.Runtime.InteropServices;
+using ShowUp.Core.Marking;
 
 namespace ShowUp.Services.Marking;
 
@@ -47,18 +48,11 @@ public sealed partial class MarkingFeedback
     [DllImport("winmm.dll", EntryPoint = "PlaySoundW", SetLastError = true)]
     private static extern bool PlaySound(IntPtr sound, IntPtr module, uint flags);
 
-    // Scratch loop: winmm waveOut plays one looping buffer; waveOutSetVolume follows the pen.
-    // Rate isn't adjustable on most drivers, so pitch stays put on this head.
-    private const uint WaveMapper = uint.MaxValue;
-    private const uint WhdrBeginLoop = 0x4;
-    private const uint WhdrEndLoop = 0x8;
-    private const uint FullVolume = 0xFFFFFFFF;
-
-    private static IntPtr _scratchPcm;
-    private static int _scratchPcmLength;
+    // Scratch loop: winmm waveOut fed with short chunks that have the gain baked in (LoopMixer), so the
+    // pen speed never touches the app's session volume (waveOutSetVolume would). Pitch stays put here.
+    private static short[]? _scratchSamples;
     private static WaveFormat _scratchFormat;
-    private static IntPtr _waveOut;
-    private static IntPtr _waveHeader;
+    private static ScratchStream? _scratch;
 
     static partial void StartScratchCore(string sound, ref string? backend)
     {
@@ -67,64 +61,34 @@ public sealed partial class MarkingFeedback
             return;
         }
 
-        if (_scratchPcm == IntPtr.Zero)
+        if (_scratchSamples is null)
         {
             (_scratchFormat, var pcm) = ReadWav(Path.Combine(AppContext.BaseDirectory, "Assets", "Sounds", sound));
-            _scratchPcm = Marshal.AllocHGlobal(pcm.Length);
-            Marshal.Copy(pcm, 0, _scratchPcm, pcm.Length);
-            _scratchPcmLength = pcm.Length;
+            if (_scratchFormat is not { FormatTag: 1, Channels: 1, BitsPerSample: 16 })
+            {
+                throw new InvalidDataException($"{sound} must be 16-bit mono PCM.");
+            }
+
+            _scratchSamples = new short[pcm.Length / 2];
+            Buffer.BlockCopy(pcm, 0, _scratchSamples, 0, _scratchSamples.Length * 2);
         }
 
-        Check(waveOutOpen(out _waveOut, WaveMapper, ref _scratchFormat, IntPtr.Zero, IntPtr.Zero, 0), nameof(waveOutOpen));
-        Check(waveOutSetVolume(_waveOut, 0), nameof(waveOutSetVolume));
-
-        var size = Marshal.SizeOf<WaveHeader>();
-        _waveHeader = Marshal.AllocHGlobal(size);
-        Marshal.StructureToPtr(new WaveHeader { Data = _scratchPcm, BufferLength = (uint)_scratchPcmLength }, _waveHeader, false);
-        Check(waveOutPrepareHeader(_waveOut, _waveHeader, (uint)size), nameof(waveOutPrepareHeader));
-
-        // Loop flags go on after prepare (it wants dwFlags zero); ~an hour of loops is "until stopped".
-        var header = Marshal.PtrToStructure<WaveHeader>(_waveHeader);
-        header.Flags |= WhdrBeginLoop | WhdrEndLoop;
-        header.Loops = 3600;
-        Marshal.StructureToPtr(header, _waveHeader, false);
-        Check(waveOutWrite(_waveOut, _waveHeader, (uint)size), nameof(waveOutWrite));
-        backend = "winmm waveOut loop";
+        _scratch = new ScratchStream(_scratchFormat, new LoopMixer(_scratchSamples, (int)_scratchFormat.SamplesPerSec));
+        backend = "winmm waveOut stream";
     }
 
     static partial void SetScratchCore(double volume, double rate)
     {
-        if (_waveOut != IntPtr.Zero)
+        if (_scratch is { } scratch)
         {
-            var level = (uint)(Math.Clamp(volume, 0, 1) * 0xFFFF);
-            waveOutSetVolume(_waveOut, level | level << 16);
+            scratch.Mixer.TargetGain = volume;
         }
     }
 
     static partial void StopScratchCore()
     {
-        if (_waveOut == IntPtr.Zero)
-        {
-            return;
-        }
-
-        // On Vista+ the volume is the app's session volume: restore it so the squeaks stay audible.
-        waveOutSetVolume(_waveOut, FullVolume);
-        waveOutReset(_waveOut);
-        waveOutUnprepareHeader(_waveOut, _waveHeader, (uint)Marshal.SizeOf<WaveHeader>());
-        waveOutClose(_waveOut);
-        Marshal.FreeHGlobal(_waveHeader);
-        _waveOut = IntPtr.Zero;
-        _waveHeader = IntPtr.Zero;
-    }
-
-    private static void Check(uint result, string call)
-    {
-        if (result != 0)
-        {
-            StopScratchCore();
-            throw new InvalidOperationException($"{call} failed ({result}).");
-        }
+        _scratch?.Dispose();
+        _scratch = null;
     }
 
     // Minimal RIFF reader for the generator's own 16-bit PCM files.
@@ -163,6 +127,128 @@ public sealed partial class MarkingFeedback
         throw new InvalidDataException($"{path} has no PCM data.");
     }
 
+    /// <summary>A few 25 ms buffers in flight; a background thread refills each one the device has finished.</summary>
+    private sealed class ScratchStream : IDisposable
+    {
+        private const int BufferCount = 4;
+        private const int ChunkMilliseconds = 25;
+        private const uint WaveMapper = uint.MaxValue;
+        private const uint WhdrDone = 0x1;
+
+        private static readonly int _headerSize = Marshal.SizeOf<WaveHeader>();
+        private static readonly int _flagsOffset = (int)Marshal.OffsetOf<WaveHeader>(nameof(WaveHeader.Flags));
+
+        private readonly IntPtr _waveOut;
+        private readonly IntPtr[] _headers = new IntPtr[BufferCount];
+        private readonly IntPtr[] _data = new IntPtr[BufferCount];
+        private readonly short[] _chunk;
+        private readonly Thread _pump;
+        private volatile bool _running = true;
+
+        public ScratchStream(WaveFormat format, LoopMixer mixer)
+        {
+            Mixer = mixer;
+            _chunk = new short[(int)(format.SamplesPerSec * ChunkMilliseconds / 1000)];
+            Check(waveOutOpen(out _waveOut, WaveMapper, ref format, IntPtr.Zero, IntPtr.Zero, 0), nameof(waveOutOpen));
+            try
+            {
+                for (var i = 0; i < BufferCount; i++)
+                {
+                    _data[i] = Marshal.AllocHGlobal(_chunk.Length * 2);
+                    _headers[i] = Marshal.AllocHGlobal(_headerSize);
+                    Marshal.StructureToPtr(new WaveHeader { Data = _data[i], BufferLength = (uint)(_chunk.Length * 2) }, _headers[i], false);
+                    Check(waveOutPrepareHeader(_waveOut, _headers[i], (uint)_headerSize), nameof(waveOutPrepareHeader));
+                    Queue(i);
+                }
+            }
+            catch
+            {
+                Close();
+                throw;
+            }
+
+            _pump = new Thread(Pump) { IsBackground = true, Name = "Marker scratch", Priority = ThreadPriority.AboveNormal };
+            _pump.Start();
+        }
+
+        public LoopMixer Mixer { get; }
+
+        public void Dispose()
+        {
+            _running = false;
+            _pump.Join();
+            Close();
+        }
+
+        private void Pump()
+        {
+            try
+            {
+                while (_running)
+                {
+                    for (var i = 0; i < BufferCount && _running; i++)
+                    {
+                        if ((Marshal.ReadInt32(_headers[i], _flagsOffset) & WhdrDone) != 0)
+                        {
+                            Queue(i);
+                        }
+                    }
+
+                    Thread.Sleep(5);
+                }
+            }
+            catch
+            {
+                // An exception on this thread would end the app; a silent scratch is the right failure.
+                _running = false;
+            }
+        }
+
+        private void Queue(int index)
+        {
+            Mixer.Fill(_chunk);
+            Marshal.Copy(_chunk, 0, _data[index], _chunk.Length);
+            waveOutWrite(_waveOut, _headers[index], (uint)_headerSize);
+        }
+
+        private void Close()
+        {
+            if (_waveOut != IntPtr.Zero)
+            {
+                waveOutReset(_waveOut);
+            }
+
+            for (var i = 0; i < BufferCount; i++)
+            {
+                if (_headers[i] != IntPtr.Zero)
+                {
+                    waveOutUnprepareHeader(_waveOut, _headers[i], (uint)_headerSize);
+                    Marshal.FreeHGlobal(_headers[i]);
+                    _headers[i] = IntPtr.Zero;
+                }
+
+                if (_data[i] != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(_data[i]);
+                    _data[i] = IntPtr.Zero;
+                }
+            }
+
+            if (_waveOut != IntPtr.Zero)
+            {
+                waveOutClose(_waveOut);
+            }
+        }
+
+        private static void Check(uint result, string call)
+        {
+            if (result != 0)
+            {
+                throw new InvalidOperationException($"{call} failed ({result}).");
+            }
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
     private struct WaveFormat
     {
@@ -199,9 +285,6 @@ public sealed partial class MarkingFeedback
 
     [DllImport("winmm.dll")]
     private static extern uint waveOutWrite(IntPtr waveOut, IntPtr header, uint size);
-
-    [DllImport("winmm.dll")]
-    private static extern uint waveOutSetVolume(IntPtr waveOut, uint volume);
 
     [DllImport("winmm.dll")]
     private static extern uint waveOutReset(IntPtr waveOut);

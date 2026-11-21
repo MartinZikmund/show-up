@@ -122,7 +122,7 @@ error logs a warning and the head goes silent.
 | Head | Sound | Scratch loop | Haptics |
 | --- | --- | --- | --- |
 | Windows (WinUI) | `MediaPlayer`, `AudioCategory = SoundEffects` | looping `MediaPlayer`: `Volume` + `PlaybackRate` | none |
-| Desktop on Windows | winmm `PlaySound` (Uno's desktop `MediaPlayer` needs the LibVLC-based `MediaPlayerElement` feature) | winmm `waveOut` looping buffer + `waveOutSetVolume`, no pitch (most drivers can't change rate). That volume is the app's session volume, so it's restored to full on stop | none |
+| Desktop on Windows | winmm `PlaySound` (Uno's desktop `MediaPlayer` needs the LibVLC-based `MediaPlayerElement` feature) | winmm `waveOut` stream: four 25 ms buffers refilled by a background thread with the gain baked in (`LoopMixer`, 30 ms easing), no pitch. Deliberately not `waveOutSetVolume`: on Vista+ that is the app's whole session volume in the mixer | none |
 | Desktop on macOS/Linux | silent | silent | none |
 | WebAssembly | `MediaPlayer` (HTML audio) | Web Audio, the prototype's code (`WasmScripts/MarkerScratch.js`): looped noise → band-pass → gain | none |
 | Android | `SoundPool`, usage `AssistanceSonification`, no audio focus request | `SoundPool` stream with loop -1, `SetVolume` + `SetRate` | `VibrationDevice` (needs `VIBRATE`, declared in the manifest) |
