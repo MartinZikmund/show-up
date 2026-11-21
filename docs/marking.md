@@ -39,7 +39,7 @@ A mixed day (some sessions auto, some drawn) draws both. Set `Strokes` from
 
 Each stroke is three `Path`s: the main line at `9 × min(w, h) / 96` (never below 0.6×, then a
 seeded ±8% per stroke from `MarkerGeometry.WidthFactor`) at 90% opacity; a 1.35× wider bleed,
-drawn underneath both strokes, in `MarkerBleedBrush` at `MarkerBleedOpacity` (marker red at 35% on paper and in high contrast; on the chalkboard a dust tone tinted toward the board, `#494D4F`, at 100%, because chalk white at 35% read as a grey rim); and a thin (0.35×) streak at 50%, offset sideways by 0.2× the
+drawn underneath both strokes, in `MarkerBleedBrush` at `MarkerBleedOpacity` (marker red at 35% on paper and in high contrast; on the chalkboard a dust tone tinted toward the board, `#6B6F72` at 35%, because chalk white at 35% read as a grey rim; it stays translucent so a drawn stroke's bleed never cuts the X under it); and a thin (0.35×) streak at 50%, offset sideways by 0.2× the
 width, for ink texture. No filters, so it costs the same on every head. An increase animates
 `StrokeDashOffset` over 180 ms with ease-out, the second stroke 90 ms after the first on a 0 → 2
 jump. With animations off in the OS (`UISettings.AnimationsEnabled`) the X lands instantly.

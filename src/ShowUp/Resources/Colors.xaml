@@ -43,9 +43,9 @@
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#454B52" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#F3EFE4" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#F3EFE4" />
-            <!--  Chalk dust: the bleed is tinted toward the board, so it reads as a soft halo, not a grey rim  -->
-            <SolidColorBrush x:Key="MarkerBleedBrush" Color="#494D4F" />
-            <x:Double x:Key="MarkerBleedOpacity">1</x:Double>
+            <!--  Chalk dust tinted toward the board: a soft halo, not a grey rim; translucent so it never cuts other strokes  -->
+            <SolidColorBrush x:Key="MarkerBleedBrush" Color="#6B6F72" />
+            <x:Double x:Key="MarkerBleedOpacity">0.35</x:Double>
             <SolidColorBrush x:Key="BonusStickerBackgroundBrush" Color="#F2C14E" />
             <SolidColorBrush x:Key="BonusStickerForegroundBrush" Color="#2B2A27" />
             <SolidColorBrush x:Key="MutedTextBrush" Color="#A9A49A" />
