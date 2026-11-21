@@ -42,9 +42,13 @@ public sealed partial class ProgramDetailView : ProgramDetailViewBase
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ProgramDetailViewModel.Tracks))
+        if (e.PropertyName is nameof(ProgramDetailViewModel.Tracks))
         {
             FillTrackBar();
+        }
+        else if (e.PropertyName is nameof(ProgramDetailViewModel.SelectedTrack))
+        {
+            SelectCurrentTrack();
         }
     }
 
@@ -57,18 +61,42 @@ public sealed partial class ProgramDetailView : ProgramDetailViewBase
         }
 
         _syncingTrack = true;
-        TrackBar.Items.Clear();
-        foreach (var track in viewModel.Tracks)
+        try
         {
-            TrackBar.Items.Add(new SelectorBarItem { Text = track.Name });
+            TrackBar.Items.Clear();
+            foreach (var track in viewModel.Tracks)
+            {
+                TrackBar.Items.Add(new SelectorBarItem { Text = track.Name });
+            }
+        }
+        finally
+        {
+            _syncingTrack = false;
         }
 
-        if (viewModel.SelectedTrack is { } selected && viewModel.Tracks.ToList().IndexOf(selected) is var index and >= 0)
+        SelectCurrentTrack();
+    }
+
+    private void SelectCurrentTrack()
+    {
+        if (ViewModel is not { SelectedTrack: { } selected } viewModel || TrackBar.Items.Count != viewModel.Tracks.Count)
         {
-            TrackBar.SelectedItem = TrackBar.Items[index];
+            return;
         }
 
-        _syncingTrack = false;
+        int index = viewModel.Tracks.ToList().IndexOf(selected);
+        if (index >= 0 && !ReferenceEquals(TrackBar.SelectedItem, TrackBar.Items[index]))
+        {
+            _syncingTrack = true;
+            try
+            {
+                TrackBar.SelectedItem = TrackBar.Items[index];
+            }
+            finally
+            {
+                _syncingTrack = false;
+            }
+        }
     }
 
     private void TrackBar_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)

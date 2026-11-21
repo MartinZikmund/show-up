@@ -472,4 +472,10 @@
   <data name="ProgramBackToPrograms" xml:space="preserve">
     <value>Back to programs</value>
   </data>
+  <data name="ProgramStartFailedTitle" xml:space="preserve">
+    <value>Couldn't start the program</value>
+  </data>
+  <data name="ProgramStartFailedMessage" xml:space="preserve">
+    <value>Something went wrong while starting it. Please try again.</value>
+  </data>
 </root>

@@ -1,6 +1,7 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 
 namespace ShowUp.Controls;
 
@@ -13,11 +14,25 @@ public sealed partial class ProgramHero : UserControl
     public static readonly DependencyProperty HeroImageProperty = Register<string?>(nameof(HeroImage), null, (d, _) => ((ProgramHero)d).UpdateBackdrop());
     public static readonly DependencyProperty TitleFontSizeProperty = Register(nameof(TitleFontSize), 32d);
 
+    private readonly AccessibilitySettings _accessibility = new();
+
     public ProgramHero()
     {
         InitializeComponent();
         UpdateBackdrop();
+        Loaded += (_, _) =>
+        {
+            _accessibility.HighContrastChanged += Accessibility_HighContrastChanged;
+            UpdateHighContrast();
+        };
+        Unloaded += (_, _) => _accessibility.HighContrastChanged -= Accessibility_HighContrastChanged;
     }
+
+    private void Accessibility_HighContrastChanged(AccessibilitySettings sender, object args) =>
+        DispatcherQueue.TryEnqueue(UpdateHighContrast);
+
+    private void UpdateHighContrast() =>
+        DecorLayers.Visibility = _accessibility.HighContrast ? Visibility.Collapsed : Visibility.Visible;
 
     public string ProgramName
     {

@@ -8,25 +8,11 @@
     xmlns:vm="using:ShowUp.Core.ViewModels">
 
     <ScrollViewer>
-        <Grid
-            x:Name="ContentGrid"
+        <StackPanel
+            x:Name="ContentPanel"
             Padding="{StaticResource PagePadding}"
-            ColumnSpacing="24"
-            RowSpacing="24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
+            Spacing="24">
             <Button
-                Grid.ColumnSpan="2"
                 Margin="-8,0,0,-8"
                 HorizontalAlignment="Left"
                 AutomationProperties.AutomationId="ProgramDetailBackButton"
@@ -38,106 +24,127 @@
                 </StackPanel>
             </Button>
 
-            <controls:ProgramHero
-                x:Name="Hero"
-                Grid.Row="1"
-                Grid.ColumnSpan="2"
-                Height="200"
-                VerticalAlignment="Top"
-                AccentColor="{x:Bind ViewModel.Program.AccentColor, Mode=OneWay, FallbackValue=''}"
-                AutomationProperties.AutomationId="ProgramDetailHero"
-                AutomationProperties.Name="{x:Bind ViewModel.Program.Name, Mode=OneWay}"
-                Family="{x:Bind ViewModel.Program.Family, Mode=OneWay, FallbackValue=''}"
-                HeroImage="{x:Bind ViewModel.Program.HeroImage, Mode=OneWay}"
-                ProgramName="{x:Bind ViewModel.Program.Name, Mode=OneWay, FallbackValue=''}"
-                TitleFontSize="40" />
+            <TextBlock
+                AutomationProperties.AutomationId="ProgramNotFoundText"
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Text="{markup:Localize Key=ProgramNotFound}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind ViewModel.IsNotFound, Mode=OneWay}" />
 
-            <StackPanel
-                x:Name="InfoPanel"
-                Grid.Row="2"
-                Grid.ColumnSpan="2"
-                Spacing="16">
-                <Border
-                    Padding="8,2"
-                    HorizontalAlignment="Left"
-                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
-                    CornerRadius="{ThemeResource ControlCornerRadius}"
-                    ToolTipService.ToolTip="{x:Bind ViewModel.VerificationTooltip, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <FontIcon
-                            FontSize="12"
-                            Foreground="{ThemeResource MutedTextBrush}"
-                            Glyph="{x:Bind ViewModel.VerificationGlyph, Mode=OneWay}" />
+            <Grid
+                x:Name="HeroInfoGrid"
+                ColumnSpacing="24"
+                RowSpacing="24"
+                Visibility="{x:Bind ViewModel.ShowContent, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <controls:ProgramHero
+                    x:Name="Hero"
+                    Grid.ColumnSpan="2"
+                    Height="200"
+                    VerticalAlignment="Top"
+                    AccentColor="{x:Bind ViewModel.Program.AccentColor, Mode=OneWay, FallbackValue=''}"
+                    AutomationProperties.AutomationId="ProgramDetailHero"
+                    AutomationProperties.Name="{x:Bind ViewModel.Program.Name, Mode=OneWay}"
+                    Family="{x:Bind ViewModel.Program.Family, Mode=OneWay, FallbackValue=''}"
+                    HeroImage="{x:Bind ViewModel.Program.HeroImage, Mode=OneWay}"
+                    ProgramName="{x:Bind ViewModel.Program.Name, Mode=OneWay, FallbackValue=''}"
+                    TitleFontSize="40" />
+
+                <StackPanel
+                    x:Name="InfoPanel"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Spacing="16">
+                    <Border
+                        Padding="8,4"
+                        HorizontalAlignment="Left"
+                        Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                        CornerRadius="{ThemeResource ControlCornerRadius}"
+                        ToolTipService.ToolTip="{x:Bind ViewModel.VerificationTooltip, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon
+                                FontSize="12"
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Glyph="{x:Bind ViewModel.VerificationGlyph, Mode=OneWay}" />
+                            <TextBlock
+                                AutomationProperties.AutomationId="ProgramVerificationText"
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind ViewModel.VerificationText, Mode=OneWay}" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Visibility="{x:Bind ViewModel.IsCommunityVerified, Mode=OneWay}">
                         <TextBlock
-                            AutomationProperties.AutomationId="ProgramVerificationText"
                             Foreground="{ThemeResource MutedTextBrush}"
                             Style="{StaticResource CaptionTextBlockStyle}"
-                            Text="{x:Bind ViewModel.VerificationText, Mode=OneWay}" />
+                            Text="{markup:Localize Key=ProgramCommunityNote}"
+                            TextWrapping="Wrap" />
+                        <HyperlinkButton
+                            Padding="0,4"
+                            AutomationProperties.AutomationId="ProgramReportIssueLink"
+                            Content="{markup:Localize Key=ProgramReportIssue}"
+                            NavigateUri="{x:Bind ViewModel.ReportIssueUri, Mode=OneWay}" />
                     </StackPanel>
-                </Border>
 
-                <StackPanel Spacing="0" Visibility="{x:Bind ViewModel.IsCommunityVerified, Mode=OneWay}">
                     <TextBlock
+                        AutomationProperties.AutomationId="ProgramDescription"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        Text="{x:Bind ViewModel.Program.Description, Mode=OneWay, FallbackValue=''}"
+                        TextWrapping="Wrap" />
+
+                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.ShowTrackSelector, Mode=OneWay}">
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{markup:Localize Key=ProgramTrackHeader}" />
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
+                            <SelectorBar
+                                x:Name="TrackBar"
+                                AutomationProperties.AutomationId="ProgramTrackSelector"
+                                SelectionChanged="TrackBar_SelectionChanged" />
+                        </ScrollViewer>
+                    </StackPanel>
+
+                    <TextBlock
+                        AutomationProperties.AutomationId="ProgramTrackSummary"
                         Foreground="{ThemeResource MutedTextBrush}"
                         Style="{StaticResource CaptionTextBlockStyle}"
-                        Text="{markup:Localize Key=ProgramCommunityNote}"
-                        TextWrapping="Wrap" />
-                    <HyperlinkButton
-                        Padding="0,4"
-                        AutomationProperties.AutomationId="ProgramReportIssueLink"
-                        Content="{markup:Localize Key=ProgramReportIssue}"
-                        NavigateUri="{x:Bind ViewModel.ReportIssueUri, Mode=OneWay}" />
+                        Text="{x:Bind ViewModel.TrackSummary, Mode=OneWay}" />
+
+                    <StackPanel Spacing="4">
+                        <CalendarDatePicker
+                            AutomationProperties.AutomationId="ProgramStartDatePicker"
+                            Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}"
+                            Header="{markup:Localize Key=ProgramStartDateHeader}"
+                            MaxDate="{x:Bind ViewModel.MaxStartDate, Mode=OneWay}"
+                            MinDate="{x:Bind ViewModel.MinStartDate, Mode=OneWay}"
+                            PlaceholderText="{markup:Localize Key=ProgramStartDatePlaceholder}" />
+                        <TextBlock
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{markup:Localize Key=ProgramStartDateHint}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button
+                        AutomationProperties.AutomationId="ProgramStartButton"
+                        Command="{x:Bind ViewModel.StartCommand, Mode=OneWay}"
+                        Content="{markup:Localize Key=ProgramStart}"
+                        Style="{StaticResource AccentButtonStyle}" />
                 </StackPanel>
-
-                <TextBlock
-                    AutomationProperties.AutomationId="ProgramDescription"
-                    Style="{StaticResource BodyTextBlockStyle}"
-                    Text="{x:Bind ViewModel.Program.Description, Mode=OneWay, FallbackValue=''}"
-                    TextWrapping="Wrap" />
-
-                <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.ShowTrackSelector, Mode=OneWay}">
-                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{markup:Localize Key=ProgramTrackHeader}" />
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
-                        <SelectorBar
-                            x:Name="TrackBar"
-                            AutomationProperties.AutomationId="ProgramTrackSelector"
-                            SelectionChanged="TrackBar_SelectionChanged" />
-                    </ScrollViewer>
-                </StackPanel>
-
-                <TextBlock
-                    AutomationProperties.AutomationId="ProgramTrackSummary"
-                    Foreground="{ThemeResource MutedTextBrush}"
-                    Style="{StaticResource CaptionTextBlockStyle}"
-                    Text="{x:Bind ViewModel.TrackSummary, Mode=OneWay}" />
-
-                <StackPanel Spacing="4">
-                    <CalendarDatePicker
-                        AutomationProperties.AutomationId="ProgramStartDatePicker"
-                        Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}"
-                        Header="{markup:Localize Key=ProgramStartDateHeader}"
-                        MaxDate="{x:Bind ViewModel.MaxStartDate, Mode=OneWay}"
-                        MinDate="{x:Bind ViewModel.MinStartDate, Mode=OneWay}"
-                        PlaceholderText="{markup:Localize Key=ProgramStartDatePlaceholder}" />
-                    <TextBlock
-                        Foreground="{ThemeResource MutedTextBrush}"
-                        Style="{StaticResource CaptionTextBlockStyle}"
-                        Text="{markup:Localize Key=ProgramStartDateHint}"
-                        TextWrapping="Wrap" />
-                </StackPanel>
-
-                <Button
-                    AutomationProperties.AutomationId="ProgramStartButton"
-                    Command="{x:Bind ViewModel.StartCommand, Mode=OneWay}"
-                    Content="{markup:Localize Key=ProgramStart}"
-                    Style="{StaticResource AccentButtonStyle}" />
-            </StackPanel>
+            </Grid>
 
             <StackPanel
                 x:Name="WeekPanel"
-                Grid.Row="3"
-                Grid.ColumnSpan="2"
-                Spacing="12">
+                Spacing="12"
+                Visibility="{x:Bind ViewModel.ShowContent, Mode=OneWay}">
                 <TextBlock
                     AutomationProperties.HeadingLevel="Level2"
                     Style="{StaticResource SectionHeaderTextBlockStyle}"
@@ -148,7 +155,7 @@
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:WeekPreview">
-                            <StackPanel Spacing="6">
+                            <StackPanel Spacing="4">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Label}" />
                                     <TextBlock
@@ -169,7 +176,7 @@
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate x:DataType="vm:DayPreview">
                                                 <Grid
-                                                    Padding="12,6"
+                                                    Padding="12,8"
                                                     ColumnSpacing="12"
                                                     Opacity="{x:Bind local:ProgramDetailView.DayOpacity(IsRest)}">
                                                     <Grid.ColumnDefinitions>
@@ -198,15 +205,12 @@
             </StackPanel>
 
             <TextBlock
-                x:Name="DisclaimerText"
-                Grid.Row="4"
-                Grid.ColumnSpan="2"
                 AutomationProperties.AutomationId="ProgramDetailDisclaimerText"
                 Foreground="{ThemeResource MutedTextBrush}"
                 Style="{StaticResource CaptionTextBlockStyle}"
                 Text="{markup:Localize Key=AboutDisclaimer}"
                 TextWrapping="Wrap" />
-        </Grid>
+        </StackPanel>
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="WidthStates">
@@ -215,7 +219,7 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="ContentGrid.Padding" Value="16,12,16,24" />
+                        <Setter Target="ContentPanel.Padding" Value="16,12,16,24" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Wide">
@@ -225,12 +229,11 @@
                     <VisualState.Setters>
                         <Setter Target="Hero.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="Hero.Height" Value="280" />
-                        <Setter Target="InfoPanel.(Grid.Row)" Value="1" />
+                        <Setter Target="InfoPanel.(Grid.Row)" Value="0" />
                         <Setter Target="InfoPanel.(Grid.Column)" Value="1" />
                         <Setter Target="InfoPanel.(Grid.ColumnSpan)" Value="1" />
-                        <Setter Target="WeekPanel.(Grid.Row)" Value="2" />
-                        <Setter Target="DisclaimerText.(Grid.Row)" Value="3" />
-                        <Setter Target="ContentGrid.Padding" Value="24,16,24,24" />
+                        <Setter Target="HeroInfoGrid.RowSpacing" Value="0" />
+                        <Setter Target="ContentPanel.Padding" Value="24,16,24,24" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

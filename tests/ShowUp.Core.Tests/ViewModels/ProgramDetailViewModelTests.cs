@@ -19,6 +19,7 @@ public sealed class ProgramDetailViewModelTests
     private readonly StubConfirmationDialogService _confirmation = new();
     private readonly RecordingSectionNavigator _navigator = new();
     private readonly RecordingNavigationService _navigation = new();
+    private readonly RecordingDialogService _dialogs = new();
 
     public ProgramDetailViewModelTests() => _time.SetLocalTimeZone(TimeZoneInfo.Utc);
 
@@ -157,16 +158,20 @@ public sealed class ProgramDetailViewModelTests
 
     private async Task<ProgramDetailViewModel> LoadAsync(WorkoutProgram program)
     {
-        ProgramDetailViewModel viewModel = new(
+        ProgramDetailViewModel viewModel = Create(new FakeCatalogService(program));
+        await viewModel.LoadAsync(program.Id);
+        return viewModel;
+    }
+
+    private ProgramDetailViewModel Create(FakeCatalogService catalog) =>
+        new(
             new PassThroughLocalizer(),
-            new FakeCatalogService(program),
+            catalog,
             _enrollments,
             _confirmation,
             _navigator,
             _navigation,
+            _dialogs,
             _time,
             NullLogger<ProgramDetailViewModel>.Instance);
-        await viewModel.LoadAsync(program.Id);
-        return viewModel;
-    }
 }

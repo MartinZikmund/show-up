@@ -18,5 +18,9 @@ public sealed partial record ProgramCardViewModel(
 {
     public bool IsCommunityVerified => Verification == VerificationLevel.Community;
 
+    public string AutomationId => $"ProgramCard_{Id}";
+
+    public string AutomationName => $"{Name}, {SummaryText}, {VerificationText}";
+
     public string VerificationGlyph => IsCommunityVerified ? "\uE716" : "\uE930";
 }

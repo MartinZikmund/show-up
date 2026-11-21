@@ -26,6 +26,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly IConfirmationDialogService _confirmation;
     private readonly ISectionNavigator _navigator;
     private readonly INavigationService _navigation;
+    private readonly IDialogService _dialogs;
     private readonly TimeProvider _time;
     private readonly ILogger<ProgramDetailViewModel> _logger;
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
@@ -38,6 +39,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         IConfirmationDialogService confirmation,
         ISectionNavigator navigator,
         INavigationService navigation,
+        IDialogService dialogs,
         TimeProvider time,
         ILogger<ProgramDetailViewModel> logger)
     {
@@ -47,6 +49,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _confirmation = confirmation;
         _navigator = navigator;
         _navigation = navigation;
+        _dialogs = dialogs;
         _time = time;
         _logger = logger;
         StartDate = _time.GetLocalNow();
@@ -73,6 +76,8 @@ public partial class ProgramDetailViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string TrackSummary { get; private set; } = "";
+
+    public bool ShowContent => Program is not null;
 
     public bool ShowTrackSelector => Tracks.Count > 1;
 
@@ -103,6 +108,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     public async Task LoadAsync(string programId)
     {
         IsLoading = true;
+        IsNotFound = false;
         try
         {
             var program = await _catalog.GetProgramAsync(programId);
@@ -115,8 +121,9 @@ public partial class ProgramDetailViewModel : ViewModelBase
             _workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
             Program = program;
             PageTitle = program.Name;
-            Tracks = program.Tracks;
             SelectedTrack = program.Tracks.FirstOrDefault();
+            Tracks = program.Tracks;
+            OnPropertyChanged(nameof(ShowContent));
             OnPropertyChanged(nameof(ShowTrackSelector));
             OnPropertyChanged(nameof(IsCommunityVerified));
             OnPropertyChanged(nameof(VerificationGlyph));
@@ -133,7 +140,9 @@ public partial class ProgramDetailViewModel : ViewModelBase
     [RelayCommand]
     private void GoBack() => _navigation.GoBack();
 
-    [RelayCommand]
+    private bool CanStart => Program is not null && SelectedTrack is not null;
+
+    [RelayCommand(CanExecute = nameof(CanStart))]
     public async Task StartAsync()
     {
         if (_isStarting || Program is not { } program || SelectedTrack is not { } track)
@@ -144,7 +153,8 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _isStarting = true;
         try
         {
-            if (await _enrollments.GetAsync() is { } active)
+            var active = await _enrollments.GetAsync();
+            if (active is not null)
             {
                 var answer = await _confirmation.ShowAsync(
                     _localizer["ProgramReplaceTitle"],
@@ -153,12 +163,24 @@ public partial class ProgramDetailViewModel : ViewModelBase
                 {
                     return;
                 }
-
-                await _enrollments.EndAsync(EnrollmentEndReason.Abandoned);
             }
 
-            DateTimeOffset picked = StartDate ?? _time.GetLocalNow();
-            await _enrollments.EnrollAsync(program, track, DateOnly.FromDateTime(picked.DateTime));
+            try
+            {
+                if (active is not null)
+                {
+                    await _enrollments.EndAsync(EnrollmentEndReason.Abandoned);
+                }
+
+                await _enrollments.EnrollAsync(program, track, ClampedStartDate());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Starting program {ProgramId} failed.", program.Id);
+                await _dialogs.ShowAsync(_localizer["ProgramStartFailedTitle"], _localizer["ProgramStartFailedMessage"]);
+                return;
+            }
+
             _navigator.NavigateToSection(NavigationSection.Calendar);
         }
         finally
@@ -167,8 +189,19 @@ public partial class ProgramDetailViewModel : ViewModelBase
         }
     }
 
+    private DateOnly ClampedStartDate()
+    {
+        DateOnly picked = DateOnly.FromDateTime((StartDate ?? _time.GetLocalNow()).DateTime);
+        DateOnly min = DateOnly.FromDateTime(MinStartDate.DateTime);
+        DateOnly max = DateOnly.FromDateTime(MaxStartDate.DateTime);
+        return picked < min ? min : picked > max ? max : picked;
+    }
+
+    partial void OnProgramChanged(WorkoutProgram? value) => StartCommand.NotifyCanExecuteChanged();
+
     partial void OnSelectedTrackChanged(ProgramTrack? value)
     {
+        StartCommand.NotifyCanExecuteChanged();
         WeekPreviews = value is null ? [] : BuildWeeks(value);
         TrackSummary = value is null
             ? ""

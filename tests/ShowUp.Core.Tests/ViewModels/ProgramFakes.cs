@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Localization;
+using Microsoft.UI.Xaml.Controls;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
@@ -100,4 +101,17 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
     public Task ShiftAsync(DateOnly fromDate, int days) => Task.CompletedTask;
 
     public Task LogBonusAsync(string title, DateOnly date) => Task.CompletedTask;
+}
+
+internal sealed class RecordingDialogService : IDialogService
+{
+    public List<(string Title, string Content)> Shown { get; } = [];
+
+    public Task<ContentDialogResult> ShowAsync(string title, string content)
+    {
+        Shown.Add((title, content));
+        return Task.FromResult(ContentDialogResult.Primary);
+    }
+
+    public Task<ContentDialogResult> ShowAsync(ContentDialog contentDialog) => Task.FromResult(ContentDialogResult.Primary);
 }

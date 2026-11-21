@@ -33,6 +33,7 @@
                 <AutoSuggestBox
                     x:Name="FilterBox"
                     AutomationProperties.AutomationId="ProgramsFilterBox"
+                    AutomationProperties.Name="{markup:Localize Key=ProgramsSearchPlaceholder}"
                     PlaceholderText="{markup:Localize Key=ProgramsSearchPlaceholder}"
                     QueryIcon="Find"
                     Text="{x:Bind ViewModel.Filter, Mode=TwoWay}" />
@@ -60,8 +61,8 @@
                         <Button
                             Padding="0"
                             HorizontalAlignment="Stretch"
-                            AutomationProperties.AutomationId="{x:Bind Id}"
-                            AutomationProperties.Name="{x:Bind Name}"
+                            AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                            AutomationProperties.Name="{x:Bind AutomationName}"
                             Click="Card_Click"
                             CornerRadius="{ThemeResource OverlayCornerRadius}"
                             Style="{StaticResource CardButtonStyle}"
@@ -92,7 +93,7 @@
                                             TextTrimming="CharacterEllipsis" />
                                         <Border
                                             Grid.Column="1"
-                                            Padding="8,2"
+                                            Padding="8,4"
                                             Background="{ThemeResource ControlFillColorSecondaryBrush}"
                                             CornerRadius="{ThemeResource ControlCornerRadius}"
                                             ToolTipService.ToolTip="{x:Bind VerificationTooltip}">

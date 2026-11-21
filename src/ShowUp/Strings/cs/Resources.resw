@@ -472,4 +472,10 @@
   <data name="ProgramBackToPrograms" xml:space="preserve">
     <value>Zp&#283;t na programy</value>
   </data>
+  <data name="ProgramStartFailedTitle" xml:space="preserve">
+    <value>Program se nepoda&#345;ilo za&#269;&#237;t</value>
+  </data>
+  <data name="ProgramStartFailedMessage" xml:space="preserve">
+    <value>P&#345;i spou&#353;t&#283;n&#237; n&#283;co selhalo. Zkuste to pros&#237;m znovu.</value>
+  </data>
 </root>
