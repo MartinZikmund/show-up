@@ -27,11 +27,7 @@ public sealed class ReminderCoordinatorTests
 
     private async Task WaitForPlansAsync(int count)
     {
-        for (var i = 0; i < 200 && _scheduler.Replaced.Count < count; i++)
-        {
-            await Task.Delay(5);
-        }
-
+        await _scheduler.WaitForAttemptsAsync(count);
         _scheduler.Replaced.Should().HaveCountGreaterThanOrEqualTo(count);
     }
 
@@ -243,7 +239,7 @@ public sealed class ReminderCoordinatorTests
         _scheduler.FailReplace = true;
 
         _messenger.Send(new TrackingChangedMessage());
-        await Task.Delay(50);
+        await _scheduler.WaitForAttemptsAsync(2);
         _scheduler.FailReplace = false;
         await coordinator.ReplanAsync();
 
@@ -259,9 +255,8 @@ public sealed class ReminderCoordinatorTests
         _messenger.Send(new TrackingChangedMessage());
         _messenger.Send(new RemindersChangedMessage());
         _entitlements.SetPro(true);
-        await Task.Delay(50);
 
-        _scheduler.Replaced.Should().ContainSingle();
+        _scheduler.Replaced.Should().ContainSingle("a listening coordinator would have planned by now: the fakes complete synchronously");
     }
 
     [TestMethod]
@@ -274,9 +269,8 @@ public sealed class ReminderCoordinatorTests
 
         _messenger.Send(new TrackingChangedMessage());
         await WaitForPlansAsync(1);
-        await Task.Delay(50);
 
-        _scheduler.Replaced.Should().ContainSingle();
+        _scheduler.Replaced.Should().ContainSingle("a second listener would have planned by now: the fakes complete synchronously");
     }
 }
 
