@@ -18,6 +18,7 @@
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#CFC6B2" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#D9372B" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#D9372B" />
+            <x:Double x:Key="MarkerBleedOpacity">0.35</x:Double>
             <SolidColorBrush x:Key="BonusStickerBackgroundBrush" Color="#F2C14E" />
             <SolidColorBrush x:Key="BonusStickerForegroundBrush" Color="#2B2A27" />
             <SolidColorBrush x:Key="MutedTextBrush" Color="#6E6656" />
@@ -41,6 +42,8 @@
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#454B52" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#F3EFE4" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#F3EFE4" />
+            <!--  Chalk white at 35% reads as a grey rim on the board; keep the bleed faint  -->
+            <x:Double x:Key="MarkerBleedOpacity">0.18</x:Double>
             <SolidColorBrush x:Key="BonusStickerBackgroundBrush" Color="#F2C14E" />
             <SolidColorBrush x:Key="BonusStickerForegroundBrush" Color="#2B2A27" />
             <SolidColorBrush x:Key="MutedTextBrush" Color="#A9A49A" />
@@ -56,6 +59,7 @@
             <StaticResource x:Key="CalendarCellBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="CalendarCellTodayBorderBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="MarkerBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <x:Double x:Key="MarkerBleedOpacity">0.35</x:Double>
             <StaticResource x:Key="BonusStickerBackgroundBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="BonusStickerForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
             <StaticResource x:Key="MutedTextBrush" ResourceKey="SystemColorWindowTextColorBrush" />

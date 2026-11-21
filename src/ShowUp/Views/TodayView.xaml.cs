@@ -57,9 +57,10 @@ public sealed partial class TodayView : TodayViewBase
         };
         cell.Click += (_, _) =>
         {
-            if (sample.Strokes >= 2)
+            if (sample.Strokes >= 2 || sample.Inks is { Count: > 0 })
             {
                 sample.Strokes = 0;
+                sample.Inks = null;
                 sample.Seed++;
             }
             else
@@ -87,12 +88,43 @@ public sealed partial class TodayView : TodayViewBase
                 CurrentStreak: complete ? 9 : 8));
         };
 
+        // Draw it yourself on a two-session day: the second draw shows the first one's ink at 50%.
+        Button draw = new() { Content = Localizer.Instance["DebugDrawMoment"] };
+        draw.SetValue(AutomationProperties.AutomationIdProperty, "DebugDrawMomentButton");
+        draw.Click += async (_, _) =>
+        {
+            var inks = sample.Inks ?? [];
+            var done = Math.Min(2, inks.Count + (sample.Strokes >= 2 ? 2 : 0) + 1);
+            var crossMoment = FindWindowShell(XamlRoot?.Content)!.ServiceProvider.GetRequiredService<ICrossMoment>();
+            var result = await crossMoment.DrawAsync(new CrossMomentDrawRequest(
+                new CrossMomentInfo(
+                    DayNumber: 10,
+                    TotalDays: 60,
+                    Title: "Cardio + Core",
+                    StrokesBefore: sample.Strokes,
+                    StrokesAfter: 2,
+                    Seed: sample.Seed,
+                    SessionsDone: done,
+                    SessionsRequired: 2,
+                    CurrentStreak: done >= 2 ? 9 : 8),
+                inks));
+            if (result is { Outcome: CrossMomentOutcome.Drawn, InkJson: { } ink })
+            {
+                sample.Inks = [.. inks, ink];
+            }
+            else if (result.Outcome == CrossMomentOutcome.Auto)
+            {
+                sample.Strokes = 2;
+            }
+        };
+
         ToggleSwitch slowMotion = new() { Header = Localizer.Instance["DebugSlowMotion"] };
         slowMotion.SetValue(AutomationProperties.AutomationIdProperty, "DebugSlowMotionToggle");
         slowMotion.Toggled += (_, _) => MarkerCrossControl.DebugTimeScale = slowMotion.IsOn ? 25 : 1;
 
         ContentPanel.Children.Add(cell);
         ContentPanel.Children.Add(preview);
+        ContentPanel.Children.Add(draw);
         ContentPanel.Children.Add(slowMotion);
     }
 #endif

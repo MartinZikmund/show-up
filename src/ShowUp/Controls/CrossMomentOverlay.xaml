@@ -28,6 +28,7 @@
             Background="{ThemeResource PaperBackgroundBrush}"
             BorderBrush="{ThemeResource CalendarCellBorderBrush}"
             BorderThickness="0"
+            Tapped="Card_Tapped"
             Translation="0,0,32">
             <Grid.Shadow>
                 <ThemeShadow />
@@ -68,56 +69,133 @@
                         x:Name="Cross"
                         AnimateChanges="False"
                         AutomationProperties.AccessibilityView="Raw" />
+                    <!--  Draw mode: the whole square is the drawing surface  -->
+                    <controls:InkPad
+                        x:Name="Pad"
+                        AutomationProperties.AutomationId="CrossMomentInkPad"
+                        AutomationProperties.HelpText="{markup:Localize Key=DrawAnnouncement}"
+                        AutomationProperties.Name="{markup:Localize Key=DrawPadName}"
+                        BleedOpacity="{ThemeResource MarkerBleedOpacity}"
+                        InkChanged="Pad_InkChanged"
+                        MarkerBrush="{ThemeResource MarkerBrush}"
+                        Visibility="Collapsed" />
                 </Grid>
 
-                <!--  Read as one plain sentence (the panel's Name), so the parts stay out of the UIA tree  -->
-                <StackPanel
-                    x:Name="CaptionPanel"
-                    AutomationProperties.AccessibilityView="Raw"
-                    AutomationProperties.AutomationId="CrossMomentCaption"
-                    AutomationProperties.LiveSetting="Assertive"
-                    Opacity="0"
-                    Spacing="8">
+                <!--  The draw controls and the caption share a cell; on finish it keeps its height, so the square stays put  -->
+                <Grid x:Name="BelowCell">
                     <StackPanel
-                        HorizontalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="8">
+                        x:Name="DrawPanel"
+                        AutomationProperties.LiveSetting="Polite"
+                        Spacing="12"
+                        Visibility="Collapsed">
                         <TextBlock
-                            x:Name="DayText"
-                            VerticalAlignment="Center"
-                            AutomationProperties.AccessibilityView="Raw"
-                            Style="{StaticResource CrossMomentCaptionTextBlockStyle}" />
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Text="{markup:Localize Key=DrawPrompt}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <!--  Tall enough for Done, so it appearing doesn't move the square  -->
+                        <Grid MinHeight="32" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ProgressBar
+                                x:Name="InkMeter"
+                                VerticalAlignment="Center"
+                                AutomationProperties.AutomationId="CrossMomentInkMeter"
+                                AutomationProperties.Name="{markup:Localize Key=DrawInkMeterName}"
+                                Maximum="100" />
+                            <Button
+                                x:Name="DoneButton"
+                                Grid.Column="1"
+                                AutomationProperties.AutomationId="CrossMomentDoneButton"
+                                Click="DoneButton_Click"
+                                Content="{markup:Localize Key=DrawDone}"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Visibility="Collapsed" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                x:Name="DoItForMeButton"
+                                HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="CrossMomentDoItForMeButton"
+                                AutomationProperties.HelpText="{markup:Localize Key=DrawAnnouncement}"
+                                Click="DoItForMeButton_Click"
+                                Content="{markup:Localize Key=DrawDoItForMe}" />
+                            <Button
+                                x:Name="UndoButton"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="CrossMomentUndoButton"
+                                Click="UndoButton_Click"
+                                Content="{markup:Localize Key=DrawUndo}"
+                                IsEnabled="False" />
+                            <Button
+                                x:Name="CancelButton"
+                                Grid.Column="2"
+                                HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="CrossMomentCancelButton"
+                                Click="CancelButton_Click"
+                                Content="{markup:Localize Key=DrawCancel}" />
+                        </Grid>
+                    </StackPanel>
+
+                    <!--  Read as one plain sentence (the panel's Name), so the parts stay out of the UIA tree  -->
+                    <StackPanel
+                        x:Name="CaptionPanel"
+                        AutomationProperties.AccessibilityView="Raw"
+                        AutomationProperties.AutomationId="CrossMomentCaption"
+                        AutomationProperties.LiveSetting="Assertive"
+                        IsHitTestVisible="False"
+                        Opacity="0"
+                        Spacing="8">
                         <StackPanel
-                            x:Name="StreakPanel"
+                            HorizontalAlignment="Center"
                             Orientation="Horizontal"
                             Spacing="8">
                             <TextBlock
-                                VerticalAlignment="Center"
-                                AutomationProperties.AccessibilityView="Raw"
-                                Style="{StaticResource CrossMomentCaptionTextBlockStyle}"
-                                Text="·" />
-                            <Path
-                                Height="24"
-                                VerticalAlignment="Center"
-                                AutomationProperties.AccessibilityView="Raw"
-                                Data="M8,0 C9,3.2 13,5.4 13,10 C13,13.6 10.8,16 8,16 C5.2,16 3,13.8 3,10.8 C3,8.4 4.2,6.8 5.6,5.6 C5.6,7.6 6.4,8.8 7.4,9.2 C6.8,6 7.6,2.8 8,0 Z M8,16 C6.6,16 5.6,14.9 5.6,13.5 C5.6,12.2 6.4,11.3 7.2,10.6 C7.3,11.6 7.9,12.2 8.6,12.4 C8.5,11.4 8.9,10.5 9.6,9.8 C10.1,10.9 10.4,12.1 10.4,13.3 C10.4,14.8 9.4,16 8,16 Z"
-                                Fill="{ThemeResource MarkerBrush}"
-                                Stretch="Uniform" />
-                            <TextBlock
-                                x:Name="StreakText"
+                                x:Name="DayText"
                                 VerticalAlignment="Center"
                                 AutomationProperties.AccessibilityView="Raw"
                                 Style="{StaticResource CrossMomentCaptionTextBlockStyle}" />
+                            <StackPanel
+                                x:Name="StreakPanel"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Style="{StaticResource CrossMomentCaptionTextBlockStyle}"
+                                    Text="·" />
+                                <Path
+                                    Height="24"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Data="M8,0 C9,3.2 13,5.4 13,10 C13,13.6 10.8,16 8,16 C5.2,16 3,13.8 3,10.8 C3,8.4 4.2,6.8 5.6,5.6 C5.6,7.6 6.4,8.8 7.4,9.2 C6.8,6 7.6,2.8 8,0 Z M8,16 C6.6,16 5.6,14.9 5.6,13.5 C5.6,12.2 6.4,11.3 7.2,10.6 C7.3,11.6 7.9,12.2 8.6,12.4 C8.5,11.4 8.9,10.5 9.6,9.8 C10.1,10.9 10.4,12.1 10.4,13.3 C10.4,14.8 9.4,16 8,16 Z"
+                                    Fill="{ThemeResource MarkerBrush}"
+                                    Stretch="Uniform" />
+                                <TextBlock
+                                    x:Name="StreakText"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Style="{StaticResource CrossMomentCaptionTextBlockStyle}" />
+                            </StackPanel>
                         </StackPanel>
+                        <TextBlock
+                            x:Name="ProgressText"
+                            AutomationProperties.AccessibilityView="Raw"
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
                     </StackPanel>
-                    <TextBlock
-                        x:Name="ProgressText"
-                        AutomationProperties.AccessibilityView="Raw"
-                        Foreground="{ThemeResource MutedTextBrush}"
-                        Style="{StaticResource BodyTextBlockStyle}"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap" />
-                </StackPanel>
+                </Grid>
             </StackPanel>
         </Grid>
 
