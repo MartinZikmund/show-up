@@ -410,6 +410,39 @@ public sealed class SupabaseAuthTests
         _store.Value.Should().BeNull();
     }
 
+    [TestMethod]
+    public async Task RefreshAsync_ThrowingSubscriber_DoesNotFaultTheRefreshOrSkipOthers()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token("access-2", "refresh-2"));
+        List<string> seen = [];
+        auth.SessionChanged += (_, _) => throw new InvalidOperationException("boom");
+        auth.SessionChanged += (_, s) => seen.Add(s!.AccessToken);
+
+        Session? result = await auth.RefreshAsync();
+
+        result!.AccessToken.Should().Be("access-2");
+        seen.Should().Equal("access-2");
+    }
+
+    [TestMethod]
+    public async Task SignOutAsync_ThrowingSubscriber_StillLeavesTheStoreCleared()
+    {
+        SupabaseAuth auth = await SignedInAsync();
+        _handler.Enqueue(HttpStatusCode.NoContent);
+        string? storeAtEvent = "unset";
+        auth.SessionChanged += (_, _) =>
+        {
+            storeAtEvent = _store.Value;
+            throw new InvalidOperationException("boom");
+        };
+
+        await auth.SignOutAsync();
+
+        storeAtEvent.Should().BeNull();
+        auth.Current.Should().BeNull();
+    }
+
     private async Task<SupabaseAuth> SignedInAsync()
     {
         _handler.Enqueue(HttpStatusCode.OK, FakeHandler.Token());
