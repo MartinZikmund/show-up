@@ -1,0 +1,487 @@
+{
+  "id": "insanity-max-30",
+  "revision": 1,
+  "name": "Insanity MAX:30",
+  "family": "Insanity",
+  "description": "Shaun T 60-day program of 30-minute all-out workouts: a month of building up, then a month of beating your own Max Out times.",
+  "heroImage": null,
+  "accentColor": "#00B4CC",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2024/10/insanity-max30-workout-calendar.pdf",
+      "confirms": "Official Max Out calendar (page 1): every day of Month 1 and Month 2. Saturdays are 'Rest or Pulse (optional)'. Page 2 (Ab Maximizer variant) not encoded."
+    },
+    {
+      "url": "https://www.bodi.com/blog/insanity-workout-calendars",
+      "confirms": "Official Bodi page linking the calendar; 60-day program."
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "max-out",
+      "name": "Max Out Calendar",
+      "phases": [
+        {
+          "name": "Month 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-cardio-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-sweat-intervals"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-1"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-cardio-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-sweat-intervals"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-1"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-cardio-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-sweat-intervals"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-1"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-cardio-challenge"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-sweat-intervals"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-tabata-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-1"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Month 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-sweat"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-sweat"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-sweat"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-cardio"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-sweat"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-max-out-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-max-30-friday-fight-round-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-max-30-pulse"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

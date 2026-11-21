@@ -1,0 +1,1504 @@
+{
+  "id": "body-beast",
+  "revision": 1,
+  "name": "Body Beast",
+  "family": "Body Beast",
+  "description": "Sagi Kalev's muscle-building program: a Build block, a long Bulk block, then a Beast block that adds cardio and abs. Pick the Huge calendar to gain size or Lean to get cut.",
+  "heroImage": null,
+  "accentColor": "#6BA539",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bod-cms-assets.prod.cd.beachbodyondemand.com/bod-cms/wp-content/uploads/2016/10/BE_Calendar.pdf",
+      "confirms": "Official Beachbody Huge Beast and Lean Beast calendars (English, Spanish, French pages): every day of both tracks, Tempo and Total Body options, Abs placement"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "huge",
+      "name": "Huge",
+      "phases": [
+        {
+          "name": "Block 1 Build",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio",
+                      "alternates": [
+                        "body-beast-beast-total-body"
+                      ]
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio",
+                      "alternates": [
+                        "body-beast-beast-total-body"
+                      ]
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 2 Bulk",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 3 Beast",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio",
+                      "alternates": [
+                        "body-beast-beast-total-body"
+                      ]
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio",
+                      "alternates": [
+                        "body-beast-beast-total-body"
+                      ]
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lean",
+      "name": "Lean",
+      "phases": [
+        {
+          "name": "Block 1 Build",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 2 Bulk",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Block 3 Beast",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio",
+                      "alternates": [
+                        "body-beast-beast-total-body"
+                      ]
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-chest-tris",
+                      "alternates": [
+                        "body-beast-tempo-chest-tris"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-back-bis",
+                      "alternates": [
+                        "body-beast-tempo-back-bis"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio",
+                      "alternates": [
+                        "body-beast-beast-total-body"
+                      ]
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-chest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-build-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-shoulders"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-back"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-bulk-arms"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "body-beast-beast-cardio"
+                    },
+                    {
+                      "workoutId": "body-beast-beast-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

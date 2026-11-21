@@ -1,0 +1,266 @@
+{
+  "id": "insanity-asylum-vol-1",
+  "revision": 1,
+  "name": "Insanity: The Asylum Vol. 1",
+  "family": "Insanity",
+  "description": "Shaun T 30-day sports performance program built around speed, agility, strength and plyometrics, finishing with a fit test.",
+  "heroImage": null,
+  "accentColor": "#F2C500",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2024/10/Insanity-the-asylum-workout-calendar-pdf.pdf",
+      "confirms": "Official Asylum Vol. 1 calendar, Days 1-30. Days 19 and 25 list 'Game Day Overtime' (encoded as Game Day + Overtime). Optional recovery week not encoded."
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "30 Days",
+      "phases": [
+        {
+          "name": "Month 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-speed-agility"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-back-to-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-vertical-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-speed-agility"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-strength"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-back-to-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-vertical-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-relief"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-game-day"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-back-to-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-relief"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-speed-agility"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-vertical-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-relief"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-game-day"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-overtime"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-vertical-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-back-to-core"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-speed-agility"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-strength"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-game-day"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-overtime"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-vertical-plyo"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-back-to-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-relief"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-speed-agility"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-fit-test"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

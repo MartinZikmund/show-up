@@ -1,0 +1,203 @@
+{
+  "id": "21-day-fix-extreme",
+  "revision": 1,
+  "name": "21 Day Fix Extreme",
+  "family": "21 Day Fix",
+  "description": "A tougher sequel to the Fix: seven 30-minute workouts, one per day of the week, repeated for three weeks.",
+  "heroImage": null,
+  "accentColor": "#D6402B",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://images.beachbody.com/coach-office/downloads/toolkit/21DFX/21DFX_DCG_MCT.pdf",
+      "confirms": "Official Beachbody 21 Day Fix EXTREME Challenge Group Daily Coaching Guide: Week 1, 2 and 3 each list Day 1 Plyo Fix Extreme ... Day 7 Yoga Fix Extreme"
+    },
+    {
+      "url": "https://images.beachbody.com/coach-office/downloads/toolkit/21df/21DayFixExt_ProdTrainGuide_122314.pdf",
+      "confirms": "Official product guide: seven 30-minute workouts, one for each day of the week, 3 weeks"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "standard",
+      "name": "Standard",
+      "phases": [
+        {
+          "name": "Week 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-plyo-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-upper-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-pilates-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-lower-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-cardio-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-dirty-30-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-yoga-fix-extreme"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 2",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-plyo-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-upper-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-pilates-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-lower-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-cardio-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-dirty-30-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-yoga-fix-extreme"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Week 3",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-plyo-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-upper-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-pilates-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-lower-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-cardio-fix-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-dirty-30-extreme"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "21-day-fix-extreme-yoga-fix-extreme"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

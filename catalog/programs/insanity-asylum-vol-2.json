@@ -1,0 +1,269 @@
+{
+  "id": "insanity-asylum-vol-2",
+  "revision": 1,
+  "name": "Insanity: The Asylum Vol. 2",
+  "family": "Insanity",
+  "description": "Shaun T four-week follow-up to the Asylum with agility, upper body, legs and abs, capped each Saturday by a Sudden Death fit test.",
+  "heroImage": null,
+  "accentColor": "#C92A2A",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2024/10/the-asylum-volume-2-workout-calendar.pdf",
+      "confirms": "Official Asylum Vol. 2 calendar: all 4 weeks. Week 1 Monday lists Agility Tutorial + X Trainer; weeks 3-4 add Ab Shredder and Pure Contact (a Team Beachbody exclusive per the PDF)."
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "4 Weeks",
+      "phases": [
+        {
+          "name": "Month 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-agility-tutorial"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-2-x-trainer"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-upper-elite"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-power-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-back-6-pack"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-off-day-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-championship-fit-test"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-asylum-2-off-day-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-x-trainer"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-upper-elite"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-power-legs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-back-6-pack"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-off-day-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-championship-fit-test"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-asylum-2-off-day-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-x-trainer"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-upper-elite"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-power-legs"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-2-ab-shredder"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-back-6-pack"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-2-pure-contact"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-off-day-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-championship-fit-test"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-asylum-2-off-day-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-x-trainer"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-upper-elite"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-power-legs"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-2-ab-shredder"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-back-6-pack"
+                    },
+                    {
+                      "workoutId": "insanity-asylum-2-pure-contact"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-off-day-stretch"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "insanity-asylum-2-championship-fit-test"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "insanity-asylum-2-off-day-stretch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

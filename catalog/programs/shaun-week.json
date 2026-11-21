@@ -1,0 +1,95 @@
+{
+  "id": "shaun-week",
+  "revision": 1,
+  "name": "Shaun Week",
+  "family": "Insanity",
+  "description": "Seven days, seven Shaun T workouts: Insanity-style basics, cardio, weights, abs and a speed finisher.",
+  "heroImage": null,
+  "accentColor": "#7048E8",
+  "verification": "community",
+  "sources": [
+    {
+      "url": "https://soreyfitness.com/fitness/shaun-t-week-insane-focus",
+      "confirms": "Day order Day 1-7."
+    },
+    {
+      "url": "https://bestoflifemag.com/?p=24826",
+      "confirms": "Same day order Day 1-7."
+    },
+    {
+      "url": "https://pastebin.com/R25J5twJ",
+      "confirms": "Same day order Day 1-7."
+    },
+    {
+      "url": "https://www.beachbodyondemand.com/programs/shaun-week/start-here",
+      "confirms": "Official page: 7-day program with 7 workouts (day order not shown in fetched text)."
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "7 Days",
+      "phases": [
+        {
+          "name": "Week 1",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-insane-basics"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-pure-cardio-2"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-insane-weights"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-25-abs"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-ripsanity"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-speed-4-0"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "shaun-week-dig-deep"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

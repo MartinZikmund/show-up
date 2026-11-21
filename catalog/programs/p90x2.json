@@ -1,0 +1,611 @@
+{
+  "id": "p90x2",
+  "revision": 1,
+  "name": "P90X2",
+  "family": "P90X",
+  "description": "The follow-up to P90X, built around balance, core and athletic performance in Foundation, Strength and Performance phases.",
+  "heroImage": null,
+  "accentColor": "#1F6FB2",
+  "verification": "official",
+  "sources": [
+    {
+      "url": "https://www.bodi.com/blog/p90x-workout-schedule",
+      "confirms": "Official BODi page linking the P90X2 calendar PDF; five training days a week, no separate tracks"
+    },
+    {
+      "url": "https://bodiblog.wpenginepowered.com/wp-content/uploads/2024/11/P90X2-workout-schedule-pdf.pdf",
+      "confirms": "Official calendar: every day of Foundation, Strength, Performance. Phase lengths are ranges (3-6, 3-6, 3-4 weeks); encoded at the 3-week minimum"
+    }
+  ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "phases": [
+        {
+          "name": "Foundation",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-plyocide"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-total-body"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-balance-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-plyocide"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-total-body"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-balance-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-core"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-plyocide"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-total-body"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-balance-power"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Strength",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-chest-back-balance"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-plyocide"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-base-back"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-chest-back-balance"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-plyocide"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-base-back"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-chest-back-balance"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-plyocide"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-shoulders-arms"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-base-back"
+                    },
+                    {
+                      "workoutId": "p90x2-x2-ab-ripper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Performance",
+          "weeks": [
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "days": [
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-x2-yoga"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-lower"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "p90x2-pap-upper"
+                    }
+                  ]
+                },
+                {
+                  "sessions": [
+                    {
+                      "workoutId": "rest",
+                      "alternates": [
+                        "p90x2-x2-recovery-mobility"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
