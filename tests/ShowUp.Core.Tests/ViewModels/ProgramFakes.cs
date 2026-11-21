@@ -31,7 +31,13 @@ internal sealed class RecordingNavigationService : INavigationService
 
     public void Navigate<TViewModel>(object? parameter) => Navigations.Add((typeof(TViewModel), parameter));
 
-    public bool GoBack() => false;
+    public int BackCount { get; private set; }
+
+    public bool GoBack()
+    {
+        BackCount++;
+        return true;
+    }
 
     public void ClearBackStack() { }
 }

@@ -73,8 +73,3 @@ vector flame, Shift schedule), the grid and the empty state, and takes the view 
 
 The shift and bonus dialogs live behind `ICalendarPrompts`; the empty state's Browse programs
 goes through `ISectionNavigator` (the window's `WindowShellViewModel`).
-
-## Debug sample
-
-Debug builds show "Start sample enrollment" in the empty state: Insanity (classic) started nine
-days ago, so the grid has past, today and future days to try.

@@ -18,6 +18,7 @@ public sealed class ProgramDetailViewModelTests
     private readonly RecordingEnrollmentService _enrollments = new();
     private readonly StubConfirmationDialogService _confirmation = new();
     private readonly RecordingSectionNavigator _navigator = new();
+    private readonly RecordingNavigationService _navigation = new();
 
     public ProgramDetailViewModelTests() => _time.SetLocalTimeZone(TimeZoneInfo.Utc);
 
@@ -131,6 +132,16 @@ public sealed class ProgramDetailViewModelTests
         _navigator.Sections.Should().BeEmpty();
     }
 
+    [TestMethod]
+    public async Task GoBack_ReturnsToThePreviousPage()
+    {
+        var viewModel = await LoadAsync(TestCatalog.Program("p", 1, "run"));
+
+        viewModel.GoBackCommand.Execute(null);
+
+        _navigation.BackCount.Should().Be(1);
+    }
+
     private static WorkoutProgram TwoTracks()
     {
         var program = TestCatalog.Program("p", 1, "run", "run", "run");
@@ -152,6 +163,7 @@ public sealed class ProgramDetailViewModelTests
             _enrollments,
             _confirmation,
             _navigator,
+            _navigation,
             _time,
             NullLogger<ProgramDetailViewModel>.Instance);
         await viewModel.LoadAsync(program.Id);

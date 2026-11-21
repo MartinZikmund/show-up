@@ -25,6 +25,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly IActiveEnrollmentService _enrollments;
     private readonly IConfirmationDialogService _confirmation;
     private readonly ISectionNavigator _navigator;
+    private readonly INavigationService _navigation;
     private readonly TimeProvider _time;
     private readonly ILogger<ProgramDetailViewModel> _logger;
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
@@ -36,6 +37,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         IActiveEnrollmentService enrollments,
         IConfirmationDialogService confirmation,
         ISectionNavigator navigator,
+        INavigationService navigation,
         TimeProvider time,
         ILogger<ProgramDetailViewModel> logger)
     {
@@ -44,6 +46,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _enrollments = enrollments;
         _confirmation = confirmation;
         _navigator = navigator;
+        _navigation = navigation;
         _time = time;
         _logger = logger;
         StartDate = _time.GetLocalNow();
@@ -74,6 +77,8 @@ public partial class ProgramDetailViewModel : ViewModelBase
     public bool ShowTrackSelector => Tracks.Count > 1;
 
     public bool IsCommunityVerified => Program?.Verification == VerificationLevel.Community;
+
+    public string VerificationGlyph => IsCommunityVerified ? "\uE716" : "\uE930";
 
     public string VerificationText => _localizer[IsCommunityVerified ? "VerificationCommunity" : "VerificationOfficial"];
 
@@ -114,6 +119,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
             SelectedTrack = program.Tracks.FirstOrDefault();
             OnPropertyChanged(nameof(ShowTrackSelector));
             OnPropertyChanged(nameof(IsCommunityVerified));
+            OnPropertyChanged(nameof(VerificationGlyph));
             OnPropertyChanged(nameof(VerificationText));
             OnPropertyChanged(nameof(VerificationTooltip));
             OnPropertyChanged(nameof(ReportIssueUri));
@@ -123,6 +129,9 @@ public partial class ProgramDetailViewModel : ViewModelBase
             IsLoading = false;
         }
     }
+
+    [RelayCommand]
+    private void GoBack() => _navigation.GoBack();
 
     [RelayCommand]
     public async Task StartAsync()

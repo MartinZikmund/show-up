@@ -301,9 +301,6 @@
   <data name="CalendarBrowsePrograms" xml:space="preserve">
     <value>Proch&#225;zet programy</value>
   </data>
-  <data name="DebugStartSampleEnrollment" xml:space="preserve">
-    <value>Spustit uk&#225;zkov&#253; program</value>
-  </data>
   <data name="CalendarShiftSchedule" xml:space="preserve">
     <value>Posunout pl&#225;n</value>
   </data>
@@ -381,5 +378,98 @@
   </data>
   <data name="ShiftFailedMessage" xml:space="preserve">
     <value>V&#353;echny zb&#253;vaj&#237;c&#237; dny u&#382; m&#225;te od&#353;krtnut&#233; nebo program skon&#269;il, tak&#382;e nen&#237; co posunout.</value>
+  </data>
+  <data name="ProgramsSearchPlaceholder" xml:space="preserve">
+    <value>Hledat programy</value>
+  </data>
+  <data name="ProgramsAllFamilies" xml:space="preserve">
+    <value>V&#353;echny &#345;ady</value>
+  </data>
+  <data name="ProgramsFamilyPicker" xml:space="preserve">
+    <value>&#344;ada</value>
+  </data>
+  <data name="ProgramsNoMatches" xml:space="preserve">
+    <value>Nic takov&#233;ho tu nen&#237;. Zkuste krat&#353;&#237; n&#225;zev nebo jinou &#345;adu.</value>
+  </data>
+  <data name="ProgramDays_One" xml:space="preserve">
+    <value>{0} den</value>
+  </data>
+  <data name="ProgramDays_Few" xml:space="preserve">
+    <value>{0} dny</value>
+  </data>
+  <data name="ProgramDays_Other" xml:space="preserve">
+    <value>{0} dn&#237;</value>
+  </data>
+  <data name="ProgramTracks_One" xml:space="preserve">
+    <value>{0} varianta</value>
+  </data>
+  <data name="ProgramTracks_Few" xml:space="preserve">
+    <value>{0} varianty</value>
+  </data>
+  <data name="ProgramTracks_Other" xml:space="preserve">
+    <value>{0} variant</value>
+  </data>
+  <data name="ProgramWeeks_One" xml:space="preserve">
+    <value>{0} t&#253;den</value>
+  </data>
+  <data name="ProgramWeeks_Few" xml:space="preserve">
+    <value>{0} t&#253;dny</value>
+  </data>
+  <data name="ProgramWeeks_Other" xml:space="preserve">
+    <value>{0} t&#253;dn&#367;</value>
+  </data>
+  <data name="ProgramCardSummaryFormat" xml:space="preserve">
+    <value>{0} &#183; {1}</value>
+  </data>
+  <data name="VerificationOfficial" xml:space="preserve">
+    <value>Ofici&#225;ln&#237; kalend&#225;&#345;</value>
+  </data>
+  <data name="VerificationCommunity" xml:space="preserve">
+    <value>Ov&#283;&#345;eno komunitou</value>
+  </data>
+  <data name="VerificationOfficialTooltip" xml:space="preserve">
+    <value>Tento rozvrh odpov&#237;d&#225; kalend&#225;&#345;i, kter&#253; zve&#345;ejnil tv&#367;rce programu.</value>
+  </data>
+  <data name="VerificationCommunityTooltip" xml:space="preserve">
+    <value>Sestaveno a zkontrolov&#225;no komunitou, tv&#367;rce ofici&#225;ln&#237; kalend&#225;&#345; nezve&#345;ejnil. V&#353;imli jste si chyby? Nahlaste ji.</value>
+  </data>
+  <data name="ProgramTrackHeader" xml:space="preserve">
+    <value>Varianta</value>
+  </data>
+  <data name="ProgramStartDateHeader" xml:space="preserve">
+    <value>Datum zah&#225;jen&#237;</value>
+  </data>
+  <data name="ProgramStartDatePlaceholder" xml:space="preserve">
+    <value>Vyberte datum</value>
+  </data>
+  <data name="ProgramStartDateHint" xml:space="preserve">
+    <value>U&#382; jste za&#269;ali? Vyberte den skute&#269;n&#233;ho startu, a&#382; 30 dn&#237; zp&#283;t.</value>
+  </data>
+  <data name="ProgramStart" xml:space="preserve">
+    <value>Zah&#225;jit program</value>
+  </data>
+  <data name="ProgramWeekPreviewHeader" xml:space="preserve">
+    <value>T&#253;den po t&#253;dnu</value>
+  </data>
+  <data name="ProgramOptionalFormat" xml:space="preserve">
+    <value>{0} (voliteln&#233;)</value>
+  </data>
+  <data name="ProgramCommunityNote" xml:space="preserve">
+    <value>Tento kalend&#225;&#345; ov&#283;&#345;ila komunita. N&#283;co nesed&#237;?</value>
+  </data>
+  <data name="ProgramReportIssue" xml:space="preserve">
+    <value>Nahl&#225;sit chybu</value>
+  </data>
+  <data name="ProgramReplaceTitle" xml:space="preserve">
+    <value>Zm&#283;nit program?</value>
+  </data>
+  <data name="ProgramReplaceMessageFormat" xml:space="preserve">
+    <value>Ukon&#269;it {0} a za&#269;&#237;t {1}?</value>
+  </data>
+  <data name="ProgramNotFound" xml:space="preserve">
+    <value>Tento program v katalogu nen&#237;.</value>
+  </data>
+  <data name="ProgramBackToPrograms" xml:space="preserve">
+    <value>Zp&#283;t na programy</value>
   </data>
 </root>

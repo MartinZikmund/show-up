@@ -301,9 +301,6 @@
   <data name="CalendarBrowsePrograms" xml:space="preserve">
     <value>Browse programs</value>
   </data>
-  <data name="DebugStartSampleEnrollment" xml:space="preserve">
-    <value>Start sample enrollment</value>
-  </data>
   <data name="CalendarShiftSchedule" xml:space="preserve">
     <value>Shift schedule</value>
   </data>
@@ -381,5 +378,98 @@
   </data>
   <data name="ShiftFailedMessage" xml:space="preserve">
     <value>Every remaining day is already crossed off or the program is over, so there's nothing left to move.</value>
+  </data>
+  <data name="ProgramsSearchPlaceholder" xml:space="preserve">
+    <value>Search programs</value>
+  </data>
+  <data name="ProgramsAllFamilies" xml:space="preserve">
+    <value>All families</value>
+  </data>
+  <data name="ProgramsFamilyPicker" xml:space="preserve">
+    <value>Family</value>
+  </data>
+  <data name="ProgramsNoMatches" xml:space="preserve">
+    <value>Nothing matches that. Try a shorter name, or pick another family.</value>
+  </data>
+  <data name="ProgramDays_One" xml:space="preserve">
+    <value>{0} day</value>
+  </data>
+  <data name="ProgramDays_Few" xml:space="preserve">
+    <value>{0} days</value>
+  </data>
+  <data name="ProgramDays_Other" xml:space="preserve">
+    <value>{0} days</value>
+  </data>
+  <data name="ProgramTracks_One" xml:space="preserve">
+    <value>{0} track</value>
+  </data>
+  <data name="ProgramTracks_Few" xml:space="preserve">
+    <value>{0} tracks</value>
+  </data>
+  <data name="ProgramTracks_Other" xml:space="preserve">
+    <value>{0} tracks</value>
+  </data>
+  <data name="ProgramWeeks_One" xml:space="preserve">
+    <value>{0} week</value>
+  </data>
+  <data name="ProgramWeeks_Few" xml:space="preserve">
+    <value>{0} weeks</value>
+  </data>
+  <data name="ProgramWeeks_Other" xml:space="preserve">
+    <value>{0} weeks</value>
+  </data>
+  <data name="ProgramCardSummaryFormat" xml:space="preserve">
+    <value>{0} &#183; {1}</value>
+  </data>
+  <data name="VerificationOfficial" xml:space="preserve">
+    <value>Official calendar</value>
+  </data>
+  <data name="VerificationCommunity" xml:space="preserve">
+    <value>Community-verified</value>
+  </data>
+  <data name="VerificationOfficialTooltip" xml:space="preserve">
+    <value>This schedule matches the calendar published by the program creator.</value>
+  </data>
+  <data name="VerificationCommunityTooltip" xml:space="preserve">
+    <value>Rebuilt and cross-checked by the community, not published as an official calendar. Spot a mistake? Report it.</value>
+  </data>
+  <data name="ProgramTrackHeader" xml:space="preserve">
+    <value>Track</value>
+  </data>
+  <data name="ProgramStartDateHeader" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="ProgramStartDatePlaceholder" xml:space="preserve">
+    <value>Pick a date</value>
+  </data>
+  <data name="ProgramStartDateHint" xml:space="preserve">
+    <value>Already under way? Pick the day you really started, up to 30 days back.</value>
+  </data>
+  <data name="ProgramStart" xml:space="preserve">
+    <value>Start program</value>
+  </data>
+  <data name="ProgramWeekPreviewHeader" xml:space="preserve">
+    <value>Week by week</value>
+  </data>
+  <data name="ProgramOptionalFormat" xml:space="preserve">
+    <value>{0} (optional)</value>
+  </data>
+  <data name="ProgramCommunityNote" xml:space="preserve">
+    <value>This calendar is community-verified. Something look off?</value>
+  </data>
+  <data name="ProgramReportIssue" xml:space="preserve">
+    <value>Report an issue</value>
+  </data>
+  <data name="ProgramReplaceTitle" xml:space="preserve">
+    <value>Switch programs?</value>
+  </data>
+  <data name="ProgramReplaceMessageFormat" xml:space="preserve">
+    <value>End {0} and start {1}?</value>
+  </data>
+  <data name="ProgramNotFound" xml:space="preserve">
+    <value>That program isn't in the catalog.</value>
+  </data>
+  <data name="ProgramBackToPrograms" xml:space="preserve">
+    <value>Back to programs</value>
   </data>
 </root>

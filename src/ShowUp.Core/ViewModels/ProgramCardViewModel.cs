@@ -17,4 +17,6 @@ public sealed partial record ProgramCardViewModel(
     string VerificationTooltip)
 {
     public bool IsCommunityVerified => Verification == VerificationLevel.Community;
+
+    public string VerificationGlyph => IsCommunityVerified ? "\uE716" : "\uE930";
 }
