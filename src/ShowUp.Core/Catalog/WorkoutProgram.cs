@@ -9,6 +9,30 @@ public sealed partial record ProgramTrack(string Id, string Name, IReadOnlyList<
     /// <summary>All days in phase, week, day order.</summary>
     [JsonIgnore]
     public IReadOnlyList<ScheduleDay> Days => [.. Phases.SelectMany(p => p.Weeks).SelectMany(w => w.Days)];
+
+    /// <summary>Phase name, 1-based week across the track, and 1-based day within that week.</summary>
+    public (string PhaseName, int WeekNumber, int DayOfWeek) Locate(int dayIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(dayIndex);
+
+        int remaining = dayIndex;
+        int weekNumber = 0;
+        foreach (ProgramPhase phase in Phases)
+        {
+            foreach (ScheduleWeek week in phase.Weeks)
+            {
+                weekNumber++;
+                if (remaining < week.Days.Count)
+                {
+                    return (phase.Name, weekNumber, remaining + 1);
+                }
+
+                remaining -= week.Days.Count;
+            }
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(dayIndex));
+    }
 }
 
 public sealed record CatalogSource(string Url, string Confirms);
