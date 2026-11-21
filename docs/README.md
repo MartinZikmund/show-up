@@ -14,6 +14,7 @@ One page per topic. Keep it that way.
 ## Architecture
 
 - [json-aot-serialization.md](./json-aot-serialization.md) — `JsonSerializerContext` conventions for AOT-safe, trim-safe JSON serialization.
+- [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
 - [views.md](./views.md) — `ViewBase<TViewModel>`, `IViewBase`, and how views resolve their view models.
 
 ## Release

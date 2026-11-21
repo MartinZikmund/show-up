@@ -11,5 +11,8 @@ public sealed partial class MainView : MainViewBase
     public MainView()
     {
         this.InitializeComponent();
+#if DEBUG
+        DebugStoragePanel.Visibility = Visibility.Visible;
+#endif
     }
 }

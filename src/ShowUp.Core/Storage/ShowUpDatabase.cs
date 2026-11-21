@@ -2,7 +2,7 @@ using SQLite;
 
 namespace ShowUp.Core.Storage;
 
-public sealed class ShowUpDatabase(string databasePath) : IAsyncDisposable
+public sealed class ShowUpDatabase(string databasePath, Func<Task>? prepareStorage = null) : IAsyncDisposable
 {
     private static readonly Lazy<bool> _sqliteInit = new(() =>
     {
@@ -26,6 +26,11 @@ public sealed class ShowUpDatabase(string databasePath) : IAsyncDisposable
             if (_connection is null)
             {
                 _ = _sqliteInit.Value;
+                if (prepareStorage is not null)
+                {
+                    await prepareStorage();
+                }
+
                 SQLiteAsyncConnection connection = new(databasePath);
                 await Migrations.ApplyAsync(connection);
                 _connection = connection;
