@@ -154,4 +154,49 @@ public sealed class JournalServiceTests : StorageTestBase
         (await viewModel.LoadForSessionAsync(2, 0)).Should().BeFalse();
         viewModel.HasResults.Should().BeFalse();
     }
+
+    [TestMethod]
+    public async Task SaveResults_UnknownMetric_Throws()
+    {
+        var sheet = (await _journal.GetResultsSheetAsync(0, 0))!;
+
+        Func<Task> act = () => _journal.SaveResultsAsync(sheet.Target, new Dictionary<string, MetricValue> { ["burpees"] = new(10) });
+
+        await act.Should().ThrowAsync<ArgumentException>();
+        _changes.Should().Be(0);
+    }
+
+    [TestMethod]
+    public async Task SaveResults_WorkoutNotScheduledThere_Throws()
+    {
+        var enrollmentId = (await _enrollments.GetAsync())!.Enrollment.Id;
+
+        Func<Task> act = () => _journal.SaveResultsAsync(
+            MetricTarget.ForSession(enrollmentId, 2, 0, "fit"),
+            new Dictionary<string, MetricValue> { ["jacks"] = new(10) });
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [TestMethod]
+    [DataRow(-7, true)]
+    [DataRow(-8, false)]
+    public async Task GetResults_BonusBeforeDayOne_CountsWithinAWeek(int daysFromStart, bool included)
+    {
+        Time.SetUtcNow(new DateTimeOffset(2026, 12, 10, 12, 0, 0, TimeSpan.Zero));
+        var bonus = await _enrollments.LogBonusAsync("fit", "Fit Test", _start.AddDays(daysFromStart), null);
+        await _journal.SaveResultsAsync((await _journal.GetBonusResultsSheetAsync(bonus))!.Target, new Dictionary<string, MetricValue> { ["jacks"] = new(30) });
+
+        var table = (await _journal.GetResultsAsync()).Single();
+
+        table.Columns.Any(c => c.BonusWorkoutId == bonus.Id).Should().Be(included);
+    }
+
+    [TestMethod]
+    public async Task HasMetrics_ScheduledWorkout_ReflectsTheCatalog()
+    {
+        (await _journal.HasMetricsAsync(0, 0)).Should().BeTrue();
+        (await _journal.HasMetricsAsync(2, 0)).Should().BeFalse();
+        (await _journal.HasMetricsAsync(99, 0)).Should().BeFalse();
+    }
 }

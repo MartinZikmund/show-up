@@ -131,4 +131,56 @@ public class JournalRepositoriesTests : StorageTestBase
 
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
     }
+
+    [TestMethod]
+    public async Task SubjectKeys_NotesAndResults_AreStoredForUpserts()
+    {
+        var bonusId = Guid.NewGuid();
+        await CreateNotesRepository().SetNotesAsync(_enrollment, [new NoteEdit(null, null, "p"), new NoteEdit(2, null, "d"), new NoteEdit(2, 1, "s")]);
+        await CreateMetricsRepository().SetValuesAsync(MetricTarget.ForSession(_enrollment, 2, 1, "w"), new Dictionary<string, MetricValue> { ["m"] = new(1) });
+        await CreateMetricsRepository().SetValuesAsync(MetricTarget.ForBonus(bonusId, "w"), new Dictionary<string, MetricValue> { ["m"] = new(2) });
+
+        var connection = await Db.GetConnectionAsync();
+        var noteKeys = (await connection.Table<NoteEntity>().ToListAsync()).Select(n => n.SubjectKey);
+        var metricKeys = (await connection.Table<MetricEntryEntity>().ToListAsync()).Select(m => m.SubjectKey);
+
+        noteKeys.Should().BeEquivalentTo($"p:{_enrollment:D}", $"d:{_enrollment:D}:2", $"s:{_enrollment:D}:2:1");
+        metricKeys.Should().BeEquivalentTo($"s:{_enrollment:D}:2:1", $"b:{bonusId:D}");
+    }
+
+    [TestMethod]
+    public async Task Metrics_OneInvalidValue_WritesNothing()
+    {
+        var metrics = CreateMetricsRepository();
+
+        Func<Task> act = () => metrics.SetValuesAsync(
+            MetricTarget.ForSession(_enrollment, 0, 0, "w"),
+            new Dictionary<string, MetricValue> { ["a"] = new(1), ["b"] = new(double.PositiveInfinity) });
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        (await metrics.GetSessionEntriesAsync(_enrollment)).Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Metrics_SameSubjectOtherWorkout_IsNotOverwritten()
+    {
+        var metrics = CreateMetricsRepository();
+        await metrics.SetValuesAsync(MetricTarget.ForSession(_enrollment, 0, 0, "old"), new Dictionary<string, MetricValue> { ["m"] = new(1) });
+
+        await metrics.SetValuesAsync(MetricTarget.ForSession(_enrollment, 0, 0, "new"), new Dictionary<string, MetricValue> { ["m"] = new(2) });
+
+        (await metrics.GetSessionEntriesAsync(_enrollment)).Select(e => (e.WorkoutId, e.Value)).Should().BeEquivalentTo([("old", (double?)1), ("new", (double?)2)]);
+    }
+
+    [TestMethod]
+    public void MetricTarget_Shapes_AreExclusive()
+    {
+        var bonus = MetricTarget.ForBonus(Guid.NewGuid(), "w");
+        var session = MetricTarget.ForSession(_enrollment, 1, 0, "w");
+
+        bonus.Should().BeEquivalentTo(new { IsBonus = true, EnrollmentId = (Guid?)null, DayIndex = (int?)null, SessionIndex = (int?)null });
+        session.BonusWorkoutId.Should().BeNull();
+        FluentActions.Invoking(() => MetricTarget.ForSession(_enrollment, -1, 0, "w")).Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => MetricTarget.ForBonus(Guid.NewGuid(), " ")).Should().Throw<ArgumentException>();
+    }
 }
