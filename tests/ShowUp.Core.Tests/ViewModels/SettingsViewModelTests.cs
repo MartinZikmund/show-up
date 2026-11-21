@@ -173,6 +173,18 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
+    public void MarkerColor_Changed_RaisesSelectedMarkerSwatch()
+    {
+        var viewModel = Navigated(new FakeAppPreferences());
+        List<string?> raised = [];
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        viewModel.MarkerColor = MarkerColor.Orange;
+
+        raised.Should().Contain(nameof(SettingsViewModel.SelectedMarkerSwatch));
+    }
+
+    [TestMethod]
     public void CanChangeMarkerColor_ForNow_IsTrue()
     {
         CreateViewModel(new FakeAppPreferences()).CanChangeMarkerColor.Should().BeTrue();
