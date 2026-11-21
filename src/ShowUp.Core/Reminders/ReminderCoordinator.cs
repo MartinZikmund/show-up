@@ -24,6 +24,7 @@ public sealed class ReminderCoordinator : IDisposable
     private readonly ReminderMessageBuilder _messages;
     private readonly ILogger<ReminderCoordinator> _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly ThreadLocal<bool> _announcing = new();
     private Task? _firstRefresh;
     private int _started;
     private long _requested;
@@ -56,7 +57,14 @@ public sealed class ReminderCoordinator : IDisposable
         {
             _messenger.Register<ReminderCoordinator, TrackingChangedMessage>(this, static (r, m) => r.ReplanInBackground());
             _messenger.Register<ReminderCoordinator, DataChangedMessage>(this, static (r, m) => r.ReplanInBackground());
-            _messenger.Register<ReminderCoordinator, RemindersChangedMessage>(this, static (r, m) => r.ReplanInBackground());
+            _messenger.Register<ReminderCoordinator, RemindersChangedMessage>(this, static (r, m) =>
+            {
+                // Our own announcement (extras disabled) already comes with a plan.
+                if (!r._announcing.Value)
+                {
+                    r.ReplanInBackground();
+                }
+            });
             _entitlements.Changed += OnEntitlementsChanged;
         }
 
@@ -67,6 +75,7 @@ public sealed class ReminderCoordinator : IDisposable
     {
         _messenger.UnregisterAll(this);
         _entitlements.Changed -= OnEntitlementsChanged;
+        _announcing.Dispose();
     }
 
     private void OnEntitlementsChanged(object? sender, EventArgs e) => ReplanInBackground();
@@ -153,7 +162,16 @@ public sealed class ReminderCoordinator : IDisposable
             await _reminders.SetEnabledAsync(reminder.Id, false);
         }
 
-        _messenger.Send(new RemindersChangedMessage());
+        _announcing.Value = true;
+        try
+        {
+            _messenger.Send(new RemindersChangedMessage());
+        }
+        finally
+        {
+            _announcing.Value = false;
+        }
+
         return await _reminders.ListAsync();
     }
 
