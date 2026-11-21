@@ -1,0 +1,6 @@
+[
+  { "id": "fit-test", "name": "Fit Test", "durationMinutes": 30, "kind": "fitTest", "family": "Insanity" },
+  { "id": "cardio", "name": "Cardio", "durationMinutes": 40, "kind": "cardio", "family": "Insanity" },
+  { "id": "abs", "name": "Abs", "durationMinutes": 20, "kind": "abs", "family": "Insanity" },
+  { "id": "rest", "name": "Rest", "durationMinutes": null, "kind": "rest", "family": null }
+]
