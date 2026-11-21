@@ -98,6 +98,17 @@
                 </ComboBox>
             </toolkit:SettingsCard>
 
+            <toolkit:SettingsCard
+                AutomationProperties.AutomationId="RemindersSettingsCard"
+                Command="{x:Bind ViewModel.OpenRemindersCommand}"
+                Description="{markup:Localize Key=RemindersCardDescription}"
+                Header="{markup:Localize Key=Reminders}"
+                IsClickEnabled="True">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xEA8F;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
             <!--  Crossing off section  -->
             <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="{markup:Localize Key=CrossingOff}" />
 

@@ -925,4 +925,76 @@
   <data name="ProgramReadOnlyRestartMessage" xml:space="preserve">
     <value>Verze Free nechá běžet jeden program, takže tento zůstane přesně tak, jak je, dokud se Pro nevrátí. Chcete-li ho začít znovu, odemkněte Pro.</value>
   </data>
+  <data name="Reminders" xml:space="preserve">
+    <value>Připomínky</value>
+  </data>
+  <data name="RemindersCardDescription" xml:space="preserve">
+    <value>Denní šťouchnutí, ať se ukážete</value>
+  </data>
+  <data name="ReminderTitle" xml:space="preserve">
+    <value>Show Up</value>
+  </data>
+  <data name="ReminderWorkoutBody" xml:space="preserve">
+    <value>{0} už čeká. Ukažte se.</value>
+  </data>
+  <data name="ReminderRestBody" xml:space="preserve">
+    <value>Den volna. Zasloužíte si ho.</value>
+  </data>
+  <data name="ReminderMore_One" xml:space="preserve">
+    <value>{0} a 1 další</value>
+  </data>
+  <data name="ReminderMore_Few" xml:space="preserve">
+    <value>{0} a {1} další</value>
+  </data>
+  <data name="ReminderMore_Other" xml:space="preserve">
+    <value>{0} a {1} dalších</value>
+  </data>
+  <data name="ReminderAdd" xml:space="preserve">
+    <value>Přidat připomínku</value>
+  </data>
+  <data name="ReminderEdit" xml:space="preserve">
+    <value>Upravit připomínku</value>
+  </data>
+  <data name="ReminderEveryDay" xml:space="preserve">
+    <value>Každý den</value>
+  </data>
+  <data name="ReminderDeleteTitle" xml:space="preserve">
+    <value>Smazat připomínku?</value>
+  </data>
+  <data name="ReminderDeleteText" xml:space="preserve">
+    <value>Připomínka na {0} bude odstraněna.</value>
+  </data>
+  <data name="ReminderDelete" xml:space="preserve">
+    <value>Smazat připomínku</value>
+  </data>
+  <data name="ReminderEditAction" xml:space="preserve">
+    <value>Upravit připomínku</value>
+  </data>
+  <data name="ReminderEmpty" xml:space="preserve">
+    <value>Zatím žádné připomínky. Přidejte jednu a my vás v tréninkové dny popostrčíme.</value>
+  </data>
+  <data name="ReminderTimeLabel" xml:space="preserve">
+    <value>Čas</value>
+  </data>
+  <data name="ReminderDaysLabel" xml:space="preserve">
+    <value>Dny</value>
+  </data>
+  <data name="ReminderEnabledName" xml:space="preserve">
+    <value>Připomínka zapnutá</value>
+  </data>
+  <data name="ReminderUnsupported" xml:space="preserve">
+    <value>Připomínky na tomhle zařízení zatím nejsou podporované. Nastavit je můžete už teď, začnou fungovat, jakmile to půjde.</value>
+  </data>
+  <data name="ReminderPermissionDenied" xml:space="preserve">
+    <value>Oznámení jsou pro Show Up vypnutá. Povolte je v nastavení systému, ať připomínky dorazí.</value>
+  </data>
+  <data name="ReminderProLink" xml:space="preserve">
+    <value>Odemkněte Pro a mějte až 20 připomínek</value>
+  </data>
+  <data name="ReminderErrorTitle" xml:space="preserve">
+    <value>Připomínku se nepodařilo upravit</value>
+  </data>
+  <data name="ReminderErrorText" xml:space="preserve">
+    <value>Při ukládání připomínek se něco pokazilo. Seznam ukazuje, co je uložené.</value>
+  </data>
 </root>
