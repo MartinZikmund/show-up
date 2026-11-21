@@ -120,15 +120,16 @@ public sealed class JournalServiceTests : StorageTestBase
     }
 
     [TestMethod]
-    public async Task DayDetail_Uncross_UncrossesRightAway()
+    public async Task DayDetail_Uncross_AppliedOnSave()
     {
         await _enrollments.CrossAsync(0, 0);
         DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), _preferences, NullLogger<DayDetailViewModel>.Instance);
         await viewModel.LoadAsync(0);
 
-        await viewModel.UncrossCommand.ExecuteAsync(viewModel.Sessions[0]);
+        viewModel.ToggleUncrossCommand.Execute(viewModel.Sessions[0]);
+        (await _enrollments.GetCompletionsAsync()).Should().ContainSingle("nothing is written before Save");
+        await viewModel.SaveAsync();
 
-        viewModel.Sessions[0].IsDone.Should().BeFalse();
         (await _enrollments.GetCompletionsAsync()).Should().BeEmpty();
     }
 

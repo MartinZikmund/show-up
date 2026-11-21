@@ -17,14 +17,14 @@ public sealed partial class DayDetailDialog : ContentDialog
 
     public static int StrokesFor(bool isDone) => isDone ? 2 : 0;
 
-    public static string StatusText(bool isDone) => Localizer.Instance[isDone ? "DayDetailSessionDone" : "DayDetailSessionNotDone"];
+    public static string StatusText(bool isDone, bool pendingUncross) =>
+        Localizer.Instance[pendingUncross ? "DayDetailUncrossPending" : isDone ? "DayDetailSessionDone" : "DayDetailSessionNotDone"];
 
-    // The flyout lives outside the template's visual tree, so the session rides along on Tag.
-    private void ConfirmUncross_Click(object sender, RoutedEventArgs e)
+    private void ToggleUncross_Click(object sender, RoutedEventArgs e)
     {
         if (((FrameworkElement)sender).Tag is DaySessionViewModel session)
         {
-            ViewModel.UncrossCommand.Execute(session);
+            ViewModel.ToggleUncrossCommand.Execute(session);
         }
     }
 }

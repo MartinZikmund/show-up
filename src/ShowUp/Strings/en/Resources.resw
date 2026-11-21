@@ -640,9 +640,6 @@
   <data name="DayDetailSessionNotDone" xml:space="preserve">
     <value>Not crossed off yet</value>
   </data>
-  <data name="DayDetailUncrossConfirm" xml:space="preserve">
-    <value>Uncross this session? It goes back to not done.</value>
-  </data>
   <data name="DayDetailBonusHeader" xml:space="preserve">
     <value>Bonus workouts</value>
   </data>
@@ -726,5 +723,11 @@
   </data>
   <data name="UnitSystem_Imperial" xml:space="preserve">
     <value>Imperial (lb, mi)</value>
+  </data>
+  <data name="DayDetailUncrossPending" xml:space="preserve">
+    <value>Uncrossed when you save</value>
+  </data>
+  <data name="DayDetailUndo" xml:space="preserve">
+    <value>Undo</value>
   </data>
 </root>

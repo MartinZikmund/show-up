@@ -640,9 +640,6 @@
   <data name="DayDetailSessionNotDone" xml:space="preserve">
     <value>Zatím neodškrtnuto</value>
   </data>
-  <data name="DayDetailUncrossConfirm" xml:space="preserve">
-    <value>Zrušit odškrtnutí? Cvičení bude zase nehotové.</value>
-  </data>
   <data name="DayDetailBonusHeader" xml:space="preserve">
     <value>Bonusová cvičení</value>
   </data>
@@ -726,5 +723,11 @@
   </data>
   <data name="UnitSystem_Imperial" xml:space="preserve">
     <value>Imperiální (lb, mi)</value>
+  </data>
+  <data name="DayDetailUncrossPending" xml:space="preserve">
+    <value>Odškrtnutí zrušíte uložením</value>
+  </data>
+  <data name="DayDetailUndo" xml:space="preserve">
+    <value>Vrátit</value>
   </data>
 </root>

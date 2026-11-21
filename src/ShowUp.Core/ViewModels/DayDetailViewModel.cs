@@ -33,8 +33,19 @@ public sealed partial class DaySessionViewModel : ObservableObject
 
     public string UncrossAutomationId => $"DayDetailUncross_{Index}";
 
+    public string UndoAutomationId => $"DayDetailUndoUncross_{Index}";
+
+    /// <summary>Crossed off when the sheet opened.</summary>
+    public bool IsDone { get; }
+
+    /// <summary>Marked to uncross; applied on Save, dropped on Cancel.</summary>
     [ObservableProperty]
-    public partial bool IsDone { get; internal set; }
+    [NotifyPropertyChangedFor(nameof(ShowsCrossed), nameof(CanUncross))]
+    public partial bool PendingUncross { get; internal set; }
+
+    public bool ShowsCrossed => IsDone && !PendingUncross;
+
+    public bool CanUncross => IsDone && !PendingUncross;
 
     [ObservableProperty]
     public partial string Note { get; set; }
@@ -114,23 +125,13 @@ public sealed partial class DayDetailViewModel(
         return true;
     }
 
-    /// <summary>Uncrossing is immediate (the sheet's edits stay pending until Save).</summary>
+    /// <summary>Marks a crossed session to uncross on Save, or takes that back.</summary>
     [RelayCommand]
-    private async Task UncrossAsync(DaySessionViewModel? session)
+    private void ToggleUncross(DaySessionViewModel? session)
     {
-        if (session is not { IsDone: true } || DayIndex < 0)
+        if (DayIndex >= 0 && session is { IsDone: true })
         {
-            return;
-        }
-
-        try
-        {
-            await enrollments.UncrossAsync(DayIndex, session.Index);
-            session.IsDone = false;
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Uncrossing day {Day} session {Session} failed.", DayIndex, session.Index);
+            session.PendingUncross = !session.PendingUncross;
         }
     }
 
@@ -139,6 +140,18 @@ public sealed partial class DayDetailViewModel(
         if (DayIndex < 0 || !CanSave)
         {
             return;
+        }
+
+        foreach (var session in Sessions.Where(s => s.PendingUncross))
+        {
+            try
+            {
+                await enrollments.UncrossAsync(DayIndex, session.Index);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogWarning(ex, "Uncrossing day {Day} session {Session} failed.", DayIndex, session.Index);
+            }
         }
 
         DayEdit edit = new(

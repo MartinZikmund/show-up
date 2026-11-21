@@ -54,7 +54,7 @@
                                         Margin="4"
                                         AnimateChanges="False"
                                         AutomationProperties.AccessibilityView="Raw"
-                                        Strokes="{x:Bind local:DayDetailDialog.StrokesFor(IsDone), Mode=OneWay}" />
+                                        Strokes="{x:Bind local:DayDetailDialog.StrokesFor(ShowsCrossed), Mode=OneWay}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock
@@ -64,31 +64,24 @@
                                     <TextBlock
                                         Foreground="{ThemeResource MutedTextBrush}"
                                         Style="{StaticResource CaptionTextBlockStyle}"
-                                        Text="{x:Bind local:DayDetailDialog.StatusText(IsDone), Mode=OneWay}" />
+                                        Text="{x:Bind local:DayDetailDialog.StatusText(IsDone, PendingUncross), Mode=OneWay}" />
                                 </StackPanel>
                                 <Button
                                     Grid.Column="2"
                                     VerticalAlignment="Center"
                                     AutomationProperties.AutomationId="{x:Bind UncrossAutomationId}"
+                                    Click="ToggleUncross_Click"
                                     Content="{markup:Localize Key=CalendarUncross}"
-                                    Visibility="{x:Bind IsDone, Mode=OneWay}">
-                                    <Button.Flyout>
-                                        <Flyout Placement="Bottom">
-                                            <StackPanel MaxWidth="260" Spacing="12">
-                                                <TextBlock
-                                                    Style="{StaticResource BodyTextBlockStyle}"
-                                                    Text="{markup:Localize Key=DayDetailUncrossConfirm}"
-                                                    TextWrapping="Wrap" />
-                                                <Button
-                                                    AutomationProperties.AutomationId="DayDetailUncrossConfirmButton"
-                                                    Click="ConfirmUncross_Click"
-                                                    Content="{markup:Localize Key=CalendarUncross}"
-                                                    Style="{StaticResource AccentButtonStyle}"
-                                                    Tag="{x:Bind}" />
-                                            </StackPanel>
-                                        </Flyout>
-                                    </Button.Flyout>
-                                </Button>
+                                    Tag="{x:Bind}"
+                                    Visibility="{x:Bind CanUncross, Mode=OneWay}" />
+                                <Button
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="{x:Bind UndoAutomationId}"
+                                    Click="ToggleUncross_Click"
+                                    Content="{markup:Localize Key=DayDetailUndo}"
+                                    Tag="{x:Bind}"
+                                    Visibility="{x:Bind PendingUncross, Mode=OneWay}" />
                             </Grid>
                             <controls:MetricInputsControl Inputs="{x:Bind Inputs}" Visibility="{x:Bind HasResults}" />
                             <TextBox
