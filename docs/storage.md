@@ -5,12 +5,15 @@ Where Show Up keeps its data, and whether it survives a restart on each head.
 ## What is stored where
 
 One SQLite file, `showup.db`, in `ApplicationData.Current.LocalFolder`, opened through
-`ShowUpDatabase` (sqlite-net). Three repositories share it, all on `SqliteRepositoryBase` (user scoping,
+`ShowUpDatabase` (sqlite-net). Six repositories share it, all on `SqliteRepositoryBase` (user scoping,
 stamping `Id`/`UserId`/`DeviceId`/timestamps, tombstones):
 
 - `ITrackingRepository` / `SqliteTrackingRepository`: enrollments, completions, shifts, bonus workouts.
 - `INotesRepository` / `SqliteNotesRepository`: program, day and session notes.
 - `IMetricsRepository` / `SqliteMetricsRepository`: logged results.
+- `IReminderRepository` / `SqliteReminderRepository`: daily reminders (minute of day, weekday mask, enabled). No natural key.
+- `ICustomProgramRepository` / `SqliteCustomProgramRepository`: user-built programs, one row per revision, natural key `c:{programId}` (`custom-<guid>`). The highest live revision is current; older ones stay (not tombstoned) so enrollments pinned to them still resolve. Delete tombstones every revision.
+- `ISyncedSettings` / `SqliteSyncedSettings`: key/value settings that follow the user, natural key `k:{key}`, upserted.
 
 | Head | Location | Persistence |
 |---|---|---|
@@ -29,6 +32,7 @@ Add a new numbered step there; never edit a shipped one.
 | 1 | Enrollments, completions, schedule shifts, bonus workouts |
 | 2 | `CompletionEntity.InkJson`: the user's drawn strokes for a cross (see [marking.md](./marking.md#draw-it-yourself)) |
 | 3 | `NoteEntity` (program, day and session notes) and `MetricEntryEntity` (logged results), see [results.md](./results.md) |
+| 4 | `ReminderEntity`, `CustomProgramEntity` and `SyncedSettingEntity` (frozen DDL, one transaction) |
 
 ## WebAssembly: the async file system catch
 
@@ -55,3 +59,7 @@ The database file itself lives at `LocalFolder/showup.db`; the `db` folder is ju
 The DEBUG-only "bonus rows" panel used for this spike was removed when the real shell landed
 (Today replaced the template's main page). To re-check persistence, log a bonus workout from the app
 and reload.
+
+## Server merge for keyed rows
+
+Settings (`k:{key}`), custom programs (`c:{programId}` + `Revision`) and notes/results are matched on their natural key with last writer wins (`UpdatedAt`, then `Id`), not unique constraints: two offline devices can each create a row for the same key. Local reads already take the newest live row per key, and the next write tombstones the rest.
