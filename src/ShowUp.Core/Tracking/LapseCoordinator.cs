@@ -13,16 +13,18 @@ public sealed class LapseCoordinator
 {
     private readonly IActiveEnrollmentService _enrollments;
     private readonly IEntitlementService _entitlements;
+    private readonly TimeProvider _time;
     private readonly ILogger<LapseCoordinator> _logger;
     private readonly object _gate = new();
     private readonly List<IPrimaryProgramPrompt> _prompts = [];
     private Task? _firstRefresh;
     private int _running;
 
-    public LapseCoordinator(IActiveEnrollmentService enrollments, IEntitlementService entitlements, ILogger<LapseCoordinator> logger)
+    public LapseCoordinator(IActiveEnrollmentService enrollments, IEntitlementService entitlements, TimeProvider time, ILogger<LapseCoordinator> logger)
     {
         _enrollments = enrollments;
         _entitlements = entitlements;
+        _time = time;
         _logger = logger;
         _entitlements.Changed += (_, _) => _ = CheckWhenSettledAsync();
     }
@@ -110,7 +112,12 @@ public sealed class LapseCoordinator
     {
         try
         {
-            await _entitlements.RefreshAsync();
+            await _entitlements.RefreshAsync().WaitAsync(ExpiryWatch.RefreshTimeout, _time);
+        }
+        catch (TimeoutException)
+        {
+            // Store unreachable: the cached state decides, as offline.
+            _logger.LogWarning("The store didn't answer within {Timeout} at launch; checking the lapse from the cached state.", ExpiryWatch.RefreshTimeout);
         }
         catch (Exception ex)
         {

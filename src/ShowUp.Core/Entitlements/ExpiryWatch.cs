@@ -1,11 +1,16 @@
+using Microsoft.Extensions.Logging;
+
 namespace ShowUp.Core.Entitlements;
 
 /// <summary>
 /// Rechecks Pro when a cached subscription reaches its end mid-session: refreshes from the store first, so a
 /// renewal keeps Pro, and reports a lapse only when the refresh still says not Pro (or couldn't reach the store).
 /// </summary>
-public sealed class ExpiryWatch(TimeProvider time) : IDisposable
+public sealed class ExpiryWatch(TimeProvider time, ILogger? logger = null) : IDisposable
 {
+    /// <summary>How long the store gets to answer before it counts as unreachable.</summary>
+    public static readonly TimeSpan RefreshTimeout = TimeSpan.FromSeconds(10);
+
     // Timers can't wait much past 49 days; longer waits re-arm in steps.
     private static readonly TimeSpan _maxStep = TimeSpan.FromDays(30);
 
@@ -51,32 +56,45 @@ public sealed class ExpiryWatch(TimeProvider time) : IDisposable
         }
     }
 
+    // Timer callbacks can't await, and an exception here would take the app down: log it instead.
     private async void OnTimer(int generation, DateTimeOffset at, Func<Task> refreshAsync, Func<bool> isPro, Action lapsed)
     {
-        if (Volatile.Read(ref _generation) != generation)
-        {
-            return;
-        }
-
-        if (time.GetUtcNow() < at)
-        {
-            Schedule(at, refreshAsync, isPro, lapsed);
-            return;
-        }
-
         try
         {
-            await refreshAsync();
-        }
-        catch
-        {
-            // Offline: the cached expiry stands.
-        }
+            if (Volatile.Read(ref _generation) != generation)
+            {
+                return;
+            }
 
-        // The refresh may have re-armed the watch for a renewal; Pro decides, not the generation.
-        if (!isPro())
+            if (time.GetUtcNow() < at)
+            {
+                Schedule(at, refreshAsync, isPro, lapsed);
+                return;
+            }
+
+            try
+            {
+                await refreshAsync().WaitAsync(RefreshTimeout, time);
+            }
+            catch (TimeoutException)
+            {
+                logger?.LogWarning("The store didn't answer within {Timeout} at the subscription's end; treating it as unreachable.", RefreshTimeout);
+            }
+            catch (Exception ex)
+            {
+                // Offline: the cached expiry stands.
+                logger?.LogWarning(ex, "Refreshing Pro at the subscription's end failed.");
+            }
+
+            // The refresh may have re-armed the watch for a renewal; Pro decides, not the generation.
+            if (!isPro())
+            {
+                lapsed();
+            }
+        }
+        catch (Exception ex)
         {
-            lapsed();
+            logger?.LogError(ex, "Checking the subscription's end failed.");
         }
     }
 }

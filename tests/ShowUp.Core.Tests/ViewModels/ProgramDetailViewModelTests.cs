@@ -17,6 +17,7 @@ public sealed class ProgramDetailViewModelTests
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 21, 10, 0, 0, TimeSpan.Zero));
     private readonly RecordingJournalDialogs _journalDialogs = new();
     private readonly RecordingEnrollmentService _enrollments = new();
+    private readonly CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger _messenger = new();
     private readonly ShowUp.Core.Tests.Entitlements.FakeEntitlementService _entitlements = new();
     private readonly StubConfirmationDialogService _confirmation = new();
     private readonly RecordingSectionNavigator _navigator = new();
@@ -363,5 +364,6 @@ public sealed class ProgramDetailViewModelTests
             _time,
             _journalDialogs,
             _entitlements,
+            _messenger,
             NullLogger<ProgramDetailViewModel>.Instance);
 }

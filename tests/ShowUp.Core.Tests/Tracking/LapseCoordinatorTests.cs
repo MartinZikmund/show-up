@@ -27,7 +27,7 @@ public sealed class LapseCoordinatorTests
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
         _repository = new(_time);
         _service = TestEnrollments.Create(_repository, _catalog, new WeakReferenceMessenger(), _settings, _entitlements);
-        _coordinator = new(_service, _entitlements, NullLogger<LapseCoordinator>.Instance);
+        _coordinator = new(_service, _entitlements, _time, NullLogger<LapseCoordinator>.Instance);
         _coordinator.Attach(_prompt);
     }
 
@@ -126,7 +126,7 @@ public sealed class LapseCoordinatorTests
             return Task.CompletedTask;
         };
         FakePrompt prompt = new();
-        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+        LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
 
         coordinator.Attach(prompt);
         var shown = await coordinator.CheckAsync();
@@ -142,7 +142,7 @@ public sealed class LapseCoordinatorTests
         await EnrollTwoAsync();
         FakeEntitlementService entitlements = new() { IsPro = false };
         FakePrompt prompt = new();
-        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+        LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
 
         coordinator.Attach(prompt);
         await prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -157,7 +157,7 @@ public sealed class LapseCoordinatorTests
         TaskCompletionSource refresh = new(TaskCreationOptions.RunContinuationsAsynchronously);
         FakeEntitlementService entitlements = new() { IsPro = true, OnRefresh = () => refresh.Task };
         FakePrompt prompt = new();
-        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+        LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
         coordinator.Attach(prompt);
 
         entitlements.SetPro(false);
@@ -177,7 +177,7 @@ public sealed class LapseCoordinatorTests
         FakeEntitlementService entitlements = new() { IsPro = false };
         FakePrompt first = new();
         FakePrompt second = new();
-        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+        LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
 
         coordinator.Attach(first);
         coordinator.Attach(second);

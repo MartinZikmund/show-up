@@ -1,7 +1,9 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Localization;
+using ShowUp.Core.Messages;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
@@ -31,6 +33,8 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly TimeProvider _time;
     private readonly IJournalDialogs _journalDialogs;
     private readonly IEntitlementService _entitlements;
+    private readonly IMessenger _messenger;
+    private SynchronizationContext? _context;
     private readonly ILogger<ProgramDetailViewModel> _logger;
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
     private bool _isStarting;
@@ -49,6 +53,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         TimeProvider time,
         IJournalDialogs journalDialogs,
         IEntitlementService entitlements,
+        IMessenger messenger,
         ILogger<ProgramDetailViewModel> logger)
     {
         _localizer = localizer;
@@ -61,6 +66,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _time = time;
         _journalDialogs = journalDialogs;
         _entitlements = entitlements;
+        _messenger = messenger;
         _logger = logger;
         StartDate = _time.GetLocalNow();
     }
@@ -120,7 +126,11 @@ public partial class ProgramDetailViewModel : ViewModelBase
         if (!_listening)
         {
             _listening = true;
+            _context = SynchronizationContext.Current;
             _entitlements.Changed += OnEntitlementsChanged;
+
+            // A primary chosen after a lapse (or a program started elsewhere) changes the hint.
+            _messenger.Register<ProgramDetailViewModel, TrackingChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.ReloadEnrollmentsAsync)));
         }
 
         if (parameter is string programId)
@@ -175,6 +185,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         {
             _listening = false;
             _entitlements.Changed -= OnEntitlementsChanged;
+            _messenger.UnregisterAll(this);
         }
     }
 
@@ -258,6 +269,31 @@ public partial class ProgramDetailViewModel : ViewModelBase
     }
 
     private void OnEntitlementsChanged(object? sender, EventArgs e) => UpdateMultiProgramHint();
+
+    public async Task ReloadEnrollmentsAsync()
+    {
+        if (Program is not { } program)
+        {
+            return;
+        }
+
+        _all = await _enrollments.GetAllAsync();
+        _enrollment = _all.FirstOrDefault(e => e.Program.Id == program.Id);
+        IsActiveProgram = _enrollment is not null;
+        UpdateMultiProgramHint();
+    }
+
+    private void Post(Action action)
+    {
+        if (_context is null || _context == SynchronizationContext.Current)
+        {
+            action();
+        }
+        else
+        {
+            _context.Post(_ => action(), null);
+        }
+    }
 
     private void UpdateMultiProgramHint() =>
         ShowMultiProgramHint = !_entitlements.IsPro

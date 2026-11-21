@@ -52,7 +52,7 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         _time = time;
         _logger = logger;
         _isPro = _proStoreIds.Count > 0 && ProCache.IsPro(preferences.LastKnownPro, preferences.LastKnownProExpires, time.GetUtcNow());
-        _expiry = new(time);
+        _expiry = new(time, logger);
         WatchExpiry();
     }
 

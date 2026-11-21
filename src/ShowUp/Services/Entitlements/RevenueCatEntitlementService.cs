@@ -42,7 +42,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         _time = time;
         _logger = logger;
         _apiKey = apiKey;
-        _expiry = new(time);
+        _expiry = new(time, logger);
         WatchExpiry();
     }
 
@@ -223,7 +223,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
                 _recheckingExpiry = true;
                 try
                 {
-                    await RefreshAsync();
+                    // Bounded here too, so a hung store can't keep IsPro forced on.
+                    await RefreshAsync().WaitAsync(ExpiryWatch.RefreshTimeout, _time);
                 }
                 finally
                 {
