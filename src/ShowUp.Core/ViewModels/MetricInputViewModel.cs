@@ -48,6 +48,11 @@ public sealed partial class MetricInputViewModel : ObservableObject
 
     public string AutomationId => $"MetricInput_{Metric.Id}";
 
+    // Only the visible box carries the id, so UI tests find exactly one.
+    public string NumberAutomationId => IsNumberInput ? AutomationId : "";
+
+    public string TextAutomationId => IsTextInput ? AutomationId : "";
+
     public bool IsNumberInput => Metric.Unit is not (MetricUnit.Duration or MetricUnit.Text);
 
     public bool IsTextInput => !IsNumberInput;
