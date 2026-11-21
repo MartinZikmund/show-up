@@ -1,6 +1,18 @@
+using System.Text.Json.Serialization;
+
 namespace ShowUp.Core.Catalog;
 
-public sealed partial record Workout(string Id, string Name, int? DurationMinutes, WorkoutKind Kind, string? Family);
+public sealed partial record Workout(
+    string Id,
+    string Name,
+    int? DurationMinutes,
+    WorkoutKind Kind,
+    string? Family,
+    IReadOnlyList<WorkoutMetric>? Metrics = null)
+{
+    [JsonIgnore]
+    public bool HasMetrics => Metrics is { Count: > 0 };
+}
 
 public sealed record ScheduledSession(string WorkoutId, IReadOnlyList<string>? Alternates = null, bool Optional = false);
 

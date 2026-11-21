@@ -37,4 +37,8 @@ public abstract class StorageTestBase
     }
 
     internal SqliteTrackingRepository CreateRepository() => new(Db, Time, User, Device);
+
+    internal SqliteNotesRepository CreateNotesRepository() => new(Db, Time, User, Device);
+
+    internal SqliteMetricsRepository CreateMetricsRepository() => new(Db, Time, User, Device);
 }
