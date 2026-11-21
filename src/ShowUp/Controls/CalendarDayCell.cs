@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Globalization;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
+using Windows.UI.ViewManagement;
+using Path = Microsoft.UI.Xaml.Shapes.Path;
 using ShowUp.Core.ViewModels;
 using ShowUp.Services.Localization;
 
@@ -28,9 +30,10 @@ public enum CalendarCellAction
 [TemplatePart(Name = "PART_BonusText", Type = typeof(TextBlock))]
 [TemplatePart(Name = "PART_Cross", Type = typeof(MarkerCrossControl))]
 [TemplatePart(Name = "PART_Today", Type = typeof(Border))]
+[TemplatePart(Name = "PART_Missed", Type = typeof(Path))]
 public sealed partial class CalendarDayCell : Button
 {
-    /// <summary>Below this width a cell shows only the day number and session ticks.</summary>
+    /// <summary>Below this width a cell shows only the day number, session ticks and the rest label.</summary>
     private const double CompactWidth = 64;
 
     public static readonly DependencyProperty DayProperty = DependencyProperty.Register(
@@ -50,6 +53,7 @@ public sealed partial class CalendarDayCell : Button
     private TextBlock? _bonusText;
     private MarkerCrossControl? _cross;
     private Border? _today;
+    private Path? _missed;
     private Storyboard? _shakeStoryboard;
     private bool _isCompact;
 
@@ -79,7 +83,7 @@ public sealed partial class CalendarDayCell : Button
             }
         };
         SizeChanged += (_, e) => UpdateCompact(e.NewSize.Width);
-        ActualThemeChanged += (_, _) => UpdateTicks();
+        ActualThemeChanged += (_, _) => ApplyText();
     }
 
     public event TypedEventHandler<CalendarDayCell, CalendarCellAction>? ActionRequested;
@@ -103,6 +107,7 @@ public sealed partial class CalendarDayCell : Button
         _bonusText = GetTemplateChild("PART_BonusText") as TextBlock;
         _cross = GetTemplateChild("PART_Cross") as MarkerCrossControl;
         _today = GetTemplateChild("PART_Today") as Border;
+        _missed = GetTemplateChild("PART_Missed") as Path;
         ApplyAll();
     }
 
@@ -200,11 +205,12 @@ public sealed partial class CalendarDayCell : Button
         _title!.Text = day.Title;
         _today!.Visibility = day.IsToday ? Visibility.Visible : Visibility.Collapsed;
         _bonus!.Visibility = day.BonusCount > 0 ? Visibility.Visible : Visibility.Collapsed;
-        _date.Margin = new Thickness(0, 5, day.BonusCount > 0 ? 26 : 0, 0);
+        _date.Margin = new Thickness(0, 4, day.BonusCount > 0 ? 28 : 0, 0);
+        _missed!.Visibility = day.IsMissed ? Visibility.Visible : Visibility.Collapsed;
         _bonusText!.Text = day.BonusCount > 1 ? $"+{day.BonusCount}" : "+";
 
-        // Locked and rest days read quieter; the X stays at full strength.
-        _content!.Opacity = day.IsFuture ? 0.6 : 1;
+        // Locked and rest days read quieter; the X stays at full strength. High contrast keeps full-strength text.
+        _content!.Opacity = day.IsFuture && !IsHighContrast ? 0.6 : 1;
         _title.Opacity = day.IsRestDay ? 0.7 : 1;
         UpdateTicks();
         UpdateCompact(ActualWidth);
@@ -220,7 +226,27 @@ public sealed partial class CalendarDayCell : Button
         _isCompact = width < CompactWidth;
         _dayNumber.FontSize = Math.Clamp(width * 0.26, 14, 26);
         _date!.Visibility = _isCompact ? Visibility.Collapsed : Visibility.Visible;
-        _title!.Visibility = _isCompact ? Visibility.Collapsed : Visibility.Visible;
+
+        // Compact cells have no room for workout names, but a rest day still says so.
+        var showTitle = !_isCompact || Day is { IsRestDay: true };
+        _title!.Visibility = showTitle ? Visibility.Visible : Visibility.Collapsed;
+        _title.MaxLines = _isCompact ? 1 : 2;
+
+        // The X sits in a square below the header row, so the day number and date stay readable;
+        // compact cells tuck it bottom-right, clear of the number.
+        if (_cross is not null)
+        {
+            var height = ActualHeight > 0 ? ActualHeight : width;
+            var inset = _isCompact ? 2 : 4;
+            var top = 4 + _dayNumber.FontSize * (_isCompact ? 0.8 : 1.2);
+            var side = Math.Max(0, Math.Min(width - 2 * inset, height - top - inset));
+            _cross.Width = side;
+            _cross.Height = side;
+            _cross.Margin = new Thickness(inset);
+            _cross.HorizontalAlignment = _isCompact ? HorizontalAlignment.Right : HorizontalAlignment.Center;
+            _cross.VerticalAlignment = VerticalAlignment.Bottom;
+        }
+
         UpdateTicks();
     }
 
@@ -240,7 +266,7 @@ public sealed partial class CalendarDayCell : Button
             return;
         }
 
-        var size = _isCompact ? 5 : 7;
+        var size = _isCompact ? 4 : 8;
         foreach (var session in day.Sessions)
         {
             _ticks.Children.Add(new Ellipse
@@ -253,6 +279,20 @@ public sealed partial class CalendarDayCell : Button
             });
         }
     }
+
+    private static readonly Lazy<AccessibilitySettings?> _accessibility = new(() =>
+    {
+        try
+        {
+            return new AccessibilitySettings();
+        }
+        catch
+        {
+            return null;
+        }
+    });
+
+    private static bool IsHighContrast => _accessibility.Value?.HighContrast ?? false;
 
     private void Shake()
     {

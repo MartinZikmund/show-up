@@ -287,7 +287,17 @@
                             x:Name="HoverOverlay"
                             Fill="{ThemeResource SubtleFillColorSecondaryBrush}"
                             Opacity="0" />
-                        <Grid x:Name="PART_Content" Padding="6,2,6,5">
+                        <!--  Missed training day: a faint hatch, so it reads differently from a locked future day  -->
+                        <Path
+                            x:Name="PART_Missed"
+                            Margin="4"
+                            Data="M0,8 L8,0 M0,16 L16,0 M0,24 L24,0 M0,32 L32,0 M8,32 L32,8 M16,32 L32,16 M24,32 L32,24"
+                            Opacity="0.25"
+                            Stretch="Fill"
+                            Stroke="{ThemeResource MutedTextBrush}"
+                            StrokeThickness="1"
+                            Visibility="Collapsed" />
+                        <Grid x:Name="PART_Content" Padding="8,4,8,4">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -299,7 +309,7 @@
                                 Style="{StaticResource DisplayNumberTextBlockStyle}" />
                             <TextBlock
                                 x:Name="PART_Date"
-                                Margin="0,5,0,0"
+                                Margin="0,4,0,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
                                 Foreground="{ThemeResource MutedTextBrush}"
@@ -309,7 +319,7 @@
                                 Grid.Row="1"
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal"
-                                Spacing="3" />
+                                Spacing="4" />
                             <TextBlock
                                 x:Name="PART_Title"
                                 Grid.Row="2"
@@ -318,17 +328,19 @@
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="Wrap" />
                         </Grid>
-                        <!--  Bonus sticker, slightly askew like a real one; the date moves aside for it (CalendarDayCell)  -->
+                        <!--  Inset below the header row from code, so the day number and date stay readable  -->
+                        <controls:MarkerCrossControl x:Name="PART_Cross" AutomationProperties.AccessibilityView="Raw" />
+                        <!--  Bonus sticker above the X, slightly askew like a real one; the date moves aside for it  -->
                         <Border
                             x:Name="PART_Bonus"
-                            Height="18"
-                            MinWidth="18"
+                            Height="20"
+                            MinWidth="20"
                             Margin="0,4,4,0"
                             Padding="4,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             Background="{ThemeResource BonusStickerBackgroundBrush}"
-                            CornerRadius="9"
+                            CornerRadius="10"
                             RenderTransformOrigin="0.5,0.5"
                             Visibility="Collapsed">
                             <Border.RenderTransform>
@@ -341,7 +353,6 @@
                                 Foreground="{ThemeResource BonusStickerForegroundBrush}"
                                 Style="{StaticResource CaptionTextBlockStyle}" />
                         </Border>
-                        <controls:MarkerCrossControl x:Name="PART_Cross" AutomationProperties.AccessibilityView="Raw" />
                         <Border
                             x:Name="PART_Today"
                             BorderBrush="{ThemeResource CalendarCellTodayBorderBrush}"

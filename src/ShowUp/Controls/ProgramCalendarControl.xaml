@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="ShowUp.Controls.ProgramCalendarControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -21,7 +21,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Spacing="2">
+                    <StackPanel Spacing="4">
                         <TextBlock
                             AutomationProperties.AutomationId="CalendarProgramName"
                             AutomationProperties.HeadingLevel="Level1"
@@ -30,7 +30,7 @@
                         <StackPanel
                             AutomationProperties.AutomationId="CalendarStreak"
                             Orientation="Horizontal"
-                            Spacing="6">
+                            Spacing="8">
                             <!--  Vector flame (no emoji font on WebAssembly), the cross moment caption's shape  -->
                             <Path
                                 Height="18"
@@ -83,13 +83,13 @@
                                     Margin="0,16,0,4"
                                     AutomationProperties.HeadingLevel="Level2"
                                     Style="{StaticResource CalendarPhaseHeaderTextBlockStyle}"
-                                    Text="{x:Bind PhaseName}"
-                                    Visibility="{x:Bind IsPhaseStart}" />
+                                    Text="{x:Bind PhaseName, Mode=OneTime}"
+                                    Visibility="{x:Bind IsPhaseStart, Mode=OneTime}" />
                                 <TextBlock
                                     Foreground="{ThemeResource MutedTextBrush}"
                                     Style="{StaticResource CaptionTextBlockStyle}"
-                                    Text="{x:Bind WeekLabel}" />
-                                <controls:CalendarWeekCells Days="{x:Bind Days}" />
+                                    Text="{x:Bind WeekLabel, Mode=OneTime}" />
+                                <controls:CalendarWeekCells Days="{x:Bind Days, Mode=OneTime}" />
                             </StackPanel>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
