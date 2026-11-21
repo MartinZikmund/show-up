@@ -57,7 +57,7 @@ public abstract partial class ViewBase<TViewModel> : Page, IViewBase
         return true;
     }
 
-    private static WindowShell? FindWindowShell(UIElement? windowRoot)
+    protected static WindowShell? FindWindowShell(UIElement? windowRoot)
     {
         if (windowRoot is WindowShell shell)
         {

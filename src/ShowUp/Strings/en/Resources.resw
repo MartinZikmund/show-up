@@ -193,4 +193,61 @@
   <data name="SectionsTabBarName" xml:space="preserve">
     <value>Sections</value>
   </data>
+  <data name="CrossingOff" xml:space="preserve">
+    <value>Crossing off</value>
+  </data>
+  <data name="MarkerSound" xml:space="preserve">
+    <value>Marker sound</value>
+  </data>
+  <data name="MarkerSoundDescription" xml:space="preserve">
+    <value>A little squeak with every stroke</value>
+  </data>
+  <data name="MarkerHaptics" xml:space="preserve">
+    <value>Haptic tick</value>
+  </data>
+  <data name="MarkerHapticsDescription" xml:space="preserve">
+    <value>A short vibration with every stroke (phones)</value>
+  </data>
+  <data name="CrossMoment" xml:space="preserve">
+    <value>Cross moment</value>
+  </data>
+  <data name="CrossMomentDescription" xml:space="preserve">
+    <value>The big X after you finish a workout</value>
+  </data>
+  <data name="CrossMomentMode_Always" xml:space="preserve">
+    <value>Always</value>
+  </data>
+  <data name="CrossMomentMode_OnlyToday" xml:space="preserve">
+    <value>Only today</value>
+  </data>
+  <data name="CrossMomentMode_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="CrossMomentDayFormat" xml:space="preserve">
+    <value>Day {0} of {1}</value>
+    <comment>{0} day number, {1} total days.</comment>
+  </data>
+  <data name="CrossMomentStreakFormat" xml:space="preserve">
+    <value>{0}-day streak</value>
+    <comment>{0} current streak in days (at least 1). Shown after a flame icon.</comment>
+  </data>
+  <data name="CrossMomentProgressFormat" xml:space="preserve">
+    <value>{0} of {1} done</value>
+    <comment>{0} sessions done today, {1} sessions required.</comment>
+  </data>
+  <data name="CrossMomentDayComplete" xml:space="preserve">
+    <value>Day crossed off. Show up again tomorrow.</value>
+  </data>
+  <data name="CrossMomentName" xml:space="preserve">
+    <value>Workout crossed off</value>
+  </data>
+  <data name="DebugCrossMoment" xml:space="preserve">
+    <value>Preview cross moment</value>
+  </data>
+  <data name="DebugMarkerSample" xml:space="preserve">
+    <value>Marker sample: tap to cross</value>
+  </data>
+  <data name="DebugSlowMotion" xml:space="preserve">
+    <value>Slow motion (25&#215;)</value>
+  </data>
 </root>

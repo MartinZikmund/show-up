@@ -132,6 +132,9 @@
             </not_win:Border>
         </Grid>
 
+        <!--  Top-most: covers the tab bar and safe areas (it pads its own content)  -->
+        <controls:CrossMomentOverlay x:Name="CrossMomentOverlay" />
+
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="WidthStates" CurrentStateChanged="WidthStates_CurrentStateChanged">
                 <VisualState x:Name="Narrow">

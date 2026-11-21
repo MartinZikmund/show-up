@@ -1,3 +1,4 @@
+using ShowUp.Core.Marking;
 using ShowUp.Core.ViewModels;
 using Microsoft.UI.Dispatching;
 
@@ -14,6 +15,8 @@ public interface IWindowShell
     DispatcherQueue DispatcherQueue { get; }
 
     Frame RootFrame { get; }
+
+    ICrossMoment CrossMoment { get; }
 
     void SetTitleBar(UIElement? titleBar);
 }

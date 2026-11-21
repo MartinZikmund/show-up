@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using AwesomeAssertions;
 
@@ -17,6 +18,27 @@ public class AndroidManifestTests
         var permissions = manifest.Root!.Elements("uses-permission").Select(e => (string?)e.Attribute(_android + "name"));
 
         permissions.Should().Contain("android.permission.INTERNET");
+    }
+
+    [TestMethod]
+    public void Manifest_DeclaresVibratePermission()
+    {
+        // VibrationDevice throws a SecurityException on Android without it.
+        var manifest = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "ShowUp", "Platforms", "Android", "AndroidManifest.xml"));
+
+        var permissions = manifest.Root!.Elements("uses-permission").Select(e => (string?)e.Attribute(_android + "name"));
+
+        permissions.Should().Contain("android.permission.VIBRATE");
+    }
+
+    [TestMethod]
+    public void SoundAssets_UseAndroidSafeNames()
+    {
+        // Android rewrites other characters in asset names, and Uno opens the original name (unoplatform/uno#26157).
+        var sounds = Directory.GetFiles(Path.Combine(FindRepoRoot(), "src", "ShowUp", "Assets", "Sounds"), "*.wav");
+
+        sounds.Should().NotBeEmpty();
+        sounds.Select(Path.GetFileName).Should().OnlyContain(name => Regex.IsMatch(name!, "^[a-z0-9_]+\\.wav$"));
     }
 
     private static string FindRepoRoot()
