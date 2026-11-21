@@ -91,6 +91,7 @@ public partial class App : Application, IApplication
         var appUpdater = Host.Services.GetRequiredService<IAppUpdater>();
         await appUpdater.EnsureAppUpToDateAsync();
         appPreferences.LaunchCount++;
+        Host.Services.GetRequiredService<MarkerBrushUpdater>().Apply();
 
         // Create WindowShell as root content
         if (MainWindow.Content is not WindowShell)
@@ -124,6 +125,7 @@ public partial class App : Application, IApplication
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
         services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+        services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 

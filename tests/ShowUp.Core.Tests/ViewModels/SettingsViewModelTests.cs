@@ -1,10 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Localization;
 using Microsoft.UI.Xaml;
 using MZikmund.Toolkit.WinUI.Services;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Messages;
 using ShowUp.Core.ViewModels;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
@@ -100,6 +102,94 @@ public sealed class SettingsViewModelTests
         viewModel.CrossMomentModeOptions.Should().Equal(CrossMomentMode.OnlyToday, CrossMomentMode.Always, CrossMomentMode.Never);
     }
 
+    [TestMethod]
+    public void SettingsViewModel_MarkerColor_PersistsOnChange()
+    {
+        FakeAppPreferences preferences = new();
+        var viewModel = Navigated(preferences);
+
+        viewModel.MarkerColor = MarkerColor.Blue;
+
+        preferences.MarkerColor.Should().Be(MarkerColor.Blue);
+        preferences.Writes.Should().Equal(nameof(IAppPreferences.MarkerColor));
+    }
+
+    [TestMethod]
+    public void MarkerColor_Changed_TellsTheApp()
+    {
+        FakeAppPreferences preferences = new();
+        WeakReferenceMessenger messenger = new();
+        var viewModel = CreateViewModel(preferences, messenger);
+        viewModel.OnNavigatedTo(null);
+        List<MarkerColor> received = [];
+        messenger.Register<MarkerColorChangedMessage>(this, (_, m) => received.Add(m.Color));
+
+        viewModel.MarkerColor = MarkerColor.Green;
+
+        received.Should().Equal(MarkerColor.Green);
+    }
+
+    [TestMethod]
+    public void OnNavigatedTo_StoredMarkerColor_LoadsItWithoutWriting()
+    {
+        FakeAppPreferences preferences = new() { MarkerColor = MarkerColor.Purple };
+        preferences.Writes.Clear();
+        var viewModel = CreateViewModel(preferences);
+
+        viewModel.OnNavigatedTo(null);
+
+        viewModel.MarkerColor.Should().Be(MarkerColor.Purple);
+        viewModel.SelectedMarkerSwatch!.Color.Should().Be(MarkerColor.Purple);
+        viewModel.MarkerSwatches.Where(s => s.IsSelected).Select(s => s.Color).Should().Equal(MarkerColor.Purple);
+        preferences.Writes.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void MarkerSwatches_AreAutoPlusSixInOrder()
+    {
+        var viewModel = CreateViewModel(new FakeAppPreferences());
+
+        viewModel.MarkerSwatches.Select(s => s.AutomationId).Should().Equal(
+            "MarkerColor_Auto", "MarkerColor_Red", "MarkerColor_Blue", "MarkerColor_Green", "MarkerColor_Purple", "MarkerColor_Orange", "MarkerColor_Contrast");
+    }
+
+    [TestMethod]
+    public void SelectedMarkerSwatch_Set_ChangesTheColor()
+    {
+        FakeAppPreferences preferences = new();
+        var viewModel = Navigated(preferences);
+
+        viewModel.SelectedMarkerSwatch = viewModel.MarkerSwatches.Single(s => s.Color == MarkerColor.Orange);
+
+        preferences.MarkerColor.Should().Be(MarkerColor.Orange);
+    }
+
+    [TestMethod]
+    public void OnNavigatedTo_DefaultMarkerColor_SelectsAuto()
+    {
+        var viewModel = Navigated(new FakeAppPreferences());
+
+        viewModel.MarkerSwatches.Where(s => s.IsSelected).Select(s => s.Color).Should().Equal(MarkerColor.Auto);
+    }
+
+    [TestMethod]
+    public void MarkerColor_Changed_RaisesSelectedMarkerSwatch()
+    {
+        var viewModel = Navigated(new FakeAppPreferences());
+        List<string?> raised = [];
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        viewModel.MarkerColor = MarkerColor.Orange;
+
+        raised.Should().Contain(nameof(SettingsViewModel.SelectedMarkerSwatch));
+    }
+
+    [TestMethod]
+    public void CanChangeMarkerColor_ForNow_IsTrue()
+    {
+        CreateViewModel(new FakeAppPreferences()).CanChangeMarkerColor.Should().BeTrue();
+    }
+
     private static SettingsViewModel Navigated(FakeAppPreferences preferences)
     {
         var viewModel = CreateViewModel(preferences);
@@ -108,8 +198,8 @@ public sealed class SettingsViewModelTests
         return viewModel;
     }
 
-    private static SettingsViewModel CreateViewModel(FakeAppPreferences preferences) =>
-        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication());
+    private static SettingsViewModel CreateViewModel(FakeAppPreferences preferences, IMessenger? messenger = null) =>
+        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger());
 
     private sealed class FakeAppPreferences : IAppPreferences
     {
@@ -152,6 +242,12 @@ public sealed class SettingsViewModelTests
             get;
             set => Record(nameof(CrossOffStyle), () => field = value);
         } = CrossOffStyle.DrawYourself;
+
+        public MarkerColor MarkerColor
+        {
+            get;
+            set => Record(nameof(MarkerColor), () => field = value);
+        }
 
         private void Record(string name, Action write)
         {

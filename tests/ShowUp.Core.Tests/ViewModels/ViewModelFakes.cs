@@ -101,4 +101,6 @@ internal sealed class FakeAppPreferences : IAppPreferences
     public CrossMomentMode CrossMomentMode { get; set; }
 
     public CrossOffStyle CrossOffStyle { get; set; }
+
+    public MarkerColor MarkerColor { get; set; }
 }

@@ -34,7 +34,7 @@
                 <ThemeShadow />
             </Grid.Shadow>
 
-            <controls:PaperGrid x:Name="CardPaper" />
+            <controls:PaperBackground x:Name="CardPaper" />
 
             <StackPanel
                 Padding="32"

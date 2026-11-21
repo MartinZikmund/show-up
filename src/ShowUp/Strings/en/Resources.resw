@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -133,7 +133,7 @@
     <value>About</value>
   </data>
   <data name="AboutAppDescription" xml:space="preserve">
-    <value>An Uno Platform application</value>
+    <value>Cross off your workouts, one marker X at a time</value>
   </data>
   <data name="WorktreeFormat" xml:space="preserve">
     <value>Worktree: {0}</value>
@@ -585,5 +585,35 @@
   </data>
   <data name="TodayCrossOffFormat" xml:space="preserve">
     <value>Cross off {0}</value>
+  </data>
+  <data name="MarkerColor" xml:space="preserve">
+    <value>Marker color</value>
+  </data>
+  <data name="MarkerColorDescription" xml:space="preserve">
+    <value>The ink you cross days off with</value>
+  </data>
+  <data name="MarkerColor_Auto" xml:space="preserve">
+    <value>Auto: red on paper, chalk on the board</value>
+  </data>
+  <data name="MarkerColor_Red" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="MarkerColor_Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="MarkerColor_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="MarkerColor_Purple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="MarkerColor_Orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="MarkerColor_Contrast" xml:space="preserve">
+    <value>Ink</value>
+  </data>
+  <data name="MarkerColorHighContrastNote" xml:space="preserve">
+    <value>Not used while High Contrast is on</value>
   </data>
 </root>

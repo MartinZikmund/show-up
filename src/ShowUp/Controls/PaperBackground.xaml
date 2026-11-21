@@ -1,0 +1,15 @@
+﻿<UserControl
+    x:Class="ShowUp.Controls.PaperBackground"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsHitTestVisible="False">
+
+    <Grid Background="{ThemeResource PaperBackgroundBrush}">
+        <!--  The theme decides the texture: "none" (High Contrast) leaves flat paper  -->
+        <TextBlock
+            x:Name="GrainSource"
+            Text="{ThemeResource PaperGrainSource}"
+            Visibility="Collapsed" />
+        <Canvas x:Name="Grain" />
+    </Grid>
+</UserControl>

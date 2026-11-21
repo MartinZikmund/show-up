@@ -41,7 +41,7 @@
                                 Width="24"
                                 Height="4"
                                 HorizontalAlignment="Center"
-                                Background="{ThemeResource MarkerBrush}"
+                                Background="{ThemeResource TabIndicatorBrush}"
                                 CornerRadius="2"
                                 Opacity="0" />
                             <VisualStateManager.VisualStateGroups>

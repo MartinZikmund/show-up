@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -133,7 +133,7 @@
     <value>O aplikaci</value>
   </data>
   <data name="AboutAppDescription" xml:space="preserve">
-    <value>Aplikace Uno Platform</value>
+    <value>Odškrtávej tréninky fixou, jeden křížek po druhém</value>
   </data>
   <data name="WorktreeFormat" xml:space="preserve">
     <value>Pracovn&#237; strom: {0}</value>
@@ -585,5 +585,35 @@
   </data>
   <data name="TodayCrossOffFormat" xml:space="preserve">
     <value>Od&#353;krtnout {0}</value>
+  </data>
+  <data name="MarkerColor" xml:space="preserve">
+    <value>Barva fixy</value>
+  </data>
+  <data name="MarkerColorDescription" xml:space="preserve">
+    <value>Čím odškrtáváš splněné dny</value>
+  </data>
+  <data name="MarkerColor_Auto" xml:space="preserve">
+    <value>Auto: červená na papíře, křída na tabuli</value>
+  </data>
+  <data name="MarkerColor_Red" xml:space="preserve">
+    <value>Červená</value>
+  </data>
+  <data name="MarkerColor_Blue" xml:space="preserve">
+    <value>Modrá</value>
+  </data>
+  <data name="MarkerColor_Green" xml:space="preserve">
+    <value>Zelená</value>
+  </data>
+  <data name="MarkerColor_Purple" xml:space="preserve">
+    <value>Fialová</value>
+  </data>
+  <data name="MarkerColor_Orange" xml:space="preserve">
+    <value>Oranžová</value>
+  </data>
+  <data name="MarkerColor_Contrast" xml:space="preserve">
+    <value>Inkoust</value>
+  </data>
+  <data name="MarkerColorHighContrastNote" xml:space="preserve">
+    <value>Při vysokém kontrastu se nepoužívá</value>
   </data>
 </root>
