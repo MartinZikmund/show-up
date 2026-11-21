@@ -73,6 +73,7 @@
                 <!--  Read as one plain sentence (the panel's Name), so the parts stay out of the UIA tree  -->
                 <StackPanel
                     x:Name="CaptionPanel"
+                    AutomationProperties.AccessibilityView="Raw"
                     AutomationProperties.AutomationId="CrossMomentCaption"
                     AutomationProperties.LiveSetting="Assertive"
                     Opacity="0"

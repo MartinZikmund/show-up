@@ -3,6 +3,12 @@ namespace ShowUp.Core.Marking;
 /// <summary>The cross moment's text: "Day 10 of 60", "9-day streak" (null at 0) and the progress line.</summary>
 public sealed record CrossMomentCaption(string Day, string? Streak, string Progress)
 {
+    /// <summary>The caption line as screen readers should hear it: plain text, no icon.</summary>
+    public string Headline => Streak is null ? Day : $"{Day}, {Streak}";
+
+    /// <summary>One sentence for the live-region announcement.</summary>
+    public string Announcement => $"{Headline}. {Progress}";
+
     public static CrossMomentCaption Create(CrossMomentInfo info, IStringLocalizer localizer)
     {
         ArgumentNullException.ThrowIfNull(info);

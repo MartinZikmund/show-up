@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using ShowUp.Core.Marking;
@@ -22,6 +23,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
     private readonly DispatcherQueueTimer _captionTimer;
     private TaskCompletionSource? _shown;
     private CrossMomentInfo? _info;
+    private CrossMomentCaption? _caption;
     private bool _awaitingStrokes;
     private UIElement? _previousFocus;
 
@@ -52,14 +54,14 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         _info = info;
         _shown = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var caption = CrossMomentCaption.Create(info, App.Current.Services.GetRequiredService<IStringLocalizer>());
+        var caption = _caption = CrossMomentCaption.Create(info, App.Current.Services.GetRequiredService<IStringLocalizer>());
         DayNumberText.Text = info.DayNumber.ToString(CultureInfo.CurrentCulture);
         TitleText.Text = info.Title;
         DayText.Text = caption.Day;
         StreakText.Text = caption.Streak ?? string.Empty;
         StreakPanel.Visibility = caption.Streak is null ? Visibility.Collapsed : Visibility.Visible;
         ProgressText.Text = caption.Progress;
-        AutomationProperties.SetName(CaptionPanel, caption.Streak is null ? caption.Day : $"{caption.Day}, {caption.Streak}");
+        HideCaptionFromAutomation();
 
         var animate = AnimationsEnabled;
         CaptionPanel.Opacity = 0;
@@ -111,6 +113,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
         _shown = null;
         Visibility = Visibility.Collapsed;
+        HideCaptionFromAutomation();
 
         // The cell keeps the final X only while open; the next show starts from its own StrokesBefore.
         Cross.AnimateChanges = false;
@@ -169,6 +172,29 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         {
             CaptionPanel.Opacity = 1;
         }
+
+        AnnounceCaption();
+    }
+
+    // LiveSetting alone announces nothing: the live region has to raise LiveRegionChanged itself.
+    private void AnnounceCaption()
+    {
+        if (_caption is not { } caption)
+        {
+            return;
+        }
+
+        AutomationProperties.SetAccessibilityView(CaptionPanel, AccessibilityView.Content);
+        AutomationProperties.SetName(CaptionPanel, caption.Announcement);
+        var peer = FrameworkElementAutomationPeer.FromElement(CaptionPanel) ?? FrameworkElementAutomationPeer.CreatePeerForElement(CaptionPanel);
+        peer?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+    }
+
+    // While invisible the caption mustn't be found (or read) by screen readers.
+    private void HideCaptionFromAutomation()
+    {
+        AutomationProperties.SetName(CaptionPanel, string.Empty);
+        AutomationProperties.SetAccessibilityView(CaptionPanel, AccessibilityView.Raw);
     }
 
     private static void Fade(UIElement target, double from, double to, TimeSpan duration)
