@@ -739,4 +739,157 @@
   <data name="ResultsPendingHeader" xml:space="preserve">
     <value>Waiting for results</value>
   </data>
+  <data name="ProTitle" xml:space="preserve">
+    <value>Show Up Pro</value>
+  </data>
+  <data name="ProCardTitle" xml:space="preserve">
+    <value>Show Up Pro</value>
+  </data>
+  <data name="ProCardStatusFree" xml:space="preserve">
+    <value>Free plan · see what Pro adds</value>
+  </data>
+  <data name="ProCardStatusActive" xml:space="preserve">
+    <value>Active · thank you!</value>
+  </data>
+  <data name="ProHeroTitle" xml:space="preserve">
+    <value>Show up for more</value>
+  </data>
+  <data name="ProHeroSubtitle" xml:space="preserve">
+    <value>Several programs, more reminders, your own schedules and your own marker color. The free version stays free.</value>
+  </data>
+  <data name="ProFeaturesHeader" xml:space="preserve">
+    <value>Free vs Pro</value>
+  </data>
+  <data name="ProFeaturePrograms" xml:space="preserve">
+    <value>Active programs</value>
+  </data>
+  <data name="ProFeatureProgramsFree" xml:space="preserve">
+    <value>1 at a time</value>
+  </data>
+  <data name="ProFeatureProgramsPro" xml:space="preserve">
+    <value>Several at once</value>
+  </data>
+  <data name="ProFeatureReminders" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="ProFeatureRemindersFree" xml:space="preserve">
+    <value>{0} reminder</value>
+  </data>
+  <data name="ProFeatureRemindersPro" xml:space="preserve">
+    <value>Up to {0}</value>
+  </data>
+  <data name="ProFeatureHistory" xml:space="preserve">
+    <value>History and stats</value>
+  </data>
+  <data name="ProFeatureHistoryFree" xml:space="preserve">
+    <value>Current program</value>
+  </data>
+  <data name="ProFeatureHistoryPro" xml:space="preserve">
+    <value>Everything, ever</value>
+  </data>
+  <data name="ProFeatureCustom" xml:space="preserve">
+    <value>Custom schedules</value>
+  </data>
+  <data name="ProFeatureCustomFree" xml:space="preserve">
+    <value>Not included</value>
+  </data>
+  <data name="ProFeatureCustomPro" xml:space="preserve">
+    <value>Build your own</value>
+  </data>
+  <data name="ProFeaturePersonalization" xml:space="preserve">
+    <value>Marker color</value>
+  </data>
+  <data name="ProFeaturePersonalizationFree" xml:space="preserve">
+    <value>Default red</value>
+  </data>
+  <data name="ProFeaturePersonalizationPro" xml:space="preserve">
+    <value>Pick any</value>
+  </data>
+  <data name="ProFeatureSync" xml:space="preserve">
+    <value>Cloud sync</value>
+  </data>
+  <data name="ProFeatureSyncFree" xml:space="preserve">
+    <value>This device only</value>
+  </data>
+  <data name="ProFeatureSyncPro" xml:space="preserve">
+    <value>All your devices</value>
+  </data>
+  <data name="ProOffersHeader" xml:space="preserve">
+    <value>Choose how to go Pro</value>
+  </data>
+  <data name="ProOfferMonthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="ProOfferYearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <data name="ProOfferLifetime" xml:space="preserve">
+    <value>Lifetime</value>
+  </data>
+  <data name="ProOfferLifetimeNote" xml:space="preserve">
+    <value>Pay once, keep it</value>
+  </data>
+  <data name="ProRestore" xml:space="preserve">
+    <value>Restore purchases</value>
+  </data>
+  <data name="ProPurchased" xml:space="preserve">
+    <value>You're Pro. Time to show up!</value>
+  </data>
+  <data name="ProPending" xml:space="preserve">
+    <value>Your purchase is pending. Pro unlocks as soon as it goes through.</value>
+  </data>
+  <data name="ProFailed" xml:space="preserve">
+    <value>Something went wrong. Please try again.</value>
+  </data>
+  <data name="ProRestored" xml:space="preserve">
+    <value>Your purchase was restored.</value>
+  </data>
+  <data name="ProNothingToRestore" xml:space="preserve">
+    <value>No earlier purchase found.</value>
+  </data>
+  <data name="ProStateActive" xml:space="preserve">
+    <value>Show Up Pro is active. Thank you!</value>
+  </data>
+  <data name="ProUnavailable" xml:space="preserve">
+    <value>Purchases aren't available in this build.</value>
+  </data>
+  <data name="ProUnlockLink" xml:space="preserve">
+    <value>Unlock with Pro</value>
+  </data>
+  <data name="ProColumnFree" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="ProColumnPro" xml:space="preserve">
+    <value>Pro</value>
+  </data>
+  <data name="ProCheckBack" xml:space="preserve">
+    <value>Your purchase went through, but Pro hasn't shown up yet. Check back in a minute or tap Restore purchases.</value>
+  </data>
+  <data name="ProOffersFailed" xml:space="preserve">
+    <value>Couldn't load the offers. Check your connection and try again.</value>
+  </data>
+  <data name="ProRetry" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="ProSubscriptionDisclosure" xml:space="preserve">
+    <value>Subscriptions renew automatically each month or year at the price shown, until you cancel. Manage or cancel any time in your store account settings.</value>
+  </data>
+  <data name="ProOfferMonthlyNote" xml:space="preserve">
+    <value>Renews every month until cancelled</value>
+  </data>
+  <data name="ProOfferYearlyNote" xml:space="preserve">
+    <value>Renews every year until cancelled</value>
+  </data>
+  <data name="ProTerms" xml:space="preserve">
+    <value>Terms of use</value>
+  </data>
+  <data name="ProPrivacy" xml:space="preserve">
+    <value>Privacy policy</value>
+  </data>
+  <data name="ProManage" xml:space="preserve">
+    <value>Manage subscription</value>
+  </data>
+  <data name="ProBusyName" xml:space="preserve">
+    <value>Working</value>
+  </data>
 </root>

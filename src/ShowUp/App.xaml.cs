@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Services;
@@ -8,6 +9,7 @@ using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
 using ShowUp.Services.Dialogs;
+using ShowUp.Services.Entitlements;
 using ShowUp.Services.Marking;
 using ShowUp.Services.Navigation;
 using ShowUp.Services.Rating;
@@ -100,6 +102,16 @@ public partial class App : Application, IApplication
             MainWindow.Content = shell;
         }
 
+        var entitlements = Host.Services.GetRequiredService<IEntitlementService>();
+        MainWindow.Activated += (_, e) =>
+        {
+            if (e.WindowActivationState != WindowActivationState.Deactivated)
+            {
+                _ = entitlements.RefreshAsync();
+            }
+        };
+        _ = entitlements.RefreshAsync();
+
         MainWindow.Activate();
     }
 
@@ -129,6 +141,10 @@ public partial class App : Application, IApplication
         services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
         services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
+        RegisterEntitlements(context, services);
+        services.AddSingleton(new ProLinks(
+            new Uri(context.Configuration["Legal:TermsUrl"] is { Length: > 0 } terms ? terms : "https://github.com/MartinZikmund/show-up/blob/main/docs/terms.md"),
+            new Uri(context.Configuration["Legal:PrivacyUrl"] is { Length: > 0 } privacy ? privacy : "https://github.com/MartinZikmund/show-up/blob/main/docs/privacy.md")));
         services.AddSingleton<IJournalService, JournalService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
@@ -160,6 +176,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.ProgramResultsView), typeof(ProgramResultsViewModel));
             service.RegisterView(typeof(Views.HistoryView), typeof(HistoryViewModel));
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
+            service.RegisterView(typeof(Views.ProView), typeof(ProViewModel));
             return service;
         });
 
@@ -176,6 +193,38 @@ public partial class App : Application, IApplication
         services.AddTransient<LogResultsViewModel>();
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<ProViewModel>();
+    }
+
+    private static void RegisterEntitlements(HostBuilderContext context, IServiceCollection services)
+    {
+#if __ANDROID__ || __IOS__
+        Uno.RevenueCat.RevenueCatExtension.AddRevenueCat(services);
+#if __ANDROID__
+        var apiKey = context.Configuration["RevenueCat:AndroidApiKey"] ?? "";
+#else
+        var apiKey = context.Configuration["RevenueCat:AppleApiKey"] ?? "";
+#endif
+        services.AddSingleton<IEntitlementService>(sp => new RevenueCatEntitlementService(
+            sp.GetRequiredService<Uno.RevenueCat.Services.IRevenueCatBilling>(),
+            sp.GetRequiredService<IAppPreferences>(),
+            sp.GetRequiredService<IStringLocalizer>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<RevenueCatEntitlementService>>(),
+            apiKey));
+#elif !HAS_UNO
+        services.AddSingleton<IEntitlementService>(sp => new MicrosoftStoreEntitlementService(
+            context.Configuration["MicrosoftStore:ProMonthlyStoreId"] ?? "",
+            context.Configuration["MicrosoftStore:ProYearlyStoreId"] ?? "",
+            context.Configuration["MicrosoftStore:ProLifetimeStoreId"] ?? "",
+            () => WinRT.Interop.WindowNative.GetWindowHandle(Current.MainWindow),
+            sp.GetRequiredService<IAppPreferences>(),
+            sp.GetRequiredService<IStringLocalizer>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<MicrosoftStoreEntitlementService>>()));
+#else
+        services.AddSingleton<IEntitlementService, UnlockedEntitlementService>();
+#endif
     }
 
     private static void ConfigureLogging(HostBuilderContext context, ILoggingBuilder logBuilder)

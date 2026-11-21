@@ -739,4 +739,157 @@
   <data name="ResultsPendingHeader" xml:space="preserve">
     <value>Čeká na výsledky</value>
   </data>
+  <data name="ProTitle" xml:space="preserve">
+    <value>Show Up Pro</value>
+  </data>
+  <data name="ProCardTitle" xml:space="preserve">
+    <value>Show Up Pro</value>
+  </data>
+  <data name="ProCardStatusFree" xml:space="preserve">
+    <value>Zdarma · podívejte se, co Pro přidává</value>
+  </data>
+  <data name="ProCardStatusActive" xml:space="preserve">
+    <value>Aktivní · děkujeme!</value>
+  </data>
+  <data name="ProHeroTitle" xml:space="preserve">
+    <value>Přijďte víc</value>
+  </data>
+  <data name="ProHeroSubtitle" xml:space="preserve">
+    <value>Víc programů, víc připomínek, vlastní rozvrhy a vlastní barva fixy. Zdarma zůstává zdarma.</value>
+  </data>
+  <data name="ProFeaturesHeader" xml:space="preserve">
+    <value>Zdarma a Pro</value>
+  </data>
+  <data name="ProFeaturePrograms" xml:space="preserve">
+    <value>Aktivní programy</value>
+  </data>
+  <data name="ProFeatureProgramsFree" xml:space="preserve">
+    <value>Jeden najednou</value>
+  </data>
+  <data name="ProFeatureProgramsPro" xml:space="preserve">
+    <value>Víc najednou</value>
+  </data>
+  <data name="ProFeatureReminders" xml:space="preserve">
+    <value>Připomínky</value>
+  </data>
+  <data name="ProFeatureRemindersFree" xml:space="preserve">
+    <value>{0} připomínka</value>
+  </data>
+  <data name="ProFeatureRemindersPro" xml:space="preserve">
+    <value>Až {0}</value>
+  </data>
+  <data name="ProFeatureHistory" xml:space="preserve">
+    <value>Historie a statistiky</value>
+  </data>
+  <data name="ProFeatureHistoryFree" xml:space="preserve">
+    <value>Aktuální program</value>
+  </data>
+  <data name="ProFeatureHistoryPro" xml:space="preserve">
+    <value>Všechno, navždy</value>
+  </data>
+  <data name="ProFeatureCustom" xml:space="preserve">
+    <value>Vlastní rozvrhy</value>
+  </data>
+  <data name="ProFeatureCustomFree" xml:space="preserve">
+    <value>Nezahrnuto</value>
+  </data>
+  <data name="ProFeatureCustomPro" xml:space="preserve">
+    <value>Sestavte si vlastní</value>
+  </data>
+  <data name="ProFeaturePersonalization" xml:space="preserve">
+    <value>Barva fixy</value>
+  </data>
+  <data name="ProFeaturePersonalizationFree" xml:space="preserve">
+    <value>Výchozí červená</value>
+  </data>
+  <data name="ProFeaturePersonalizationPro" xml:space="preserve">
+    <value>Libovolná</value>
+  </data>
+  <data name="ProFeatureSync" xml:space="preserve">
+    <value>Cloudová synchronizace</value>
+  </data>
+  <data name="ProFeatureSyncFree" xml:space="preserve">
+    <value>Jen toto zařízení</value>
+  </data>
+  <data name="ProFeatureSyncPro" xml:space="preserve">
+    <value>Všechna vaše zařízení</value>
+  </data>
+  <data name="ProOffersHeader" xml:space="preserve">
+    <value>Vyberte si, jak přejít na Pro</value>
+  </data>
+  <data name="ProOfferMonthly" xml:space="preserve">
+    <value>Měsíčně</value>
+  </data>
+  <data name="ProOfferYearly" xml:space="preserve">
+    <value>Ročně</value>
+  </data>
+  <data name="ProOfferLifetime" xml:space="preserve">
+    <value>Navždy</value>
+  </data>
+  <data name="ProOfferLifetimeNote" xml:space="preserve">
+    <value>Zaplatíte jednou, máte navždy</value>
+  </data>
+  <data name="ProRestore" xml:space="preserve">
+    <value>Obnovit nákupy</value>
+  </data>
+  <data name="ProPurchased" xml:space="preserve">
+    <value>Jste Pro. Čas přijít!</value>
+  </data>
+  <data name="ProPending" xml:space="preserve">
+    <value>Nákup čeká na dokončení. Pro se odemkne, jakmile projde.</value>
+  </data>
+  <data name="ProFailed" xml:space="preserve">
+    <value>Něco se nepovedlo. Zkuste to prosím znovu.</value>
+  </data>
+  <data name="ProRestored" xml:space="preserve">
+    <value>Váš nákup byl obnoven.</value>
+  </data>
+  <data name="ProNothingToRestore" xml:space="preserve">
+    <value>Žádný dřívější nákup nenalezen.</value>
+  </data>
+  <data name="ProStateActive" xml:space="preserve">
+    <value>Show Up Pro je aktivní. Děkujeme!</value>
+  </data>
+  <data name="ProUnavailable" xml:space="preserve">
+    <value>V této verzi nejsou nákupy dostupné.</value>
+  </data>
+  <data name="ProUnlockLink" xml:space="preserve">
+    <value>Odemknout s Pro</value>
+  </data>
+  <data name="ProColumnFree" xml:space="preserve">
+    <value>Zdarma</value>
+  </data>
+  <data name="ProColumnPro" xml:space="preserve">
+    <value>Pro</value>
+  </data>
+  <data name="ProCheckBack" xml:space="preserve">
+    <value>Nákup proběhl, ale Pro se zatím neobjevilo. Zkuste to za minutu nebo klepněte na Obnovit nákupy.</value>
+  </data>
+  <data name="ProOffersFailed" xml:space="preserve">
+    <value>Nabídky se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.</value>
+  </data>
+  <data name="ProRetry" xml:space="preserve">
+    <value>Zkusit znovu</value>
+  </data>
+  <data name="ProSubscriptionDisclosure" xml:space="preserve">
+    <value>Předplatné se automaticky obnovuje každý měsíc nebo rok za zobrazenou cenu, dokud ho nezrušíte. Správu a zrušení najdete kdykoli v nastavení účtu v obchodě.</value>
+  </data>
+  <data name="ProOfferMonthlyNote" xml:space="preserve">
+    <value>Obnovuje se každý měsíc, dokud ho nezrušíte</value>
+  </data>
+  <data name="ProOfferYearlyNote" xml:space="preserve">
+    <value>Obnovuje se každý rok, dokud ho nezrušíte</value>
+  </data>
+  <data name="ProTerms" xml:space="preserve">
+    <value>Podmínky použití</value>
+  </data>
+  <data name="ProPrivacy" xml:space="preserve">
+    <value>Zásady ochrany osobních údajů</value>
+  </data>
+  <data name="ProManage" xml:space="preserve">
+    <value>Spravovat předplatné</value>
+  </data>
+  <data name="ProBusyName" xml:space="preserve">
+    <value>Pracuji</value>
+  </data>
 </root>

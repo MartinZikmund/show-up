@@ -4,7 +4,9 @@ using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Localization;
 using Microsoft.UI.Xaml;
 using MZikmund.Toolkit.WinUI.Services;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Infrastructure;
+using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Tracking;
@@ -158,7 +160,7 @@ public sealed class SettingsViewModelTests
     public void SelectedMarkerSwatch_Set_ChangesTheColor()
     {
         FakeAppPreferences preferences = new();
-        var viewModel = Navigated(preferences);
+        var viewModel = Navigated(preferences, new FakeEntitlementService { IsPro = true });
 
         viewModel.SelectedMarkerSwatch = viewModel.MarkerSwatches.Single(s => s.Color == MarkerColor.Orange);
 
@@ -186,21 +188,59 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public void CanChangeMarkerColor_ForNow_IsTrue()
+    public void CanChangeMarkerColor_Free_IsFalse()
     {
-        CreateViewModel(new FakeAppPreferences()).CanChangeMarkerColor.Should().BeTrue();
+        CreateViewModel(new FakeAppPreferences()).CanChangeMarkerColor.Should().BeFalse();
     }
 
-    private static SettingsViewModel Navigated(FakeAppPreferences preferences)
+    [TestMethod]
+    public void CanChangeMarkerColor_Pro_IsTrue()
     {
-        var viewModel = CreateViewModel(preferences);
+        CreateViewModel(new FakeAppPreferences(), entitlements: new FakeEntitlementService { IsPro = true }).CanChangeMarkerColor.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void CanChangeMarkerColor_EntitlementChanges_RaisesPropertyChanged()
+    {
+        FakeEntitlementService entitlements = new();
+        var viewModel = Navigated(new FakeAppPreferences(), entitlements);
+        List<string?> raised = [];
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        entitlements.SetPro(true);
+
+        viewModel.CanChangeMarkerColor.Should().BeTrue();
+        raised.Should().Contain(nameof(SettingsViewModel.CanChangeMarkerColor));
+    }
+
+    [TestMethod]
+    public void IsMarkerColorLocked_FreeAndPro_FollowsEntitlement()
+    {
+        CreateViewModel(new FakeAppPreferences()).IsMarkerColorLocked.Should().BeTrue();
+        CreateViewModel(new FakeAppPreferences(), entitlements: new FakeEntitlementService { IsPro = true }).IsMarkerColorLocked.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void SelectedMarkerSwatch_FreeUser_DoesNotChangeColor()
+    {
+        FakeAppPreferences preferences = new();
+        var viewModel = Navigated(preferences);
+
+        viewModel.SelectedMarkerSwatch = viewModel.MarkerSwatches.First(s => s.Color == MarkerColor.Orange);
+
+        preferences.MarkerColor.Should().NotBe(MarkerColor.Orange);
+    }
+
+    private static SettingsViewModel Navigated(FakeAppPreferences preferences, FakeEntitlementService? entitlements = null)
+    {
+        var viewModel = CreateViewModel(preferences, entitlements: entitlements);
         viewModel.OnNavigatedTo(null);
         preferences.Writes.Clear();
         return viewModel;
     }
 
-    private static SettingsViewModel CreateViewModel(FakeAppPreferences preferences, IMessenger? messenger = null) =>
-        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger());
+    private static SettingsViewModel CreateViewModel(FakeAppPreferences preferences, IMessenger? messenger = null, FakeEntitlementService? entitlements = null) =>
+        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger(), entitlements ?? new FakeEntitlementService(), new RecordingNavigationService());
 
     private sealed class FakeAppPreferences : IAppPreferences
     {
@@ -255,6 +295,10 @@ public sealed class SettingsViewModelTests
             get;
             set => Record(nameof(UnitSystem), () => field = value);
         }
+
+        public bool LastKnownPro { get; set; }
+
+        public DateTimeOffset? LastKnownProExpires { get; set; }
 
         private void Record(string name, Action write)
         {

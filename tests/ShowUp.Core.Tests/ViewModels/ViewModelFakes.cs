@@ -109,6 +109,10 @@ internal sealed class FakeAppPreferences : IAppPreferences
     public MarkerColor MarkerColor { get; set; }
 
     public UnitSystem UnitSystem { get; set; }
+
+    public bool LastKnownPro { get; set; }
+
+    public DateTimeOffset? LastKnownProExpires { get; set; }
 }
 
 internal sealed class RecordingJournalDialogs : IJournalDialogs

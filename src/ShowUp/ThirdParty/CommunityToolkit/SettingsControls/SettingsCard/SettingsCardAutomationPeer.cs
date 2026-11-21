@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.UI.Xaml.Automation.Provider;
+
 namespace CommunityToolkit.WinUI.Controls;
 
 /// <summary>
 /// AutomationPeer for SettingsCard
 /// </summary>
-public partial class SettingsCardAutomationPeer : ButtonBaseAutomationPeer
+public partial class SettingsCardAutomationPeer : ButtonBaseAutomationPeer, IInvokeProvider
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsCard"/> class.
@@ -65,6 +67,16 @@ public partial class SettingsCardAutomationPeer : ButtonBaseAutomationPeer
         }
 
         return base.GetNameCore();
+    }
+
+    // Local fix: the Invoke pattern was offered without implementing IInvokeProvider, so UI Automation could not activate the card.
+    /// <inheritdoc/>
+    public void Invoke()
+    {
+        if (Owner is SettingsCard { IsClickEnabled: true, IsEnabled: true } card)
+        {
+            card.InvokeCommand();
+        }
     }
 
     /// <inheritdoc/>

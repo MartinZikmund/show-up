@@ -15,6 +15,7 @@ One page per topic. Keep it that way.
 
 - [calendar.md](./calendar.md) — the program calendar page: the active enrollment service, tap-to-cross flow, and the reusable grid control.
 - [catalog.md](./catalog.md) — how the bundled workout programs are verified, the file format, optional sessions, and held programs.
+- [entitlements.md](./entitlements.md) — Show Up Pro: the feature gate, the paywall, per-head billing (RevenueCat, Microsoft Store, unlocked) and its configuration.
 - [json-aot-serialization.md](./json-aot-serialization.md) — `JsonSerializerContext` conventions for AOT-safe, trim-safe JSON serialization.
 - [marking.md](./marking.md) — the hand-drawn marker X, drawing the cross yourself, sound and haptics, and the cross moment.
 - [programs.md](./programs.md) — browsing the catalog, the program detail page, starting a program, and the hero fallback.

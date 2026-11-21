@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
 using ShowUp.Services.Settings;
@@ -13,16 +14,20 @@ namespace ShowUp.Services.Marking;
 public sealed class MarkerBrushUpdater : IRecipient<MarkerColorChangedMessage>
 {
     private readonly IAppPreferences _preferences;
+    private readonly IEntitlementService _entitlements;
 
-    public MarkerBrushUpdater(IAppPreferences preferences, IMessenger messenger)
+    public MarkerBrushUpdater(IAppPreferences preferences, IMessenger messenger, IEntitlementService entitlements)
     {
         _preferences = preferences;
+        _entitlements = entitlements;
         messenger.Register(this);
+        entitlements.Changed += (_, _) => Apply();
     }
 
-    public void Apply() => Apply(_preferences.MarkerColor);
+    // Lapsed users keep their stored choice but get the default ink until they are Pro again.
+    public void Apply() => Apply(FeatureGate.EffectiveMarkerColor(_preferences.MarkerColor, _entitlements.IsPro));
 
-    public void Receive(MarkerColorChangedMessage message) => Apply(message.Color);
+    public void Receive(MarkerColorChangedMessage message) => Apply(FeatureGate.EffectiveMarkerColor(message.Color, _entitlements.IsPro));
 
     private static void Apply(MarkerColor color)
     {

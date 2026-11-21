@@ -1,0 +1,24 @@
+﻿<UserControl
+    x:Class="ShowUp.Controls.ProGateHint"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:markup="using:ShowUp.Markup">
+
+    <Button
+        x:Name="UnlockButton"
+        Margin="-8,0,0,0"
+        Padding="8,4"
+        AutomationProperties.AutomationId="ProGateHintButton"
+        Style="{StaticResource SubtleButtonStyle}">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <FontIcon
+                FontSize="12"
+                Foreground="{ThemeResource MutedTextBrush}"
+                Glyph="&#xE72E;" />
+            <TextBlock
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{markup:Localize Key=ProUnlockLink}" />
+        </StackPanel>
+    </Button>
+</UserControl>

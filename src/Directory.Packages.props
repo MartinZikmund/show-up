@@ -5,6 +5,9 @@
     <PackageVersion Include="MZikmund.Toolkit.WinUI" Version="1.0.0-dev.71" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.3.1" />
+    <PackageVersion Include="MZikmund.Uno.RevenueCat" Version="0.3.0-beta.4" />
+    <!-- Pinned to 1.9.1: RevenueCat pulls Ktx 1.8.9.2, whose classes duplicate Xamarin.AndroidX.Fragment 1.9.0 and break D8. -->
+    <PackageVersion Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.1" />
     <!-- SQLite -->
     <PackageVersion Include="sqlite-net-e" Version="1.11.285" />
     <PackageVersion Include="SourceGear.sqlite3" Version="3.53.4" />
