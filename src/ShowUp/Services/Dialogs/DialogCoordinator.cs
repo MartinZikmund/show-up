@@ -26,6 +26,7 @@ public sealed class DialogCoordinator : IDialogCoordinator
             var queued = _dialogQueue.Dequeue();
             try
             {
+                ApplyAppTheme(queued.Dialog);
                 var result = await queued.Dialog.ShowAsync();
                 queued.CompletionSource.SetResult(result);
             }
@@ -36,6 +37,15 @@ public sealed class DialogCoordinator : IDialogCoordinator
         }
 
         _isShowingDialog = false;
+    }
+
+    // A dialog lives in the popup layer and can come up in the system theme while the app is on the other one.
+    private static void ApplyAppTheme(ContentDialog dialog)
+    {
+        if (dialog.XamlRoot?.Content is FrameworkElement root)
+        {
+            dialog.RequestedTheme = root.ActualTheme;
+        }
     }
 
     private sealed class QueuedDialog

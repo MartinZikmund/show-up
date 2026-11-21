@@ -15,13 +15,7 @@ public sealed class BonusWorkoutDialogService(
     {
         var today = DateOnly.FromDateTime(time.GetLocalNow().DateTime);
         BonusWorkoutDialogViewModel viewModel = new((await catalog.GetCatalogAsync()).Workouts, today, date);
-        var xamlRoot = xamlRootProvider.XamlRoot;
-        BonusWorkoutDialog dialog = new(viewModel) { XamlRoot = xamlRoot };
-        // Dialogs follow the system theme, not the app's.
-        if (xamlRoot?.Content is FrameworkElement root)
-        {
-            dialog.RequestedTheme = root.ActualTheme;
-        }
+        BonusWorkoutDialog dialog = new(viewModel) { XamlRoot = xamlRootProvider.XamlRoot };
 
         var result = await dialogCoordinator.ShowAsync(dialog);
         return result == ContentDialogResult.Primary && viewModel.CanSave ? viewModel.ToEntry() : null;
