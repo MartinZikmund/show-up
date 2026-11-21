@@ -27,4 +27,7 @@ public interface IAppPreferences
 
     /// <summary>Kg/km or lb/mi for logged results; seeded from the region the first time it's read.</summary>
     UnitSystem UnitSystem { get; set; }
+
+    /// <summary>Last Pro state the store reported, so offline launches keep it.</summary>
+    bool LastKnownPro { get; set; }
 }

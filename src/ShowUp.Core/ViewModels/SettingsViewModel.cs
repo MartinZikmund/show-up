@@ -1,7 +1,9 @@
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Infrastructure;
 using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
+using ShowUp.Core.Services;
 using ShowUp.Core.Tracking;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
@@ -17,7 +19,10 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IPreferences _preferences;
     private readonly IApplication _application;
     private readonly IMessenger _messenger;
+    private readonly IEntitlementService _entitlements;
+    private readonly INavigationService _navigation;
     private bool _isInitializing;
+    private bool _isSubscribed;
 
     public SettingsViewModel(
         IStringLocalizer localizer,
@@ -25,8 +30,12 @@ public partial class SettingsViewModel : ViewModelBase
         IThemeManager themeManager,
         IPreferences preferences,
         IApplication application,
-        IMessenger messenger)
+        IMessenger messenger,
+        IEntitlementService entitlements,
+        INavigationService navigation)
     {
+        _entitlements = entitlements;
+        _navigation = navigation;
         _messenger = messenger;
         _localizer = localizer;
         _appPreferences = appPreferences;
@@ -40,6 +49,13 @@ public partial class SettingsViewModel : ViewModelBase
     public override void OnNavigatedTo(object? parameter)
     {
         base.OnNavigatedTo(parameter);
+        if (!_isSubscribed)
+        {
+            _entitlements.Changed += OnEntitlementsChanged;
+            _isSubscribed = true;
+        }
+
+        OnEntitlementsChanged(null, EventArgs.Empty);
         try
         {
             _isInitializing = true;
@@ -57,6 +73,28 @@ public partial class SettingsViewModel : ViewModelBase
             _isInitializing = false;
         }
     }
+
+    public override void OnNavigatedFrom()
+    {
+        base.OnNavigatedFrom();
+        if (_isSubscribed)
+        {
+            _entitlements.Changed -= OnEntitlementsChanged;
+            _isSubscribed = false;
+        }
+    }
+
+    private void OnEntitlementsChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(CanChangeMarkerColor));
+        OnPropertyChanged(nameof(ProStatusText));
+    }
+
+    /// <summary>Status line of the "Show Up Pro" card.</summary>
+    public string ProStatusText => _localizer[_entitlements.IsPro ? "ProCardStatusActive" : "ProCardStatusFree"];
+
+    [RelayCommand]
+    private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
     public ElementTheme[] ThemeOptions { get; } = [ElementTheme.Default, ElementTheme.Light, ElementTheme.Dark];
 
@@ -146,8 +184,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Whether the marker color picker is unlocked; Plan 3 wires this to the Personalization feature gate.</summary>
-    public bool CanChangeMarkerColor => true;
+    public bool CanChangeMarkerColor => FeatureGate.CanUse(ProFeature.Personalization, _entitlements.IsPro);
 
     [ObservableProperty]
     public partial MarkerColor MarkerColor { get; set; }

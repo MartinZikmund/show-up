@@ -90,6 +90,13 @@ public sealed class AppPreferences : IAppPreferences
         set => _preferences.Set(MarkerColorKey, (int)value);
     }
 
+    private const string LastKnownProKey = "LastKnownPro";
+    public bool LastKnownPro
+    {
+        get => _preferences.Get(LastKnownProKey, false);
+        set => _preferences.Set(LastKnownProKey, value);
+    }
+
     private const string UnitSystemKey = "UnitSystem";
     public UnitSystem UnitSystem
     {
