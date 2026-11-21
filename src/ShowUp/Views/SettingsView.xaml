@@ -126,8 +126,8 @@
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="vm:MarkerSwatch">
                             <Grid
-                                Width="40"
-                                Height="40"
+                                Width="36"
+                                Height="36"
                                 AutomationProperties.AutomationId="{x:Bind AutomationId}"
                                 AutomationProperties.Name="{x:Bind Name}"
                                 ToolTipService.ToolTip="{x:Bind Name}">

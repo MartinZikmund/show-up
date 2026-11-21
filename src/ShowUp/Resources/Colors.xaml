@@ -13,7 +13,7 @@
             <Color x:Key="SystemAccentColorDark3">#741913</Color>
 
             <SolidColorBrush x:Key="PaperBackgroundBrush" Color="#F6F1E6" />
-            <SolidColorBrush x:Key="PaperGridLineBrush" Color="#E6DFCF" />
+            <x:String x:Key="PaperGrainSource">ms-appx:///Assets/Paper/paper_grain_light.png</x:String>
             <SolidColorBrush x:Key="CalendarCellBackgroundBrush" Color="#FFFDF7" />
             <!--  Backplate keeping the day number and date readable over the X  -->
             <SolidColorBrush
@@ -45,7 +45,7 @@
             <Color x:Key="SystemAccentColorDark3">#741913</Color>
 
             <SolidColorBrush x:Key="PaperBackgroundBrush" Color="#22262A" />
-            <SolidColorBrush x:Key="PaperGridLineBrush" Color="#2A2E33" />
+            <x:String x:Key="PaperGrainSource">ms-appx:///Assets/Paper/paper_grain_dark.png</x:String>
             <SolidColorBrush x:Key="CalendarCellBackgroundBrush" Color="#2B3035" />
             <SolidColorBrush
                 x:Key="CalendarCellPlateBrush"
@@ -65,10 +65,10 @@
             <SolidColorBrush x:Key="TabBarBorderBrush" Color="#454B52" />
         </ResourceDictionary>
 
-        <!--  System colors only; the grid disappears into the window color  -->
+        <!--  System colors only, flat window color: no grain  -->
         <ResourceDictionary x:Key="HighContrast">
             <StaticResource x:Key="PaperBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
-            <StaticResource x:Key="PaperGridLineBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <x:String x:Key="PaperGrainSource">none</x:String>
             <StaticResource x:Key="CalendarCellBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="CalendarCellPlateBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="CalendarCellBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />

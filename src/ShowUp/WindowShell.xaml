@@ -12,7 +12,7 @@
 
     <Grid>
         <!--  Paper (or chalkboard) fills the whole window, safe-area insets included  -->
-        <controls:PaperGrid />
+        <controls:PaperBackground />
 
         <Grid toolkit:VisibleBoundsPadding.PaddingMask="Top,Left,Right">
             <Grid.RowDefinitions>

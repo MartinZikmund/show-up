@@ -19,6 +19,7 @@ One page per topic. Keep it that way.
 - [marking.md](./marking.md) — the hand-drawn marker X, drawing the cross yourself, sound and haptics, and the cross moment.
 - [programs.md](./programs.md) — browsing the catalog, the program detail page, starting a program, and the hero fallback.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
+- [theme.md](./theme.md) � marker color picker, how it repaints live, and the grain paper background.
 - [today.md](./today.md) — the Today page, the shared crossing flow, and bonus workouts.
 - [views.md](./views.md) — `ViewBase<TViewModel>`, `IViewBase`, and how views resolve their view models.
 
