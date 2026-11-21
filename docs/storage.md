@@ -19,6 +19,11 @@ One SQLite file, `showup.db`, in `ApplicationData.Current.LocalFolder`, opened t
 `Migrations.ApplyAsync` runs on first connection and tracks the schema with `PRAGMA user_version`.
 Add a new numbered step there; never edit a shipped one.
 
+| Version | Change |
+|---|---|
+| 1 | Enrollments, completions, schedule shifts, bonus workouts |
+| 2 | `CompletionEntity.InkJson`: the user's drawn strokes for a cross (see [marking.md](./marking.md#draw-it-yourself)) |
+
 ## WebAssembly: the async file system catch
 
 The WASM file system is IDBFS: IndexedDB mirrored into memory. The load is asynchronous, so a

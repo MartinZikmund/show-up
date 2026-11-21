@@ -17,6 +17,9 @@ public sealed class CompletionEntity : SyncableEntity
 
     public DateTimeOffset CompletedAt { get; set; }
 
+    /// <summary>The user's strokes (<c>InkCodec</c> JSON) when crossed by drawing; null for the marker X.</summary>
+    public string? InkJson { get; set; }
+
     [Ignore]
     public DateOnly CompletedOn
     {

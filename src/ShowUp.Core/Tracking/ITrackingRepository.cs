@@ -10,7 +10,8 @@ public interface ITrackingRepository
 
     Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason);
 
-    Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate);
+    /// <param name="inkJson">The user's drawn strokes (<c>InkCodec</c> JSON), or null for the marker X.</param>
+    Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null);
 
     Task UncrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex);
 

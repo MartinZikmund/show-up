@@ -5,13 +5,21 @@ namespace ShowUp.Core.Storage;
 // Each version is frozen DDL, never the live entity classes, so later versions can ALTER safely.
 public static class Migrations
 {
-    public static async Task ApplyAsync(SQLiteAsyncConnection connection)
+    public const int LatestVersion = 2;
+
+    /// <param name="targetVersion">Stop after this version (tests build older schemas with it).</param>
+    public static async Task ApplyAsync(SQLiteAsyncConnection connection, int targetVersion = LatestVersion)
     {
         int version = await connection.ExecuteScalarAsync<int>("PRAGMA user_version");
 
-        if (version < 1)
+        if (version < 1 && targetVersion >= 1)
         {
             await connection.RunInTransactionAsync(V1);
+        }
+
+        if (version < 2 && targetVersion >= 2)
+        {
+            await connection.RunInTransactionAsync(V2);
         }
     }
 
@@ -78,5 +86,12 @@ public static class Migrations
             )
             """);
         c.Execute("PRAGMA user_version = 1");
+    }
+
+    // The user's own strokes for a drawn cross (InkCodec JSON); null = the generated marker X.
+    private static void V2(SQLiteConnection c)
+    {
+        c.Execute("""ALTER TABLE "CompletionEntity" ADD COLUMN "InkJson" varchar""");
+        c.Execute("PRAGMA user_version = 2");
     }
 }
