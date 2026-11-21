@@ -93,6 +93,34 @@ public sealed class ProgramsViewModelTests
         PluralForms.CategoryFor(CultureInfo.GetCultureInfo(culture), count).Should().Be(expected);
 
     [TestMethod]
+    public async Task Card_Summary_UsesThePluralFormOfTheUiCulture()
+    {
+        CultureInfo previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("cs");
+            var viewModel = await LoadAsync(TestCatalog.Program("p", 1, "run", "run", "run") with { Name = "P" });
+
+            viewModel.Programs.Single().SummaryText.Should().Contain("ProgramDays_Few(3)").And.Contain("ProgramTracks_One(1)");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    [TestMethod]
+    public async Task Card_Automation_NamesTheProgramSummaryAndVerification()
+    {
+        var viewModel = await LoadAsync(Program("insanity", "Insanity", "Insanity"));
+
+        var card = viewModel.Programs.Single();
+
+        card.AutomationId.Should().Be("ProgramCard_insanity");
+        card.AutomationName.Should().StartWith("Insanity, ").And.EndWith(", VerificationOfficial");
+    }
+
+    [TestMethod]
     public void KeyFor_AppendsTheCategory() =>
         PluralForms.KeyFor(CultureInfo.GetCultureInfo("cs"), "ProgramDays", 3).Should().Be("ProgramDays_Few");
 

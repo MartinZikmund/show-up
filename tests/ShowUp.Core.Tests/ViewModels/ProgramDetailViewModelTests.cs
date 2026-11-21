@@ -115,6 +115,7 @@ public sealed class ProgramDetailViewModelTests
         await viewModel.StartAsync();
 
         _confirmation.Asked.Should().ContainSingle().Which.Text.Should().Contain("Program old r1").And.Contain("Program new r1");
+        _enrollments.EndReason.Should().Be(EnrollmentEndReason.Abandoned);
         _enrollments.Calls.Should().Equal($"End:{EnrollmentEndReason.Abandoned}", "Enroll");
         _navigator.Sections.Should().Equal(NavigationSection.Calendar);
     }
@@ -141,6 +142,89 @@ public sealed class ProgramDetailViewModelTests
         viewModel.GoBackCommand.Execute(null);
 
         _navigation.BackCount.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Start_PassesThePinnedRevision()
+    {
+        var viewModel = await LoadAsync(TestCatalog.Program("p", 3, "run"));
+
+        await viewModel.StartAsync();
+
+        _enrollments.Enrolled!.Value.Program.Revision.Should().Be(3);
+    }
+
+    [TestMethod]
+    public async Task Start_DateTooFarBack_IsClampedToTheMinimum()
+    {
+        var viewModel = await LoadAsync(TestCatalog.Program("p", 1, "run"));
+        viewModel.StartDate = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+        await viewModel.StartAsync();
+
+        _enrollments.Enrolled!.Value.Start.Should().Be(new DateOnly(2026, 10, 22));
+    }
+
+    [TestMethod]
+    public async Task Start_DateTooFarAhead_IsClampedToTheMaximum()
+    {
+        var viewModel = await LoadAsync(TestCatalog.Program("p", 1, "run"));
+        viewModel.StartDate = new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+        await viewModel.StartAsync();
+
+        _enrollments.Enrolled!.Value.Start.Should().Be(new DateOnly(2027, 11, 21));
+    }
+
+    [TestMethod]
+    public async Task Start_EnrollFails_ShowsAnErrorAndStaysPut()
+    {
+        _enrollments.EnrollFailure = new InvalidOperationException("disk full");
+        var viewModel = await LoadAsync(TestCatalog.Program("p", 1, "run"));
+
+        await viewModel.StartAsync();
+
+        _dialogs.Shown.Should().ContainSingle().Which.Title.Should().Be("ProgramStartFailedTitle");
+        _navigator.Sections.Should().BeEmpty();
+        viewModel.StartCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Start_EndFails_ShowsAnErrorInsteadOfCrashing()
+    {
+        _enrollments.Active = ActiveOne();
+        _enrollments.EndFailure = new InvalidOperationException("gone");
+        var viewModel = await LoadAsync(TestCatalog.Program("new", 1, "run"));
+
+        await viewModel.StartAsync();
+
+        _dialogs.Shown.Should().ContainSingle();
+        _navigator.Sections.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Detail_UnknownProgram_ShowsNotFoundAndCannotStart()
+    {
+        ProgramDetailViewModel viewModel = Create(new FakeCatalogService());
+
+        await viewModel.LoadAsync("nope");
+
+        viewModel.IsNotFound.Should().BeTrue();
+        viewModel.ShowContent.Should().BeFalse();
+        viewModel.StartCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Detail_Load_SelectsTheTrackBeforePublishingTheList()
+    {
+        var program = TwoTracks();
+        ProgramDetailViewModel viewModel = Create(new FakeCatalogService(program));
+        List<string?> order = [];
+        viewModel.PropertyChanged += (_, e) => order.Add(e.PropertyName);
+
+        await viewModel.LoadAsync(program.Id);
+
+        order.IndexOf(nameof(ProgramDetailViewModel.SelectedTrack)).Should().BeLessThan(order.IndexOf(nameof(ProgramDetailViewModel.Tracks)));
     }
 
     private static WorkoutProgram TwoTracks()

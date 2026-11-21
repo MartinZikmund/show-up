@@ -72,12 +72,23 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public List<string> Calls { get; } = [];
 
+    public Exception? EnrollFailure { get; set; }
+
+    public Exception? EndFailure { get; set; }
+
+    public EnrollmentEndReason? EndReason { get; private set; }
+
     public (WorkoutProgram Program, ProgramTrack Track, DateOnly Start)? Enrolled { get; private set; }
 
     public Task<ActiveEnrollment?> GetAsync() => Task.FromResult(Active);
 
     public Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate)
     {
+        if (EnrollFailure is not null)
+        {
+            return Task.FromException<ActiveEnrollment>(EnrollFailure);
+        }
+
         Calls.Add("Enroll");
         Enrolled = (program, track, startDate);
         return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
@@ -85,7 +96,13 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public Task EndAsync(EnrollmentEndReason reason)
     {
+        if (EndFailure is not null)
+        {
+            return Task.FromException(EndFailure);
+        }
+
         Calls.Add($"End:{reason}");
+        EndReason = reason;
         Active = null;
         return Task.CompletedTask;
     }
