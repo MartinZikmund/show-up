@@ -254,4 +254,165 @@ public sealed class RemindersViewModelTests
 
         _navigation.Navigations.Should().ContainSingle().Which.ViewModel.Should().Be(typeof(ProViewModel));
     }
+
+    [TestMethod]
+    public async Task Weekdays_HaveFullNamesForScreenReaders()
+    {
+        var english = await OpenAsync(CultureInfo.GetCultureInfo("en-US"));
+        var czech = await OpenAsync(CultureInfo.GetCultureInfo("cs-CZ"));
+
+        english.Weekdays.Select(d => (d.Label, d.FullName)).Should().StartWith(("Sun", "Sunday"));
+        english.Weekdays.Single(d => d.Bit == 0).FullName.Should().Be("Monday");
+        czech.Weekdays[0].FullName.Should().Be(CultureInfo.GetCultureInfo("cs-CZ").DateTimeFormat.DayNames[1]);
+    }
+
+    [TestMethod]
+    public async Task Free_OneEnabled_OtherRowsCannotBeEnabled()
+    {
+        _entitlements.IsPro = false;
+        await _repository.AddAsync(8 * 60, 127);
+        await _repository.AddAsync(9 * 60, 127, enabled: false);
+
+        var viewModel = await OpenAsync();
+
+        viewModel.Items[0].CanEnable.Should().BeTrue("it is the one that is on, so it can be turned off");
+        viewModel.Items[1].CanEnable.Should().BeFalse();
+        viewModel.Items[1].ShowGate.Should().BeTrue();
+        viewModel.Items[0].ShowGate.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Free_NoneEnabled_AnyRowCanBeEnabled()
+    {
+        _entitlements.IsPro = false;
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+
+        var viewModel = await OpenAsync();
+
+        viewModel.Items[0].CanEnable.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Free_SwitchingTheOnOneOff_FreesTheOthers()
+    {
+        _entitlements.IsPro = false;
+        await _repository.AddAsync(8 * 60, 127);
+        await _repository.AddAsync(9 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+
+        viewModel.Items[0].IsEnabled = false;
+        await Task.Delay(50);
+
+        viewModel.Items[1].CanEnable.Should().BeTrue();
+        viewModel.Items[1].ShowGate.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Pro_AllRowsCanBeEnabled()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        await _repository.AddAsync(9 * 60, 127, enabled: false);
+
+        var viewModel = await OpenAsync();
+
+        viewModel.Items.Should().OnlyContain(i => i.CanEnable && !i.ShowGate);
+    }
+
+    [TestMethod]
+    public async Task Lapse_UpdatesRowsLive()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        await _repository.AddAsync(9 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        viewModel.Items[1].CanEnable.Should().BeTrue();
+
+        _entitlements.SetPro(false);
+        await Task.Delay(50);
+
+        viewModel.Items[1].CanEnable.Should().BeFalse();
+        viewModel.Items[1].ShowGate.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Toggle_RepositoryFails_ShowsErrorAndResyncs()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        var viewModel = await OpenAsync();
+        _repository.FailWrites = true;
+
+        viewModel.Items[0].IsEnabled = false;
+        await Task.Delay(100);
+
+        _dialogs.Shown.Should().ContainSingle();
+        viewModel.Items[0].IsEnabled.Should().BeTrue("the list reloads what is stored");
+        _changes.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Delete_RepositoryFails_DoesNotThrowAndResyncs()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        var viewModel = await OpenAsync();
+        _repository.FailWrites = true;
+
+        await viewModel.Items[0].DeleteCommand.ExecuteAsync(null);
+
+        _dialogs.Shown.Should().ContainSingle();
+        viewModel.Items.Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task Save_RepositoryFails_DoesNotThrowAndResyncs()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        _repository.FailWrites = true;
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        _dialogs.Shown.Should().ContainSingle();
+        viewModel.Items.Should().BeEmpty();
+        viewModel.IsEditing.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Save_OwnMessage_DoesNotReloadAgain()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        var before = _repository.ListCalls;
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+        await Task.Delay(50);
+
+        (_repository.ListCalls - before).Should().Be(1, "only the save's own reload");
+    }
+
+    [TestMethod]
+    public async Task RemindersChanged_FromElsewhere_Reloads()
+    {
+        var viewModel = await OpenAsync();
+        await _repository.AddAsync(8 * 60, 127);
+
+        _messenger.Send(new RemindersChangedMessage());
+        await Task.Delay(50);
+
+        viewModel.Items.Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task OnNavigatedTo_EditorOpen_KeepsTheEditorAsItIs()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        var weekdays = viewModel.Weekdays;
+        viewModel.Weekdays[0].IsChecked = false;
+        var before = _repository.ListCalls;
+
+        viewModel.OnNavigatedTo(null);
+
+        viewModel.Weekdays.Should().BeSameAs(weekdays);
+        viewModel.Weekdays[0].IsChecked.Should().BeFalse();
+        _repository.ListCalls.Should().Be(before);
+    }
 }

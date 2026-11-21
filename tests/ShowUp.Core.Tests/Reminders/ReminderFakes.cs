@@ -11,11 +11,28 @@ internal sealed class FakeReminderRepository : IReminderRepository
 
     public int SetEnabledCalls { get; private set; }
 
-    public Task<IReadOnlyList<ReminderEntity>> ListAsync() =>
-        Task.FromResult<IReadOnlyList<ReminderEntity>>([.. _items.OrderBy(r => r.MinutesOfDay).ThenBy(r => r.CreatedAt)]);
+    public int ListCalls { get; private set; }
+
+    /// <summary>Makes every write throw.</summary>
+    public bool FailWrites { get; set; }
+
+    private void ThrowIfFailing()
+    {
+        if (FailWrites)
+        {
+            throw new InvalidOperationException("disk full");
+        }
+    }
+
+    public Task<IReadOnlyList<ReminderEntity>> ListAsync()
+    {
+        ListCalls++;
+        return Task.FromResult<IReadOnlyList<ReminderEntity>>([.. _items.OrderBy(r => r.MinutesOfDay).ThenBy(r => r.CreatedAt)]);
+    }
 
     public Task<ReminderEntity> AddAsync(int minutesOfDay, int daysMask, bool enabled = true)
     {
+        ThrowIfFailing();
         ReminderEntity reminder = new()
         {
             Id = Guid.NewGuid(),
@@ -30,6 +47,7 @@ internal sealed class FakeReminderRepository : IReminderRepository
 
     public Task UpdateAsync(Guid id, int minutesOfDay, int daysMask)
     {
+        ThrowIfFailing();
         var item = _items.Single(r => r.Id == id);
         item.MinutesOfDay = minutesOfDay;
         item.DaysMask = daysMask;
@@ -38,6 +56,7 @@ internal sealed class FakeReminderRepository : IReminderRepository
 
     public Task SetEnabledAsync(Guid id, bool enabled)
     {
+        ThrowIfFailing();
         SetEnabledCalls++;
         _items.Single(r => r.Id == id).Enabled = enabled;
         return Task.CompletedTask;
@@ -45,6 +64,7 @@ internal sealed class FakeReminderRepository : IReminderRepository
 
     public Task DeleteAsync(Guid id)
     {
+        ThrowIfFailing();
         _items.RemoveAll(r => r.Id == id);
         return Task.CompletedTask;
     }

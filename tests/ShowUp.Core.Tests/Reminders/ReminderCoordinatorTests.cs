@@ -186,4 +186,33 @@ public sealed class ReminderCoordinatorTests
 
         _scheduler.Replaced.Should().ContainSingle();
     }
+
+    [TestMethod]
+    public async Task Dispose_StopsListening()
+    {
+        await _coordinator.StartAsync();
+        _coordinator.Dispose();
+
+        _messenger.Send(new TrackingChangedMessage());
+        _messenger.Send(new RemindersChangedMessage());
+        _entitlements.SetPro(true);
+        await Task.Delay(50);
+
+        _scheduler.Replaced.Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task Start_Twice_ListensOnce()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        await _coordinator.StartAsync();
+        await _coordinator.StartAsync();
+        _scheduler.Replaced.Clear();
+
+        _messenger.Send(new TrackingChangedMessage());
+        await WaitForPlansAsync(1);
+        await Task.Delay(50);
+
+        _scheduler.Replaced.Should().ContainSingle();
+    }
 }
