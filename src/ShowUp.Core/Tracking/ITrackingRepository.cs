@@ -11,6 +11,9 @@ public interface ITrackingRepository
 
     Task<IReadOnlyList<EnrollmentEntity>> GetActiveEnrollmentsAsync();
 
+    /// <summary>Every enrollment that isn't deleted, ended ones included.</summary>
+    Task<IReadOnlyList<EnrollmentEntity>> GetAllEnrollmentsAsync();
+
     Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason);
 
     /// <param name="inkJson">The user's drawn strokes (<c>InkCodec</c> JSON), or null for the marker X.</param>

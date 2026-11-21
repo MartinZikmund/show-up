@@ -537,6 +537,8 @@ public sealed class ProgramCalendarViewModelTests
 
         public Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync() => inner.GetAllAsync();
 
+        public Task<IReadOnlyList<EnrollmentRecord>> GetHistoryAsync() => inner.GetHistoryAsync();
+
         public Task<ActiveEnrollment?> GetSelectedAsync()
         {
             Gets++;

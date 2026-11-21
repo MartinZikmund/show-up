@@ -60,7 +60,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
             var version = Volatile.Read(ref _version);
             if (_loadedVersion != version)
             {
-                _snapshot = new(await LoadAsync(), ParseId(await _settings.GetAsync(PrimaryKey)));
+                _snapshot = new(await LoadAsync(await _repository.GetActiveEnrollmentsAsync()), ParseId(await _settings.GetAsync(PrimaryKey)));
                 _loadedVersion = version;
             }
 
@@ -70,6 +70,22 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         {
             _gate.Release();
         }
+    }
+
+    public async Task<IReadOnlyList<EnrollmentRecord>> GetHistoryAsync()
+    {
+        var all = await LoadAsync(await _repository.GetAllEnrollmentsAsync());
+        List<EnrollmentRecord> records = [];
+        foreach (var enrollment in all)
+        {
+            records.Add(new(enrollment, await _repository.GetCompletionsAsync(enrollment.Id)));
+        }
+
+        return
+        [
+            .. records.Where(r => r.IsActive),
+            .. records.Where(r => !r.IsActive).OrderByDescending(r => r.Enrollment.Enrollment.EndedAt),
+        ];
     }
 
     public async Task<ActiveEnrollment?> GetSelectedAsync()
@@ -248,10 +264,9 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
 
     // Newest first. A pinned revision that left the catalog falls back to the latest one (warned);
     // an enrollment whose program or track is gone entirely is skipped, not fatal.
-    private async Task<IReadOnlyList<ActiveEnrollment>> LoadAsync()
+    private async Task<IReadOnlyList<ActiveEnrollment>> LoadAsync(IReadOnlyList<EnrollmentEntity> enrollments)
     {
         List<ActiveEnrollment> result = [];
-        var enrollments = await _repository.GetActiveEnrollmentsAsync();
         foreach (var enrollment in enrollments.OrderByDescending(e => e.CreatedAt))
         {
             var program = await _catalog.GetProgramAsync(enrollment.ProgramId, enrollment.ProgramRevision);

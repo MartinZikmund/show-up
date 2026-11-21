@@ -15,6 +15,12 @@ public sealed class EnrollmentReadOnlyException(Guid enrollmentId)
     public Guid EnrollmentId { get; } = enrollmentId;
 }
 
+/// <summary>An enrollment, active or ended, with what was crossed in it.</summary>
+public sealed record EnrollmentRecord(ActiveEnrollment Enrollment, IReadOnlyList<CompletedSession> Completions)
+{
+    public bool IsActive => Enrollment.Enrollment.EndedAt is null;
+}
+
 /// <summary>
 /// The active enrollments, each with its program at the pinned revision. The only path that crosses,
 /// uncrosses or shifts, so the day's date always comes from the enrollment's calendar. Free runs one
@@ -24,6 +30,9 @@ public interface IActiveEnrollmentService
 {
     /// <summary>Every active enrollment, newest first.</summary>
     Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync();
+
+    /// <summary>Every enrollment ever started, active first (newest first), then ended ones by when they ended (newest first).</summary>
+    Task<IReadOnlyList<EnrollmentRecord>> GetHistoryAsync();
 
     /// <summary>The one Calendar and Results show: the stored selection while it's active, else the newest.</summary>
     Task<ActiveEnrollment?> GetSelectedAsync();

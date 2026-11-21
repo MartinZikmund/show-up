@@ -2,20 +2,269 @@
     x:Class="ShowUp.Views.HistoryView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls"
     xmlns:local="using:ShowUp.Views"
-    xmlns:markup="using:ShowUp.Markup">
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:vm="using:ShowUp.Core.ViewModels">
+
+    <local:HistoryViewBase.Resources>
+        <DataTemplate x:Key="ProgramTemplate" x:DataType="vm:HistoryProgramViewModel">
+            <Border
+                Background="{ThemeResource CalendarCellBackgroundBrush}"
+                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{ThemeResource OverlayCornerRadius}">
+                <StackPanel AutomationProperties.AutomationId="{x:Bind AutomationId}" AutomationProperties.Name="{x:Bind AutomationName}">
+                    <Border
+                        Height="8"
+                        Background="{x:Bind local:HistoryView.AccentBrush(AccentColor)}"
+                        CornerRadius="7,7,0,0" />
+                    <StackPanel Padding="16,12,16,12" Spacing="8">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                Text="{x:Bind Name}"
+                                TextWrapping="Wrap" />
+                            <Border
+                                Grid.Column="1"
+                                Padding="8,4"
+                                VerticalAlignment="Center"
+                                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                CornerRadius="{ThemeResource ControlCornerRadius}">
+                                <TextBlock
+                                    Foreground="{ThemeResource MutedTextBrush}"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{x:Bind StatusText}" />
+                            </Border>
+                        </Grid>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                Text="{x:Bind SummaryText}"
+                                TextWrapping="Wrap" />
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="6">
+                                <!--  Vector flame (no emoji font on WebAssembly)  -->
+                                <Path
+                                    Height="16"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Data="M8,0 C9,3.2 13,5.4 13,10 C13,13.6 10.8,16 8,16 C5.2,16 3,13.8 3,10.8 C3,8.4 4.2,6.8 5.6,5.6 C5.6,7.6 6.4,8.8 7.4,9.2 C6.8,6 7.6,2.8 8,0 Z M8,16 C6.6,16 5.6,14.9 5.6,13.5 C5.6,12.2 6.4,11.3 7.2,10.6 C7.3,11.6 7.9,12.2 8.6,12.4 C8.5,11.4 8.9,10.5 9.6,9.8 C10.1,10.9 10.4,12.1 10.4,13.3 C10.4,14.8 9.4,16 8,16 Z"
+                                    Fill="{ThemeResource MarkerBrush}"
+                                    Stretch="Uniform" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                                    Text="{x:Bind BestText}" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind DatesText}"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            Margin="-8,0,0,0"
+                            Orientation="Horizontal"
+                            Spacing="4"
+                            Visibility="{x:Bind IsActive}">
+                            <Button
+                                Padding="8,4"
+                                AutomationProperties.AutomationId="HistoryCalendarButton"
+                                Click="Calendar_Click"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Tag="{x:Bind}">
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{markup:Localize Key=HistoryCalendarLink}" />
+                            </Button>
+                            <Button
+                                Padding="8,4"
+                                AutomationProperties.AutomationId="HistoryResultsButton"
+                                Click="Results_Click"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Tag="{x:Bind}"
+                                Visibility="{x:Bind ShowResultsLink}">
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{markup:Localize Key=HistoryResultsLink}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="BonusTemplate" x:DataType="vm:HistoryBonusViewModel">
+            <Border
+                Padding="12,8"
+                Background="{ThemeResource CalendarCellBackgroundBrush}"
+                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{ThemeResource ControlCornerRadius}">
+                <Grid AutomationProperties.Name="{x:Bind AutomationName}" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="12"
+                        Height="12"
+                        VerticalAlignment="Center"
+                        Background="{ThemeResource BonusStickerBackgroundBrush}"
+                        CornerRadius="6" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                            Text="{x:Bind Title}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind DateText}" />
+                    </StackPanel>
+                    <TextBlock
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource MutedTextBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind DurationText}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="MonthTemplate" x:DataType="vm:HistoryMonthViewModel">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                    AutomationProperties.HeadingLevel="Level3"
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="{x:Bind Header}" />
+                <ItemsRepeater ItemTemplate="{StaticResource BonusTemplate}" ItemsSource="{x:Bind Items}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+        </DataTemplate>
+    </local:HistoryViewBase.Resources>
 
     <ScrollViewer>
-        <StackPanel Padding="{StaticResource PagePadding}" Spacing="8">
+        <StackPanel
+            x:Name="ContentPanel"
+            Padding="{StaticResource PagePadding}"
+            Spacing="16">
             <TextBlock
                 AutomationProperties.AutomationId="HistoryHeader"
                 AutomationProperties.HeadingLevel="Level1"
                 Style="{StaticResource SectionHeaderTextBlockStyle}"
                 Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
-            <TextBlock
-                Foreground="{ThemeResource MutedTextBrush}"
-                Text="{markup:Localize Key=HistoryComingSoon}"
-                TextWrapping="Wrap" />
+
+            <StackPanel
+                AutomationProperties.AutomationId="HistoryEmpty"
+                Spacing="4"
+                Visibility="{x:Bind ViewModel.ShowEmptyState, Mode=OneWay}">
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{markup:Localize Key=HistoryEmptyTitle}" />
+                <TextBlock
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Text="{markup:Localize Key=HistoryEmpty}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Grid
+                x:Name="Columns"
+                ColumnSpacing="32"
+                RowSpacing="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="BonusColumn" Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel
+                    x:Name="ProgramsPanel"
+                    Spacing="12"
+                    Visibility="{x:Bind ViewModel.HasPrograms, Mode=OneWay}">
+                    <TextBlock
+                        AutomationProperties.AutomationId="HistoryProgramsHeader"
+                        AutomationProperties.HeadingLevel="Level2"
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        Text="{markup:Localize Key=HistoryProgramsHeader}" />
+                    <ItemsRepeater ItemTemplate="{StaticResource ProgramTemplate}" ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="12" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+
+                <StackPanel
+                    x:Name="BonusPanel"
+                    Grid.Column="1"
+                    Spacing="12"
+                    Visibility="{x:Bind ViewModel.HasBonuses, Mode=OneWay}">
+                    <TextBlock
+                        AutomationProperties.AutomationId="HistoryBonusHeader"
+                        AutomationProperties.HeadingLevel="Level2"
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        Text="{markup:Localize Key=HistoryBonusHeader}" />
+                    <ItemsRepeater ItemTemplate="{StaticResource MonthTemplate}" ItemsSource="{x:Bind ViewModel.BonusMonths, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="16" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+            </Grid>
+
+            <Border
+                Padding="12,4"
+                HorizontalAlignment="Left"
+                Background="{ThemeResource CalendarCellBackgroundBrush}"
+                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{ThemeResource ControlCornerRadius}"
+                Visibility="{x:Bind ViewModel.ShowGate, Mode=OneWay}">
+                <controls:ProGateHint
+                    Margin="8,0,0,0"
+                    Command="{x:Bind ViewModel.OpenProCommand, Mode=OneTime}"
+                    Text="{markup:Localize Key=HistoryGateLink}" />
+            </Border>
         </StackPanel>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WidthStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.Padding" Value="16,12,16,24" />
+                        <Setter Target="Columns.ColumnSpacing" Value="0" />
+                        <Setter Target="BonusColumn.Width" Value="0" />
+                        <Setter Target="BonusPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="BonusPanel.(Grid.Row)" Value="1" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1008" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </ScrollViewer>
 </local:HistoryViewBase>

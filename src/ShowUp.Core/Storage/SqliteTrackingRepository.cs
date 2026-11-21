@@ -57,6 +57,13 @@ public sealed class SqliteTrackingRepository(
         return rows.OrderBy(e => e.CreatedAt).ToList();
     }
 
+    public async Task<IReadOnlyList<EnrollmentEntity>> GetAllEnrollmentsAsync()
+    {
+        var connection = await ConnectAsync();
+        var rows = await QueryAsync<EnrollmentEntity>(connection, e => e.DeletedAt == null);
+        return rows.OrderBy(e => e.CreatedAt).ToList();
+    }
+
     public async Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason)
     {
         var connection = await ConnectAsync();
