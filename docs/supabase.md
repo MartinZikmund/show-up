@@ -116,10 +116,21 @@ Two things for the sync engine:
 
 ### Last writer wins on the server
 
-A second `BEFORE UPDATE` trigger (`private.keep_newest_row`) skips an update whose `updated_at` is
-older than the stored row's. A device that pushes a stale copy of a row can't overwrite a newer one;
-the write is silently ignored (no error, so the rest of the batch goes through), and the device gets
-the newer row on its next pull. Equal `updated_at` is accepted, so re-pushing the same row is idempotent.
+A second `BEFORE UPDATE` trigger (`private.keep_newest_row`) keeps the stored row when an update's
+`updated_at` is older than the stored one: a device that pushes a stale copy can't overwrite a newer
+row. The write doesn't fail (the rest of the batch goes through); the trigger returns the stored row
+unchanged, and `set_server_updated_at` still bumps `server_updated_at`, so every device, the stale one
+included, pulls the winning row again on its next sync.
+
+- **Equal `updated_at` is accepted**, so re-pushing the same row is idempotent. The flip side: if two
+  devices write the same row with the same `updated_at`, the last one to arrive wins.
+- **A far-future `updated_at`** (a device with a badly wrong clock) freezes that row: no correctly
+  clocked write can beat it until real time passes it. Only the user's own row is affected (RLS keeps
+  it inside their account), so a device can only hurt itself.
+
+Hand-off for the sync engine (Task 4): stamp a row's local `UpdatedAt` monotonic per row,
+`max(now, previous + 1 µs)`, truncated to whole microseconds. An edit then always beats the version it
+replaces, even when the clock steps back or two edits land in the same microsecond.
 
 ## Security model
 

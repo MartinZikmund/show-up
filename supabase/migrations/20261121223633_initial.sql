@@ -18,7 +18,8 @@ begin
 end;
 $$;
 
--- Last writer wins on updated_at: a stale device can't overwrite a newer row (skipped, not an error).
+-- Last writer wins on updated_at: a stale write keeps the stored row (no error), and returning OLD
+-- still lets set_server_updated_at bump the cursor, so every device re-pulls the winner.
 create function private.keep_newest_row()
 returns trigger
 language plpgsql
@@ -27,7 +28,7 @@ set search_path = ''
 as $$
 begin
   if new.updated_at < old.updated_at then
-    return null;
+    return old;
   end if;
   return new;
 end;
@@ -188,7 +189,7 @@ create index synced_settings_user_id_subject_key_idx on public.synced_settings (
 
 -- Per table: RLS (owner only, no DELETE: tombstones), pull index, triggers, grants.
 -- The pull index ends in id so a page boundary inside one timestamp can resume on (server_updated_at, id).
--- Triggers fire in name order: keep_newest_row can skip the update before the cursor moves.
+-- Triggers fire in name order: keep_newest_row picks the winning row, then the cursor moves.
 
 -- enrollments
 alter table public.enrollments enable row level security;
