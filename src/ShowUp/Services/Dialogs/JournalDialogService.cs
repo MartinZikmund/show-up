@@ -14,10 +14,10 @@ public sealed class JournalDialogService(
     IActiveEnrollmentService enrollments,
     JournalSaveGuard saveGuard) : IJournalDialogs
 {
-    public async Task ShowDayAsync(int dayIndex)
+    public async Task ShowDayAsync(Guid enrollmentId, int dayIndex)
     {
         var viewModel = services.GetRequiredService<DayDetailViewModel>();
-        if (!await viewModel.LoadAsync(dayIndex))
+        if (!await viewModel.LoadAsync(enrollmentId, dayIndex))
         {
             return;
         }
@@ -29,10 +29,10 @@ public sealed class JournalDialogService(
         }
     }
 
-    public async Task LogResultsAsync(int dayIndex, int sessionIndex)
+    public async Task LogResultsAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
         var viewModel = services.GetRequiredService<LogResultsViewModel>();
-        if (await viewModel.LoadForSessionAsync(dayIndex, sessionIndex))
+        if (await viewModel.LoadForSessionAsync(enrollmentId, dayIndex, sessionIndex))
         {
             await ShowResultsAsync(viewModel);
         }
@@ -47,17 +47,20 @@ public sealed class JournalDialogService(
         }
     }
 
-    public async Task EditProgramNoteAsync()
+    public async Task EditProgramNoteAsync(Guid enrollmentId)
     {
-        if (await enrollments.GetAsync() is not { } active)
+        if (await enrollments.GetAsync(enrollmentId) is not { } active)
         {
             return;
         }
 
-        ProgramNoteDialog dialog = new(active.Program.Name, await journal.GetProgramNoteAsync()) { XamlRoot = xamlRootProvider.XamlRoot };
+        ProgramNoteDialog dialog = new(active.Program.Name, await journal.GetProgramNoteAsync(enrollmentId), enrollments.IsReadOnly(active))
+        {
+            XamlRoot = xamlRootProvider.XamlRoot,
+        };
         if (await dialogCoordinator.ShowAsync(dialog) == ContentDialogResult.Primary)
         {
-            await SaveAsync(() => journal.SaveProgramNoteAsync(dialog.Note));
+            await SaveAsync(() => journal.SaveProgramNoteAsync(enrollmentId, dialog.Note));
         }
     }
 

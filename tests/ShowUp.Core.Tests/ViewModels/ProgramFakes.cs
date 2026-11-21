@@ -63,10 +63,21 @@ internal sealed class StubConfirmationDialogService : IConfirmationDialogService
     }
 }
 
-/// <summary>Records the write calls; <see cref="Active"/> is what GetAsync returns.</summary>
+/// <summary>Records the write calls; <see cref="All"/> (or <see cref="Active"/> for one) is what the getters return.</summary>
 internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 {
-    public ActiveEnrollment? Active { get; set; }
+    public List<ActiveEnrollment> All { get; set; } = [];
+
+    /// <summary>The single active enrollment: setting it replaces <see cref="All"/>.</summary>
+    public ActiveEnrollment? Active
+    {
+        get => All.FirstOrDefault();
+        set => All = value is null ? [] : [value];
+    }
+
+    public HashSet<Guid> ReadOnlyIds { get; } = [];
+
+    public Guid? PrimaryId { get; set; }
 
     public List<string> Calls { get; } = [];
 
@@ -76,9 +87,38 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public EnrollmentEndReason? EndReason { get; private set; }
 
+    public Guid? ReplacedId { get; private set; }
+
     public (WorkoutProgram Program, ProgramTrack Track, DateOnly Start)? Enrolled { get; private set; }
 
-    public Task<ActiveEnrollment?> GetAsync() => Task.FromResult(Active);
+    public Guid? SelectedEnrollmentId { get; private set; }
+
+    public Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync() => Task.FromResult<IReadOnlyList<ActiveEnrollment>>([.. All]);
+
+    public Task<ActiveEnrollment?> GetSelectedAsync() =>
+        Task.FromResult(All.FirstOrDefault(e => e.Id == SelectedEnrollmentId) ?? All.FirstOrDefault());
+
+    public Task<ActiveEnrollment?> GetAsync(Guid enrollmentId) => Task.FromResult(All.FirstOrDefault(e => e.Id == enrollmentId));
+
+    public Task SelectAsync(Guid enrollmentId)
+    {
+        Calls.Add("Select");
+        SelectedEnrollmentId = enrollmentId;
+        return Task.CompletedTask;
+    }
+
+    public Task<ActiveEnrollment?> GetPrimaryAsync() =>
+        Task.FromResult(All.FirstOrDefault(e => e.Id == PrimaryId) ?? All.FirstOrDefault());
+
+    public Task<bool> HasPrimaryChoiceAsync() => Task.FromResult(All.Any(e => e.Id == PrimaryId));
+
+    public Task SetPrimaryAsync(Guid enrollmentId)
+    {
+        PrimaryId = enrollmentId;
+        return Task.CompletedTask;
+    }
+
+    public bool IsReadOnly(ActiveEnrollment enrollment) => ReadOnlyIds.Contains(enrollment.Id);
 
     public Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate)
     {
@@ -89,10 +129,10 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
         Calls.Add("Enroll");
         Enrolled = (program, track, startDate);
-        return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
+        return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity { Id = Guid.NewGuid() }, program, track, new EnrollmentCalendar(startDate, 1, [])));
     }
 
-    public Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate)
+    public Task<ActiveEnrollment> ReplaceAsync(Guid enrollmentId, EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate)
     {
         if (EndFailure is not null)
         {
@@ -106,12 +146,13 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
         Calls.Add($"Replace:{reason}");
         EndReason = reason;
+        ReplacedId = enrollmentId;
         Enrolled = (program, track, startDate);
-        Active = null;
-        return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
+        All.RemoveAll(e => e.Id == enrollmentId);
+        return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity { Id = Guid.NewGuid() }, program, track, new EnrollmentCalendar(startDate, 1, [])));
     }
 
-    public Task EndAsync(EnrollmentEndReason reason)
+    public Task EndAsync(Guid enrollmentId, EnrollmentEndReason reason)
     {
         if (EndFailure is not null)
         {
@@ -120,25 +161,28 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
         Calls.Add($"End:{reason}");
         EndReason = reason;
-        Active = null;
+        All.RemoveAll(e => e.Id == enrollmentId);
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync() => Task.FromResult<IReadOnlyList<CompletedSession>>([]);
+    public Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId) => Task.FromResult<IReadOnlyList<CompletedSession>>([]);
 
-    public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync() => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
+    public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(Guid enrollmentId) => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
 
     public List<(int Day, int Session, string? Ink, Guid? CompletionId)> Crosses { get; } = [];
 
-    public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null)
+    public List<Guid> CrossedEnrollments { get; } = [];
+
+    public Task CrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null)
     {
+        CrossedEnrollments.Add(enrollmentId);
         Crosses.Add((dayIndex, sessionIndex, inkJson, completionId));
         return Task.CompletedTask;
     }
 
-    public Task UncrossAsync(int dayIndex, int sessionIndex) => Task.CompletedTask;
+    public Task UncrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex) => Task.CompletedTask;
 
-    public Task ShiftAsync(DateOnly fromDate, int days) => Task.CompletedTask;
+    public Task ShiftAsync(Guid enrollmentId, DateOnly fromDate, int days) => Task.CompletedTask;
 
     public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
 

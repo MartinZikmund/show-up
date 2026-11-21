@@ -16,9 +16,11 @@
                 Foreground="{ThemeResource MutedTextBrush}"
                 Glyph="&#xE72E;" />
             <TextBlock
+                x:Name="LinkText"
                 Foreground="{ThemeResource MutedTextBrush}"
                 Style="{StaticResource CaptionTextBlockStyle}"
-                Text="{markup:Localize Key=ProUnlockLink}" />
+                Text="{markup:Localize Key=ProUnlockLink}"
+                TextWrapping="Wrap" />
         </StackPanel>
     </Button>
 </UserControl>

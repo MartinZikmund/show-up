@@ -27,7 +27,8 @@ public sealed partial class LogResultsViewModel(IJournalService journal, IString
     public bool HasResults => Editor is not null;
 
     /// <returns>False when the session's workout has nothing to log.</returns>
-    public async Task<bool> LoadForSessionAsync(int dayIndex, int sessionIndex) => Load(await journal.GetResultsSheetAsync(dayIndex, sessionIndex));
+    public async Task<bool> LoadForSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex) =>
+        Load(await journal.GetResultsSheetAsync(enrollmentId, dayIndex, sessionIndex));
 
     public async Task<bool> LoadForBonusAsync(BonusWorkoutEntity bonus) => Load(await journal.GetBonusResultsSheetAsync(bonus));
 

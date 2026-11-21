@@ -93,6 +93,29 @@ public sealed class ProgramResultsViewModelTests
     }
 
     private readonly WeakReferenceMessenger _messenger = new();
+    private readonly RecordingEnrollmentService _enrollments = new() { Active = Enrollment(_enrollment, "p") };
+
+    private static ActiveEnrollment Enrollment(Guid id, string programId)
+    {
+        var program = TestCatalog.Program(programId, 1, "fit");
+        return new(new EnrollmentEntity { Id = id }, program, program.Tracks[0], new EnrollmentCalendar(_start, 1, []));
+    }
+
+    [TestMethod]
+    public async Task Load_TwoPrograms_ShowsSwitcherAndSelectsOnPick()
+    {
+        var other = Enrollment(Guid.NewGuid(), "q");
+        _enrollments.All.Add(other);
+        var viewModel = Create(_start);
+        await viewModel.LoadAsync();
+
+        viewModel.ShowProgramSwitcher.Should().BeTrue();
+        viewModel.SelectedProgram!.Id.Should().Be(_enrollment);
+        await viewModel.SelectProgramAsync(viewModel.Programs[1]);
+
+        _enrollments.SelectedEnrollmentId.Should().Be(other.Id);
+        viewModel.ProgramName.Should().Be(other.Program.Name);
+    }
 
     private ProgramResultsViewModel Create(DateOnly today)
     {
@@ -100,7 +123,7 @@ public sealed class ProgramResultsViewModelTests
         time.SetLocalTimeZone(TimeZoneInfo.Utc);
         return new(
             _journal,
-            new RecordingEnrollmentService(),
+            _enrollments,
             new RecordingJournalDialogs(),
             new RecordingNavigationService(),
             _messenger,

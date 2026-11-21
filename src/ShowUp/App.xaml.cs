@@ -145,10 +145,14 @@ public partial class App : Application, IApplication
         services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
         RegisterEntitlements(context, services);
+#if DEBUG
+        DecorateEntitlementsForDebug(services);
+#endif
         services.AddSingleton(new ProLinks(
             new Uri(context.Configuration["Legal:TermsUrl"] is { Length: > 0 } terms ? terms : "https://github.com/MartinZikmund/show-up/blob/main/docs/terms.md"),
             new Uri(context.Configuration["Legal:PrivacyUrl"] is { Length: > 0 } privacy ? privacy : "https://github.com/MartinZikmund/show-up/blob/main/docs/privacy.md")));
         services.AddSingleton<IJournalService, JournalService>();
+        services.AddSingleton<IScheduleQuery, ScheduleQuery>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services
@@ -168,6 +172,8 @@ public partial class App : Application, IApplication
         services.AddScoped<JournalSaveGuard>();
         services.AddScoped<IJournalDialogs, JournalDialogService>();
         services.AddScoped<ICrossingCoordinator, CrossingCoordinator>();
+        services.AddScoped<IPrimaryProgramPrompt, PrimaryProgramPrompt>();
+        services.AddScoped<LapseCoordinator>();
         services.AddScoped<ISectionNavigator>(sp => sp.GetRequiredService<WindowShellViewModel>());
         services.AddScoped<INavigationService>(sp =>
         {
@@ -198,6 +204,19 @@ public partial class App : Application, IApplication
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ProViewModel>();
     }
+
+#if DEBUG
+    // Settings > Debugging can then simulate a lapse on heads where Pro is simply unlocked.
+    private static void DecorateEntitlementsForDebug(IServiceCollection services)
+    {
+        var real = services.Last(d => d.ServiceType == typeof(IEntitlementService));
+        services.Remove(real);
+        services.AddSingleton(sp => new DebugEntitlementOverride(real.ImplementationFactory is { } factory
+            ? (IEntitlementService)factory(sp)
+            : (IEntitlementService)ActivatorUtilities.CreateInstance(sp, real.ImplementationType!)));
+        services.AddSingleton<IEntitlementService>(sp => sp.GetRequiredService<DebugEntitlementOverride>());
+    }
+#endif
 
     private static void RegisterEntitlements(HostBuilderContext context, IServiceCollection services)
     {

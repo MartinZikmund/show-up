@@ -1,0 +1,117 @@
+using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
+using ShowUp.Core.Services;
+using ShowUp.Core.Tests.Entitlements;
+using ShowUp.Core.Tracking;
+
+namespace ShowUp.Core.Tests.Tracking;
+
+[TestClass]
+public sealed class LapseCoordinatorTests
+{
+    private static readonly DateOnly _today = new(2026, 11, 21);
+
+    private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 21, 10, 0, 0, TimeSpan.Zero));
+    private readonly FakeCatalogService _catalog = new(TestCatalog.Program("p", 1, "run"), TestCatalog.Program("q", 1, "abs"));
+    private readonly FakeSyncedSettings _settings = new();
+    private readonly FakeEntitlementService _entitlements = new() { IsPro = true };
+    private readonly FakePrompt _prompt = new();
+    private readonly FakeTrackingRepository _repository;
+    private readonly ActiveEnrollmentService _service;
+    private readonly LapseCoordinator _coordinator;
+
+    public LapseCoordinatorTests()
+    {
+        _time.SetLocalTimeZone(TimeZoneInfo.Utc);
+        _repository = new(_time);
+        _service = TestEnrollments.Create(_repository, _catalog, new WeakReferenceMessenger(), _settings, _entitlements);
+        _coordinator = new(_service, _entitlements, _prompt, NullLogger<LapseCoordinator>.Instance);
+    }
+
+    [TestMethod]
+    public async Task Check_LapseWithTwo_AsksAndPersistsThePick()
+    {
+        var (p, q) = await EnrollTwoAsync();
+        _prompt.Answer = p;
+        _entitlements.IsPro = false;
+
+        var shown = await _coordinator.CheckAsync();
+
+        shown.Should().BeTrue();
+        _prompt.Asked.Should().ContainSingle().Which.Suggested.Should().Be(q, "the most recently started is the default");
+        (await _service.GetPrimaryAsync())!.Id.Should().Be(p);
+    }
+
+    [TestMethod]
+    public async Task Check_Dismissed_KeepsTheMostRecentAndDoesNotAskAgain()
+    {
+        var (_, q) = await EnrollTwoAsync();
+        _entitlements.IsPro = false;
+
+        await _coordinator.CheckAsync();
+        var again = await _coordinator.CheckAsync();
+
+        again.Should().BeFalse();
+        _prompt.Asked.Should().ContainSingle();
+        (await _service.GetPrimaryAsync())!.Id.Should().Be(q);
+        (await _service.HasPrimaryChoiceAsync()).Should().BeTrue();
+    }
+
+    [TestMethod]
+    [DataRow(true, 2)]
+    [DataRow(false, 1)]
+    public async Task Check_ProOrSingleProgram_DoesNotAsk(bool isPro, int programs)
+    {
+        if (programs == 2)
+        {
+            await EnrollTwoAsync();
+        }
+        else
+        {
+            await _repository.EnrollAsync("p", 1, "t", _today);
+        }
+
+        _entitlements.IsPro = isPro;
+
+        (await _coordinator.CheckAsync()).Should().BeFalse();
+        _prompt.Asked.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Watch_ProFlipsFalse_Asks()
+    {
+        await EnrollTwoAsync();
+        using var watch = _coordinator.Watch();
+
+        _entitlements.SetPro(false);
+        await _prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        _prompt.Asked.Should().ContainSingle();
+    }
+
+    private async Task<(Guid P, Guid Q)> EnrollTwoAsync()
+    {
+        var p = (await _repository.EnrollAsync("p", 1, "t", _today)).Id;
+        _time.Advance(TimeSpan.FromSeconds(1));
+        var q = (await _repository.EnrollAsync("q", 1, "t", _today)).Id;
+        return (p, q);
+    }
+
+    private sealed class FakePrompt : IPrimaryProgramPrompt
+    {
+        public Guid? Answer { get; set; }
+
+        public List<(IReadOnlyList<ActiveEnrollment> Programs, Guid Suggested)> Asked { get; } = [];
+
+        public TaskCompletionSource Shown { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task<Guid?> PickAsync(IReadOnlyList<ActiveEnrollment> programs, Guid suggested)
+        {
+            Asked.Add((programs, suggested));
+            Shown.TrySetResult();
+            return Task.FromResult(Answer);
+        }
+    }
+}

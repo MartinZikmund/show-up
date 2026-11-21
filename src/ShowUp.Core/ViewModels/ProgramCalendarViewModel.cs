@@ -13,7 +13,7 @@ using ShowUp.Services.Settings;
 
 namespace ShowUp.Core.ViewModels;
 
-/// <summary>The paper calendar of the active enrollment: program weeks as rows, tap a day to cross off its next session.</summary>
+/// <summary>The paper calendar of the selected enrollment (a switcher picks among several): program weeks as rows, tap a day to cross off its next session.</summary>
 public partial class ProgramCalendarViewModel : ViewModelBase
 {
     private readonly IStringLocalizer _localizer;
@@ -40,6 +40,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
     private ActiveEnrollment? _active;
     private DateOnly _loadedToday;
+    private bool _syncingSelection;
     private readonly LiveRefresher _live;
 
     public ProgramCalendarViewModel(
@@ -79,6 +80,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     public ObservableCollection<CalendarWeekViewModel> Weeks { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditable))]
     public partial bool HasEnrollment { get; private set; }
 
     /// <summary>Loaded and there's no enrollment (not shown while the first load runs).</summary>
@@ -87,6 +89,23 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string ProgramName { get; private set; } = "";
+
+    /// <summary>Every active program, for the switcher.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowProgramSwitcher))]
+    public partial IReadOnlyList<ProgramOption> Programs { get; private set; } = [];
+
+    [ObservableProperty]
+    public partial ProgramOption? SelectedProgram { get; set; }
+
+    public bool ShowProgramSwitcher => Programs.Count > 1;
+
+    /// <summary>Pro lapsed and this isn't the primary program: shown, not crossed.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditable))]
+    public partial bool IsReadOnly { get; private set; }
+
+    public bool IsEditable => HasEnrollment && !IsReadOnly;
 
     [ObservableProperty]
     public partial int CurrentStreak { get; private set; }
@@ -143,7 +162,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             _loadedToday = today;
             _live.ScheduleNextChange();
 
-            var active = await _enrollments.GetAsync();
+            var all = await _enrollments.GetAllAsync();
+            var active = await _enrollments.GetSelectedAsync();
             if (active is null)
             {
                 ShowNoEnrollment();
@@ -151,8 +171,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             }
 
             _workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
-            var completions = await _enrollments.GetCompletionsAsync();
-            var bonuses = await _enrollments.GetBonusWorkoutsAsync();
+            var completions = await _enrollments.GetCompletionsAsync(active.Id);
+            var bonuses = await _enrollments.GetBonusWorkoutsAsync(active.Id);
             var statuses = ProgressCalculator.Build(
                 active.Track,
                 _workouts,
@@ -181,6 +201,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             _statuses = statuses;
             _completions = completions;
             ProgramName = active.Program.Name;
+            SyncPrograms(all, active);
+            IsReadOnly = _enrollments.IsReadOnly(active);
             CurrentStreak = StreakCalculator.Current(statuses, today);
             LongestStreak = StreakCalculator.Longest(statuses, today);
             StreakText = _localizer["CrossMomentStreakFormat", CurrentStreak].Value;
@@ -203,7 +225,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             return;
         }
 
-        if (day.IsFuture)
+        if (day.IsFuture || IsReadOnly)
         {
             day.RequestShake();
             return;
@@ -226,7 +248,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
             var dayCompletions = _completions.Where(c => c.DayIndex == day.DayIndex).ToList();
             await _crossing.CrossAsync(
-                new CrossTarget(day.DayIndex, session, SessionName(day.DayIndex, session), day.IsToday, day.Seed, status, _statuses, dayCompletions, Today),
+                new CrossTarget(_active.Id, day.DayIndex, session, SessionName(day.DayIndex, session), day.IsToday, day.Seed, status, _statuses, dayCompletions, Today),
                 new CrossHooks(_live.WriteAsync, RefreshAsync, animate => day.AnimateMarks = animate));
         }
         catch (InvalidOperationException)
@@ -244,7 +266,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task UncrossLastAsync(CalendarDayViewModel? day)
     {
-        if (day is null || day.DayIndex >= _statuses.Count || _statuses[day.DayIndex].CompletedSessions.Count == 0 || !_inFlight.Add(day.DayIndex))
+        if (day is null || _active is not { } active || IsReadOnly || day.DayIndex >= _statuses.Count
+            || _statuses[day.DayIndex].CompletedSessions.Count == 0 || !_inFlight.Add(day.DayIndex))
         {
             return;
         }
@@ -260,7 +283,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
                 return;
             }
 
-            await _live.WriteAsync(() => _enrollments.UncrossAsync(day.DayIndex, session));
+            await _live.WriteAsync(() => _enrollments.UncrossAsync(active.Id, day.DayIndex, session));
             await RefreshAsync();
         }
         catch (InvalidOperationException)
@@ -307,12 +330,43 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             return;
         }
 
-        await _journalDialogs.ShowDayAsync(day.DayIndex);
+        await _journalDialogs.ShowDayAsync(_active.Id, day.DayIndex);
         await RefreshAsync();
     }
 
     [RelayCommand]
-    private Task EditProgramNoteAsync() => _active is null ? Task.CompletedTask : _journalDialogs.EditProgramNoteAsync();
+    private Task EditProgramNoteAsync() => _active is null ? Task.CompletedTask : _journalDialogs.EditProgramNoteAsync(_active.Id);
+
+    [RelayCommand]
+    private void OpenPro() => _navigation.Navigate<ProViewModel>();
+
+    /// <summary>Shows another active program; the choice is remembered (and synced).</summary>
+    public async Task SelectProgramAsync(ProgramOption? option)
+    {
+        if (option is null || option.Id == _active?.Id)
+        {
+            return;
+        }
+
+        try
+        {
+            await _live.WriteAsync(() => _enrollments.SelectAsync(option.Id));
+        }
+        catch (InvalidOperationException)
+        {
+            // It ended under us; the refresh shows what's true now.
+        }
+
+        await RefreshAsync();
+    }
+
+    partial void OnSelectedProgramChanged(ProgramOption? value)
+    {
+        if (!_syncingSelection)
+        {
+            _live.RunInBackground(() => SelectProgramAsync(value));
+        }
+    }
 
     [RelayCommand]
     private void OpenResults()
@@ -327,14 +381,14 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     [RelayCommand]
     private async Task ShiftScheduleAsync()
     {
-        if (_active is null || await _prompts.AskShiftDaysAsync() is not { } days)
+        if (_active is not { } active || IsReadOnly || await _prompts.AskShiftDaysAsync() is not { } days)
         {
             return;
         }
 
         try
         {
-            await _live.WriteAsync(() => _enrollments.ShiftAsync(Today, days));
+            await _live.WriteAsync(() => _enrollments.ShiftAsync(active.Id, Today, days));
         }
         catch (InvalidOperationException)
         {
@@ -356,12 +410,36 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         _completions = [];
         Weeks.Clear();
         ProgramName = "";
+        _syncingSelection = true;
+        Programs = [];
+        SelectedProgram = null;
+        _syncingSelection = false;
+        IsReadOnly = false;
         CurrentStreak = 0;
         LongestStreak = 0;
         StreakText = "";
         LongestStreakText = "";
         HasEnrollment = false;
         ShowEmptyState = true;
+    }
+
+    private void SyncPrograms(IReadOnlyList<ActiveEnrollment> all, ActiveEnrollment selected)
+    {
+        _syncingSelection = true;
+        try
+        {
+            List<ProgramOption> options = [.. all.Select(e => new ProgramOption(e.Id, e.Program.Name))];
+            if (!Programs.SequenceEqual(options))
+            {
+                Programs = options;
+            }
+
+            SelectedProgram = Programs.FirstOrDefault(o => o.Id == selected.Id);
+        }
+        finally
+        {
+            _syncingSelection = false;
+        }
     }
 
     private void RebuildWeeks(ProgramTrack track, int dayCount)

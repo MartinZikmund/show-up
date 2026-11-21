@@ -38,7 +38,7 @@ public sealed record PendingResultsViewModel(string Title, string Detail, string
 
 public sealed record ResultsTableViewModel(string Title, string AutomationId, IReadOnlyList<ResultsColumnHeader> Columns, IReadOnlyList<ResultsRowViewModel> Rows);
 
-/// <summary>Every Fit Test (and other workout with metrics) of the active program side by side, with the change against the first one.</summary>
+/// <summary>Every Fit Test (and other workout with metrics) of the selected program side by side, with the change against the first one.</summary>
 public partial class ProgramResultsViewModel : ViewModelBase
 {
     private readonly IJournalService _journal;
@@ -53,6 +53,8 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private readonly SemaphoreSlim _loadGate = new(1, 1);
     private SynchronizationContext? _context;
     private bool _isRegistered;
+    private bool _syncingSelection;
+    private Guid? _enrollmentId;
 
     public ProgramResultsViewModel(
         IJournalService journal,
@@ -91,6 +93,16 @@ public partial class ProgramResultsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool HasEnrollment { get; private set; }
+
+    /// <summary>Every active program, for the switcher.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowProgramSwitcher))]
+    public partial IReadOnlyList<ProgramOption> Programs { get; private set; } = [];
+
+    [ObservableProperty]
+    public partial ProgramOption? SelectedProgram { get; set; }
+
+    public bool ShowProgramSwitcher => Programs.Count > 1;
 
     [ObservableProperty]
     public partial bool ShowEmptyState { get; private set; }
@@ -136,11 +148,14 @@ public partial class ProgramResultsViewModel : ViewModelBase
 
     private async Task LoadCoreAsync()
     {
-        var active = await _enrollments.GetAsync();
+        var all = await _enrollments.GetAllAsync();
+        var active = await _enrollments.GetSelectedAsync();
+        _enrollmentId = active?.Id;
         HasEnrollment = active is not null;
         ProgramName = active?.Program.Name ?? "";
+        SyncPrograms(all, active);
         var today = DateOnly.FromDateTime(_time.GetLocalNow().DateTime);
-        var tables = await _journal.GetResultsAsync();
+        IReadOnlyList<ResultsTable> tables = active is null ? [] : await _journal.GetResultsAsync(active.Id);
         Tables = [.. tables.Where(t => t.HasValues).Select(t => ToViewModel(t.UpToNext(today)))];
         Pending = [.. tables.Where(t => !t.HasValues).Select(t => ToPending(t, today))];
         ShowEmptyState = tables.Count == 0;
@@ -150,7 +165,54 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private void GoBack() => _navigation.GoBack();
 
     [RelayCommand]
-    private Task EditProgramNoteAsync() => _dialogs.EditProgramNoteAsync();
+    private Task EditProgramNoteAsync() => _enrollmentId is { } id ? _dialogs.EditProgramNoteAsync(id) : Task.CompletedTask;
+
+    /// <summary>Shows another active program's results; the choice is remembered (and synced).</summary>
+    public async Task SelectProgramAsync(ProgramOption? option)
+    {
+        if (option is null || option.Id == _enrollmentId)
+        {
+            return;
+        }
+
+        try
+        {
+            await _enrollments.SelectAsync(option.Id);
+        }
+        catch (InvalidOperationException)
+        {
+            // It ended under us; the reload shows what's true now.
+        }
+
+        await LoadAsync();
+    }
+
+    partial void OnSelectedProgramChanged(ProgramOption? value)
+    {
+        if (!_syncingSelection)
+        {
+            RunInBackground(() => SelectProgramAsync(value));
+        }
+    }
+
+    private void SyncPrograms(IReadOnlyList<ActiveEnrollment> all, ActiveEnrollment? selected)
+    {
+        _syncingSelection = true;
+        try
+        {
+            List<ProgramOption> options = [.. all.Select(e => new ProgramOption(e.Id, e.Program.Name))];
+            if (!Programs.SequenceEqual(options))
+            {
+                Programs = options;
+            }
+
+            SelectedProgram = Programs.FirstOrDefault(o => o.Id == selected?.Id);
+        }
+        finally
+        {
+            _syncingSelection = false;
+        }
+    }
 
     private PendingResultsViewModel ToPending(ResultsTable table, DateOnly today) => new(
         table.Workout.Name,

@@ -892,4 +892,31 @@
   <data name="ProBusyName" xml:space="preserve">
     <value>Pracuji</value>
   </data>
+  <data name="Close" xml:space="preserve">
+    <value>Zavřít</value>
+  </data>
+  <data name="ProgramReadOnlyMessage" xml:space="preserve">
+    <value>Jen pro čtení: verze Free sleduje jeden program najednou. Vaše křížky a poznámky zůstanou, až se Pro vrátí.</value>
+  </data>
+  <data name="ProMultiProgramLink" xml:space="preserve">
+    <value>Odemkněte Pro a sledujte víc programů najednou</value>
+  </data>
+  <data name="ProgramSwitcherLabel" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="PrimaryProgramTitle" xml:space="preserve">
+    <value>Který program si necháte?</value>
+  </data>
+  <data name="PrimaryProgramMessage" xml:space="preserve">
+    <value>Show Up Pro skončilo, a tak verze Free nechá běžet jeden program. Ostatní zůstanou přesně tak, jak jsou, jen pro čtení, a vrátí se s Pro.</value>
+  </data>
+  <data name="PrimaryProgramConfirm" xml:space="preserve">
+    <value>Nechat tento</value>
+  </data>
+  <data name="DebugSimulateFree" xml:space="preserve">
+    <value>Simulovat Free (jen ladicí sestavení)</value>
+  </data>
+  <data name="ProCouldNotConfirm" xml:space="preserve">
+    <value>Nákup se nepodařilo ověřit. Pokud vám byla stržena platba, Pro se brzy odemkne; ověřit to můžete klepnutím na Obnovit nákupy.</value>
+  </data>
 </root>

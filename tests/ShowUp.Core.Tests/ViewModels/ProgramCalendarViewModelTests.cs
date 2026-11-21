@@ -36,6 +36,9 @@ public sealed class ProgramCalendarViewModelTests
     private readonly FakeSectionNavigator _navigator = new();
     private ActiveEnrollmentService? _service;
     private CountingEnrollmentService? _counting;
+    private Guid _enrollmentId;
+    private readonly FakeSyncedSettings _settings = new();
+    private readonly ShowUp.Core.Tests.Entitlements.FakeEntitlementService _entitlements = new() { IsPro = true };
 
     public ProgramCalendarViewModelTests()
     {
@@ -87,7 +90,7 @@ public sealed class ProgramCalendarViewModelTests
     public async Task CrossNext_AfterShift_MapsToShiftedDay()
     {
         var viewModel = await LoadAsync(_today.AddDays(-5), "run", "run", "run");
-        await _service!.ShiftAsync(_today.AddDays(-4), 2);
+        await _service!.ShiftAsync(_enrollmentId, _today.AddDays(-4), 2);
         await viewModel.RefreshAsync();
         var day = Day(viewModel, 1);
 
@@ -171,7 +174,7 @@ public sealed class ProgramCalendarViewModelTests
         _time.Advance(TimeSpan.FromMinutes(1));
         await viewModel.CrossNextCommand.ExecuteAsync(day);
         _time.Advance(TimeSpan.FromMinutes(1));
-        await _service!.UncrossAsync(0, 0);
+        await _service!.UncrossAsync(_enrollmentId, 0, 0);
         await viewModel.RefreshAsync();
         var seedOfRemaining = day.Seed;
 
@@ -289,7 +292,7 @@ public sealed class ProgramCalendarViewModelTests
     {
         var viewModel = await LoadAsync(_today, "run");
 
-        await _service!.CrossAsync(0, 0);
+        await _service!.CrossAsync(_enrollmentId, 0, 0);
 
         Day(viewModel, 0).IsComplete.Should().BeTrue();
         viewModel.CurrentStreak.Should().Be(1);
@@ -425,6 +428,68 @@ public sealed class ProgramCalendarViewModelTests
         day.IsComplete.Should().BeTrue();
     }
 
+    [TestMethod]
+    public async Task Load_OneProgram_HidesSwitcher()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+
+        viewModel.ShowProgramSwitcher.Should().BeFalse();
+        viewModel.SelectedProgram!.Id.Should().Be(_enrollmentId);
+    }
+
+    [TestMethod]
+    public async Task SelectProgram_Other_ShowsItAndPersists()
+    {
+        var (viewModel, p, q) = await LoadTwoAsync();
+        viewModel.ShowProgramSwitcher.Should().BeTrue();
+        viewModel.ProgramName.Should().Be("Program q r1", "the newest one shows first");
+
+        await viewModel.SelectProgramAsync(viewModel.Programs.Single(o => o.Id == p));
+
+        viewModel.ProgramName.Should().Be("Program p r1");
+        viewModel.Weeks.SelectMany(w => w.Days).Should().HaveCount(3);
+        _settings.Values[ActiveEnrollmentService.SelectedKey].Should().Be(p.ToString("D"));
+    }
+
+    [TestMethod]
+    public async Task CrossNext_SelectedProgram_WritesThatEnrollment()
+    {
+        var (viewModel, p, _) = await LoadTwoAsync();
+        await viewModel.SelectProgramAsync(viewModel.Programs.Single(o => o.Id == p));
+
+        await viewModel.CrossNextCommand.ExecuteAsync(Day(viewModel, 0));
+
+        _repository.CrossesByEnrollment.Should().Equal((p, 0, 0));
+    }
+
+    [TestMethod]
+    public async Task Lapse_ReadOnlyProgram_CrossShakesWithoutWriting()
+    {
+        var (viewModel, p, q) = await LoadTwoAsync();
+        await _service!.SetPrimaryAsync(p);
+        _entitlements.SetPro(false);
+        await viewModel.RefreshAsync();
+        var day = Day(viewModel, 0);
+
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+
+        viewModel.SelectedProgram!.Id.Should().Be(q);
+        viewModel.IsReadOnly.Should().BeTrue();
+        viewModel.IsEditable.Should().BeFalse();
+        day.ShakeRequested.Should().BeTrue();
+        _repository.Crosses.Should().BeEmpty();
+    }
+
+    private async Task<(ProgramCalendarViewModel ViewModel, Guid P, Guid Q)> LoadTwoAsync()
+    {
+        var viewModel = CreateViewModel(new FakeCatalogService(TestCatalog.Program("p", 1, "run", "run", "run"), TestCatalog.Program("q", 1, "abs")));
+        var p = (await _repository.EnrollAsync("p", 1, "t", _today)).Id;
+        _time.Advance(TimeSpan.FromSeconds(1));
+        var q = (await _repository.EnrollAsync("q", 1, "t", _today)).Id;
+        await viewModel.LoadAsync();
+        return (viewModel, p, q);
+    }
+
     private static CalendarDayViewModel Day(ProgramCalendarViewModel viewModel, int index) =>
         viewModel.Weeks.SelectMany(w => w.Days).Single(d => d.DayIndex == index);
 
@@ -432,7 +497,7 @@ public sealed class ProgramCalendarViewModelTests
     {
         var program = TestCatalog.Program("p", 1, days);
         var viewModel = CreateViewModel(new FakeCatalogService(program));
-        await _repository.EnrollAsync("p", 1, "t", start);
+        _enrollmentId = (await _repository.EnrollAsync("p", 1, "t", start)).Id;
         await viewModel.LoadAsync();
         return viewModel;
     }
@@ -440,7 +505,7 @@ public sealed class ProgramCalendarViewModelTests
     private ProgramCalendarViewModel CreateViewModel(FakeCatalogService catalog)
     {
         WeakReferenceMessenger messenger = new();
-        _service = new(_repository, catalog, messenger, NullLogger<ActiveEnrollmentService>.Instance);
+        _service = TestEnrollments.Create(_repository, catalog, messenger, _settings, _entitlements);
         _counting = new(_service);
         return new(
             new FakeStringLocalizer(),
@@ -466,30 +531,46 @@ public sealed class ProgramCalendarViewModelTests
 
         public bool FailWrites { get; set; }
 
-        public Task<ActiveEnrollment?> GetAsync()
+        public Guid? SelectedEnrollmentId => inner.SelectedEnrollmentId;
+
+        public Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync() => inner.GetAllAsync();
+
+        public Task<ActiveEnrollment?> GetSelectedAsync()
         {
             Gets++;
-            return inner.GetAsync();
+            return inner.GetSelectedAsync();
         }
 
-        public Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync() => inner.GetCompletionsAsync();
+        public Task<ActiveEnrollment?> GetAsync(Guid enrollmentId) => inner.GetAsync(enrollmentId);
 
-        public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync() => inner.GetBonusWorkoutsAsync();
+        public Task SelectAsync(Guid enrollmentId) => inner.SelectAsync(enrollmentId);
+
+        public Task<ActiveEnrollment?> GetPrimaryAsync() => inner.GetPrimaryAsync();
+
+        public Task<bool> HasPrimaryChoiceAsync() => inner.HasPrimaryChoiceAsync();
+
+        public Task SetPrimaryAsync(Guid enrollmentId) => inner.SetPrimaryAsync(enrollmentId);
+
+        public bool IsReadOnly(ActiveEnrollment enrollment) => inner.IsReadOnly(enrollment);
+
+        public Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId) => inner.GetCompletionsAsync(enrollmentId);
+
+        public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(Guid enrollmentId) => inner.GetBonusWorkoutsAsync(enrollmentId);
 
         public Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
             inner.EnrollAsync(program, track, startDate);
 
-        public Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
-            inner.ReplaceAsync(reason, program, track, startDate);
+        public Task<ActiveEnrollment> ReplaceAsync(Guid enrollmentId, EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
+            inner.ReplaceAsync(enrollmentId, reason, program, track, startDate);
 
-        public Task EndAsync(EnrollmentEndReason reason) => Write(() => inner.EndAsync(reason));
+        public Task EndAsync(Guid enrollmentId, EnrollmentEndReason reason) => Write(() => inner.EndAsync(enrollmentId, reason));
 
-        public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null) =>
-            Write(() => inner.CrossAsync(dayIndex, sessionIndex, inkJson, completionId));
+        public Task CrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null) =>
+            Write(() => inner.CrossAsync(enrollmentId, dayIndex, sessionIndex, inkJson, completionId));
 
-        public Task UncrossAsync(int dayIndex, int sessionIndex) => Write(() => inner.UncrossAsync(dayIndex, sessionIndex));
+        public Task UncrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex) => Write(() => inner.UncrossAsync(enrollmentId, dayIndex, sessionIndex));
 
-        public Task ShiftAsync(DateOnly fromDate, int days) => Write(() => inner.ShiftAsync(fromDate, days));
+        public Task ShiftAsync(Guid enrollmentId, DateOnly fromDate, int days) => Write(() => inner.ShiftAsync(enrollmentId, fromDate, days));
 
         public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to) => inner.GetBonusWorkoutsAsync(from, to);
 

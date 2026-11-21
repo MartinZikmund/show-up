@@ -11,6 +11,12 @@ public sealed partial class DayDetailDialog : ContentDialog
         ViewModel = viewModel;
         InitializeComponent();
         JournalDialogLayout.Apply(this, ContentPanel);
+        if (viewModel.IsReadOnly)
+        {
+            // Nothing to save: a lapsed program is shown, not edited.
+            PrimaryButtonText = "";
+            CloseButtonText = Localizer.Instance["Close"];
+        }
     }
 
     public DayDetailViewModel ViewModel { get; }

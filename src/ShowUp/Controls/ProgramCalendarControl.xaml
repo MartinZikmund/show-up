@@ -27,6 +27,19 @@
                             AutomationProperties.HeadingLevel="Level1"
                             Style="{StaticResource SectionHeaderTextBlockStyle}"
                             Text="{x:Bind ViewModel.ProgramName, Mode=OneWay}" />
+                        <ComboBox
+                            MinWidth="200"
+                            AutomationProperties.AutomationId="CalendarProgramSwitcher"
+                            AutomationProperties.Name="{markup:Localize Key=ProgramSwitcherLabel}"
+                            ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedProgram, Mode=TwoWay}"
+                            Visibility="{x:Bind ViewModel.ShowProgramSwitcher, Mode=OneWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ProgramOption">
+                                    <TextBlock AutomationProperties.AutomationId="{x:Bind AutomationId}" Text="{x:Bind Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <StackPanel
                             AutomationProperties.AutomationId="CalendarStreak"
                             Orientation="Horizontal"
@@ -83,6 +96,7 @@
                             AutomationProperties.AutomationId="ShiftScheduleButton"
                             AutomationProperties.Name="{markup:Localize Key=CalendarShiftSchedule}"
                             Command="{x:Bind ViewModel.ShiftScheduleCommand, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.IsEditable, Mode=OneWay}"
                             ToolTipService.ToolTip="{markup:Localize Key=CalendarShiftSchedule}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon FontSize="16" Glyph="&#xE823;" />
@@ -91,6 +105,24 @@
                         </Button>
                     </StackPanel>
                 </Grid>
+
+                <!--  Lapsed Pro: shown, not crossed  -->
+                <Border
+                    Padding="12"
+                    BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{ThemeResource ControlCornerRadius}"
+                    Visibility="{x:Bind ViewModel.IsReadOnly, Mode=OneWay}">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            AutomationProperties.AutomationId="CalendarReadOnly"
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Text="{markup:Localize Key=ProgramReadOnlyMessage}"
+                            TextWrapping="Wrap" />
+                        <controls:ProGateHint Command="{x:Bind ViewModel.OpenProCommand, Mode=OneWay}" Text="{markup:Localize Key=ProMultiProgramLink}" />
+                    </StackPanel>
+                </Border>
 
                 <ItemsRepeater
                     x:Name="WeeksRepeater"

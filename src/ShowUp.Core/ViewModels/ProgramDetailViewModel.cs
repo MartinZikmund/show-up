@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Localization;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
@@ -13,7 +14,7 @@ public sealed record DayPreview(string DayLabel, string Text, bool IsRest);
 
 public sealed record WeekPreview(string Label, string PhaseName, IReadOnlyList<DayPreview> Days);
 
-/// <summary>One program: pick a track and a start date, then start it.</summary>
+/// <summary>One program: pick a track and a start date, then start it (alongside the others with Pro).</summary>
 public partial class ProgramDetailViewModel : ViewModelBase
 {
     private const string IssueUrl = "https://github.com/MartinZikmund/show-up/issues/new";
@@ -29,9 +30,11 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly IDialogService _dialogs;
     private readonly TimeProvider _time;
     private readonly IJournalDialogs _journalDialogs;
+    private readonly IEntitlementService _entitlements;
     private readonly ILogger<ProgramDetailViewModel> _logger;
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
     private bool _isStarting;
+    private ActiveEnrollment? _enrollment;
 
     public ProgramDetailViewModel(
         IStringLocalizer localizer,
@@ -43,6 +46,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         IDialogService dialogs,
         TimeProvider time,
         IJournalDialogs journalDialogs,
+        IEntitlementService entitlements,
         ILogger<ProgramDetailViewModel> logger)
     {
         _localizer = localizer;
@@ -54,6 +58,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _dialogs = dialogs;
         _time = time;
         _journalDialogs = journalDialogs;
+        _entitlements = entitlements;
         _logger = logger;
         StartDate = _time.GetLocalNow();
     }
@@ -80,6 +85,10 @@ public partial class ProgramDetailViewModel : ViewModelBase
     /// <summary>This is the program being tracked, so it has notes and results.</summary>
     [ObservableProperty]
     public partial bool IsActiveProgram { get; private set; }
+
+    /// <summary>Free with another program running: starting this one replaces it, Pro runs both.</summary>
+    [ObservableProperty]
+    public partial bool ShowMultiProgramHint { get; private set; }
 
     [ObservableProperty]
     public partial string TrackSummary { get; private set; } = "";
@@ -126,7 +135,10 @@ public partial class ProgramDetailViewModel : ViewModelBase
             }
 
             _workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
-            IsActiveProgram = (await _enrollments.GetAsync())?.Program.Id == program.Id;
+            var all = await _enrollments.GetAllAsync();
+            _enrollment = all.FirstOrDefault(e => e.Program.Id == program.Id);
+            IsActiveProgram = _enrollment is not null;
+            ShowMultiProgramHint = !_entitlements.IsPro && all.Count > 0 && _enrollment is null;
             Program = program;
             PageTitle = program.Name;
             SelectedTrack = program.Tracks.FirstOrDefault();
@@ -149,10 +161,21 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private void GoBack() => _navigation.GoBack();
 
     [RelayCommand]
-    private void OpenResults() => _navigation.Navigate<ProgramResultsViewModel>();
+    private async Task OpenResultsAsync()
+    {
+        if (_enrollment is { } enrollment)
+        {
+            await _enrollments.SelectAsync(enrollment.Id);
+        }
+
+        _navigation.Navigate<ProgramResultsViewModel>();
+    }
 
     [RelayCommand]
-    private Task EditProgramNoteAsync() => _journalDialogs.EditProgramNoteAsync();
+    private Task EditProgramNoteAsync() => _enrollment is { } enrollment ? _journalDialogs.EditProgramNoteAsync(enrollment.Id) : Task.CompletedTask;
+
+    [RelayCommand]
+    private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
     private bool CanStart => Program is not null && SelectedTrack is not null;
 
@@ -167,12 +190,15 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _isStarting = true;
         try
         {
-            var active = await _enrollments.GetAsync();
-            if (active is not null)
+            // Pro runs programs side by side; restarting one that's running, or Free with one running, replaces it.
+            var all = await _enrollments.GetAllAsync();
+            var replaced = all.FirstOrDefault(e => e.Program.Id == program.Id)
+                ?? (FeatureGate.MaxActivePrograms(_entitlements.IsPro) <= all.Count ? await _enrollments.GetPrimaryAsync() : null);
+            if (replaced is not null)
             {
                 var answer = await _confirmation.ShowAsync(
                     _localizer["ProgramReplaceTitle"],
-                    _localizer["ProgramReplaceMessageFormat", active.Program.Name, program.Name]);
+                    _localizer["ProgramReplaceMessageFormat", replaced.Program.Name, program.Name]);
                 if (answer != ConfirmationResult.Confirmed)
                 {
                     return;
@@ -181,7 +207,15 @@ public partial class ProgramDetailViewModel : ViewModelBase
 
             try
             {
-                await _enrollments.ReplaceAsync(EnrollmentEndReason.Abandoned, program, track, ClampedStartDate());
+                var start = ClampedStartDate();
+                if (replaced is null)
+                {
+                    await _enrollments.EnrollAsync(program, track, start);
+                }
+                else
+                {
+                    await _enrollments.ReplaceAsync(replaced.Id, EnrollmentEndReason.Abandoned, program, track, start);
+                }
             }
             catch (Exception ex)
             {

@@ -29,26 +29,27 @@ public sealed record DayEdit(string? DayNote, IReadOnlyDictionary<int, string> S
 }
 
 /// <summary>
-/// Notes and logged results of the active enrollment, and results of bonus workouts. Crossing stays with
-/// <see cref="IActiveEnrollmentService"/>; this is the only path that writes notes and results.
+/// Notes and logged results of an active enrollment, and results of bonus workouts. Crossing stays with
+/// <see cref="IActiveEnrollmentService"/>; this is the only path that writes notes and results. Writes to a
+/// read-only enrollment throw <see cref="EnrollmentReadOnlyException"/>.
 /// </summary>
 public interface IJournalService
 {
-    Task<string> GetProgramNoteAsync();
+    Task<string> GetProgramNoteAsync(Guid enrollmentId);
 
-    /// <summary>Blank text deletes the note. Throws <see cref="InvalidOperationException"/> without an enrollment.</summary>
-    Task SaveProgramNoteAsync(string? text);
+    /// <summary>Blank text deletes the note. Throws <see cref="InvalidOperationException"/> when it isn't active.</summary>
+    Task SaveProgramNoteAsync(Guid enrollmentId, string? text);
 
-    Task<DayJournal?> GetDayAsync(int dayIndex);
+    Task<DayJournal?> GetDayAsync(Guid enrollmentId, int dayIndex);
 
     /// <summary>Writes the day's notes and results, then sends one <see cref="JournalChangedMessage"/>.</summary>
-    Task SaveDayAsync(int dayIndex, DayEdit edit);
+    Task SaveDayAsync(Guid enrollmentId, int dayIndex, DayEdit edit);
 
     /// <summary>Whether the session's workout has anything to log (cheap: no stored values are read).</summary>
-    Task<bool> HasMetricsAsync(int dayIndex, int sessionIndex);
+    Task<bool> HasMetricsAsync(Guid enrollmentId, int dayIndex, int sessionIndex);
 
     /// <summary>Null when the session's workout has nothing to log.</summary>
-    Task<ResultsSheet?> GetResultsSheetAsync(int dayIndex, int sessionIndex);
+    Task<ResultsSheet?> GetResultsSheetAsync(Guid enrollmentId, int dayIndex, int sessionIndex);
 
     Task<ResultsSheet?> GetBonusResultsSheetAsync(BonusWorkoutEntity bonus);
 
@@ -59,9 +60,9 @@ public interface IJournalService
     Task SaveResultsAsync(MetricTarget target, IReadOnlyDictionary<string, MetricValue> values);
 
     /// <summary>
-    /// A table per workout with metrics in the active enrollment, with bonus workouts from a week before its start to its end.
+    /// A table per workout with metrics in the enrollment, with bonus workouts from a week before its start to its end.
     /// </summary>
-    Task<IReadOnlyList<ResultsTable>> GetResultsAsync();
+    Task<IReadOnlyList<ResultsTable>> GetResultsAsync(Guid enrollmentId);
 }
 
 public sealed class JournalService(
@@ -74,9 +75,9 @@ public sealed class JournalService(
     /// <summary>A Fit Test taken as a bonus in the days before Day 1 still counts as the baseline.</summary>
     public const int BonusDaysBeforeStart = 7;
 
-    public async Task<string> GetProgramNoteAsync()
+    public async Task<string> GetProgramNoteAsync(Guid enrollmentId)
     {
-        if (await enrollments.GetAsync() is not { } active)
+        if (await enrollments.GetAsync(enrollmentId) is not { } active)
         {
             return "";
         }
@@ -85,16 +86,16 @@ public sealed class JournalService(
         return all.FirstOrDefault(n => n.DayIndex is null)?.Text ?? "";
     }
 
-    public async Task SaveProgramNoteAsync(string? text)
+    public async Task SaveProgramNoteAsync(Guid enrollmentId, string? text)
     {
-        var active = await RequireAsync();
+        var active = await RequireWritableAsync(enrollmentId);
         await notes.SetNotesAsync(active.Enrollment.Id, [new NoteEdit(null, null, text)]);
         NotifyChanged();
     }
 
-    public async Task<DayJournal?> GetDayAsync(int dayIndex)
+    public async Task<DayJournal?> GetDayAsync(Guid enrollmentId, int dayIndex)
     {
-        if (await enrollments.GetAsync() is not { } active || dayIndex < 0 || dayIndex >= active.Calendar.DayCount)
+        if (await enrollments.GetAsync(enrollmentId) is not { } active || dayIndex < 0 || dayIndex >= active.Calendar.DayCount)
         {
             return null;
         }
@@ -103,7 +104,7 @@ public sealed class JournalService(
         var day = catalog.GetTrackDays(active.Track)[dayIndex];
         var date = active.Calendar.DateOf(dayIndex);
         var dayNotes = (await notes.GetNotesAsync(active.Enrollment.Id)).Where(n => n.DayIndex == dayIndex).ToList();
-        var done = (await enrollments.GetCompletionsAsync()).Where(c => c.DayIndex == dayIndex).Select(c => c.SessionIndex).ToHashSet();
+        var done = (await enrollments.GetCompletionsAsync(active.Id)).Where(c => c.DayIndex == dayIndex).Select(c => c.SessionIndex).ToHashSet();
         var entries = (await metrics.GetSessionEntriesAsync(active.Enrollment.Id)).Where(e => e.DayIndex == dayIndex).ToList();
 
         List<SessionJournal> sessions = [];
@@ -131,10 +132,10 @@ public sealed class JournalService(
         return new DayJournal(dayIndex, date, sessions, dayNotes.FirstOrDefault(n => n.SessionIndex is null)?.Text ?? "", bonusJournals);
     }
 
-    public async Task SaveDayAsync(int dayIndex, DayEdit edit)
+    public async Task SaveDayAsync(Guid enrollmentId, int dayIndex, DayEdit edit)
     {
         ArgumentNullException.ThrowIfNull(edit);
-        var active = await RequireAsync();
+        var active = await RequireWritableAsync(enrollmentId);
         ArgumentOutOfRangeException.ThrowIfNegative(dayIndex);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(dayIndex, active.Calendar.DayCount);
         if (edit.IsEmpty)
@@ -166,17 +167,16 @@ public sealed class JournalService(
         NotifyChanged();
     }
 
-    public async Task<bool> HasMetricsAsync(int dayIndex, int sessionIndex) =>
-        await ScheduledWorkoutAsync(dayIndex, sessionIndex) is { Workout.HasMetrics: true };
+    public async Task<bool> HasMetricsAsync(Guid enrollmentId, int dayIndex, int sessionIndex) =>
+        await ScheduledWorkoutAsync(enrollmentId, dayIndex, sessionIndex) is { Workout.HasMetrics: true };
 
-    public async Task<ResultsSheet?> GetResultsSheetAsync(int dayIndex, int sessionIndex)
+    public async Task<ResultsSheet?> GetResultsSheetAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
-        if (await ScheduledWorkoutAsync(dayIndex, sessionIndex) is not { Workout: { HasMetrics: true } workout } scheduled)
+        if (await ScheduledWorkoutAsync(enrollmentId, dayIndex, sessionIndex) is not { Workout: { HasMetrics: true } workout } scheduled)
         {
             return null;
         }
 
-        var enrollmentId = scheduled.Active.Enrollment.Id;
         var entries = (await metrics.GetSessionEntriesAsync(enrollmentId)).Where(e => e.DayIndex == dayIndex).ToList();
         return Sheet(
             workout,
@@ -197,14 +197,14 @@ public sealed class JournalService(
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(values);
-        await ValidateAsync(target.IsBonus ? null : await RequireAsync(), target, values);
+        await ValidateAsync(target.IsBonus ? null : await RequireWritableAsync(target.EnrollmentId!.Value), target, values);
         await metrics.SetValuesAsync(target, values);
         NotifyChanged();
     }
 
-    public async Task<IReadOnlyList<ResultsTable>> GetResultsAsync()
+    public async Task<IReadOnlyList<ResultsTable>> GetResultsAsync(Guid enrollmentId)
     {
-        if (await enrollments.GetAsync() is not { } active)
+        if (await enrollments.GetAsync(enrollmentId) is not { } active)
         {
             return [];
         }
@@ -229,7 +229,7 @@ public sealed class JournalService(
                 throw new InvalidOperationException("The results belong to an enrollment that is no longer active.");
             }
 
-            var scheduled = await ScheduledWorkoutAsync(target.DayIndex!.Value, target.SessionIndex!.Value);
+            var scheduled = await ScheduledWorkoutAsync(active.Id, target.DayIndex!.Value, target.SessionIndex!.Value);
             if (scheduled?.Workout.Id != target.WorkoutId)
             {
                 throw new ArgumentException($"Day {target.DayIndex + 1}, session {target.SessionIndex} is not '{target.WorkoutId}'.", nameof(target));
@@ -244,9 +244,9 @@ public sealed class JournalService(
         }
     }
 
-    private async Task<(ActiveEnrollment Active, Workout Workout)?> ScheduledWorkoutAsync(int dayIndex, int sessionIndex)
+    private async Task<(ActiveEnrollment Active, Workout Workout)?> ScheduledWorkoutAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
-        if (await enrollments.GetAsync() is not { } active || dayIndex < 0 || dayIndex >= active.Calendar.DayCount)
+        if (await enrollments.GetAsync(enrollmentId) is not { } active || dayIndex < 0 || dayIndex >= active.Calendar.DayCount)
         {
             return null;
         }
@@ -278,8 +278,11 @@ public sealed class JournalService(
         return new ResultsSheet(workout, target, date, dayNumber, values);
     }
 
-    private async Task<ActiveEnrollment> RequireAsync() =>
-        await enrollments.GetAsync() ?? throw new InvalidOperationException("There is no active enrollment.");
+    private async Task<ActiveEnrollment> RequireWritableAsync(Guid enrollmentId)
+    {
+        var active = await enrollments.GetAsync(enrollmentId) ?? throw new InvalidOperationException("The enrollment is no longer active.");
+        return enrollments.IsReadOnly(active) ? throw new EnrollmentReadOnlyException(enrollmentId) : active;
+    }
 
     private void NotifyChanged() => messenger.Send(new JournalChangedMessage());
 }

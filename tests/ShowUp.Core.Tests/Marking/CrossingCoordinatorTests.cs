@@ -13,6 +13,8 @@ public sealed class CrossingCoordinatorTests
 
     private readonly FakeAppPreferences _preferences = new() { CrossOffStyle = CrossOffStyle.AutoMarker, CrossMomentMode = CrossMomentMode.Always };
     private readonly FakeCrossMoment _crossMoment = new();
+    private static readonly Guid _enrollmentId = Guid.NewGuid();
+
     private readonly RecordingEnrollmentService _enrollments = new();
     private readonly StubJournalService _journal = new();
     private readonly RecordingJournalDialogs _journalDialogs = new();
@@ -167,6 +169,7 @@ public sealed class CrossingCoordinatorTests
 
     private static CrossTarget Target(int session = 0, bool isToday = true, int daySeed = 0, int[]? done = null, CompletedSession[]? completions = null) =>
         new(
+            _enrollmentId,
             0,
             session,
             "Run",

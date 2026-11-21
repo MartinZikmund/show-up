@@ -10,8 +10,9 @@ public sealed partial class DaySessionViewModel : ObservableObject
 {
     private readonly string _initialNote;
 
-    internal DaySessionViewModel(SessionJournal session, ResultsEditorViewModel? results, string optionalFormat)
+    internal DaySessionViewModel(SessionJournal session, ResultsEditorViewModel? results, string optionalFormat, bool isLocked = false)
     {
+        IsLocked = isLocked;
         Index = session.SessionIndex;
         Name = session.IsOptional ? string.Format(CultureInfo.CurrentCulture, optionalFormat, session.Name) : session.Name;
         IsDone = session.IsDone;
@@ -35,6 +36,9 @@ public sealed partial class DaySessionViewModel : ObservableObject
 
     public string UndoAutomationId => $"DayDetailUndoUncross_{Index}";
 
+    /// <summary>The enrollment is read-only (Pro lapsed): no uncross, no note edits.</summary>
+    public bool IsLocked { get; }
+
     /// <summary>Crossed off when the sheet opened.</summary>
     public bool IsDone { get; }
 
@@ -45,7 +49,7 @@ public sealed partial class DaySessionViewModel : ObservableObject
 
     public bool ShowsCrossed => IsDone && !PendingUncross;
 
-    public bool CanUncross => IsDone && !PendingUncross;
+    public bool CanUncross => IsDone && !PendingUncross && !IsLocked;
 
     [ObservableProperty]
     public partial string Note { get; set; }
@@ -78,6 +82,15 @@ public sealed partial class DayDetailViewModel(
 
     public int DayIndex { get; private set; } = -1;
 
+    public Guid EnrollmentId { get; private set; }
+
+    /// <summary>Pro lapsed and this isn't the primary program: shown, not edited.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditable))]
+    public partial bool IsReadOnly { get; private set; }
+
+    public bool IsEditable => !IsReadOnly;
+
     [ObservableProperty]
     public partial string Title { get; private set; } = "";
 
@@ -99,20 +112,22 @@ public sealed partial class DayDetailViewModel(
 
     public bool HasBonuses => Bonuses.Count > 0;
 
-    /// <returns>False when there's no enrollment or no such day.</returns>
-    public async Task<bool> LoadAsync(int dayIndex)
+    /// <returns>False when the enrollment isn't active or has no such day.</returns>
+    public async Task<bool> LoadAsync(Guid enrollmentId, int dayIndex)
     {
-        if (await journal.GetDayAsync(dayIndex) is not { } day)
+        if (await enrollments.GetAsync(enrollmentId) is not { } active || await journal.GetDayAsync(enrollmentId, dayIndex) is not { } day)
         {
             return false;
         }
 
         var metric = preferences.UnitSystem;
+        EnrollmentId = enrollmentId;
+        IsReadOnly = enrollments.IsReadOnly(active);
         DayIndex = dayIndex;
         Title = localizer["CalendarDayNumberFormat", dayIndex + 1];
         DateLabel = day.Date.ToString("D", CultureInfo.CurrentCulture);
         var optional = localizer["ProgramOptionalFormat"].Value;
-        Sessions = [.. day.Sessions.Select(s => new DaySessionViewModel(s, s.Results is { } r ? new ResultsEditorViewModel(r, localizer, metric) : null, optional))];
+        Sessions = [.. day.Sessions.Select(s => new DaySessionViewModel(s, s.Results is { } r ? new ResultsEditorViewModel(r, localizer, metric) : null, optional, IsReadOnly))];
         Bonuses = [.. day.Bonuses.Select(b => new DayBonusViewModel(b.Bonus, b.Results is { } r ? new ResultsEditorViewModel(r, localizer, metric) : null))];
         DayNote = _initialDayNote = day.Note;
 
@@ -129,7 +144,7 @@ public sealed partial class DayDetailViewModel(
     [RelayCommand]
     private void ToggleUncross(DaySessionViewModel? session)
     {
-        if (DayIndex >= 0 && session is { IsDone: true })
+        if (DayIndex >= 0 && !IsReadOnly && session is { IsDone: true })
         {
             session.PendingUncross = !session.PendingUncross;
         }
@@ -137,7 +152,7 @@ public sealed partial class DayDetailViewModel(
 
     public async Task SaveAsync()
     {
-        if (DayIndex < 0 || !CanSave)
+        if (DayIndex < 0 || !CanSave || IsReadOnly)
         {
             return;
         }
@@ -146,7 +161,7 @@ public sealed partial class DayDetailViewModel(
         {
             try
             {
-                await enrollments.UncrossAsync(DayIndex, session.Index);
+                await enrollments.UncrossAsync(EnrollmentId, DayIndex, session.Index);
             }
             catch (InvalidOperationException ex)
             {
@@ -158,7 +173,7 @@ public sealed partial class DayDetailViewModel(
             DayNote.Trim() != _initialDayNote ? DayNote : null,
             Sessions.Where(s => s.NoteChanged).ToDictionary(s => s.Index, s => s.Note),
             [.. Editors().Where(e => e.Changes.Count > 0).Select(e => new ResultsEdit(e.Sheet.Target, e.Changes))]);
-        await journal.SaveDayAsync(DayIndex, edit);
+        await journal.SaveDayAsync(EnrollmentId, DayIndex, edit);
     }
 
     private IEnumerable<ResultsEditorViewModel> Editors() =>

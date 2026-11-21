@@ -119,13 +119,13 @@ internal sealed class RecordingJournalDialogs : IJournalDialogs
 {
     public List<string> Calls { get; } = [];
 
-    public Task ShowDayAsync(int dayIndex) => Record($"day:{dayIndex}");
+    public Task ShowDayAsync(Guid enrollmentId, int dayIndex) => Record($"day:{dayIndex}");
 
-    public Task LogResultsAsync(int dayIndex, int sessionIndex) => Record($"results:{dayIndex}:{sessionIndex}");
+    public Task LogResultsAsync(Guid enrollmentId, int dayIndex, int sessionIndex) => Record($"results:{dayIndex}:{sessionIndex}");
 
     public Task LogBonusResultsAsync(BonusWorkoutEntity bonus) => Record($"bonus:{bonus.WorkoutId}");
 
-    public Task EditProgramNoteAsync() => Record("program-note");
+    public Task EditProgramNoteAsync(Guid enrollmentId) => Record("program-note");
 
     private Task Record(string call)
     {
@@ -139,17 +139,17 @@ internal sealed class StubJournalService : IJournalService
 {
     public Func<int, int, bool> HasMetrics { get; set; } = (_, _) => false;
 
-    public Task<string> GetProgramNoteAsync() => Task.FromResult("");
+    public Task<string> GetProgramNoteAsync(Guid enrollmentId) => Task.FromResult("");
 
-    public Task SaveProgramNoteAsync(string? text) => Task.CompletedTask;
+    public Task SaveProgramNoteAsync(Guid enrollmentId, string? text) => Task.CompletedTask;
 
-    public Task<DayJournal?> GetDayAsync(int dayIndex) => Task.FromResult<DayJournal?>(null);
+    public Task<DayJournal?> GetDayAsync(Guid enrollmentId, int dayIndex) => Task.FromResult<DayJournal?>(null);
 
-    public Task SaveDayAsync(int dayIndex, DayEdit edit) => Task.CompletedTask;
+    public Task SaveDayAsync(Guid enrollmentId, int dayIndex, DayEdit edit) => Task.CompletedTask;
 
-    public Task<bool> HasMetricsAsync(int dayIndex, int sessionIndex) => Task.FromResult(HasMetrics(dayIndex, sessionIndex));
+    public Task<bool> HasMetricsAsync(Guid enrollmentId, int dayIndex, int sessionIndex) => Task.FromResult(HasMetrics(dayIndex, sessionIndex));
 
-    public Task<ResultsSheet?> GetResultsSheetAsync(int dayIndex, int sessionIndex) => Task.FromResult<ResultsSheet?>(null);
+    public Task<ResultsSheet?> GetResultsSheetAsync(Guid enrollmentId, int dayIndex, int sessionIndex) => Task.FromResult<ResultsSheet?>(null);
 
     public Task<ResultsSheet?> GetBonusResultsSheetAsync(BonusWorkoutEntity bonus) => Task.FromResult<ResultsSheet?>(null);
 
@@ -166,7 +166,7 @@ internal sealed class StubJournalService : IJournalService
 
     private int _loading;
 
-    public async Task<IReadOnlyList<ResultsTable>> GetResultsAsync()
+    public async Task<IReadOnlyList<ResultsTable>> GetResultsAsync(Guid enrollmentId)
     {
         ResultsCalls++;
         MaxConcurrentLoads = Math.Max(MaxConcurrentLoads, ++_loading);
