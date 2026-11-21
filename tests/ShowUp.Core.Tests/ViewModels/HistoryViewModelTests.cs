@@ -220,6 +220,130 @@ public sealed class HistoryViewModelTests
         viewModel.ViewUnloaded();
     }
 
+    [TestMethod]
+    public async Task Dates_FollowTheCulture()
+    {
+        await _repository.EnrollAsync("new", 1, "t", _today.AddDays(-4));
+        await _repository.LogBonusAsync(null, "Run", _today, null);
+        CultureInfo.CurrentCulture = new CultureInfo("cs-CZ");
+        var czech = Create();
+        await czech.LoadAsync();
+        CultureInfo.CurrentCulture = new CultureInfo("en-US");
+        var english = Create();
+        await english.LoadAsync();
+
+        czech.Programs.Single().DatesText.Should().Be("HistoryStartedFormat(17.11.2026)");
+        english.Programs.Single().DatesText.Should().Be("HistoryStartedFormat(11/17/2026)");
+        czech.BonusMonths.Single().Header.Should().Be("Listopad 2026");
+        english.BonusMonths.Single().Header.Should().Be("November 2026");
+        czech.BonusMonths.Single().Items.Single().DateText.Should().Be("so 21. listopadu");
+        english.BonusMonths.Single().Items.Single().DateText.Should().Be("Sat November 21");
+    }
+
+    [TestMethod]
+    public async Task EndedProgram_CountsCrossedDaysAndBestStreakUpToItsEnd()
+    {
+        var first = await _repository.EnrollAsync("new", 1, "t", _today.AddDays(-10));
+        foreach (var day in new[] { 0, 1, 2, 4, 5 })
+        {
+            await _repository.CrossSessionAsync(first.Id, day, 0, _today.AddDays(day - 10));
+        }
+
+        await _repository.ReplaceEnrollmentAsync(first.Id, EnrollmentEndReason.Abandoned, "old", 1, "t", _today);
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        var ended = viewModel.Programs.Single(p => p.Status == HistoryStatus.Stopped);
+        ended.CrossedText.Should().Be("HistoryCrossedFormat(5)");
+        ended.BestText.Should().Be("CalendarLongestStreakFormat(3)");
+        ended.ProgressText.Should().Be("ProgramDays_Other(7)");
+    }
+
+    [TestMethod]
+    public async Task Free_WithSeveralActive_ShowsTheNewestUntilAPrimaryIsChosen()
+    {
+        _entitlements.IsPro = false;
+        await _repository.EnrollAsync("old", 1, "t", _today.AddDays(-5));
+        _time.Advance(TimeSpan.FromMinutes(1));
+        await _repository.EnrollAsync("new", 1, "t", _today.AddDays(-2));
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.Programs.Select(p => p.Name).Should().Equal("Program new r1");
+        viewModel.ShowGate.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Free_WithSeveralActive_ShowsTheChosenPrimary()
+    {
+        _entitlements.IsPro = false;
+        var older = await _repository.EnrollAsync("old", 1, "t", _today.AddDays(-5));
+        _time.Advance(TimeSpan.FromMinutes(1));
+        await _repository.EnrollAsync("new", 1, "t", _today.AddDays(-2));
+        _settings.Values[ActiveEnrollmentService.PrimaryKey] = older.Id.ToString("D");
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.Programs.Select(p => p.Name).Should().Equal("Program old r1");
+    }
+
+    [TestMethod]
+    public async Task Free_WithOnlyEndedPrograms_ShowsTheMostRecentOne()
+    {
+        _entitlements.IsPro = false;
+        var first = await _repository.EnrollAsync("old", 1, "t", _today.AddDays(-20));
+        var second = await _repository.ReplaceEnrollmentAsync(first.Id, EnrollmentEndReason.Finished, "new", 1, "t", _today.AddDays(-10));
+        _time.Advance(TimeSpan.FromHours(1));
+        await _repository.EndEnrollmentAsync(second.Id, EnrollmentEndReason.Abandoned);
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.Programs.Select(p => (p.Name, p.Status)).Should().Equal(("Program new r1", HistoryStatus.Stopped));
+        viewModel.ShowGate.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task PinnedRevisionGone_FallsBackToTheLatestRevision()
+    {
+        await _repository.EnrollAsync("new", 9, "t", _today);
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.Programs.Select(p => p.Name).Should().Equal("Program new r1");
+    }
+
+    [TestMethod]
+    public async Task ProgramGoneFromTheCatalog_IsSkipped()
+    {
+        await _repository.EnrollAsync("vanished", 1, "t", _today);
+        await _repository.EnrollAsync("new", 1, "t", _today);
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.Programs.Select(p => p.Name).Should().Equal("Program new r1");
+    }
+
+    [TestMethod]
+    public async Task Program_LinksNameTheirProgram()
+    {
+        await _repository.EnrollAsync("old", 1, "t", _today);
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        var program = viewModel.Programs.Single();
+        program.CalendarAutomationName.Should().Be("HistoryCalendarNameFormat(Program old r1)");
+        program.ResultsAutomationName.Should().Be("HistoryResultsNameFormat(Program old r1)");
+        program.CalendarAutomationId.Should().Be($"HistoryCalendar_{program.EnrollmentId}");
+        program.ResultsAutomationId.Should().Be($"HistoryResults_{program.EnrollmentId}");
+    }
+
     private HistoryViewModel Create()
     {
         _service = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements);
