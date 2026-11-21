@@ -478,4 +478,112 @@
   <data name="ProgramStartFailedMessage" xml:space="preserve">
     <value>P&#345;i spou&#353;t&#283;n&#237; n&#283;co selhalo. Zkuste to pros&#237;m znovu.</value>
   </data>
+  <data name="GreetingMorning" xml:space="preserve">
+    <value>Dobr&#233; r&#225;no</value>
+  </data>
+  <data name="GreetingAfternoon" xml:space="preserve">
+    <value>Dobr&#233; odpoledne</value>
+  </data>
+  <data name="GreetingEvening" xml:space="preserve">
+    <value>Dobr&#253; ve&#269;er</value>
+  </data>
+  <data name="GreetingNight" xml:space="preserve">
+    <value>Je&#353;t&#283; vzh&#367;ru?</value>
+  </data>
+  <data name="TodayDayFormat" xml:space="preserve">
+    <value>Den {0} z {1}</value>
+  </data>
+  <data name="TodayDurationFormat" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="WorkoutKind_Cardio" xml:space="preserve">
+    <value>Kardio</value>
+  </data>
+  <data name="WorkoutKind_Strength" xml:space="preserve">
+    <value>S&#237;la</value>
+  </data>
+  <data name="WorkoutKind_Abs" xml:space="preserve">
+    <value>B&#345;icho</value>
+  </data>
+  <data name="WorkoutKind_Yoga" xml:space="preserve">
+    <value>J&#243;ga</value>
+  </data>
+  <data name="WorkoutKind_Stretch" xml:space="preserve">
+    <value>Prota&#382;en&#237;</value>
+  </data>
+  <data name="WorkoutKind_Recovery" xml:space="preserve">
+    <value>Regenerace</value>
+  </data>
+  <data name="WorkoutKind_Rest" xml:space="preserve">
+    <value>Odpo&#269;inek</value>
+  </data>
+  <data name="WorkoutKind_FitTest" xml:space="preserve">
+    <value>Fit test</value>
+  </data>
+  <data name="WorkoutKind_Mixed" xml:space="preserve">
+    <value>Kombinace</value>
+  </data>
+  <data name="TodayCrossItOff" xml:space="preserve">
+    <value>Od&#353;krtnout</value>
+  </data>
+  <data name="TodaySessionDone" xml:space="preserve">
+    <value>Hotovo</value>
+  </data>
+  <data name="TodayOptionalBadge" xml:space="preserve">
+    <value>Voliteln&#233;</value>
+  </data>
+  <data name="TodayRestDayTitle" xml:space="preserve">
+    <value>Den odpo&#269;inku</value>
+  </data>
+  <data name="TodayRestDayMessage" xml:space="preserve">
+    <value>Regenerace je sou&#269;&#225;st pl&#225;nu. Zvedn&#283;te nohy.</value>
+  </data>
+  <data name="TodayOffScheduleTitle" xml:space="preserve">
+    <value>Dnes nic nenapl&#225;nov&#225;no</value>
+  </data>
+  <data name="TodayOffScheduleMessage" xml:space="preserve">
+    <value>V&#225;&#353; program na dne&#353;ek nic nem&#225;. Bonusov&#253; tr&#233;nink je ale v&#382;dycky v&#237;tan&#253;.</value>
+  </data>
+  <data name="TodayNoProgramTitle" xml:space="preserve">
+    <value>Zat&#237;m &#382;&#225;dn&#253; program</value>
+  </data>
+  <data name="TodayNoProgramMessage" xml:space="preserve">
+    <value>Vyberte si program a dostanete denn&#237; pl&#225;n, nebo si jen zapi&#353;te, co jste odcvi&#269;ili.</value>
+  </data>
+  <data name="TodayBrowsePrograms" xml:space="preserve">
+    <value>Proch&#225;zet programy</value>
+  </data>
+  <data name="TodayBonusHeader" xml:space="preserve">
+    <value>Bonusov&#233; tr&#233;ninky</value>
+  </data>
+  <data name="TodayBonusAdd" xml:space="preserve">
+    <value>Bonusov&#253; tr&#233;nink</value>
+  </data>
+  <data name="TodayBonusEmpty" xml:space="preserve">
+    <value>Tento t&#253;den nic zaps&#225;no. Bonus je dobrovoln&#253;, ale p&#345;&#237;jemn&#253;.</value>
+  </data>
+  <data name="TodayBonusToday" xml:space="preserve">
+    <value>Dnes</value>
+  </data>
+  <data name="TodayBonusRemove" xml:space="preserve">
+    <value>Odebrat bonusov&#253; tr&#233;nink</value>
+  </data>
+  <data name="BonusRemoveConfirmTitle" xml:space="preserve">
+    <value>Odebrat bonusov&#253; tr&#233;nink?</value>
+  </data>
+  <data name="BonusRemoveConfirmFormat" xml:space="preserve">
+    <value>{0} se odebere ze z&#225;znamu.</value>
+  </data>
+  <data name="BonusDialogSearchPlaceholder" xml:space="preserve">
+    <value>Hledejte tr&#233;nink nebo napi&#353;te vlastn&#237;</value>
+  </data>
+  <data name="BonusDialogDuration" xml:space="preserve">
+    <value>Minuty</value>
+  </data>
+  <data name="BonusDialogDate" xml:space="preserve">
+    <value>Den</value>
+  </data>
+  <data name="TodayCrossOffFormat" xml:space="preserve">
+    <value>Od&#353;krtnout {0}</value>
+  </data>
 </root>

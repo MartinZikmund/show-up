@@ -86,11 +86,20 @@ public sealed class ActiveEnrollmentService(
         NotifyChanged();
     }
 
-    public async Task LogBonusAsync(string title, DateOnly date)
+    public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to) =>
+        repository.GetBonusWorkoutsAsync(from, to);
+
+    public async Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        var entity = await repository.LogBonusAsync(workoutId, title.Trim(), date, durationMinutes);
+        NotifyChanged();
+        return entity;
+    }
 
-        await repository.LogBonusAsync(null, title, date, null);
+    public async Task RemoveBonusAsync(Guid id)
+    {
+        await repository.RemoveBonusAsync(id);
         NotifyChanged();
     }
 

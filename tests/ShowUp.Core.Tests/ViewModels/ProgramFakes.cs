@@ -111,13 +111,24 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync() => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
 
-    public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null) => Task.CompletedTask;
+    public List<(int Day, int Session, string? Ink, Guid? CompletionId)> Crosses { get; } = [];
+
+    public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null)
+    {
+        Crosses.Add((dayIndex, sessionIndex, inkJson, completionId));
+        return Task.CompletedTask;
+    }
 
     public Task UncrossAsync(int dayIndex, int sessionIndex) => Task.CompletedTask;
 
     public Task ShiftAsync(DateOnly fromDate, int days) => Task.CompletedTask;
 
-    public Task LogBonusAsync(string title, DateOnly date) => Task.CompletedTask;
+    public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
+
+    public Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes) =>
+        Task.FromResult(new BonusWorkoutEntity { WorkoutId = workoutId, Title = title, Date = date, DurationMinutes = durationMinutes });
+
+    public Task RemoveBonusAsync(Guid id) => Task.CompletedTask;
 }
 
 internal sealed class RecordingDialogService : IDialogService

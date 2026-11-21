@@ -46,30 +46,4 @@ public sealed class CalendarPrompts(IDialogCoordinator dialogCoordinator, IXamlR
     }
 
     private static bool IsValidShift(double value) => !double.IsNaN(value) && value >= 1 && value <= MaxShiftDays;
-
-    public async Task<string?> AskBonusTitleAsync()
-    {
-        TextBox title = new()
-        {
-            Header = Localizer.Instance["BonusDialogHeader"],
-            PlaceholderText = Localizer.Instance["BonusDialogPlaceholder"],
-            MaxLength = 80,
-        };
-        AutomationProperties.SetAutomationId(title, "BonusTitleTextBox");
-
-        ContentDialog dialog = new()
-        {
-            Title = Localizer.Instance["BonusDialogTitle"],
-            Content = title,
-            PrimaryButtonText = Localizer.Instance["BonusDialogConfirm"],
-            CloseButtonText = Localizer.Instance["Cancel"],
-            DefaultButton = ContentDialogButton.Primary,
-            IsPrimaryButtonEnabled = false,
-            XamlRoot = xamlRootProvider.XamlRoot,
-        };
-        title.TextChanged += (_, _) => dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(title.Text);
-
-        var result = await dialogCoordinator.ShowAsync(dialog);
-        return result == ContentDialogResult.Primary ? title.Text.Trim() : null;
-    }
 }

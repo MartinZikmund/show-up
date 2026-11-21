@@ -121,8 +121,8 @@ public sealed class ActiveEnrollmentServiceTests
     public async Task GetBonusWorkoutsAsync_BonusOutsideCalendar_IsExcluded()
     {
         await _repository.EnrollAsync("p", 1, "t", _today);
-        await _service.LogBonusAsync("Inside", _today.AddDays(1));
-        await _repository.LogBonusAsync(null, "Outside", _today.AddDays(10), null);
+        await _service.LogBonusAsync(null, "Inside", _today, null);
+        await _repository.LogBonusAsync(null, "Outside", _today.AddDays(-10), null);
 
         var bonuses = await _service.GetBonusWorkoutsAsync();
 

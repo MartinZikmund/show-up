@@ -327,7 +327,8 @@
                                 <TextBlock
                                     x:Name="PART_Date"
                                     Foreground="{ThemeResource MutedTextBrush}"
-                                    Style="{StaticResource CaptionTextBlockStyle}" />
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    TextWrapping="NoWrap" />
                             </Border>
                             <StackPanel
                                 x:Name="PART_Ticks"
