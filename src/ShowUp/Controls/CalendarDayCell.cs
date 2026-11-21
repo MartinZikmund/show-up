@@ -37,6 +37,12 @@ public sealed partial class CalendarDayCell : Button
     /// <summary>Below this width a cell shows only the day number, session ticks and the rest label.</summary>
     private const double CompactWidth = 64;
 
+    /// <summary>Below this width the date label goes (it stays in the accessible name and tooltip), and titles take one line.</summary>
+    private const double DateMinWidth = 84;
+
+    /// <summary>With a bonus sticker the date needs more room to stay clear of the day number.</summary>
+    private const double DateWithStickerMinWidth = 112;
+
     public static readonly DependencyProperty DayProperty = DependencyProperty.Register(
         nameof(Day), typeof(CalendarDayViewModel), typeof(CalendarDayCell),
         new PropertyMetadata(null, (d, e) => ((CalendarDayCell)d).OnDayChanged((CalendarDayViewModel?)e.OldValue, (CalendarDayViewModel?)e.NewValue)));
@@ -228,12 +234,17 @@ public sealed partial class CalendarDayCell : Button
 
         _isCompact = width < CompactWidth;
         _dayNumber.FontSize = Math.Clamp(width * 0.26, 14, 26);
-        _datePlate!.Visibility = _isCompact ? Visibility.Collapsed : Visibility.Visible;
+        var hasSticker = Day is { BonusCount: > 0 };
+        var showDate = width >= (hasSticker ? DateWithStickerMinWidth : DateMinWidth);
+        var narrow = width < DateMinWidth;
+        _datePlate!.Visibility = showDate ? Visibility.Visible : Visibility.Collapsed;
+        ToolTipService.SetToolTip(this, showDate || Day is null ? null : Day.DateLabel);
 
         // Compact cells have no room for workout names, but a rest day still says so.
         var showTitle = !_isCompact || Day is { IsRestDay: true };
         _title!.Visibility = showTitle ? Visibility.Visible : Visibility.Collapsed;
-        _title.MaxLines = _isCompact ? 1 : 2;
+        _title.MaxLines = narrow ? 1 : 2;
+        _title.TextWrapping = narrow ? TextWrapping.NoWrap : TextWrapping.Wrap;
 
         UpdateTicks();
     }
