@@ -17,6 +17,7 @@ One page per topic. Keep it that way.
 - [catalog.md](./catalog.md) — how the bundled workout programs are verified, the file format, optional sessions, and held programs.
 - [custom-schedules.md](./custom-schedules.md) — the Pro schedule builder: drafts, own workouts, revisions, the catalog merge and read-only after a lapse.
 - [entitlements.md](./entitlements.md) — Show Up Pro: the feature gate, the paywall, per-head billing (RevenueCat, Microsoft Store, unlocked) and its configuration.
+- [history.md](./history.md) — the History tab: programs with streaks, bonus workouts by month, and the Free limit.
 - [json-aot-serialization.md](./json-aot-serialization.md) — `JsonSerializerContext` conventions for AOT-safe, trim-safe JSON serialization.
 - [marking.md](./marking.md) — the hand-drawn marker X, drawing the cross yourself, sound and haptics, and the cross moment.
 - [multiple-programs.md](./multiple-programs.md) — running several programs at once (Pro): enrollment-addressed APIs, the selected program, Today's groups, and read-only programs after a lapse.
