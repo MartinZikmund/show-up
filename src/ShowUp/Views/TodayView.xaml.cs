@@ -41,17 +41,18 @@ public sealed partial class TodayView : TodayViewBase
         };
         cell.SetValue(AutomationProperties.AutomationIdProperty, "DebugMarkerCell");
         cell.SetValue(AutomationProperties.NameProperty, Localizer.Instance["DebugMarkerSample"]);
-        // The theme dictionaries live in merged Colors.xaml, so let the root lookup find them.
+        // The cell's theme can differ from the app's, so read the merged Colors.xaml dictionary for that theme.
         cell.Loaded += (_, _) =>
         {
-            if (Application.Current.Resources.TryGetValue("CalendarCellBackgroundBrush", out var background))
+            var themeKey = cell.ActualTheme.ToString();
+            var theme = Application.Current.Resources.MergedDictionaries
+                .Where(d => d.ThemeDictionaries.ContainsKey(themeKey))
+                .Select(d => (ResourceDictionary)d.ThemeDictionaries[themeKey])
+                .FirstOrDefault(d => d.ContainsKey("CalendarCellBackgroundBrush"));
+            if (theme is not null)
             {
-                cell.Background = (Brush)background;
-            }
-
-            if (Application.Current.Resources.TryGetValue("CalendarCellBorderBrush", out var border))
-            {
-                cell.BorderBrush = (Brush)border;
+                cell.Background = (Brush)theme["CalendarCellBackgroundBrush"];
+                cell.BorderBrush = (Brush)theme["CalendarCellBorderBrush"];
             }
         };
         cell.Click += (_, _) =>
