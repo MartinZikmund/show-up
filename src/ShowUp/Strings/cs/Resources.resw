@@ -289,4 +289,97 @@
   <data name="DebugDrawMoment" xml:space="preserve">
     <value>N&#225;hled kreslen&#237; vlastn&#237; rukou</value>
   </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Zru&#353;it</value>
+  </data>
+  <data name="CalendarEmptyTitle" xml:space="preserve">
+    <value>Zat&#237;m &#382;&#225;dn&#253; program</value>
+  </data>
+  <data name="CalendarEmptyMessage" xml:space="preserve">
+    <value>Vyberte si program a jeho kalend&#225;&#345; se objev&#237; tady, p&#345;ipraven&#253; k od&#353;krt&#225;v&#225;n&#237; den po dni.</value>
+  </data>
+  <data name="CalendarBrowsePrograms" xml:space="preserve">
+    <value>Proch&#225;zet programy</value>
+  </data>
+  <data name="DebugStartSampleEnrollment" xml:space="preserve">
+    <value>Spustit uk&#225;zkov&#253; program</value>
+  </data>
+  <data name="CalendarShiftSchedule" xml:space="preserve">
+    <value>Posunout pl&#225;n</value>
+  </data>
+  <data name="ShiftDialogMessage" xml:space="preserve">
+    <value>Posune zbytek programu, po&#269;&#237;naje dne&#353;kem. Dny, kter&#233; u&#382; m&#225;te od&#353;krtnut&#233;, se nikdy nep&#345;esunou.</value>
+  </data>
+  <data name="ShiftDialogDays" xml:space="preserve">
+    <value>Po&#269;et dn&#237;</value>
+  </data>
+  <data name="ShiftDialogConfirm" xml:space="preserve">
+    <value>Posunout</value>
+  </data>
+  <data name="CalendarWeekFormat" xml:space="preserve">
+    <value>T&#253;den {0}</value>
+  </data>
+  <data name="CalendarLongestStreakFormat" xml:space="preserve">
+    <value>Rekord: {0}</value>
+  </data>
+  <data name="CalendarDateFormat" xml:space="preserve">
+    <value>d. M.</value>
+  </data>
+  <data name="CalendarDayNumberFormat" xml:space="preserve">
+    <value>Den {0}</value>
+  </data>
+  <data name="CalendarSessionJoin" xml:space="preserve">
+    <value> a </value>
+  </data>
+  <data name="CalendarDayDone" xml:space="preserve">
+    <value>hotovo</value>
+  </data>
+  <data name="CalendarDayNotDone" xml:space="preserve">
+    <value>nehotovo</value>
+  </data>
+  <data name="CalendarDayMissed" xml:space="preserve">
+    <value>zme&#353;k&#225;no</value>
+  </data>
+  <data name="CalendarDayToday" xml:space="preserve">
+    <value>dnes</value>
+  </data>
+  <data name="CalendarDayUpcoming" xml:space="preserve">
+    <value>teprve p&#345;ijde</value>
+  </data>
+  <data name="CalendarDayBonusFormat" xml:space="preserve">
+    <value>bonus: {0}</value>
+  </data>
+  <data name="CalendarUncross" xml:space="preserve">
+    <value>Zru&#353;it od&#353;krtnut&#237;</value>
+  </data>
+  <data name="CalendarUncrossLast" xml:space="preserve">
+    <value>Zru&#353;it posledn&#237; od&#353;krtnut&#237;</value>
+  </data>
+  <data name="CalendarLogBonus" xml:space="preserve">
+    <value>Zapsat sem bonusov&#253; tr&#233;nink</value>
+  </data>
+  <data name="UncrossConfirmTitle" xml:space="preserve">
+    <value>Zru&#353;it od&#353;krtnut&#237;?</value>
+  </data>
+  <data name="UncrossConfirmFormat" xml:space="preserve">
+    <value>Den {0}: {1} se vr&#225;t&#237; mezi nehotov&#233;.</value>
+  </data>
+  <data name="BonusDialogTitle" xml:space="preserve">
+    <value>Bonusov&#253; tr&#233;nink</value>
+  </data>
+  <data name="BonusDialogHeader" xml:space="preserve">
+    <value>Co jste cvi&#269;ili?</value>
+  </data>
+  <data name="BonusDialogPlaceholder" xml:space="preserve">
+    <value>Ve&#269;ern&#237; b&#283;h, j&#243;ga, ...</value>
+  </data>
+  <data name="BonusDialogConfirm" xml:space="preserve">
+    <value>Zapsat</value>
+  </data>
+  <data name="ShiftFailedTitle" xml:space="preserve">
+    <value>Nen&#237; co posunout</value>
+  </data>
+  <data name="ShiftFailedMessage" xml:space="preserve">
+    <value>V&#353;echny zb&#253;vaj&#237;c&#237; dny u&#382; m&#225;te od&#353;krtnut&#233; nebo program skon&#269;il, tak&#382;e nen&#237; co posunout.</value>
+  </data>
 </root>

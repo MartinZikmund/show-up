@@ -1,4 +1,5 @@
-﻿using ShowUp.Core.Catalog;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using ShowUp.Core.Catalog;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Services;
@@ -122,6 +123,8 @@ public partial class App : Application, IApplication
         services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
+        services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+        services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services
@@ -136,6 +139,8 @@ public partial class App : Application, IApplication
         services.AddScoped<ILauncherService, LauncherService>();
         services.AddScoped<IShareService, ShareService>();
         services.AddScoped<ICrossMoment, CrossMomentService>();
+        services.AddScoped<ICalendarPrompts, CalendarPrompts>();
+        services.AddScoped<ISectionNavigator>(sp => sp.GetRequiredService<WindowShellViewModel>());
         services.AddScoped<INavigationService>(sp =>
         {
             var service = new NavigationService(sp.GetRequiredService<IFrameProvider>());

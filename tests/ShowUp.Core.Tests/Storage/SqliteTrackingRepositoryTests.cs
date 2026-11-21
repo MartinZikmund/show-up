@@ -341,6 +341,38 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task CrossSession_GivenCompletionId_UsesIt()
+    {
+        var (repo, e) = await EnrolledAsync();
+        var id = Guid.NewGuid();
+
+        await repo.CrossSessionAsync(e.Id, 2, 0, _today, completionId: id);
+
+        (await repo.GetCompletionsAsync(e.Id)).Should().ContainSingle().Which.CompletionId.Should().Be(id);
+    }
+
+    [TestMethod]
+    public async Task CrossSession_AlreadyCrossedWithNewId_KeepsOriginal()
+    {
+        var (repo, e) = await EnrolledAsync();
+        var first = Guid.NewGuid();
+        await repo.CrossSessionAsync(e.Id, 2, 0, _today, completionId: first);
+
+        await repo.CrossSessionAsync(e.Id, 2, 0, _today, completionId: Guid.NewGuid());
+
+        (await repo.GetCompletionsAsync(e.Id)).Should().ContainSingle().Which.CompletionId.Should().Be(first);
+    }
+
+    [TestMethod]
+    public async Task GetCompletions_ReturnsCompletedAt()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 2, 0, _today);
+
+        (await repo.GetCompletionsAsync(e.Id)).Should().ContainSingle().Which.CompletedAt.Should().Be(Time.GetUtcNow());
+    }
+
+    [TestMethod]
     public async Task CrossSession_WithInk_RoundTripsInCompletions()
     {
         var (repo, e) = await EnrolledAsync();

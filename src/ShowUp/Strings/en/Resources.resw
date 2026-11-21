@@ -289,4 +289,97 @@
   <data name="DebugDrawMoment" xml:space="preserve">
     <value>Preview draw it yourself</value>
   </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CalendarEmptyTitle" xml:space="preserve">
+    <value>No program yet</value>
+  </data>
+  <data name="CalendarEmptyMessage" xml:space="preserve">
+    <value>Pick a program and its calendar shows up here, ready to be crossed off day by day.</value>
+  </data>
+  <data name="CalendarBrowsePrograms" xml:space="preserve">
+    <value>Browse programs</value>
+  </data>
+  <data name="DebugStartSampleEnrollment" xml:space="preserve">
+    <value>Start sample enrollment</value>
+  </data>
+  <data name="CalendarShiftSchedule" xml:space="preserve">
+    <value>Shift schedule</value>
+  </data>
+  <data name="ShiftDialogMessage" xml:space="preserve">
+    <value>Push the rest of the program back, starting today. Days you've already crossed off never move.</value>
+  </data>
+  <data name="ShiftDialogDays" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="ShiftDialogConfirm" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="CalendarWeekFormat" xml:space="preserve">
+    <value>Week {0}</value>
+  </data>
+  <data name="CalendarLongestStreakFormat" xml:space="preserve">
+    <value>Best {0}</value>
+  </data>
+  <data name="CalendarDateFormat" xml:space="preserve">
+    <value>MMM d</value>
+  </data>
+  <data name="CalendarDayNumberFormat" xml:space="preserve">
+    <value>Day {0}</value>
+  </data>
+  <data name="CalendarSessionJoin" xml:space="preserve">
+    <value> and </value>
+  </data>
+  <data name="CalendarDayDone" xml:space="preserve">
+    <value>done</value>
+  </data>
+  <data name="CalendarDayNotDone" xml:space="preserve">
+    <value>not done</value>
+  </data>
+  <data name="CalendarDayMissed" xml:space="preserve">
+    <value>missed</value>
+  </data>
+  <data name="CalendarDayToday" xml:space="preserve">
+    <value>today</value>
+  </data>
+  <data name="CalendarDayUpcoming" xml:space="preserve">
+    <value>upcoming</value>
+  </data>
+  <data name="CalendarDayBonusFormat" xml:space="preserve">
+    <value>{0} bonus</value>
+  </data>
+  <data name="CalendarUncross" xml:space="preserve">
+    <value>Uncross</value>
+  </data>
+  <data name="CalendarUncrossLast" xml:space="preserve">
+    <value>Uncross last session</value>
+  </data>
+  <data name="CalendarLogBonus" xml:space="preserve">
+    <value>Log bonus workout here</value>
+  </data>
+  <data name="UncrossConfirmTitle" xml:space="preserve">
+    <value>Uncross this session?</value>
+  </data>
+  <data name="UncrossConfirmFormat" xml:space="preserve">
+    <value>Day {0}: {1} goes back to not done.</value>
+  </data>
+  <data name="BonusDialogTitle" xml:space="preserve">
+    <value>Bonus workout</value>
+  </data>
+  <data name="BonusDialogHeader" xml:space="preserve">
+    <value>What did you do?</value>
+  </data>
+  <data name="BonusDialogPlaceholder" xml:space="preserve">
+    <value>Evening run, yoga, ...</value>
+  </data>
+  <data name="BonusDialogConfirm" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="ShiftFailedTitle" xml:space="preserve">
+    <value>Nothing to shift</value>
+  </data>
+  <data name="ShiftFailedMessage" xml:space="preserve">
+    <value>Every remaining day is already crossed off or the program is over, so there's nothing left to move.</value>
+  </data>
 </root>

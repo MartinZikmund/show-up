@@ -51,7 +51,7 @@ public sealed class SqliteTrackingRepository(
         await connection.UpdateAsync(row);
     }
 
-    public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null)
+    public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null, Guid? completionId = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(dayIndex);
         ArgumentOutOfRangeException.ThrowIfNegative(sessionIndex);
@@ -79,6 +79,7 @@ public sealed class SqliteTrackingRepository(
             CompletedAt = time.GetUtcNow(),
             InkJson = inkJson,
         });
+        entity.Id = completionId ?? entity.Id;
         await connection.InsertAsync(entity);
     }
 
@@ -111,7 +112,7 @@ public sealed class SqliteTrackingRepository(
             .Select(g => g.OrderBy(c => c.CompletedAt).ThenBy(c => c.Id.ToString("D"), StringComparer.Ordinal).First())
             .OrderBy(c => c.DayIndex)
             .ThenBy(c => c.SessionIndex)
-            .Select(c => new CompletedSession(c.DayIndex, c.SessionIndex, c.Id, c.CompletedOn, c.InkJson))
+            .Select(c => new CompletedSession(c.DayIndex, c.SessionIndex, c.Id, c.CompletedOn, c.InkJson, c.CompletedAt))
             .ToList();
     }
 
