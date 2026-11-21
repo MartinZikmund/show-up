@@ -147,6 +147,53 @@ public class CatalogValidatorTests
         errors.Should().BeEmpty();
     }
 
+    [TestMethod]
+    public void Validate_CustomProgramWithOwnWorkouts_ReturnsNoErrors()
+    {
+        var errors = Validate(c => WithProgram(c, CustomWithOwnWorkout));
+
+        errors.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Validate_CatalogProgramWithWorkouts_ReturnsError()
+    {
+        var errors = Validate(c => WithProgram(c, p => CustomWithOwnWorkout(p) with { Verification = VerificationLevel.Official, Sources = p.Sources }));
+
+        errors.Should().ContainSingle(e => e.Contains("only custom programs carry workouts"));
+    }
+
+    [TestMethod]
+    public void Validate_CustomWorkoutWithoutTheProgramPrefix_ReturnsError()
+    {
+        var errors = Validate(c => WithProgram(c, p => CustomWithOwnWorkout(p) is var custom
+            ? custom with { Workouts = [custom.Workouts![0] with { Id = "jog" }], Tracks = [Track(new ScheduledSession("jog"))] }
+            : p));
+
+        errors.Should().ContainSingle(e => e.Contains("workout 'jog' must start with 'custom-1-'"));
+    }
+
+    [TestMethod]
+    public void Validate_CustomWorkoutDuplicatingAnId_ReturnsError()
+    {
+        var errors = Validate(c => WithProgram(c, p => CustomWithOwnWorkout(p) is var custom
+            ? custom with { Workouts = [custom.Workouts![0], custom.Workouts[0]] }
+            : p));
+
+        errors.Should().ContainSingle(e => e.Contains("duplicate workout id 'custom-1-1'"));
+    }
+
+    private static WorkoutProgram CustomWithOwnWorkout(WorkoutProgram p) => p with
+    {
+        Id = "custom-1",
+        Verification = VerificationLevel.Custom,
+        Sources = [],
+        Workouts = [new Workout("custom-1-1", "Jog", 20, WorkoutKind.Cardio, null)],
+        Tracks = [Track(new ScheduledSession("custom-1-1"))],
+    };
+
+    private static ProgramTrack Track(ScheduledSession first) => new("main", "Main", [new ProgramPhase("P", [new ScheduleWeek(Week(first))])]);
+
     private static IReadOnlyList<ScheduleDay> Week(ScheduledSession first) =>
         [new ScheduleDay([first]), .. Enumerable.Repeat(new ScheduleDay([new ScheduledSession("rest")]), 6)];
 

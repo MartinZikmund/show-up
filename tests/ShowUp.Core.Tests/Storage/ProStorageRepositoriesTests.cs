@@ -69,6 +69,18 @@ public class ProStorageRepositoriesTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task CustomPrograms_GetRevisions_ListsEveryRevisionOldestFirstEvenWhenDeleted()
+    {
+        var programs = CreateCustomPrograms();
+        var (id, first) = await programs.SaveNewRevisionAsync("{\"v\":1}");
+        var (_, second) = await programs.SaveNewRevisionAsync("{\"v\":2}", id);
+        await programs.DeleteAsync(id);
+
+        (await programs.GetRevisionsAsync(id)).Should().Equal(first, second);
+        (await programs.GetRevisionsAsync("custom-missing")).Should().BeEmpty();
+    }
+
+    [TestMethod]
     public async Task CustomPrograms_Delete_HidesButPinnedRevisionResolves()
     {
         var programs = CreateCustomPrograms();

@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Services;
 
@@ -8,22 +6,15 @@ namespace ShowUp.Core.ViewModels;
 /// <summary>State of the bonus workout dialog: search the catalog or type a title, set a duration and a day (today or earlier).</summary>
 public sealed partial class BonusWorkoutDialogViewModel : ObservableObject
 {
-    public const int MaxSuggestions = 20;
+    public const int MaxSuggestions = WorkoutSearch.MaxSuggestions;
     public const int MaxTitleLength = 80;
     public const int MaxDurationMinutes = 600;
 
-    private readonly IReadOnlyList<(Workout Workout, string Folded)> _workouts;
+    private readonly WorkoutSearch _search;
 
     public BonusWorkoutDialogViewModel(IEnumerable<Workout> workouts, DateOnly today, DateOnly date)
     {
-        ArgumentNullException.ThrowIfNull(workouts);
-        _workouts =
-        [
-            .. workouts
-                .Where(w => w.Kind != WorkoutKind.Rest)
-                .OrderBy(w => w.Name, StringComparer.CurrentCultureIgnoreCase)
-                .Select(w => (w, Fold(w.Name))),
-        ];
+        _search = new(workouts);
         Today = today;
         Date = date > today ? today : date;
     }
@@ -73,7 +64,7 @@ public sealed partial class BonusWorkoutDialogViewModel : ObservableObject
             Selected = null;
         }
 
-        Suggestions = Search(value);
+        Suggestions = _search.Search(value);
     }
 
     partial void OnSelectedChanged(Workout? value)
@@ -91,38 +82,4 @@ public sealed partial class BonusWorkoutDialogViewModel : ObservableObject
         CanSave
             ? new(Selected?.Id, Title, DurationMinutes, Date)
             : throw new InvalidOperationException("The bonus workout isn't valid yet.");
-
-    private List<Workout> Search(string query)
-    {
-        var needle = Fold(query.Trim());
-        if (needle.Length == 0)
-        {
-            return [];
-        }
-
-        return
-        [
-            .. _workouts
-                .Where(w => w.Folded.Contains(needle, StringComparison.Ordinal))
-                .OrderByDescending(w => w.Folded.StartsWith(needle, StringComparison.Ordinal))
-                .Select(w => w.Workout)
-                .Take(MaxSuggestions),
-        ];
-    }
-
-    // Case and diacritics don't matter: "cardio" finds "Cardío", "ab" finds "Ab Attack".
-    private static string Fold(string text)
-    {
-        var decomposed = text.Normalize(NormalizationForm.FormD);
-        StringBuilder builder = new(decomposed.Length);
-        foreach (var c in decomposed)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-            {
-                builder.Append(char.ToLowerInvariant(c));
-            }
-        }
-
-        return builder.ToString();
-    }
 }

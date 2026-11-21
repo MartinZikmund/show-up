@@ -3,6 +3,8 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Localization;
+using ShowUp.Core.Tests.CustomPrograms;
+using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Tests.Tracking;
 using ShowUp.Core.ViewModels;
 
@@ -12,6 +14,8 @@ namespace ShowUp.Core.Tests.ViewModels;
 public sealed class ProgramsViewModelTests
 {
     private readonly RecordingNavigationService _navigation = new();
+    private readonly FakeCustomProgramService _customPrograms = new();
+    private readonly FakeEntitlementService _entitlements = new() { IsPro = true };
 
     [TestMethod]
     public async Task Filter_ByName_IsCaseInsensitive()
@@ -124,12 +128,50 @@ public sealed class ProgramsViewModelTests
     public void KeyFor_AppendsTheCategory() =>
         PluralForms.KeyFor(CultureInfo.GetCultureInfo("cs"), "ProgramDays", 3).Should().Be("ProgramDays_Few");
 
+    [TestMethod]
+    public async Task Load_CustomPrograms_ListedApartWithTheirVersion()
+    {
+        _customPrograms.VersionNumber = 3;
+        var custom = Program("custom-a", "Mine", "") with { Verification = VerificationLevel.Custom };
+
+        var viewModel = await LoadAsync(Program("insanity", "Insanity", "Insanity"), custom);
+
+        viewModel.Programs.Select(p => p.Id).Should().Equal("insanity");
+        viewModel.Families.Should().Equal("Insanity");
+        var card = viewModel.CustomPrograms.Should().ContainSingle().Subject;
+        card.IsCustom.Should().BeTrue();
+        card.VerificationText.Should().Be("CustomProgramBadgeFormat(3)");
+        card.Family.Should().Be("CustomProgramFamily");
+        viewModel.HasCustomPrograms.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task NewSchedule_Pro_OpensTheBuilder()
+    {
+        var viewModel = await LoadAsync();
+
+        viewModel.NewScheduleCommand.Execute(null);
+
+        _navigation.Navigations.Should().ContainSingle().Which.Should().Be((typeof(ScheduleBuilderViewModel), (object?)null));
+    }
+
+    [TestMethod]
+    public async Task NewSchedule_Free_IsGated()
+    {
+        _customPrograms.CanEdit = false;
+
+        var viewModel = await LoadAsync();
+
+        viewModel.NewScheduleCommand.CanExecute(null).Should().BeFalse();
+        viewModel.ShowScheduleGate.Should().BeTrue();
+    }
+
     private static WorkoutProgram Program(string id, string name, string family) =>
         TestCatalog.Program(id, 1, "run", "run") with { Name = name, Family = family };
 
     private async Task<ProgramsViewModel> LoadAsync(params WorkoutProgram[] programs)
     {
-        ProgramsViewModel viewModel = new(new PassThroughLocalizer(), new FakeCatalogService(programs), _navigation, NullLogger<ProgramsViewModel>.Instance);
+        ProgramsViewModel viewModel = new(new PassThroughLocalizer(), new FakeCatalogService(programs), _customPrograms, _entitlements, _navigation, NullLogger<ProgramsViewModel>.Instance);
         await viewModel.LoadAsync();
         return viewModel;
     }

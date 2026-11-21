@@ -56,6 +56,10 @@ internal sealed class FakeCatalogService(params WorkoutProgram[] programs) : ICa
         Task.FromResult(_catalog.WorkoutsById.GetValueOrDefault(workoutId));
 
     public IReadOnlyList<ScheduleDay> GetTrackDays(ProgramTrack track) => track.Days;
+
+    public int Invalidations { get; private set; }
+
+    public void InvalidateCustomPrograms() => Invalidations++;
 }
 
 internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepository

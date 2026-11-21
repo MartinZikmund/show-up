@@ -64,6 +64,14 @@ public sealed class SqliteCustomProgramRepository(
         return await IsDeletedAsync(programId, rows) ? null : revisions.OrderByDescending(p => p.Revision).FirstOrDefault();
     }
 
+    public async Task<IReadOnlyList<int>> GetRevisionsAsync(string programId)
+    {
+        string key = KeyOf(programId);
+        var connection = await ConnectAsync();
+        var rows = await QueryAsync<CustomProgramEntity>(connection, p => p.SubjectKey == key);
+        return [.. rows.Select(p => p.Revision).Distinct().Order()];
+    }
+
     public async Task<(string ProgramId, int Revision)> SaveNewRevisionAsync(string programJson, string? programId = null)
     {
         string id = programId ?? $"{IdPrefix}{Guid.NewGuid():D}";

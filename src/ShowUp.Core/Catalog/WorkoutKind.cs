@@ -17,4 +17,7 @@ public enum VerificationLevel
 {
     Official,
     Community,
+
+    /// <summary>Built by the user in the schedule builder; never in the bundled catalog.</summary>
+    Custom,
 }

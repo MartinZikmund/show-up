@@ -1,6 +1,8 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.CustomPrograms;
+using ShowUp.Core.Tests.CustomPrograms;
 
 namespace ShowUp.Core.Tests.Catalog;
 
@@ -11,7 +13,7 @@ public class CatalogServiceTests
     public async Task GetCatalog_LoadsOnce_Caches()
     {
         FakeSource source = new([Fixture("sample-program.json")]);
-        CatalogService service = new(source, NullLogger<CatalogService>.Instance);
+        CatalogService service = new(source, new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
 
         var results = await Task.WhenAll(service.GetCatalogAsync(), service.GetCatalogAsync(), service.GetCatalogAsync());
         var again = await service.GetCatalogAsync();
@@ -26,7 +28,7 @@ public class CatalogServiceTests
     public async Task GetCatalog_ProgramWithUnknownWorkout_IsSkipped()
     {
         var bad = Fixture("sample-program.json").Replace("\"id\": \"sample\"", "\"id\": \"bad\"").Replace("\"fit-test\"", "\"nope\"");
-        CatalogService service = new(new FakeSource([bad, Fixture("sample-program.json")]), NullLogger<CatalogService>.Instance);
+        CatalogService service = new(new FakeSource([bad, Fixture("sample-program.json")]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
 
         var catalog = await service.GetCatalogAsync();
 
@@ -36,7 +38,7 @@ public class CatalogServiceTests
     [TestMethod]
     public async Task GetCatalog_MalformedProgram_IsSkipped()
     {
-        CatalogService service = new(new FakeSource(["{ not json", Fixture("sample-program.json")]), NullLogger<CatalogService>.Instance);
+        CatalogService service = new(new FakeSource(["{ not json", Fixture("sample-program.json")]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
 
         var catalog = await service.GetCatalogAsync();
 
@@ -46,7 +48,7 @@ public class CatalogServiceTests
     [TestMethod]
     public async Task GetProgram_UnknownId_ReturnsNull()
     {
-        CatalogService service = new(new FakeSource([Fixture("sample-program.json")]), NullLogger<CatalogService>.Instance);
+        CatalogService service = new(new FakeSource([Fixture("sample-program.json")]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
 
         (await service.GetProgramAsync("missing")).Should().BeNull();
     }
@@ -55,7 +57,7 @@ public class CatalogServiceTests
     public async Task GetProgram_RevisionNull_ReturnsHighestRevision()
     {
         var rev2 = Fixture("sample-program.json").Replace("\"revision\": 1", "\"revision\": 2");
-        CatalogService service = new(new FakeSource([Fixture("sample-program.json"), rev2]), NullLogger<CatalogService>.Instance);
+        CatalogService service = new(new FakeSource([Fixture("sample-program.json"), rev2]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
 
         (await service.GetProgramAsync("sample"))!.Revision.Should().Be(2);
         (await service.GetProgramAsync("sample", 1))!.Revision.Should().Be(1);
@@ -65,7 +67,7 @@ public class CatalogServiceTests
     [TestMethod]
     public async Task GetWorkout_KnownAndUnknown_ReturnsWorkoutOrNull()
     {
-        CatalogService service = new(new FakeSource([]), NullLogger<CatalogService>.Instance);
+        CatalogService service = new(new FakeSource([]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
 
         (await service.GetWorkoutAsync("rest"))!.Id.Should().Be("rest");
         (await service.GetWorkoutAsync("missing")).Should().BeNull();
@@ -74,10 +76,88 @@ public class CatalogServiceTests
     [TestMethod]
     public async Task GetTrackDays_SameTrack_ReturnsCachedInstance()
     {
-        CatalogService service = new(new FakeSource([Fixture("sample-program.json")]), NullLogger<CatalogService>.Instance);
+        CatalogService service = new(new FakeSource([Fixture("sample-program.json")]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
         var track = (await service.GetProgramAsync("sample"))!.Tracks[0];
 
         service.GetTrackDays(track).Should().BeSameAs(service.GetTrackDays(track));
+    }
+
+    [TestMethod]
+    public async Task CatalogService_IncludesCustomPrograms()
+    {
+        FakeCustomProgramRepository custom = new();
+        var (id, revision) = await custom.SaveNewRevisionAsync(CustomJson("custom-a", "My plan"), "custom-a");
+        CatalogService service = new(new FakeSource([Fixture("sample-program.json")]), custom, NullLogger<CatalogService>.Instance);
+
+        var catalog = await service.GetCatalogAsync();
+
+        var program = catalog.Programs.Should().ContainSingle(p => p.Id == id).Subject;
+        program.Revision.Should().Be(revision);
+        program.Verification.Should().Be(VerificationLevel.Custom);
+        catalog.WorkoutsById.Should().ContainKey("custom-a-1");
+        (await service.GetWorkoutAsync("custom-a-1"))!.Name.Should().Be("Jog");
+        (await service.GetProgramAsync(id))!.Name.Should().Be("My plan");
+    }
+
+    [TestMethod]
+    public async Task GetCatalog_AfterInvalidate_ReReadsCustomPrograms()
+    {
+        FakeCustomProgramRepository custom = new();
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+        await service.GetCatalogAsync();
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Later"), "custom-a");
+
+        (await service.GetCatalogAsync()).Programs.Should().BeEmpty();
+        service.InvalidateCustomPrograms();
+
+        (await service.GetCatalogAsync()).Programs.Should().ContainSingle(p => p.Name == "Later");
+    }
+
+    [TestMethod]
+    public async Task GetProgram_PinnedRevisionOfDeletedProgram_StillResolvesWithItsWorkouts()
+    {
+        FakeCustomProgramRepository custom = new();
+        var (id, first) = await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Old"), "custom-a");
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "New"), id);
+        await custom.DeleteAsync(id);
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+
+        (await service.GetProgramAsync(id)).Should().BeNull();
+        var pinned = await service.GetProgramAsync(id, first);
+
+        pinned!.Name.Should().Be("Old");
+        (await service.GetCatalogAsync()).WorkoutsById.Should().ContainKey("custom-a-1");
+    }
+
+    [TestMethod]
+    public async Task GetCatalog_InvalidCustomProgram_IsSkipped()
+    {
+        FakeCustomProgramRepository custom = new();
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Bad").Replace("custom-a-1", "nope"), "custom-a");
+        await custom.SaveNewRevisionAsync("{ not json", "custom-b");
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+
+        (await service.GetCatalogAsync()).Programs.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetCatalog_BundledProgramMarkedCustom_IsSkipped()
+    {
+        var sneaky = Fixture("sample-program.json").Replace("\"verification\": \"official\"", "\"verification\": \"custom\"");
+        CatalogService service = new(new FakeSource([sneaky]), new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
+
+        (await service.GetCatalogAsync()).Programs.Should().BeEmpty();
+    }
+
+    internal static string CustomJson(string id, string name)
+    {
+        CustomProgramDraft draft = new(
+            id,
+            name,
+            "#D9372B",
+            [[[new CustomSession("cardio"), new CustomSession($"{id}-1", Optional: true)], [new CustomSession("rest")], [new CustomSession("rest")], [new CustomSession("rest")], [new CustomSession("rest")], [new CustomSession("rest")], [new CustomSession("rest")]]],
+            [new Workout($"{id}-1", "Jog", 20, WorkoutKind.Cardio, null)]);
+        return CustomProgramFactory.Serialize(CustomProgramFactory.Create(draft, new DateOnly(2026, 11, 21)));
     }
 
     private static string Fixture(string name) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", "Fixtures", name));

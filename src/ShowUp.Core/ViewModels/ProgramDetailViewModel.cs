@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.CustomPrograms;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Localization;
 using ShowUp.Core.Messages;
@@ -33,6 +34,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly TimeProvider _time;
     private readonly IJournalDialogs _journalDialogs;
     private readonly IEntitlementService _entitlements;
+    private readonly ICustomProgramService _customPrograms;
     private readonly IMessenger _messenger;
     private SynchronizationContext? _context;
     private readonly ILogger<ProgramDetailViewModel> _logger;
@@ -53,6 +55,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         TimeProvider time,
         IJournalDialogs journalDialogs,
         IEntitlementService entitlements,
+        ICustomProgramService customPrograms,
         IMessenger messenger,
         ILogger<ProgramDetailViewModel> logger)
     {
@@ -66,6 +69,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _time = time;
         _journalDialogs = journalDialogs;
         _entitlements = entitlements;
+        _customPrograms = customPrograms;
         _messenger = messenger;
         _logger = logger;
         StartDate = _time.GetLocalNow();
@@ -101,17 +105,34 @@ public partial class ProgramDetailViewModel : ViewModelBase
     [ObservableProperty]
     public partial string TrackSummary { get; private set; } = "";
 
+    /// <summary>"Custom · v2" for the user's own programs.</summary>
+    [ObservableProperty]
+    public partial string VersionText { get; private set; } = "";
+
+    /// <summary>A custom program and Pro: it can be edited, deleted and started.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowCustomLockedHint))]
+    [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(DeleteCommand), nameof(StartCommand))]
+    public partial bool CanEditCustom { get; private set; }
+
+    public bool IsCustom => Program?.IsCustom == true;
+
+    /// <summary>A custom program after a lapse: visible, but read-only until Pro is back.</summary>
+    public bool ShowCustomLockedHint => IsCustom && !CanEditCustom;
+
+    public string FamilyText => IsCustom ? _localizer["CustomProgramFamily"] : Program?.Family ?? "";
+
     public bool ShowContent => Program is not null;
 
     public bool ShowTrackSelector => Tracks.Count > 1;
 
     public bool IsCommunityVerified => Program?.Verification == VerificationLevel.Community;
 
-    public string VerificationGlyph => IsCommunityVerified ? "\uE716" : "\uE930";
+    public string VerificationGlyph => IsCustom ? "\uE70F" : IsCommunityVerified ? "\uE716" : "\uE930";
 
-    public string VerificationText => _localizer[IsCommunityVerified ? "VerificationCommunity" : "VerificationOfficial"];
+    public string VerificationText => IsCustom ? VersionText : _localizer[IsCommunityVerified ? "VerificationCommunity" : "VerificationOfficial"];
 
-    public string VerificationTooltip => _localizer[IsCommunityVerified ? "VerificationCommunityTooltip" : "VerificationOfficialTooltip"];
+    public string VerificationTooltip => _localizer[IsCustom ? "CustomProgramBadgeTooltip" : IsCommunityVerified ? "VerificationCommunityTooltip" : "VerificationOfficialTooltip"];
 
     public Uri ReportIssueUri => new($"{IssueUrl}?title={Uri.EscapeDataString($"Calendar issue: {Program?.Name}")}");
 
@@ -153,17 +174,24 @@ public partial class ProgramDetailViewModel : ViewModelBase
             }
 
             _workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
+            VersionText = program.IsCustom
+                ? _localizer["CustomProgramBadgeFormat", await _customPrograms.GetVersionNumberAsync(program.Id, program.Revision)]
+                : "";
             _all = await _enrollments.GetAllAsync();
             _enrollment = _all.FirstOrDefault(e => e.Program.Id == program.Id);
             IsActiveProgram = _enrollment is not null;
             UpdateMultiProgramHint();
             Program = program;
+            CanEditCustom = program.IsCustom && _customPrograms.CanEdit;
             PageTitle = program.Name;
             SelectedTrack = program.Tracks.FirstOrDefault();
             Tracks = program.Tracks;
             OnPropertyChanged(nameof(ShowContent));
             OnPropertyChanged(nameof(ShowTrackSelector));
             OnPropertyChanged(nameof(IsCommunityVerified));
+            OnPropertyChanged(nameof(IsCustom));
+            OnPropertyChanged(nameof(ShowCustomLockedHint));
+            OnPropertyChanged(nameof(FamilyText));
             OnPropertyChanged(nameof(VerificationGlyph));
             OnPropertyChanged(nameof(VerificationText));
             OnPropertyChanged(nameof(VerificationTooltip));
@@ -199,7 +227,48 @@ public partial class ProgramDetailViewModel : ViewModelBase
     [RelayCommand]
     private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
-    private bool CanStart => Program is not null && SelectedTrack is not null;
+    private bool CanStart => Program is not null && SelectedTrack is not null && (!IsCustom || CanEditCustom);
+
+    [RelayCommand(CanExecute = nameof(CanEditCustom))]
+    private void Edit()
+    {
+        if (Program is { IsCustom: true } program)
+        {
+            _navigation.Navigate<ScheduleBuilderViewModel>(program.Id);
+        }
+    }
+
+    /// <summary>Hides the program after a confirmation; running enrollments keep their pinned revision and history.</summary>
+    [RelayCommand(CanExecute = nameof(CanEditCustom))]
+    public async Task DeleteAsync()
+    {
+        if (Program is not { IsCustom: true } program)
+        {
+            return;
+        }
+
+        var answer = await _confirmation.ShowAsync(
+            _localizer["CustomProgramDeleteTitle"],
+            _localizer[IsActiveProgram ? "CustomProgramDeleteRunningMessageFormat" : "CustomProgramDeleteMessageFormat", program.Name]);
+        if (answer != ConfirmationResult.Confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            await _customPrograms.DeleteAsync(program.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Deleting custom program {ProgramId} failed.", program.Id);
+            CanEditCustom = _customPrograms.CanEdit;
+            await _dialogs.ShowAsync(_localizer["CustomProgramDeleteFailedTitle"], _localizer["CustomProgramDeleteFailedMessage"]);
+            return;
+        }
+
+        _navigation.GoBack();
+    }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
     public async Task StartAsync()
@@ -268,7 +337,11 @@ public partial class ProgramDetailViewModel : ViewModelBase
         return picked < min ? min : picked > max ? max : picked;
     }
 
-    private void OnEntitlementsChanged(object? sender, EventArgs e) => UpdateMultiProgramHint();
+    private void OnEntitlementsChanged(object? sender, EventArgs e) => Post(() =>
+    {
+        UpdateMultiProgramHint();
+        CanEditCustom = IsCustom && _customPrograms.CanEdit;
+    });
 
     public async Task ReloadEnrollmentsAsync()
     {
