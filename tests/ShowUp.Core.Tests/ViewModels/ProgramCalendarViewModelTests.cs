@@ -274,7 +274,8 @@ public sealed class ProgramCalendarViewModelTests
             new FakeMarkingFeedback(),
             _confirmation,
             _prompts,
-            _navigator);
+            _navigator,
+            NullLogger<ProgramCalendarViewModel>.Instance);
     }
 
     private sealed class FakeStringLocalizer : IStringLocalizer

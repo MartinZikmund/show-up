@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
@@ -25,6 +26,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private readonly IConfirmationDialogService _confirmation;
     private readonly ICalendarPrompts _prompts;
     private readonly ISectionNavigator _navigator;
+    private readonly ILogger<ProgramCalendarViewModel> _logger;
 
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private readonly HashSet<int> _inFlight = [];
@@ -39,6 +41,9 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private ITimer? _midnightTimer;
     private bool _isActive;
 
+    // While this view model writes, it refreshes itself; the echoed TrackingChangedMessage is skipped.
+    private int _ownWrites;
+
     public ProgramCalendarViewModel(
         IStringLocalizer localizer,
         IActiveEnrollmentService enrollments,
@@ -50,7 +55,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         IMarkingFeedback feedback,
         IConfirmationDialogService confirmation,
         ICalendarPrompts prompts,
-        ISectionNavigator navigator)
+        ISectionNavigator navigator,
+        ILogger<ProgramCalendarViewModel> logger)
     {
         _localizer = localizer;
         _enrollments = enrollments;
@@ -63,6 +69,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         _confirmation = confirmation;
         _prompts = prompts;
         _navigator = navigator;
+        _logger = logger;
         PageTitle = localizer["Calendar"];
     }
 
@@ -102,7 +109,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     public override void ViewLoaded()
     {
         base.ViewLoaded();
-        _ = LoadAsync();
+        RunInBackground(LoadAsync);
     }
 
     public override void ViewUnloaded()
@@ -118,7 +125,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         {
             _isActive = true;
             _context = SynchronizationContext.Current;
-            _messenger.Register<ProgramCalendarViewModel, TrackingChangedMessage>(this, static (r, _) => r.Post(r.RefreshInBackground));
+            _messenger.Register<ProgramCalendarViewModel, TrackingChangedMessage>(this, static (r, _) => r.OnTrackingChanged());
         }
 
         await RefreshAsync();
@@ -243,14 +250,14 @@ public partial class ProgramCalendarViewModel : ViewModelBase
                 }
 
                 day.AnimateMarks = false;
-                await _enrollments.CrossAsync(day.DayIndex, session, result.InkJson, completionId);
+                await WriteAsync(() => _enrollments.CrossAsync(day.DayIndex, session, result.InkJson, completionId));
                 await RefreshAsync();
             }
             else
             {
                 var showMoment = CrossMomentPolicy.ShouldShow(_preferences.CrossMomentMode, day.IsToday);
                 day.AnimateMarks = !showMoment;
-                await _enrollments.CrossAsync(day.DayIndex, session, completionId: completionId);
+                await WriteAsync(() => _enrollments.CrossAsync(day.DayIndex, session, completionId: completionId));
                 await RefreshAsync();
                 if (showMoment)
                 {
@@ -293,7 +300,11 @@ public partial class ProgramCalendarViewModel : ViewModelBase
                 return;
             }
 
-            await _enrollments.UncrossAsync(day.DayIndex, session);
+            await WriteAsync(() => _enrollments.UncrossAsync(day.DayIndex, session));
+            await RefreshAsync();
+        }
+        catch (InvalidOperationException)
+        {
             await RefreshAsync();
         }
         finally
@@ -310,7 +321,15 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             return;
         }
 
-        await _enrollments.LogBonusAsync(title.Trim(), day.Date);
+        try
+        {
+            await WriteAsync(() => _enrollments.LogBonusAsync(title.Trim(), day.Date));
+        }
+        catch (InvalidOperationException)
+        {
+            // The enrollment ended under us; the refresh shows what's true now.
+        }
+
         await RefreshAsync();
     }
 
@@ -325,7 +344,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
         try
         {
-            await _enrollments.ShiftAsync(Today, days);
+            await WriteAsync(() => _enrollments.ShiftAsync(Today, days));
         }
         catch (InvalidOperationException)
         {
@@ -345,7 +364,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 #if DEBUG
         if (await _catalog.GetProgramAsync("insanity") is { } program && program.Tracks.FirstOrDefault(t => t.Id == "classic") is { } track)
         {
-            await _enrollments.EnrollAsync(program, track, Today.AddDays(-9));
+            await WriteAsync(() => _enrollments.EnrollAsync(program, track, Today.AddDays(-9)));
             await RefreshAsync();
         }
 #else
@@ -421,10 +440,42 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
         var now = _time.GetLocalNow();
         var due = now.Date.AddDays(1) - now.DateTime + TimeSpan.FromSeconds(1);
-        _midnightTimer = _time.CreateTimer(_ => Post(RefreshInBackground), null, due, Timeout.InfiniteTimeSpan);
+        _midnightTimer = _time.CreateTimer(_ => Post(() => RunInBackground(RefreshAsync)), null, due, Timeout.InfiniteTimeSpan);
     }
 
-    private void RefreshInBackground() => _ = RefreshAsync();
+    private void OnTrackingChanged()
+    {
+        if (Volatile.Read(ref _ownWrites) == 0)
+        {
+            Post(() => RunInBackground(RefreshAsync));
+        }
+    }
+
+    private async Task WriteAsync(Func<Task> write)
+    {
+        Interlocked.Increment(ref _ownWrites);
+        try
+        {
+            await write();
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _ownWrites);
+        }
+    }
+
+    // Fire-and-forget loads must never take the app down; log and keep showing the last good state.
+    private async void RunInBackground(Func<Task> work)
+    {
+        try
+        {
+            await work();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refreshing the program calendar failed.");
+        }
+    }
 
     // Timers and messages can arrive off the UI thread; the collections must change on it.
     private void Post(Action action)
