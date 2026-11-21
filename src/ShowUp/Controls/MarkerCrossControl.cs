@@ -10,7 +10,8 @@ namespace ShowUp.Controls;
 /// <summary>
 /// Hand-drawn marker X: <see cref="Strokes"/> 1 draws the top-left to bottom-right diagonal, 2 completes the X.
 /// Increases animate stroke by stroke (with sound + haptics), decreases redraw instantly.
-/// <see cref="Inks"/> adds the user's drawn crosses on top, scaled to the control, so a mixed day shows both.
+/// <see cref="Inks"/> adds the user's drawn crosses on top, scaled to the control, so a mixed day shows both:
+/// the control must fill the whole cell, or the ink lands shrunk and offset.
 /// </summary>
 [TemplatePart(Name = FirstPartName, Type = typeof(Path))]
 [TemplatePart(Name = FirstUnderPartName, Type = typeof(Path))]
@@ -72,6 +73,9 @@ public sealed partial class MarkerCrossControl : Control
         nameof(Inks), typeof(IReadOnlyList<string>), typeof(MarkerCrossControl),
         new PropertyMetadata(null, (d, _) => ((MarkerCrossControl)d).UpdateInk()));
 
+    public static readonly DependencyProperty BleedBrushProperty = DependencyProperty.Register(
+        nameof(BleedBrush), typeof(Brush), typeof(MarkerCrossControl), new PropertyMetadata(null));
+
     public static readonly DependencyProperty BleedOpacityProperty = DependencyProperty.Register(
         nameof(BleedOpacity), typeof(double), typeof(MarkerCrossControl), new PropertyMetadata(0.35));
 
@@ -129,7 +133,14 @@ public sealed partial class MarkerCrossControl : Control
         set => SetValue(InksProperty, value);
     }
 
-    /// <summary>The bleed's opacity; the style sets it from <c>MarkerBleedOpacity</c> (lower on the dark theme).</summary>
+    /// <summary>The wider stroke under the ink; <c>MarkerBleedBrush</c>, tinted toward the board on the dark theme.</summary>
+    public Brush? BleedBrush
+    {
+        get => (Brush?)GetValue(BleedBrushProperty);
+        set => SetValue(BleedBrushProperty, value);
+    }
+
+    /// <summary>The bleed's opacity; the style sets it from <c>MarkerBleedOpacity</c>.</summary>
     public double BleedOpacity
     {
         get => (double)GetValue(BleedOpacityProperty);

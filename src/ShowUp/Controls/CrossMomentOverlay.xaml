@@ -75,6 +75,7 @@
                         AutomationProperties.AutomationId="CrossMomentInkPad"
                         AutomationProperties.HelpText="{markup:Localize Key=DrawAnnouncement}"
                         AutomationProperties.Name="{markup:Localize Key=DrawPadName}"
+                        BleedBrush="{ThemeResource MarkerBleedBrush}"
                         BleedOpacity="{ThemeResource MarkerBleedOpacity}"
                         InkChanged="Pad_InkChanged"
                         MarkerBrush="{ThemeResource MarkerBrush}"

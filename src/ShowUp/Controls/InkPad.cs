@@ -20,6 +20,10 @@ public sealed partial class InkPad : Grid
         nameof(MarkerBrush), typeof(Brush), typeof(InkPad),
         new PropertyMetadata(null, (d, e) => ((InkPad)d).ForEachView(v => v.MarkerBrush = (Brush?)e.NewValue)));
 
+    public static readonly DependencyProperty BleedBrushProperty = DependencyProperty.Register(
+        nameof(BleedBrush), typeof(Brush), typeof(InkPad),
+        new PropertyMetadata(null, (d, e) => ((InkPad)d).ForEachView(v => v.BleedBrush = (Brush?)e.NewValue)));
+
     public static readonly DependencyProperty BleedOpacityProperty = DependencyProperty.Register(
         nameof(BleedOpacity), typeof(double), typeof(InkPad),
         new PropertyMetadata(0.35, (d, e) => ((InkPad)d).ForEachView(v => v.BleedOpacity = (double)e.NewValue)));
@@ -61,6 +65,12 @@ public sealed partial class InkPad : Grid
     {
         get => (Brush?)GetValue(MarkerBrushProperty);
         set => SetValue(MarkerBrushProperty, value);
+    }
+
+    public Brush? BleedBrush
+    {
+        get => (Brush?)GetValue(BleedBrushProperty);
+        set => SetValue(BleedBrushProperty, value);
     }
 
     public double BleedOpacity

@@ -22,7 +22,8 @@ phones and as a popup on wider windows. The feel reference is
 | `StrokeThicknessScale` | 1 | Multiplies the computed width |
 | `AnimateChanges` | true | Animate increases; decreases always redraw instantly |
 | `Inks` | null | The user's drawn crosses (`InkCodec` JSON), one per session crossed by drawing |
-| `BleedOpacity` | `{ThemeResource MarkerBleedOpacity}` | Opacity of the wider bleed under each stroke |
+| `BleedBrush` | `{ThemeResource MarkerBleedBrush}` | Colour of the wider bleed under each stroke |
+| `BleedOpacity` | `{ThemeResource MarkerBleedOpacity}` | Opacity of that bleed |
 
 Ink is scaled to the whole control, so the control must fill the cell; `InkView` renders it with
 the same two layers.
@@ -38,8 +39,7 @@ A mixed day (some sessions auto, some drawn) draws both. Set `Strokes` from
 
 Each stroke is three `Path`s: the main line at `9 × min(w, h) / 96` (never below 0.6×, then a
 seeded ±8% per stroke from `MarkerGeometry.WidthFactor`) at 90% opacity; a 1.35× wider bleed,
-drawn underneath both strokes, at `MarkerBleedOpacity` (0.35 on paper and in high contrast, 0.18 on
-the chalkboard, where chalk white at 35% read as a grey rim); and a thin (0.35×) streak at 50%, offset sideways by 0.2× the
+drawn underneath both strokes, in `MarkerBleedBrush` at `MarkerBleedOpacity` (marker red at 35% on paper and in high contrast; on the chalkboard a dust tone tinted toward the board, `#494D4F`, at 100%, because chalk white at 35% read as a grey rim); and a thin (0.35×) streak at 50%, offset sideways by 0.2× the
 width, for ink texture. No filters, so it costs the same on every head. An increase animates
 `StrokeDashOffset` over 180 ms with ease-out, the second stroke 90 ms after the first on a 0 → 2
 jump. With animations off in the OS (`UISettings.AnimationsEnabled`) the X lands instantly.

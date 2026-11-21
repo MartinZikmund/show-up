@@ -19,6 +19,10 @@ public sealed partial class InkView : Grid
         nameof(MarkerBrush), typeof(Brush), typeof(InkView),
         new PropertyMetadata(null, (d, _) => ((InkView)d).Restyle()));
 
+    public static readonly DependencyProperty BleedBrushProperty = DependencyProperty.Register(
+        nameof(BleedBrush), typeof(Brush), typeof(InkView),
+        new PropertyMetadata(null, (d, _) => ((InkView)d).Restyle()));
+
     public static readonly DependencyProperty BleedOpacityProperty = DependencyProperty.Register(
         nameof(BleedOpacity), typeof(double), typeof(InkView),
         new PropertyMetadata(0.35, (d, _) => ((InkView)d).Restyle()));
@@ -46,7 +50,14 @@ public sealed partial class InkView : Grid
         set => SetValue(MarkerBrushProperty, value);
     }
 
-    /// <summary>The bleed's opacity: 0.35 on paper, lower on the chalkboard (<c>MarkerBleedOpacity</c>).</summary>
+    /// <summary>The bleed's colour (<c>MarkerBleedBrush</c>); falls back to <see cref="MarkerBrush"/>.</summary>
+    public Brush? BleedBrush
+    {
+        get => (Brush?)GetValue(BleedBrushProperty);
+        set => SetValue(BleedBrushProperty, value);
+    }
+
+    /// <summary>The bleed's opacity (<c>MarkerBleedOpacity</c>).</summary>
     public double BleedOpacity
     {
         get => (double)GetValue(BleedOpacityProperty);
@@ -114,7 +125,7 @@ public sealed partial class InkView : Grid
     {
         foreach (var (under, main) in _paths)
         {
-            under.Stroke = MarkerBrush;
+            under.Stroke = BleedBrush ?? MarkerBrush;
             main.Stroke = MarkerBrush;
             under.Opacity = BleedOpacity * InkOpacity;
             main.Opacity = MainOpacity * InkOpacity;
