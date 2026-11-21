@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.UI.Xaml;
 using ShowUp.Core.Marking;
@@ -228,7 +229,7 @@ public sealed class ProgramCalendarViewModelTests
     private ProgramCalendarViewModel CreateViewModel(FakeCatalogService catalog)
     {
         WeakReferenceMessenger messenger = new();
-        _service = new(_repository, catalog, messenger);
+        _service = new(_repository, catalog, messenger, NullLogger<ActiveEnrollmentService>.Instance);
         return new(
             new FakeStringLocalizer(),
             _service,

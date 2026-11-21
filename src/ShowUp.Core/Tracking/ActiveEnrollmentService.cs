@@ -1,11 +1,16 @@
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
 
 namespace ShowUp.Core.Tracking;
 
-public sealed class ActiveEnrollmentService(ITrackingRepository repository, ICatalogService catalog, IMessenger messenger) : IActiveEnrollmentService
+public sealed class ActiveEnrollmentService(
+    ITrackingRepository repository,
+    ICatalogService catalog,
+    IMessenger messenger,
+    ILogger<ActiveEnrollmentService> logger) : IActiveEnrollmentService
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private ActiveEnrollment? _active;
@@ -92,13 +97,24 @@ public sealed class ActiveEnrollmentService(ITrackingRepository repository, ICat
     private async Task<ActiveEnrollment> RequireAsync() =>
         await GetAsync() ?? throw new InvalidOperationException("There is no active enrollment.");
 
-    // Newest first; an enrollment whose program or track left the catalog is skipped, not fatal.
+    // Newest first. A pinned revision that left the catalog falls back to the latest one (warned);
+    // an enrollment whose program or track is gone entirely is skipped, not fatal.
     private async Task<ActiveEnrollment?> LoadAsync()
     {
         var enrollments = await repository.GetActiveEnrollmentsAsync();
         foreach (var enrollment in enrollments.OrderByDescending(e => e.CreatedAt))
         {
             var program = await catalog.GetProgramAsync(enrollment.ProgramId, enrollment.ProgramRevision);
+            if (program is null && await catalog.GetProgramAsync(enrollment.ProgramId) is { } latest)
+            {
+                logger.LogWarning(
+                    "Program '{ProgramId}' revision {Pinned} is not in the catalog; using revision {Latest}.",
+                    enrollment.ProgramId,
+                    enrollment.ProgramRevision,
+                    latest.Revision);
+                program = latest;
+            }
+
             if (program?.Tracks.FirstOrDefault(t => t.Id == enrollment.TrackId) is not { } track)
             {
                 continue;

@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
@@ -25,7 +26,7 @@ public sealed class ActiveEnrollmentServiceTests
     {
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
         _repository = new(_time);
-        _service = new(_repository, _catalog, _messenger);
+        _service = new(_repository, _catalog, _messenger, NullLogger<ActiveEnrollmentService>.Instance);
     }
 
     [TestMethod]
