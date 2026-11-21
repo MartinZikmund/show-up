@@ -202,7 +202,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Crosses the day's lowest undone session: draw-it-yourself or the auto marker, per the user's style.</summary>
+    /// <summary>Crosses the day's lowest undone session (optional ones too): draw-it-yourself or the auto marker, per the user's style.</summary>
     [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task CrossNextAsync(CalendarDayViewModel? day)
     {
@@ -217,7 +217,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             return;
         }
 
-        if (day.IsComplete || !_inFlight.Add(day.DayIndex))
+        // A complete day can still have an optional session left to cross.
+        if (!day.CanCross || !_inFlight.Add(day.DayIndex))
         {
             return;
         }

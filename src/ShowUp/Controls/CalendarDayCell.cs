@@ -69,7 +69,7 @@ public sealed partial class CalendarDayCell : Button
 
         Click += (_, _) =>
         {
-            if (Day is { IsComplete: true })
+            if (Day is { CanCross: false })
             {
                 _completeFlyout.ShowAt(this);
             }

@@ -29,7 +29,11 @@ public sealed partial class CalendarDayViewModel : ObservableObject
     public partial string DateLabel { get; private set; } = "";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCross))]
     public partial IReadOnlyList<SessionItem> Sessions { get; private set; } = [];
+
+    /// <summary>A session is left to cross, optional ones included; otherwise a tap offers to uncross.</summary>
+    public bool CanCross => Sessions.Any(s => !s.IsDone);
 
     /// <summary>Session names joined for display ("Pure Cardio + Cardio Abs").</summary>
     [ObservableProperty]
@@ -58,7 +62,7 @@ public sealed partial class CalendarDayViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsRestDay { get; private set; }
 
-    /// <summary>Nothing left to cross: a tap offers to uncross instead.</summary>
+    /// <summary>Every required session is crossed.</summary>
     [ObservableProperty]
     public partial bool IsComplete { get; private set; }
 
