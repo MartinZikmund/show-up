@@ -149,6 +149,39 @@ public class CatalogServiceTests
         (await service.GetCatalogAsync()).Programs.Should().BeEmpty();
     }
 
+    [TestMethod]
+    public async Task GetCatalog_InvalidatedWhileMerging_DoesNotCacheTheStaleMerge()
+    {
+        FakeCustomProgramRepository custom = new() { GetAllGate = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+        var merging = service.GetCatalogAsync();
+        await custom.GetAllEntered.Task;
+
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Mid-merge"), "custom-a");
+        service.InvalidateCustomPrograms();
+        custom.GetAllGate.SetResult();
+        (await merging).Programs.Should().BeEmpty("that merge read the repository before the save");
+        custom.GetAllGate = null;
+
+        (await service.GetCatalogAsync()).Programs.Should().ContainSingle(p => p.Name == "Mid-merge");
+    }
+
+    [TestMethod]
+    public async Task GetCatalog_PinnedAndLatestRevision_ListEachCustomWorkoutOnce()
+    {
+        FakeCustomProgramRepository custom = new();
+        var (id, first) = await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Old"), "custom-a");
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "New").Replace("\"Jog\"", "\"Jog (renamed)\""), id);
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+        await service.GetProgramAsync(id, first);
+
+        var catalog = await service.GetCatalogAsync();
+        ShowUp.Core.ViewModels.BonusWorkoutDialogViewModel bonus = new(catalog.Workouts, new DateOnly(2026, 11, 21), new DateOnly(2026, 11, 21)) { Query = "jog" };
+
+        catalog.Workouts.Should().ContainSingle(w => w.Id == "custom-a-1").Which.Name.Should().Be("Jog (renamed)");
+        bonus.Suggestions.Should().ContainSingle();
+    }
+
     internal static string CustomJson(string id, string name)
     {
         CustomProgramDraft draft = new(

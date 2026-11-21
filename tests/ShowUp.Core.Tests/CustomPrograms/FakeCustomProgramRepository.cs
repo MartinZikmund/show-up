@@ -10,13 +10,25 @@ internal sealed class FakeCustomProgramRepository : ICustomProgramRepository
 
     public int GetAllCalls { get; private set; }
 
-    public Task<IReadOnlyList<CustomProgramEntity>> GetAllAsync()
+    /// <summary>When set, <see cref="GetAllAsync"/> signals <see cref="GetAllEntered"/> and waits for it.</summary>
+    public TaskCompletionSource? GetAllGate { get; set; }
+
+    public TaskCompletionSource GetAllEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public async Task<IReadOnlyList<CustomProgramEntity>> GetAllAsync()
     {
         GetAllCalls++;
-        return Task.FromResult<IReadOnlyList<CustomProgramEntity>>(
+        IReadOnlyList<CustomProgramEntity> rows =
         [
             .. _rows.GroupBy(r => r.ProgramId!).Where(g => !_deleted.Contains(g.Key)).Select(g => g.OrderByDescending(r => r.Revision).First()),
-        ]);
+        ];
+        if (GetAllGate is { } gate)
+        {
+            GetAllEntered.TrySetResult();
+            await gate.Task;
+        }
+
+        return rows;
     }
 
     public Task<CustomProgramEntity?> GetAsync(string programId, int? revision = null)

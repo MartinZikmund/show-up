@@ -32,6 +32,19 @@ public sealed class CustomProgramFactoryTests
     }
 
     [TestMethod]
+    public void Create_LongName_TruncatesTheProgramTrackAndPhaseAlike()
+    {
+        string name = new('x', CustomProgramFactory.MaxNameLength + 10);
+        CustomProgramDraft draft = new("custom-a", name, "#000000", [[.. Enumerable.Repeat<IReadOnlyList<CustomSession>>([new CustomSession("rest")], 7)]], []);
+
+        var program = CustomProgramFactory.Create(draft, new DateOnly(2026, 11, 21));
+
+        program.Name.Should().HaveLength(CustomProgramFactory.MaxNameLength);
+        program.Tracks[0].Name.Should().Be(program.Name);
+        program.Tracks[0].Phases[0].Name.Should().Be(program.Name);
+    }
+
+    [TestMethod]
     public void Parse_Unreadable_ReturnsNull() =>
         CustomProgramFactory.Parse(new CustomProgramEntity { SubjectKey = "c:custom-a", Revision = 1, ProgramJson = "{" }).Should().BeNull();
 

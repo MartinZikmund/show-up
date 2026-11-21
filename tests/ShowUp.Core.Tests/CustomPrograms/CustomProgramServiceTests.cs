@@ -110,6 +110,22 @@ public sealed class CustomProgramServiceTests
     }
 
     [TestMethod]
+    public async Task Cross_LapsedPrimaryCustomProgram_StaysCrossable()
+    {
+        await _service.SaveAsync(Draft("Mine", "run"));
+        var program = (await _catalog.GetProgramAsync(Id))!;
+        FakeTrackingRepository tracking = new(_time);
+        var enrollments = TestEnrollments.Create(tracking, _catalog, _messenger, entitlements: _entitlements);
+        var active = await enrollments.EnrollAsync(program, program.Tracks[0], new DateOnly(2026, 11, 21));
+        _entitlements.IsPro = false;
+
+        await enrollments.CrossAsync(active.Id, 0, 0);
+
+        enrollments.IsReadOnly((await enrollments.GetAsync(active.Id))!).Should().BeFalse();
+        (await enrollments.GetCompletionsAsync(active.Id)).Should().ContainSingle();
+    }
+
+    [TestMethod]
     public async Task Enroll_CustomProgramWithoutPro_Throws()
     {
         await _service.SaveAsync(Draft("Mine", "run"));

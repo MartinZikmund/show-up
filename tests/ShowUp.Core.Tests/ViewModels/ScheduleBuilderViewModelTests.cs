@@ -297,6 +297,65 @@ public sealed class ScheduleBuilderViewModelTests
         _navigation.BackCount.Should().Be(1);
     }
 
+    [TestMethod]
+    public async Task Session_ButtonsAreNamedAfterTheWorkout()
+    {
+        var viewModel = await NewAsync();
+        var day = viewModel.Weeks[0].Days[1];
+        await AddAsync(day, "run");
+        await AddAsync(day, "abs");
+
+        var abs = day.Sessions[1];
+
+        abs.MoveUpName.Should().Be("BuilderMoveUpFormat(Abs)");
+        abs.MoveDownName.Should().Be("BuilderMoveDownFormat(Abs)");
+        abs.MoreName.Should().Be("BuilderSessionMoreFormat(Abs)");
+        (abs.UpAutomationId, abs.DownAutomationId, abs.MoreAutomationId).Should().Be(("BuilderSession_W1D2S2_Up", "BuilderSession_W1D2S2_Down", "BuilderSession_W1D2S2_More"));
+        abs.MoveUpCommand.Execute(null);
+        abs.UpAutomationId.Should().Be("BuilderSession_W1D2S1_Up");
+    }
+
+    [TestMethod]
+    public async Task CopyToAll_Declined_LeavesTheOtherWeeksAlone()
+    {
+        var viewModel = await NewAsync();
+        viewModel.WeekCount = 2;
+        FillWeek(viewModel.Weeks[0]);
+        _confirmation.Result = ShowUp.Services.Dialogs.ConfirmationResult.Denied;
+
+        await viewModel.Weeks[0].CopyToAllCommand.ExecuteAsync(null);
+
+        _confirmation.Asked.Should().ContainSingle().Which.Title.Should().Be("BuilderCopyAllTitle(1)");
+        viewModel.ToDraft().Weeks[1].Should().OnlyContain(d => d.Count == 0);
+    }
+
+    [TestMethod]
+    public async Task CopyToAll_OneWeek_IsDisabledUntilThereAreTwo()
+    {
+        var viewModel = await NewAsync();
+
+        viewModel.Weeks[0].CanCopyToAll.Should().BeFalse();
+        await viewModel.Weeks[0].CopyToAllCommand.ExecuteAsync(null);
+        viewModel.WeekCount = 2;
+
+        _confirmation.Asked.Should().BeEmpty();
+        viewModel.Weeks[0].CanCopyToAll.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task CopyToNext_ThenEditingTheSource_LeavesTheCopyAlone()
+    {
+        var viewModel = await NewAsync();
+        viewModel.WeekCount = 2;
+        await AddAsync(viewModel.Weeks[0].Days[0], "run");
+        viewModel.Weeks[0].CopyToNextCommand.Execute(null);
+
+        await AddAsync(viewModel.Weeks[0].Days[0], "abs");
+        viewModel.Weeks[0].Days[0].Sessions[0].ToggleOptionalCommand.Execute(null);
+
+        viewModel.ToDraft().Weeks[1][0].Should().Equal(new CustomSession("run"));
+    }
+
     private static IReadOnlyList<IReadOnlyList<CustomSession>> Week(string first) =>
         [[new CustomSession(first)], .. Enumerable.Repeat<IReadOnlyList<CustomSession>>([new CustomSession("rest")], 6)];
 
