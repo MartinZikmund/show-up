@@ -1,5 +1,7 @@
 # Show Up
 
+[![CI](https://github.com/MartinZikmund/show-up/actions/workflows/ci.yml/badge.svg)](https://github.com/MartinZikmund/show-up/actions/workflows/ci.yml)
+
 **Cross off your home workouts like a marker on a paper calendar.**
 
 Show Up is a home-workout tracker built for accountability. Pick a program, and every finished
