@@ -1,0 +1,8 @@
+[
+  { "id": "insanity-fit-test", "name": "Fit Test", "durationMinutes": 30, "kind": "fitTest", "family": "Insanity" },
+  { "id": "insanity-plyometric-cardio-circuit", "name": "Plyometric Cardio Circuit", "durationMinutes": 40, "kind": "cardio", "family": "Insanity" },
+  { "id": "insanity-cardio-recovery", "name": "Cardio Recovery", "durationMinutes": 40, "kind": "recovery", "family": "Insanity" },
+  { "id": "insanity-pure-cardio", "name": "Pure Cardio", "durationMinutes": 40, "kind": "cardio", "family": "Insanity" },
+  { "id": "insanity-cardio-abs", "name": "Cardio Abs", "durationMinutes": 20, "kind": "abs", "family": "Insanity" },
+  { "id": "rest", "name": "Rest", "durationMinutes": null, "kind": "rest", "family": null }
+]

@@ -1,0 +1,44 @@
+{
+  "id": "sample",
+  "revision": 1,
+  "name": "Sample",
+  "family": "Insanity",
+  "description": "Fixture program",
+  "heroImage": null,
+  "accentColor": "#FF5500",
+  "verification": "official",
+  "sources": [ { "url": "https://example.com/guide", "confirms": "Schedule" } ],
+  "verifiedOn": "2026-11-21",
+  "tracks": [
+    {
+      "id": "main",
+      "name": "Main",
+      "phases": [
+        {
+          "name": "Month 1",
+          "weeks": [ { "days": [
+            { "sessions": [ { "workoutId": "fit-test" } ] },
+            { "sessions": [ { "workoutId": "cardio" }, { "workoutId": "abs" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] }
+          ] } ]
+        },
+        {
+          "name": "Month 2",
+          "weeks": [ { "days": [
+            { "sessions": [ { "workoutId": "fit-test" } ] },
+            { "sessions": [ { "workoutId": "cardio" }, { "workoutId": "abs" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] },
+            { "sessions": [ { "workoutId": "rest" } ] }
+          ] } ]
+        }
+      ]
+    }
+  ]
+}
