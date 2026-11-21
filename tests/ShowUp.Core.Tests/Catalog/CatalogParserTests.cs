@@ -33,6 +33,59 @@ public class CatalogParserTests
     }
 
     [TestMethod]
+    public void TryParseProgram_Valid_ReturnsProgram()
+    {
+        bool ok = CatalogParser.TryParseProgram(Fixture("sample-program.json"), out var program, out var error);
+
+        ok.Should().BeTrue();
+        error.Should().BeNull();
+        program!.Id.Should().Be("sample");
+    }
+
+    [TestMethod]
+    public void TryParseProgram_MissingTracks_ReturnsError()
+    {
+        string json = Fixture("sample-program.json").Replace("\"tracks\"", "\"extra\"");
+
+        bool ok = CatalogParser.TryParseProgram(json, out var program, out var error);
+
+        ok.Should().BeFalse();
+        program.Should().BeNull();
+        error.Should().NotBeNullOrEmpty();
+    }
+
+    [TestMethod]
+    public void TryParseProgram_UnknownProperty_ReturnsError()
+    {
+        string json = Fixture("sample-program.json").Replace("\"id\": \"sample\",", "\"id\": \"sample\", \"surprise\": 1,");
+
+        bool ok = CatalogParser.TryParseProgram(json, out _, out var error);
+
+        ok.Should().BeFalse();
+        error.Should().Contain("surprise");
+    }
+
+    [TestMethod]
+    public void TryParseProgram_NullTracks_ReturnsError()
+    {
+        string json = """{"id":"p","revision":1,"name":"n","family":"f","description":"d","heroImage":null,"accentColor":"#FFFFFF","verification":"official","sources":[],"verifiedOn":"2026-01-01","tracks":null}""";
+
+        CatalogParser.TryParseProgram(json, out _, out _).Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void Parse_MalformedProgram_Throws()
+    {
+        Action act = () => CatalogParser.Parse(1, Fixture("sample-workouts.json"), ["""{"id":"p"}"""]);
+
+        act.Should().Throw<System.Text.Json.JsonException>();
+    }
+
+    [TestMethod]
+    public void ParseWorkouts_Sample_ReturnsWorkouts() =>
+        CatalogParser.ParseWorkouts(Fixture("sample-workouts.json")).Should().NotBeEmpty();
+
+    [TestMethod]
     public void Locate_SecondPhaseFirstDay_ReturnsPhaseAndWeek()
     {
         ScheduleDay day = new([new ScheduledSession("rest")]);
