@@ -201,4 +201,34 @@ public sealed class JournalServiceTests : StorageTestBase
         (await _journal.HasMetricsAsync(2, 0)).Should().BeFalse();
         (await _journal.HasMetricsAsync(99, 0)).Should().BeFalse();
     }
+
+    [TestMethod]
+    public async Task DayDetail_UncrossThenUndoOrCancel_KeepsTheCross()
+    {
+        await _enrollments.CrossAsync(0, 0);
+        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), _preferences, NullLogger<DayDetailViewModel>.Instance);
+        await viewModel.LoadAsync(0);
+        var session = viewModel.Sessions[0];
+
+        viewModel.ToggleUncrossCommand.Execute(session);
+        session.Should().BeEquivalentTo(new { PendingUncross = true, ShowsCrossed = false, CanUncross = false });
+        viewModel.ToggleUncrossCommand.Execute(session);
+        session.Should().BeEquivalentTo(new { PendingUncross = false, ShowsCrossed = true, CanUncross = true });
+
+        // Cancel: the sheet is dropped without SaveAsync.
+        viewModel.ToggleUncrossCommand.Execute(session);
+
+        (await _enrollments.GetCompletionsAsync()).Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task DayDetail_UndoneSession_CannotBeMarked()
+    {
+        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), _preferences, NullLogger<DayDetailViewModel>.Instance);
+        await viewModel.LoadAsync(0);
+
+        viewModel.ToggleUncrossCommand.Execute(viewModel.Sessions[0]);
+
+        viewModel.Sessions[0].PendingUncross.Should().BeFalse();
+    }
 }
