@@ -59,6 +59,17 @@ public sealed class MetricInputViewModelTests
     public void Text_Duration_PrefilledAsMinutesAndSeconds() =>
         Create(MetricUnit.Duration, new MetricValue(754)).Text.Should().Be("12:34");
 
+    [TestMethod]
+    [DataRow(MetricUnit.Reps, "MetricInput_m", "")]
+    [DataRow(MetricUnit.Duration, "", "MetricInput_m")]
+    public void AutomationIds_OnlyTheVisibleBoxHasOne(MetricUnit unit, string number, string text)
+    {
+        var input = Create(unit);
+
+        input.NumberAutomationId.Should().Be(number);
+        input.TextAutomationId.Should().Be(text);
+    }
+
     private static MetricInputViewModel Create(MetricUnit unit, MetricValue? initial = null, bool metric = true) =>
         new(new WorkoutMetric("m", "Metric", unit), initial, new FakeStringLocalizer(), metric);
 }
