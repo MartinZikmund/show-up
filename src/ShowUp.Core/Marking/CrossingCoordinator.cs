@@ -1,3 +1,4 @@
+using ShowUp.Core.Services;
 using ShowUp.Services.Settings;
 using ShowUp.Core.Tracking;
 
@@ -27,7 +28,13 @@ public interface ICrossingCoordinator
     Task<bool> CrossAsync(CrossTarget target, CrossHooks hooks);
 }
 
-public sealed class CrossingCoordinator(IAppPreferences preferences, ICrossMoment crossMoment, IMarkingFeedback feedback, IActiveEnrollmentService enrollments)
+public sealed class CrossingCoordinator(
+    IAppPreferences preferences,
+    ICrossMoment crossMoment,
+    IMarkingFeedback feedback,
+    IActiveEnrollmentService enrollments,
+    IJournalService journal,
+    IJournalDialogs journalDialogs)
     : ICrossingCoordinator
 {
     public async Task<bool> CrossAsync(CrossTarget target, CrossHooks hooks)
@@ -40,7 +47,7 @@ public sealed class CrossingCoordinator(IAppPreferences preferences, ICrossMomen
         // The id is made up front: a day's first completion picks the wobble, and the moment must draw the same X.
         var completionId = Guid.NewGuid();
         var seed = target.DayCompletions.Count == 0 ? MarkerGeometry.SeedFrom(completionId) : target.DaySeed;
-        var info = MomentInfo(target, before, afterAuto, seed);
+        var info = MomentInfo(target, before, afterAuto, seed) with { LogResults = await LogResultsAsync(target) };
 
         if (preferences.CrossOffStyle == CrossOffStyle.DrawYourself)
         {
@@ -72,6 +79,11 @@ public sealed class CrossingCoordinator(IAppPreferences preferences, ICrossMomen
 
         return true;
     }
+
+    private async Task<Func<Task>?> LogResultsAsync(CrossTarget target) =>
+        await journal.GetResultsSheetAsync(target.DayIndex, target.Session) is null
+            ? null
+            : () => journalDialogs.LogResultsAsync(target.DayIndex, target.Session);
 
     private static CrossMomentInfo MomentInfo(CrossTarget target, int before, int afterAuto, int seed)
     {

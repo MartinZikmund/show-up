@@ -15,6 +15,7 @@ namespace ShowUp.Core.Tests.ViewModels;
 public sealed class ProgramDetailViewModelTests
 {
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 21, 10, 0, 0, TimeSpan.Zero));
+    private readonly RecordingJournalDialogs _journalDialogs = new();
     private readonly RecordingEnrollmentService _enrollments = new();
     private readonly StubConfirmationDialogService _confirmation = new();
     private readonly RecordingSectionNavigator _navigator = new();
@@ -257,5 +258,6 @@ public sealed class ProgramDetailViewModelTests
             _navigation,
             _dialogs,
             _time,
+            _journalDialogs,
             NullLogger<ProgramDetailViewModel>.Instance);
 }

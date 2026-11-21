@@ -6,6 +6,7 @@ using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
 using ShowUp.Services.Dialogs;
 using ShowUp.Services.Settings;
@@ -26,6 +27,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private readonly ICalendarPrompts _prompts;
     private readonly IBonusWorkoutDialog _bonusDialog;
     private readonly ISectionNavigator _navigator;
+    private readonly IJournalDialogs _journalDialogs;
+    private readonly INavigationService _navigation;
     private readonly ILogger<ProgramCalendarViewModel> _logger;
 
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
@@ -56,6 +59,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         ICalendarPrompts prompts,
         IBonusWorkoutDialog bonusDialog,
         ISectionNavigator navigator,
+        IJournalDialogs journalDialogs,
+        INavigationService navigation,
         ILogger<ProgramCalendarViewModel> logger)
     {
         _localizer = localizer;
@@ -69,6 +74,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         _prompts = prompts;
         _bonusDialog = bonusDialog;
         _navigator = navigator;
+        _journalDialogs = journalDialogs;
+        _navigation = navigation;
         _logger = logger;
         PageTitle = localizer["Calendar"];
     }
@@ -282,9 +289,10 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             return;
         }
 
+        BonusWorkoutEntity? logged = null;
         try
         {
-            await WriteAsync(() => _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
+            await WriteAsync(async () => logged = await _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
         }
         catch (InvalidOperationException)
         {
@@ -292,6 +300,35 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         }
 
         await RefreshAsync();
+        if (logged?.WorkoutId is { } id && _workouts.GetValueOrDefault(id) is { HasMetrics: true })
+        {
+            await _journalDialogs.LogBonusResultsAsync(logged);
+        }
+    }
+
+    /// <summary>A crossed day's sheet: sessions, notes, results, bonus workouts and uncross.</summary>
+    [RelayCommand]
+    private async Task OpenDayAsync(CalendarDayViewModel? day)
+    {
+        if (day is null || _active is null)
+        {
+            return;
+        }
+
+        await _journalDialogs.ShowDayAsync(day.DayIndex);
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private Task EditProgramNoteAsync() => _active is null ? Task.CompletedTask : _journalDialogs.EditProgramNoteAsync();
+
+    [RelayCommand]
+    private void OpenResults()
+    {
+        if (_active is not null)
+        {
+            _navigation.Navigate<ProgramResultsViewModel>();
+        }
     }
 
     /// <summary>Pushes the rest of the program back from today; crossed days stay put.</summary>

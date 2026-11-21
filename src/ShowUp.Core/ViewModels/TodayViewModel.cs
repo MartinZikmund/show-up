@@ -26,6 +26,7 @@ public partial class TodayViewModel : ViewModelBase
     private readonly IConfirmationDialogService _confirmation;
     private readonly IBonusWorkoutDialog _bonusDialog;
     private readonly ISectionNavigator _navigator;
+    private readonly IJournalDialogs _journalDialogs;
     private readonly ILogger<TodayViewModel> _logger;
 
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
@@ -52,6 +53,7 @@ public partial class TodayViewModel : ViewModelBase
         IConfirmationDialogService confirmation,
         IBonusWorkoutDialog bonusDialog,
         ISectionNavigator navigator,
+        IJournalDialogs journalDialogs,
         ILogger<TodayViewModel> logger)
     {
         _localizer = localizer;
@@ -63,6 +65,7 @@ public partial class TodayViewModel : ViewModelBase
         _confirmation = confirmation;
         _bonusDialog = bonusDialog;
         _navigator = navigator;
+        _journalDialogs = journalDialogs;
         _logger = logger;
         PageTitle = localizer["Today"];
     }
@@ -227,9 +230,10 @@ public partial class TodayViewModel : ViewModelBase
             return;
         }
 
+        BonusWorkoutEntity? logged = null;
         try
         {
-            await WriteAsync(() => _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
+            await WriteAsync(async () => logged = await _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
         }
         catch (ArgumentException ex)
         {
@@ -237,6 +241,10 @@ public partial class TodayViewModel : ViewModelBase
         }
 
         await RefreshAsync();
+        if (logged?.WorkoutId is { } id && (await _catalog.GetCatalogAsync()).WorkoutsById.GetValueOrDefault(id) is { HasMetrics: true })
+        {
+            await _journalDialogs.LogBonusResultsAsync(logged);
+        }
     }
 
     [RelayCommand]

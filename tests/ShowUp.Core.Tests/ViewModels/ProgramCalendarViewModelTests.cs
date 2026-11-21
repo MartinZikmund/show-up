@@ -26,6 +26,8 @@ public sealed class ProgramCalendarViewModelTests
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 21, 10, 0, 0, TimeSpan.Zero));
     private readonly FakeTrackingRepository _repository;
     private readonly FakeAppPreferences _preferences = new() { CrossOffStyle = CrossOffStyle.AutoMarker, CrossMomentMode = CrossMomentMode.Never };
+    private readonly RecordingJournalDialogs _journalDialogs = new();
+    private readonly RecordingNavigationService _navigation = new();
     private readonly FakeCrossMoment _crossMoment = new();
     private readonly FakeConfirmationDialogService _confirmation = new();
     private readonly FakeCalendarPrompts _prompts = new();
@@ -341,6 +343,52 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
+    public async Task LogBonus_WorkoutWithMetrics_OffersItsResults()
+    {
+        _bonusDialog.Title = "Fit Test";
+        _bonusDialog.WorkoutId = "fit";
+        var viewModel = await LoadAsync(_today, "run");
+
+        await viewModel.LogBonusCommand.ExecuteAsync(Day(viewModel, 0));
+
+        _journalDialogs.Calls.Should().Equal("bonus:fit");
+    }
+
+    [TestMethod]
+    public async Task LogBonus_WorkoutWithoutMetrics_OffersNoResults()
+    {
+        _bonusDialog.Title = "Run";
+        _bonusDialog.WorkoutId = "run";
+        var viewModel = await LoadAsync(_today, "run");
+
+        await viewModel.LogBonusCommand.ExecuteAsync(Day(viewModel, 0));
+
+        _journalDialogs.Calls.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task OpenDay_CrossedDay_ShowsTheDayDetail()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        var day = Day(viewModel, 0);
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+
+        await viewModel.OpenDayCommand.ExecuteAsync(day);
+
+        _journalDialogs.Calls.Should().Equal("day:0");
+    }
+
+    [TestMethod]
+    public async Task OpenResults_WithEnrollment_NavigatesToTheResults()
+    {
+        var viewModel = await LoadAsync(_today, "fit");
+
+        viewModel.OpenResultsCommand.Execute(null);
+
+        _navigation.Navigations.Should().ContainSingle().Which.ViewModel.Should().Be<ProgramResultsViewModel>();
+    }
+
+    [TestMethod]
     public async Task LogBonus_FutureDay_DoesNotWrite()
     {
         _bonusDialog.Title = "Evening run";
@@ -388,12 +436,14 @@ public sealed class ProgramCalendarViewModelTests
             catalog,
             _time,
             messenger,
-            new CrossingCoordinator(_preferences, _crossMoment, new FakeMarkingFeedback(), _counting),
+            new CrossingCoordinator(_preferences, _crossMoment, new FakeMarkingFeedback(), _counting, new StubJournalService(), _journalDialogs),
             _confirmation,
             _dialogs,
             _prompts,
             _bonusDialog,
             _navigator,
+            _journalDialogs,
+            _navigation,
             NullLogger<ProgramCalendarViewModel>.Instance);
     }
 

@@ -28,6 +28,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly INavigationService _navigation;
     private readonly IDialogService _dialogs;
     private readonly TimeProvider _time;
+    private readonly IJournalDialogs _journalDialogs;
     private readonly ILogger<ProgramDetailViewModel> _logger;
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
     private bool _isStarting;
@@ -41,6 +42,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         INavigationService navigation,
         IDialogService dialogs,
         TimeProvider time,
+        IJournalDialogs journalDialogs,
         ILogger<ProgramDetailViewModel> logger)
     {
         _localizer = localizer;
@@ -51,6 +53,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
         _navigation = navigation;
         _dialogs = dialogs;
         _time = time;
+        _journalDialogs = journalDialogs;
         _logger = logger;
         StartDate = _time.GetLocalNow();
     }
@@ -73,6 +76,10 @@ public partial class ProgramDetailViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool IsNotFound { get; private set; }
+
+    /// <summary>This is the program being tracked, so it has notes and results.</summary>
+    [ObservableProperty]
+    public partial bool IsActiveProgram { get; private set; }
 
     [ObservableProperty]
     public partial string TrackSummary { get; private set; } = "";
@@ -119,6 +126,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
             }
 
             _workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
+            IsActiveProgram = (await _enrollments.GetAsync())?.Program.Id == program.Id;
             Program = program;
             PageTitle = program.Name;
             SelectedTrack = program.Tracks.FirstOrDefault();
@@ -139,6 +147,12 @@ public partial class ProgramDetailViewModel : ViewModelBase
 
     [RelayCommand]
     private void GoBack() => _navigation.GoBack();
+
+    [RelayCommand]
+    private void OpenResults() => _navigation.Navigate<ProgramResultsViewModel>();
+
+    [RelayCommand]
+    private Task EditProgramNoteAsync() => _journalDialogs.EditProgramNoteAsync();
 
     private bool CanStart => Program is not null && SelectedTrack is not null;
 

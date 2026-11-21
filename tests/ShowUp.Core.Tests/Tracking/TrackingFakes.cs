@@ -11,6 +11,7 @@ internal static class TestCatalog
         new("run", "Run", 30, WorkoutKind.Cardio, null),
         new("abs", "Abs", 15, WorkoutKind.Abs, null),
         new("rest", "Rest", null, WorkoutKind.Rest, null),
+        new("fit", "Fit Test", 30, WorkoutKind.FitTest, null, [new("jacks", "Jacks", MetricUnit.Reps), new("time", "Time", MetricUnit.Duration)]),
     ];
 
     /// <summary>One phase; each string is a day, "+" joins its sessions and "?" marks one optional (e.g. "run+abs?").</summary>
