@@ -3,15 +3,15 @@ using Microsoft.UI.Xaml.Media.Imaging;
 namespace ShowUp.Controls;
 
 /// <summary>
-/// Plain paper with a faint grain: 1024 px tileable PNGs laid out as a grid of images (WinUI has no tiling brush).
+/// Plain paper with a faint grain: 512 px tileable PNGs laid out as a grid of images (WinUI has no tiling brush).
 /// The tile set is resized only when the window size or the theme's texture changes; nothing runs per frame.
 /// </summary>
 public sealed partial class PaperBackground : UserControl
 {
-    private const double TileSize = 1024;
+    private const double TileSize = 512;
 
-    // Beyond 4x4 tiles (4096 px) the grain just stops; the paper color underneath carries on.
-    private const int MaxTilesPerSide = 4;
+    // Beyond 8x8 tiles (4096 px) the grain just stops; the paper color underneath carries on.
+    private const int MaxTilesPerSide = 8;
 
     private readonly RectangleGeometry _clip = new();
     private readonly List<Image> _tiles = [];
