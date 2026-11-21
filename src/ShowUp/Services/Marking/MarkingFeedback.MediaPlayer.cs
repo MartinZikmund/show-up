@@ -13,9 +13,36 @@ public sealed partial class MarkingFeedback
     {
         foreach (var sound in sounds)
         {
+#if __WASM__
+            if (sound == ScratchSound)
+            {
+                continue;
+            }
+#endif
             GetPlayer(sound);
         }
     }
+
+#if !__WASM__
+    // Windows: a looping MediaPlayer with live Volume and PlaybackRate. (WebAssembly uses Web Audio, see .Wasm.cs.)
+    static partial void StartScratchCore(string sound, ref string? backend)
+    {
+        var player = GetPlayer(sound);
+        player.IsLoopingEnabled = true;
+        player.Volume = 0;
+        player.Play();
+        backend = "MediaPlayer loop";
+    }
+
+    static partial void SetScratchCore(double volume, double rate)
+    {
+        var player = GetPlayer(ScratchSound);
+        player.Volume = volume;
+        player.PlaybackSession.PlaybackRate = rate;
+    }
+
+    static partial void StopScratchCore() => GetPlayer(ScratchSound).Pause();
+#endif
 
     private static partial string PlayCore(string sound)
     {

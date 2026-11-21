@@ -1,7 +1,9 @@
 """Synthesizes the marker squeak WAVs in src/ShowUp/Assets/Sounds (stdlib only).
 
 Same recipe as squeak() in docs/prototypes/marker-cross.html: white noise through a
-band-pass swept 1800 -> 3400 Hz, plus a faint rising triangle squeak.
+band-pass swept 1800 -> 3400 Hz, plus a faint rising triangle squeak. marker_scratch.wav is
+scratchStart()'s loop: 1 s of noise band-passed at 2400 Hz (Q 1.2), crossfaded so it loops
+without a click; the app sets its volume and rate from the pen speed.
 
     python tools/generate-marker-sounds.py
 """
@@ -59,6 +61,30 @@ def squeak(seed, ms, f_from=1800.0, f_to=3400.0):
     return out
 
 
+def scratch(seed, seconds=1.0, fade=0.1, f0=2400.0, q=1.2):
+    rnd = random.Random(seed)
+    n, m = int(RATE * seconds), int(RATE * fade)
+    w0 = 2 * math.pi * f0 / RATE
+    alpha = math.sin(w0) / (2 * q)
+    a0 = 1 + alpha
+    b0, b2 = alpha / a0, -alpha / a0
+    a1, a2 = -2 * math.cos(w0) / a0, (1 - alpha) / a0
+    x1 = x2 = y1 = y2 = 0.0
+    raw = []
+    for _ in range(n + m + RATE // 10):
+        x0 = rnd.random() * 2 - 1
+        y0 = b0 * x0 + b2 * x2 - a1 * y1 - a2 * y2
+        x2, x1, y2, y1 = x1, x0, y1, y0
+        raw.append(y0)
+    raw = raw[RATE // 10:]  # Drop the filter's settling.
+    # Equal-power crossfade of the tail into the head: the loop point is seamless.
+    out = raw[:n]
+    for i in range(m):
+        t = i / m
+        out[i] = raw[i] * math.sin(t * math.pi / 2) + raw[n + i] * math.cos(t * math.pi / 2)
+    return out
+
+
 def write(name, samples):
     peak = max(abs(s) for s in samples) or 1.0
     scale = PEAK / peak
@@ -77,6 +103,7 @@ def main():
     write("marker_2.wav", squeak(2, 180, 1700, 3200))
     write("marker_3.wav", squeak(3, 180, 1900, 3600))
     write("marker_tick.wav", squeak(4, 70))
+    write("marker_scratch.wav", scratch(5))
 
 
 if __name__ == "__main__":

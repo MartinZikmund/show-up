@@ -89,6 +89,16 @@
         <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
     </ItemGroup>
 
+    <!-- [JSImport] marshalling stubs (the Web Audio marker scratch) are generated as unsafe code. -->
+    <PropertyGroup Condition="$(TargetFramework.Contains('browserwasm'))">
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <!-- The bootstrapper only loads WasmScripts that are embedded resources. -->
+    <ItemGroup Condition="$(TargetFramework.Contains('browserwasm'))">
+        <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MarkerScratch.js" />
+    </ItemGroup>
+
     <ItemGroup>
       <Page Update="Resources\DataTemplates.xaml">
         <Generator>MSBuild:Compile</Generator>
