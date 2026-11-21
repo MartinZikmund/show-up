@@ -54,13 +54,11 @@ public sealed class LiveRefresher(TimeProvider time, ILogger logger, string fail
         }
     }
 
-    /// <summary>For the data-changed message: reloads even for own writes. Deferred one turn so the services drop their caches first.</summary>
-    public void OnDataChanged() =>
-        Post(() => RunInBackground(async () =>
-        {
-            await Task.Yield();
-            await refresh();
-        }));
+    /// <summary>
+    /// For the data-changed message: reloads even for own writes. <c>DataChangeAnnouncer</c> dropped the service caches before
+    /// sending it, so this needn't wait for the services' own handlers (the messenger calls recipients in no set order).
+    /// </summary>
+    public void OnDataChanged() => Post(() => RunInBackground(refresh));
 
     public async Task WriteAsync(Func<Task> write)
     {
