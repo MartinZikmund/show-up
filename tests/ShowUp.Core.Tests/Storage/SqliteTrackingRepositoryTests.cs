@@ -186,6 +186,28 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task LogBonus_FutureDate_Throws()
+    {
+        var repo = CreateRepository();
+
+        Func<Task> act = () => repo.LogBonusAsync(null, "Run", _today.AddDays(1), null);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("   ")]
+    public async Task LogBonus_BlankTitle_Throws(string title)
+    {
+        var repo = CreateRepository();
+
+        Func<Task> act = () => repo.LogBonusAsync(null, title, _today, null);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [TestMethod]
     public async Task Bonus_LogAndRangeQuery_RoundTrips()
     {
         var repo = CreateRepository();
