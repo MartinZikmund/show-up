@@ -112,6 +112,28 @@ public class JournalRepositoriesTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task RemoveBonus_TombstonesItsResults()
+    {
+        var tracking = CreateRepository();
+        var metrics = CreateMetricsRepository();
+        var bonus = await tracking.LogBonusAsync("w", "Run", new DateOnly(2026, 12, 10), null);
+        var other = await tracking.LogBonusAsync("w", "Swim", new DateOnly(2026, 12, 10), null);
+        await metrics.SetValuesAsync(MetricTarget.ForBonus(bonus.Id, "w"), new Dictionary<string, MetricValue> { ["m"] = new(1) });
+        await metrics.SetValuesAsync(MetricTarget.ForBonus(other.Id, "w"), new Dictionary<string, MetricValue> { ["m"] = new(2) });
+        Device.DeviceId = "dev-y";
+        Time.Advance(TimeSpan.FromMinutes(5));
+
+        await tracking.RemoveBonusAsync(bonus.Id);
+
+        (await metrics.GetBonusEntriesAsync([bonus.Id, other.Id])).Select(e => e.BonusWorkoutId).Should().Equal(other.Id);
+        var connection = await Db.GetConnectionAsync();
+        var gone = (await connection.Table<MetricEntryEntity>().ToListAsync()).Single(m => m.BonusWorkoutId == bonus.Id);
+        gone.DeletedAt.Should().Be(Time.GetUtcNow());
+        gone.UpdatedAt.Should().Be(Time.GetUtcNow());
+        gone.DeviceId.Should().Be("dev-y");
+    }
+
+    [TestMethod]
     public async Task Metrics_OtherUser_AreNotVisible()
     {
         var metrics = CreateMetricsRepository();
