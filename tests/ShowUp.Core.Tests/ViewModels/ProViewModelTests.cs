@@ -207,6 +207,16 @@ public sealed class ProViewModelTests
     }
 
     [TestMethod]
+    public void Features_CloudSyncNotShipped_SaysComingSoon()
+    {
+        var sync = CreateViewModel(new FakeEntitlementService()).Features.Single(f => f.Title == "ProFeatureSync");
+
+        sync.Pro.Should().Be("ProFeatureSyncSoon");
+        FeatureGate.IsAvailable(ProFeature.CloudSync).Should().BeFalse("Plan 4 flips this when sync ships");
+        FeatureGate.IsAvailable(ProFeature.CustomSchedules).Should().BeTrue();
+    }
+
+    [TestMethod]
     public void Features_AreLocalizedRows() => CreateViewModel(new FakeEntitlementService()).Features.Should().HaveCount(6);
 
     private static async Task<ProViewModel> LoadedAsync(FakeEntitlementService service)

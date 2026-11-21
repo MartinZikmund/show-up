@@ -25,6 +25,7 @@ One page per topic. Keep it that way.
 - [reminders.md](./reminders.md) — planning notifications for the next 14 days, delivery on each head, and the Free limit after a lapse.
 - [results.md](./results.md) — notes, logging Fit Test and Max Out results, the day detail sheet and the results table.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
+- [Sync classification](./sync-classification.md) — which settings and rows follow the user across devices and which stay on this one.
 - [theme.md](./theme.md) — marker color picker, how it repaints live, and the grain paper background.
 - [today.md](./today.md) — the Today page, the shared crossing flow, and bonus workouts.
 - [views.md](./views.md) — `ViewBase<TViewModel>`, `IViewBase`, and how views resolve their view models.

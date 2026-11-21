@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.CustomPrograms;
@@ -114,6 +115,56 @@ public class CatalogServiceTests
     }
 
     [TestMethod]
+    public async Task Invalidate_ReReadsTheBundledCatalogAndCustomPrograms()
+    {
+        FakeCustomProgramRepository custom = new();
+        FakeSource source = new([]);
+        CatalogService service = new(source, custom, NullLogger<CatalogService>.Instance);
+        await service.GetCatalogAsync();
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Synced"), "custom-a");
+        source.Programs = [Fixture("sample-program.json")];
+
+        (await service.GetCatalogAsync()).Programs.Should().BeEmpty("cached");
+        service.Invalidate();
+
+        var catalog = await service.GetCatalogAsync();
+        catalog.Programs.Select(p => p.Name).Should().Contain("Synced");
+        catalog.Programs.Select(p => p.Id).Should().Contain("sample");
+        source.WorkoutReads.Should().Be(2);
+    }
+
+    [TestMethod]
+    public async Task DataChanged_InvalidatesLikeInvalidate()
+    {
+        FakeCustomProgramRepository custom = new();
+        WeakReferenceMessenger messenger = new();
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance, messenger);
+        await service.GetCatalogAsync();
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Synced"), "custom-a");
+
+        messenger.Send(new ShowUp.Core.Messages.DataChangedMessage());
+
+        (await service.GetCatalogAsync()).Programs.Should().ContainSingle(p => p.Name == "Synced");
+    }
+
+    [TestMethod]
+    public async Task Invalidate_WhileLoadingTheBundledCatalog_DoesNotCacheTheStaleRead()
+    {
+        FakeSource source = new([Fixture("sample-program.json")]) { Gate = new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        CatalogService service = new(source, new FakeCustomProgramRepository(), NullLogger<CatalogService>.Instance);
+        var loading = service.GetCatalogAsync();
+        await source.Entered.Task;
+
+        source.Programs = [];
+        service.Invalidate();
+        source.Gate.SetResult();
+        await loading;
+        source.Gate = null;
+
+        (await service.GetCatalogAsync()).Programs.Should().BeEmpty();
+    }
+
+    [TestMethod]
     public async Task GetProgram_PinnedRevisionOfDeletedProgram_StillResolvesWithItsWorkouts()
     {
         FakeCustomProgramRepository custom = new();
@@ -138,6 +189,33 @@ public class CatalogServiceTests
         CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
 
         (await service.GetCatalogAsync()).Programs.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetCatalog_CustomProgramUsesARemovedWorkout_LoadsWithAPlaceholder()
+    {
+        FakeCustomProgramRepository custom = new();
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Mine").Replace("\"cardio\"", "\"removed-workout\""), "custom-a");
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+
+        var catalog = await service.GetCatalogAsync();
+
+        catalog.Programs.Should().ContainSingle(p => p.Name == "Mine");
+        catalog.WorkoutsById["removed-workout"].Should().Be(new Workout("removed-workout", "Unknown workout", null, WorkoutKind.Mixed, null));
+    }
+
+    [TestMethod]
+    public async Task GetProgram_PinnedRevisionUsesARemovedWorkout_StillLoadsWithAPlaceholder()
+    {
+        FakeCustomProgramRepository custom = new();
+        var (id, first) = await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Old").Replace("\"cardio\"", "\"removed-workout\""), "custom-a");
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "New"), id);
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+
+        var pinned = await service.GetProgramAsync(id, first);
+
+        pinned!.Name.Should().Be("Old");
+        (await service.GetWorkoutAsync("removed-workout"))!.Name.Should().Be("Unknown workout");
     }
 
     [TestMethod]
@@ -195,8 +273,15 @@ public class CatalogServiceTests
 
     private static string Fixture(string name) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", "Fixtures", name));
 
-    private sealed class FakeSource(IReadOnlyList<string> programs) : IBundledCatalogSource
+    private sealed class FakeSource(IReadOnlyList<string> initialPrograms) : IBundledCatalogSource
     {
+        public IReadOnlyList<string> Programs { get; set; } = initialPrograms;
+
+        /// <summary>Holds the program read open until completed.</summary>
+        public TaskCompletionSource? Gate { get; set; }
+
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public int WorkoutReads { get; private set; }
 
         public int ProgramReads { get; private set; }
@@ -211,8 +296,15 @@ public class CatalogServiceTests
         public async Task<IReadOnlyList<string>> ReadProgramsAsync()
         {
             ProgramReads++;
+            var snapshot = Programs;
+            Entered.TrySetResult();
+            if (Gate is { } gate)
+            {
+                await gate.Task;
+            }
+
             await Task.Yield();
-            return programs;
+            return snapshot;
         }
     }
 }

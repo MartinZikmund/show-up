@@ -46,7 +46,11 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
 
         // Read-only state follows Pro; pages re-read it on the tracking message.
         _entitlements.Changed += (_, _) => _messenger.Send(new TrackingChangedMessage());
+        _messenger.Register<ActiveEnrollmentService, DataChangedMessage>(this, static (r, _) => r.Invalidate());
     }
+
+    /// <summary>Stored data changed behind this service's back: the next read loads again.</summary>
+    public void Invalidate() => Interlocked.Increment(ref _version);
 
     /// <summary>Per device (<see cref="IAppPreferences"/>): each device's Calendar can show a different program.</summary>
     public Guid? SelectedEnrollmentId => _preferences.SelectedEnrollmentId;

@@ -6,6 +6,8 @@ internal sealed class FakeEntitlementService : IEntitlementService
 {
     public bool IsPro { get; set; }
 
+    public bool IsConfirmed { get; set; } = true;
+
     public bool PurchasesAvailable { get; set; } = true;
 
     public List<ProOffer> Offers { get; set; } =
@@ -38,6 +40,14 @@ internal sealed class FakeEntitlementService : IEntitlementService
     public Func<Task>? OnRefresh { get; set; }
 
     public int RefreshCalls { get; private set; }
+
+    public List<string?> Users { get; } = [];
+
+    public Task SetUserAsync(string? userId)
+    {
+        Users.Add(userId);
+        return Task.CompletedTask;
+    }
 
     public Task RefreshAsync()
     {

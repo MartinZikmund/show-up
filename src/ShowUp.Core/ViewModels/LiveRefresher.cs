@@ -54,6 +54,14 @@ public sealed class LiveRefresher(TimeProvider time, ILogger logger, string fail
         }
     }
 
+    /// <summary>For the data-changed message: reloads even for own writes. Deferred one turn so the services drop their caches first.</summary>
+    public void OnDataChanged() =>
+        Post(() => RunInBackground(async () =>
+        {
+            await Task.Yield();
+            await refresh();
+        }));
+
     public async Task WriteAsync(Func<Task> write)
     {
         Interlocked.Increment(ref _ownWrites);

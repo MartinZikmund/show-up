@@ -859,6 +859,9 @@
   <data name="ProFeatureSyncPro" xml:space="preserve">
     <value>All your devices</value>
   </data>
+  <data name="ProFeatureSyncSoon" xml:space="preserve">
+    <value>Coming soon</value>
+  </data>
   <data name="ProOffersHeader" xml:space="preserve">
     <value>Choose how to go Pro</value>
   </data>
@@ -958,8 +961,17 @@
   <data name="PrimaryProgramConfirm" xml:space="preserve">
     <value>Keep this one</value>
   </data>
-  <data name="DebugSimulateFree" xml:space="preserve">
-    <value>Simulate Free (debug builds only)</value>
+  <data name="DebugProOverride" xml:space="preserve">
+    <value>Pro override (debug builds only)</value>
+  </data>
+  <data name="DebugProOverrideReal" xml:space="preserve">
+    <value>Real</value>
+  </data>
+  <data name="DebugProOverrideForcePro" xml:space="preserve">
+    <value>Force Pro</value>
+  </data>
+  <data name="DebugProOverrideForceFree" xml:space="preserve">
+    <value>Force Free</value>
   </data>
   <data name="ProCouldNotConfirm" xml:space="preserve">
     <value>We couldn't confirm your purchase. If you were charged, Pro unlocks shortly; tap Restore purchases to check.</value>

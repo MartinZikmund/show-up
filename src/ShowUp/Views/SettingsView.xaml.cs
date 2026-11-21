@@ -17,26 +17,37 @@ public sealed partial class SettingsView : SettingsViewBase
         {
             LockMarkerColorInHighContrast();
 #if DEBUG
-            AddSimulateFreeToggle();
+            AddProOverride();
 #endif
         };
     }
 
 #if DEBUG
-    private ToggleSwitch? _simulateFree;
+    private ComboBox? _proOverride;
 
-    private void AddSimulateFreeToggle()
+    private void AddProOverride()
     {
-        if (_simulateFree is not null
+        if (_proOverride is not null
             || FindWindowShell(XamlRoot?.Content)?.ServiceProvider.GetService<ShowUp.Services.Entitlements.DebugEntitlementOverride>() is not { } entitlements)
         {
             return;
         }
 
-        _simulateFree = new() { Header = Localizer.Instance["DebugSimulateFree"], IsOn = entitlements.SimulateFree };
-        AutomationProperties.SetAutomationId(_simulateFree, "DebugSimulateFreeToggle");
-        _simulateFree.Toggled += (_, _) => entitlements.SimulateFree = _simulateFree.IsOn;
-        DebugPanel.Children.Add(_simulateFree);
+        _proOverride = new()
+        {
+            Header = Localizer.Instance["DebugProOverride"],
+            ItemsSource = new[] { Localizer.Instance["DebugProOverrideReal"], Localizer.Instance["DebugProOverrideForcePro"], Localizer.Instance["DebugProOverrideForceFree"] },
+            SelectedIndex = (int)entitlements.Override,
+        };
+        AutomationProperties.SetAutomationId(_proOverride, "DebugProOverrideCombo");
+        _proOverride.SelectionChanged += (_, _) =>
+        {
+            if (_proOverride.SelectedIndex >= 0)
+            {
+                entitlements.Override = (ShowUp.Services.Entitlements.ProOverride)_proOverride.SelectedIndex;
+            }
+        };
+        DebugPanel.Children.Add(_proOverride);
     }
 #endif
 

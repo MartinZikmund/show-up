@@ -142,6 +142,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         if (_live.Activate())
         {
             _messenger.Register<ProgramCalendarViewModel, TrackingChangedMessage>(this, static (r, _) => r._live.OnTrackingChanged());
+            _messenger.Register<ProgramCalendarViewModel, DataChangedMessage>(this, static (r, _) => r._live.OnDataChanged());
         }
 
         await RefreshAsync();

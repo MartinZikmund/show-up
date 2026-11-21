@@ -26,6 +26,8 @@ These are ours, not the source's:
 - A program has tracks, tracks have phases, phases have weeks, weeks have days, days have sessions. A session is `{ "workoutId": "...", "alternates": [...], "optional": true }`; `alternates` and `optional` can be left out.
 - **Optional sessions** (for example T25's second Friday workout) can be crossed off but never count toward completing the day, streaks or missed days. A day with only optional sessions behaves like a rest day.
 
+- **Workout ids are append-only.** Custom programs and enrollments pin them. `catalog/workout-ids.lock` lists every id, sorted; `CatalogFolderTests` fails if one disappears from `workouts.json`, and also if a new one isn't appended to the lock. If a program is saved with an id that later vanishes anyway, it still loads and shows an "Unknown workout" placeholder (logged as a warning).
+
 `CatalogFolderTests.CatalogFolder_AllFiles_AreValid` parses and validates the whole folder on every test run.
 
 ## Proposing a correction

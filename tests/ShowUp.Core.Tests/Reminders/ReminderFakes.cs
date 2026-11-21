@@ -88,6 +88,27 @@ internal sealed class FakeReminderScheduler : IReminderScheduler
 
     public ReminderDeliveryLimit Limit { get; set; }
 
+    private readonly List<(int Count, TaskCompletionSource Done)> _waiters = [];
+
+    /// <summary>Every <see cref="ReplaceAllAsync"/> call, including the ones that threw.</summary>
+    public int ReplaceAttempts { get; private set; }
+
+    /// <summary>Completes once <paramref name="count"/> replace calls have been made.</summary>
+    public Task WaitForAttemptsAsync(int count)
+    {
+        lock (_waiters)
+        {
+            if (ReplaceAttempts >= count)
+            {
+                return Task.CompletedTask;
+            }
+
+            TaskCompletionSource done = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _waiters.Add((count, done));
+            return done.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
     /// <summary>What the OS reports without asking; a refused prompt turns it on, as it would on a device.</summary>
     public bool Denied { get; set; }
 
@@ -103,6 +124,16 @@ internal sealed class FakeReminderScheduler : IReminderScheduler
 
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {
+        lock (_waiters)
+        {
+            ReplaceAttempts++;
+            foreach (var (count, done) in _waiters.Where(w => ReplaceAttempts >= w.Count).ToList())
+            {
+                done.TrySetResult();
+                _waiters.Remove((count, done));
+            }
+        }
+
         if (FailReplace)
         {
             throw new InvalidOperationException("scheduler down");

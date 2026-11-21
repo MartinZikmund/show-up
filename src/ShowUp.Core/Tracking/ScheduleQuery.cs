@@ -23,21 +23,29 @@ public interface IScheduleQuery
 {
     /// <summary>One entry per active enrollment, the selected one first; <see cref="DueProgram.DayIndex"/> is null when nothing is scheduled that date.</summary>
     Task<IReadOnlyList<DueProgram>> GetDueAsync(DateOnly date);
+
+    /// <summary>The same for <paramref name="days"/> consecutive dates from <paramref name="from"/>, reading each enrollment once.</summary>
+    Task<IReadOnlyDictionary<DateOnly, IReadOnlyList<DueProgram>>> GetDueAsync(DateOnly from, int days);
 }
 
 public sealed class ScheduleQuery(IActiveEnrollmentService enrollments, ICatalogService catalog) : IScheduleQuery
 {
-    public async Task<IReadOnlyList<DueProgram>> GetDueAsync(DateOnly date)
+    public async Task<IReadOnlyList<DueProgram>> GetDueAsync(DateOnly date) => (await GetDueAsync(date, 1))[date];
+
+    public async Task<IReadOnlyDictionary<DateOnly, IReadOnlyList<DueProgram>>> GetDueAsync(DateOnly from, int days)
     {
+        Dictionary<DateOnly, IReadOnlyList<DueProgram>> byDate = [];
+        var dates = Enumerable.Range(0, days).Select(from.AddDays).ToList();
         var all = await enrollments.GetAllAsync();
         if (all.Count == 0)
         {
-            return [];
+            dates.ForEach(d => byDate[d] = []);
+            return byDate;
         }
 
         var selected = await enrollments.GetSelectedAsync();
         var workouts = (await catalog.GetCatalogAsync()).WorkoutsById;
-        List<DueProgram> due = [];
+        Dictionary<DateOnly, List<DueProgram>> due = dates.ToDictionary(d => d, _ => new List<DueProgram>());
         foreach (var active in all.OrderBy(e => e.Id == selected?.Id ? 0 : 1))
         {
             var completions = await enrollments.GetCompletionsAsync(active.Id);
@@ -46,9 +54,18 @@ public sealed class ScheduleQuery(IActiveEnrollmentService enrollments, ICatalog
                 workouts,
                 active.Calendar,
                 completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet());
-            due.Add(new DueProgram(active, statuses, completions, active.Calendar.DayIndexOn(date), enrollments.IsReadOnly(active)));
+            var readOnly = enrollments.IsReadOnly(active);
+            foreach (var date in dates)
+            {
+                due[date].Add(new DueProgram(active, statuses, completions, active.Calendar.DayIndexOn(date), readOnly));
+            }
         }
 
-        return due;
+        foreach (var (date, list) in due)
+        {
+            byDate[date] = list;
+        }
+
+        return byDate;
     }
 }

@@ -42,6 +42,28 @@ public sealed class ScheduleQueryTests
     }
 
     [TestMethod]
+    public async Task GetDueRange_ReadsEachEnrollmentOnce()
+    {
+        var p = (await _repository.EnrollAsync("p", 1, "t", _today)).Id;
+
+        var due = await _query.GetDueAsync(_today, 3);
+
+        due.Keys.Should().Equal(_today, _today.AddDays(1), _today.AddDays(2));
+        due[_today].Single().DayIndex.Should().Be(0);
+        due[_today.AddDays(1)].Single().DayIndex.Should().Be(1);
+        due[_today.AddDays(2)].Single().DayIndex.Should().BeNull();
+        due[_today.AddDays(1)].Single().Active.Id.Should().Be(p);
+    }
+
+    [TestMethod]
+    public async Task GetDueRange_NoEnrollments_EmptyEntryPerDate()
+    {
+        var due = await _query.GetDueAsync(_today, 2);
+
+        due.Should().HaveCount(2).And.OnlyContain(kv => kv.Value.Count == 0);
+    }
+
+    [TestMethod]
     public async Task GetDue_DateOutsideTheProgram_HasNoDay()
     {
         await _repository.EnrollAsync("q", 1, "t", _today.AddDays(5));

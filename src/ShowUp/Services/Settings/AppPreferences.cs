@@ -1,5 +1,7 @@
 using MZikmund.Toolkit.WinUI.Services;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
 
 namespace ShowUp.Services.Settings;
@@ -7,10 +9,14 @@ namespace ShowUp.Services.Settings;
 public sealed class AppPreferences : IAppPreferences
 {
     private readonly IPreferences _preferences;
+    private readonly AccountProCache _proCache;
+    private readonly SyncedPersonalization _synced;
 
-    public AppPreferences(IPreferences preferences)
+    public AppPreferences(IPreferences preferences, SyncedPersonalization synced)
     {
         _preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
+        _synced = synced;
+        _proCache = new(preferences);
     }
 
     private const string DataVersionKey = "AppDataVersion";
@@ -72,37 +78,37 @@ public sealed class AppPreferences : IAppPreferences
         set => _preferences.Set(CrossMomentModeKey, (int)value);
     }
 
-    private const string CrossOffStyleKey = "CrossOffStyle";
+    // Synced settings: stored through SyncedPersonalization, not in these per-device preferences.
     public CrossOffStyle CrossOffStyle
     {
-        get => _preferences.Get(CrossOffStyleKey, (int)CrossOffStyle.DrawYourself) is var raw && Enum.IsDefined((CrossOffStyle)raw)
-            ? (CrossOffStyle)raw
-            : CrossOffStyle.DrawYourself;
-        set => _preferences.Set(CrossOffStyleKey, (int)value);
+        get => _synced.CrossOffStyle;
+        set => _synced.CrossOffStyle = value;
     }
 
-    private const string MarkerColorKey = "MarkerColor";
     public MarkerColor MarkerColor
     {
-        get => _preferences.Get(MarkerColorKey, (int)MarkerColor.Auto) is var raw && Enum.IsDefined((MarkerColor)raw)
-            ? (MarkerColor)raw
-            : MarkerColor.Auto;
-        set => _preferences.Set(MarkerColorKey, (int)value);
+        get => _synced.MarkerColor;
+        set => _synced.MarkerColor = value;
     }
 
-    private const string LastKnownProKey = "LastKnownPro";
+    public UnitSystem UnitSystem
+    {
+        get => _synced.UnitSystem;
+        set => _synced.UnitSystem = value;
+    }
+
+    public void UseProAccount(string? userId) => _proCache.UseAccount(userId);
+
     public bool LastKnownPro
     {
-        get => _preferences.Get(LastKnownProKey, false);
-        set => _preferences.Set(LastKnownProKey, value);
+        get => _proCache.LastKnownPro;
+        set => _proCache.LastKnownPro = value;
     }
 
-    // Ticks of the UTC expiry; 0 means none.
-    private const string LastKnownProExpiresKey = "LastKnownProExpires";
     public DateTimeOffset? LastKnownProExpires
     {
-        get => _preferences.Get(LastKnownProExpiresKey, 0L) is var ticks and > 0 ? new DateTimeOffset(ticks, TimeSpan.Zero) : null;
-        set => _preferences.Set(LastKnownProExpiresKey, value?.UtcTicks ?? 0L);
+        get => _proCache.LastKnownProExpires;
+        set => _proCache.LastKnownProExpires = value;
     }
 
     private const string SelectedEnrollmentIdKey = "SelectedEnrollmentId";
@@ -110,24 +116,5 @@ public sealed class AppPreferences : IAppPreferences
     {
         get => Guid.TryParse(_preferences.Get(SelectedEnrollmentIdKey, ""), out var id) ? id : null;
         set => _preferences.Set(SelectedEnrollmentIdKey, value?.ToString("D") ?? "");
-    }
-
-    private const string UnitSystemKey = "UnitSystem";
-    public UnitSystem UnitSystem
-    {
-        get
-        {
-            if (_preferences.Get(UnitSystemKey, -1) is var raw && Enum.IsDefined((UnitSystem)raw))
-            {
-                return (UnitSystem)raw;
-            }
-
-            // Seeded once, so a later region change never relabels stored results.
-            var seeded = MetricUnits.FromRegion();
-            _preferences.Set(UnitSystemKey, (int)seeded);
-            return seeded;
-        }
-
-        set => _preferences.Set(UnitSystemKey, (int)value);
     }
 }

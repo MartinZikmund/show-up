@@ -108,11 +108,19 @@ public sealed class LapseCoordinatorTests
 
         public TaskCompletionSource Shown { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public Task<Guid?> PickAsync(IReadOnlyList<ActiveEnrollment> programs, Guid suggested)
+        /// <summary>Set to keep the prompt open until completed.</summary>
+        public TaskCompletionSource? Hold { get; set; }
+
+        public async Task<Guid?> PickAsync(IReadOnlyList<ActiveEnrollment> programs, Guid suggested)
         {
             Asked.Add((programs, suggested));
             Shown.TrySetResult();
-            return Task.FromResult(Answer);
+            if (Hold is { } hold)
+            {
+                await hold.Task;
+            }
+
+            return Answer;
         }
     }
 
@@ -162,7 +170,6 @@ public sealed class LapseCoordinatorTests
         coordinator.Attach(prompt);
 
         entitlements.SetPro(false);
-        await Task.Delay(50);
         prompt.Asked.Should().BeEmpty("the launch refresh hasn't answered yet");
 
         entitlements.OnRefresh = null;
@@ -176,16 +183,17 @@ public sealed class LapseCoordinatorTests
     {
         await EnrollTwoAsync();
         FakeEntitlementService entitlements = new() { IsPro = false };
-        FakePrompt first = new();
-        FakePrompt second = new();
+        TaskCompletionSource hold = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakePrompt first = new() { Hold = hold };
+        FakePrompt second = new() { Hold = hold };
         LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
 
         coordinator.Attach(first);
         coordinator.Attach(second);
         await Task.WhenAny(first.Shown.Task, second.Shown.Task).WaitAsync(TimeSpan.FromSeconds(5));
-        await Task.Delay(50);
 
-        (first.Asked.Count + second.Asked.Count).Should().Be(1);
+        (first.Asked.Count + second.Asked.Count).Should().Be(1, "the second check bails out while the first prompt is open");
+        hold.SetResult();
     }
 
     [TestMethod]
@@ -198,7 +206,6 @@ public sealed class LapseCoordinatorTests
         LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
 
         coordinator.Attach(prompt);
-        await Task.Delay(50);
         prompt.Asked.Should().BeEmpty("the store gets its chance to answer first");
         _time.Advance(ExpiryWatch.RefreshTimeout + TimeSpan.FromSeconds(1));
 

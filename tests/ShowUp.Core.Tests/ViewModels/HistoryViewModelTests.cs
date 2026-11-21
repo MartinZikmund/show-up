@@ -221,6 +221,29 @@ public sealed class HistoryViewModelTests
     }
 
     [TestMethod]
+    public async Task DataChanged_Reloads()
+    {
+        var viewModel = Create();
+        viewModel.ViewLoaded();
+        await viewModel.LoadAsync();
+        await _repository.LogBonusAsync(null, "Synced in", _today, 10);
+        TaskCompletionSource reloaded = new();
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(HistoryViewModel.HasBonuses))
+            {
+                reloaded.TrySetResult();
+            }
+        };
+
+        _messenger.Send(new DataChangedMessage());
+
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        viewModel.HasBonuses.Should().BeTrue();
+        viewModel.ViewUnloaded();
+    }
+
+    [TestMethod]
     public async Task Dates_FollowTheCulture()
     {
         await _repository.EnrollAsync("new", 1, "t", _today.AddDays(-4));

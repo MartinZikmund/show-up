@@ -206,8 +206,7 @@ public sealed class ProgramDetailViewModelTests
         _enrollments.Active = ActiveOne();
         var viewModel = Create(new FakeCatalogService(TestCatalog.Program("new", 1, "run")));
         viewModel.OnNavigatedTo("new");
-        await Task.Delay(50);
-        viewModel.ShowMultiProgramHint.Should().BeTrue();
+        await WaitForHintAsync(viewModel, true);
 
         _entitlements.SetPro(true);
 
@@ -236,12 +235,11 @@ public sealed class ProgramDetailViewModelTests
         _enrollments.ReadOnlyIds.Add(running.Id);
         var viewModel = Create(new FakeCatalogService(program));
         viewModel.OnNavigatedTo("old");
-        await Task.Delay(50);
-        viewModel.ShowMultiProgramHint.Should().BeTrue();
+        await WaitForHintAsync(viewModel, true);
 
         _enrollments.ReadOnlyIds.Clear();
         _messenger.Send(new ShowUp.Core.Messages.TrackingChangedMessage());
-        await Task.Delay(50);
+        await WaitForHintAsync(viewModel, false);
 
         viewModel.ShowMultiProgramHint.Should().BeFalse("its program is writable again");
     }
@@ -465,4 +463,20 @@ public sealed class ProgramDetailViewModelTests
             _customPrograms,
             _messenger,
             NullLogger<ProgramDetailViewModel>.Instance);
+
+    private static async Task WaitForHintAsync(ProgramDetailViewModel viewModel, bool expected)
+    {
+        TaskCompletionSource reached = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ProgramDetailViewModel.ShowMultiProgramHint) && viewModel.ShowMultiProgramHint == expected)
+            {
+                reached.TrySetResult();
+            }
+        };
+        if (viewModel.ShowMultiProgramHint != expected)
+        {
+            await reached.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
 }

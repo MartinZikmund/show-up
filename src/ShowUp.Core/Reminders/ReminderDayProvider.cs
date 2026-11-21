@@ -17,10 +17,9 @@ public sealed class ReminderDayProvider(IScheduleQuery schedule, ICatalogService
     {
         var workouts = (await catalog.GetCatalogAsync()).WorkoutsById;
         Dictionary<DateOnly, ReminderDay> byDate = [];
-        for (var i = 0; i < days; i++)
+        foreach (var (date, due) in await schedule.GetDueAsync(from, days))
         {
-            var date = from.AddDays(i);
-            byDate[date] = Describe(await schedule.GetDueAsync(date), workouts);
+            byDate[date] = Describe(due, workouts);
         }
 
         return date => byDate.GetValueOrDefault(date) ?? new ReminderDay(true, null, false);
@@ -28,7 +27,7 @@ public sealed class ReminderDayProvider(IScheduleQuery schedule, ICatalogService
 
     private ReminderDay Describe(IReadOnlyList<DueProgram> due, IReadOnlyDictionary<string, Workout> workouts)
     {
-        var scheduled = due.Where(d => d.Day is not null).ToList();
+        var scheduled = due.Where(d => d.Day is not null && !d.IsReadOnly).ToList();
         if (scheduled.Count == 0)
         {
             return new ReminderDay(true, null, false);

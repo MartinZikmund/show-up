@@ -27,11 +27,7 @@ public sealed class ReminderCoordinatorTests
 
     private async Task WaitForPlansAsync(int count)
     {
-        for (var i = 0; i < 200 && _scheduler.Replaced.Count < count; i++)
-        {
-            await Task.Delay(5);
-        }
-
+        await _scheduler.WaitForAttemptsAsync(count);
         _scheduler.Replaced.Should().HaveCountGreaterThanOrEqualTo(count);
     }
 
@@ -132,6 +128,53 @@ public sealed class ReminderCoordinatorTests
     }
 
     [TestMethod]
+    public async Task Replan_LapseSeenOnlyInTheCache_KeepsEveryReminderOn()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        var second = await _repository.AddAsync(9 * 60, 127);
+        _entitlements.IsPro = false;
+        _entitlements.IsConfirmed = false;
+
+        await _coordinator.StartAsync();
+
+        (await _repository.ListAsync()).Single(r => r.Id == second.Id).Enabled.Should().BeTrue("the store never answered, so the lapse isn't proven");
+        _repository.SetEnabledCalls.Should().Be(0);
+    }
+
+    [TestMethod]
+    public async Task Replan_LapseTheStoreConfirmsAfterRefresh_Disables()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        var second = await _repository.AddAsync(9 * 60, 127);
+        _entitlements.IsPro = false;
+        _entitlements.IsConfirmed = false;
+        _entitlements.OnRefresh = () =>
+        {
+            _entitlements.IsConfirmed = true;
+            return Task.CompletedTask;
+        };
+
+        await _coordinator.StartAsync();
+
+        (await _repository.ListAsync()).Single(r => r.Id == second.Id).Enabled.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Replan_DisablingExtras_DoesNotReplanOnItsOwnMessage()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        await _repository.AddAsync(9 * 60, 127);
+        _entitlements.IsPro = false;
+        var sent = 0;
+        _messenger.Register<RemindersChangedMessage>(this, (_, _) => sent++);
+
+        await _coordinator.StartAsync();
+
+        sent.Should().Be(1, "the disabled reminders are announced to the Reminders page");
+        _days.Loads.Should().Be(1, "but the coordinator doesn't plan again because of its own announcement");
+    }
+
+    [TestMethod]
     public async Task Replan_PaidAgain_DoesNotSwitchDisabledOnesBackOn()
     {
         var first = await _repository.AddAsync(8 * 60, 127);
@@ -196,7 +239,7 @@ public sealed class ReminderCoordinatorTests
         _scheduler.FailReplace = true;
 
         _messenger.Send(new TrackingChangedMessage());
-        await Task.Delay(50);
+        await _scheduler.WaitForAttemptsAsync(2);
         _scheduler.FailReplace = false;
         await coordinator.ReplanAsync();
 
@@ -212,9 +255,8 @@ public sealed class ReminderCoordinatorTests
         _messenger.Send(new TrackingChangedMessage());
         _messenger.Send(new RemindersChangedMessage());
         _entitlements.SetPro(true);
-        await Task.Delay(50);
 
-        _scheduler.Replaced.Should().ContainSingle();
+        _scheduler.Replaced.Should().ContainSingle("a listening coordinator would have planned by now: the fakes complete synchronously");
     }
 
     [TestMethod]
@@ -227,9 +269,8 @@ public sealed class ReminderCoordinatorTests
 
         _messenger.Send(new TrackingChangedMessage());
         await WaitForPlansAsync(1);
-        await Task.Delay(50);
 
-        _scheduler.Replaced.Should().ContainSingle();
+        _scheduler.Replaced.Should().ContainSingle("a second listener would have planned by now: the fakes complete synchronously");
     }
 }
 

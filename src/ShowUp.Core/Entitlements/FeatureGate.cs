@@ -6,6 +6,9 @@ public static class FeatureGate
     public const int FreeReminders = 1;
     public const int ProReminders = 20;
 
+    /// <summary>Whether the feature has shipped; the paywall says "Coming soon" for the rest. Plan 4 turns cloud sync on.</summary>
+    public static bool IsAvailable(ProFeature feature) => feature is not ProFeature.CloudSync;
+
     public static bool CanUse(ProFeature feature, bool isPro) => isPro;
 
     public static int MaxActivePrograms(bool isPro) => isPro ? int.MaxValue : 1;

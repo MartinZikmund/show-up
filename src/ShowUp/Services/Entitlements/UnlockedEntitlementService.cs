@@ -7,6 +7,8 @@ public sealed class UnlockedEntitlementService : IEntitlementService
 {
     public bool IsPro => true;
 
+    public bool IsConfirmed => true;
+
     public bool PurchasesAvailable => false;
 
     public bool OffersLoadFailed => false;
@@ -16,6 +18,8 @@ public sealed class UnlockedEntitlementService : IEntitlementService
 #pragma warning restore CS0067
 
     public Task RefreshAsync() => Task.CompletedTask;
+
+    public Task SetUserAsync(string? userId) => Task.CompletedTask;
 
     public Task<IReadOnlyList<ProOffer>> GetOffersAsync() => Task.FromResult<IReadOnlyList<ProOffer>>([]);
 

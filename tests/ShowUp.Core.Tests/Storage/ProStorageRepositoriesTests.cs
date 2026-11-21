@@ -361,6 +361,19 @@ public class ProStorageRepositoriesTests : StorageTestBase
         result.Should().BeEquivalentTo(new Dictionary<string, string> { ["p:a"] = "4", ["p:b"] = "2" });
     }
 
+    [TestMethod]
+    public async Task Settings_GetByPrefix_TreatsLikeWildcardsLiterally()
+    {
+        var settings = CreateSettings();
+        await settings.SetAsync("a_b", "1");
+        await settings.SetAsync("axb", "2");
+        await settings.SetAsync("100%", "3");
+        await settings.SetAsync("100x", "4");
+
+        (await settings.GetByPrefixAsync("a_")).Keys.Should().Equal("a_b");
+        (await settings.GetByPrefixAsync("100%")).Keys.Should().Equal("100%");
+    }
+
     private int Stamp() => (int)(Time.GetUtcNow() - new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds;
 
     private CustomProgramEntity Program(string key, int revision, string json, DateTimeOffset updatedAt) => new()
