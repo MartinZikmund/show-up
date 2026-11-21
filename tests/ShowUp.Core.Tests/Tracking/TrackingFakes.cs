@@ -13,13 +13,13 @@ internal static class TestCatalog
         new("rest", "Rest", null, WorkoutKind.Rest, null),
     ];
 
-    /// <summary>One phase; each string is a day, "+" joins its sessions (e.g. "run+abs").</summary>
+    /// <summary>One phase; each string is a day, "+" joins its sessions and "?" marks one optional (e.g. "run+abs?").</summary>
     public static WorkoutProgram Program(string id, int revision, params string[] days)
     {
         List<ScheduleWeek> weeks = [];
         foreach (var chunk in days.Chunk(7))
         {
-            weeks.Add(new ScheduleWeek([.. chunk.Select(d => new ScheduleDay([.. d.Split('+').Select(w => new ScheduledSession(w))]))]));
+            weeks.Add(new ScheduleWeek([.. chunk.Select(d => new ScheduleDay([.. d.Split('+').Select(w => new ScheduledSession(w.TrimEnd('?'), Optional: w.EndsWith('?')))]))]));
         }
 
         return new WorkoutProgram(

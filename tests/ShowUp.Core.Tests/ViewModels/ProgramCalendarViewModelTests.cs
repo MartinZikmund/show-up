@@ -251,6 +251,22 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
+    public async Task CrossNext_CompleteDayWithOptionalLeft_CrossesOptional()
+    {
+        var viewModel = await LoadAsync(_today, "run+abs?");
+        var day = Day(viewModel, 0);
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+        day.IsComplete.Should().BeTrue();
+        day.CanCross.Should().BeTrue();
+
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+
+        _repository.Crosses.Select(c => c.Session).Should().Equal(0, 1);
+        day.CanCross.Should().BeFalse();
+        day.MarkStrokes.Should().Be(2);
+    }
+
+    [TestMethod]
     public async Task Message_ExternalCross_Refreshes()
     {
         var viewModel = await LoadAsync(_today, "run");
