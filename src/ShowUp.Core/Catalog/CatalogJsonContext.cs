@@ -11,6 +11,7 @@ namespace ShowUp.Core.Catalog;
     UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow)]
 [JsonSerializable(typeof(Workout[]))]
 [JsonSerializable(typeof(WorkoutProgram))]
+[JsonSerializable(typeof(string[]))]
 public partial class CatalogJsonContext : JsonSerializerContext
 {
 }

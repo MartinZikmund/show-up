@@ -17,6 +17,16 @@ public class CatalogFolderTests
         CatalogValidator.Validate(catalog).Should().BeEmpty();
     }
 
+    [TestMethod]
+    public void CatalogIndex_MatchesProgramFiles()
+    {
+        var catalogDir = FindCatalogDir();
+        var indexed = CatalogParser.ParseProgramIndex(File.ReadAllText(Path.Combine(catalogDir, "index.json")));
+        var files = Directory.GetFiles(Path.Combine(catalogDir, "programs"), "*.json").Select(Path.GetFileName).Order(StringComparer.Ordinal);
+
+        indexed.Should().Equal(files);
+    }
+
     private static string FindCatalogDir()
     {
         for (DirectoryInfo? dir = new(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)

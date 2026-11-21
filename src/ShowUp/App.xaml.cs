@@ -1,3 +1,4 @@
+using ShowUp.Core.Catalog;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
@@ -112,6 +113,8 @@ public partial class App : Application, IApplication
                 ? async () => await ApplicationData.Current.LocalFolder.CreateFolderAsync("db", CreationCollisionOption.OpenIfExists)
                 : null));
         services.AddSingleton<ITrackingRepository, SqliteTrackingRepository>();
+        services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
+        services.AddSingleton<ICatalogService, CatalogService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services

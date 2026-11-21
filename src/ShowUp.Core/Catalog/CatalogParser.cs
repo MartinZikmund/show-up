@@ -21,6 +21,11 @@ public static class CatalogParser
         JsonSerializer.Deserialize(json, CatalogJsonContext.Default.WorkoutArray)
             ?? throw new JsonException("workouts.json is empty.");
 
+    /// <summary>The <c>index.json</c> array of program file names.</summary>
+    public static IReadOnlyList<string> ParseProgramIndex(string json) =>
+        JsonSerializer.Deserialize(json, CatalogJsonContext.Default.StringArray)
+            ?? throw new JsonException("index.json is empty.");
+
     public static bool TryParseProgram(string json, [NotNullWhen(true)] out WorkoutProgram? program, [NotNullWhen(false)] out string? error)
     {
         try

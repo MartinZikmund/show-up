@@ -53,6 +53,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include="..\..\catalog\**\*.json" Exclude="..\..\catalog\schema\**" Link="Assets\Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\ShowUp.Core\ShowUp.Core.csproj" />
     </ItemGroup>
 
