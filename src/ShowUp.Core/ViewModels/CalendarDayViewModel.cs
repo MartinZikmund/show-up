@@ -1,4 +1,5 @@
 using System.Globalization;
+using ShowUp.Core.Localization;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Tracking;
 
@@ -176,7 +177,7 @@ public sealed partial class CalendarDayViewModel : ObservableObject
 
         if (BonusCount > 0)
         {
-            parts.Add(_localizer["CalendarDayBonusFormat", BonusCount].Value);
+            parts.Add(_localizer.Format("CalendarDayBonus", BonusCount));
         }
 
         parts.Add(DateLabel);

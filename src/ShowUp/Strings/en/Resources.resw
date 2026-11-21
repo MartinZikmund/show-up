@@ -331,8 +331,14 @@
   <data name="CalendarDayUpcoming" xml:space="preserve">
     <value>upcoming</value>
   </data>
-  <data name="CalendarDayBonusFormat" xml:space="preserve">
+  <data name="CalendarDayBonus_One" xml:space="preserve">
     <value>{0} bonus</value>
+  </data>
+  <data name="CalendarDayBonus_Few" xml:space="preserve">
+    <value>{0} bonuses</value>
+  </data>
+  <data name="CalendarDayBonus_Other" xml:space="preserve">
+    <value>{0} bonuses</value>
   </data>
   <data name="CalendarUncross" xml:space="preserve">
     <value>Uncross</value>

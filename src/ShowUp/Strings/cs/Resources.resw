@@ -331,8 +331,14 @@
   <data name="CalendarDayUpcoming" xml:space="preserve">
     <value>teprve p&#345;ijde</value>
   </data>
-  <data name="CalendarDayBonusFormat" xml:space="preserve">
-    <value>bonus: {0}</value>
+  <data name="CalendarDayBonus_One" xml:space="preserve">
+    <value>{0} bonus</value>
+  </data>
+  <data name="CalendarDayBonus_Few" xml:space="preserve">
+    <value>{0} bonusy</value>
+  </data>
+  <data name="CalendarDayBonus_Other" xml:space="preserve">
+    <value>{0} bonus&#367;</value>
   </data>
   <data name="CalendarUncross" xml:space="preserve">
     <value>Zru&#353;it od&#353;krtnut&#237;</value>
@@ -509,7 +515,7 @@
     <value>Odpo&#269;inek</value>
   </data>
   <data name="WorkoutKind_FitTest" xml:space="preserve">
-    <value>Fit test</value>
+    <value>Test kondice</value>
   </data>
   <data name="WorkoutKind_Mixed" xml:space="preserve">
     <value>Kombinace</value>
