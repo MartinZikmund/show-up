@@ -1,11 +1,14 @@
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Services;
+using ShowUp.Core.Storage;
+using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
 using ShowUp.Services.Dialogs;
 using ShowUp.Services.Navigation;
 using ShowUp.Services.Rating;
 using ShowUp.Services.Settings;
+using ShowUp.Services.Storage;
 using ShowUp.Services.Theming;
 using Uno.Resizetizer;
 
@@ -99,6 +102,11 @@ public partial class App : Application, IApplication
         services.AddSingleton<IAppPreferences, AppPreferences>();
         services.AddSingleton<IDisplayRequestManager, DisplayRequestManager>();
         services.AddSingleton<IAppUpdater, Infrastructure.AppUpdater>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IUserScope, AnonymousUserScope>();
+        services.AddSingleton<IDeviceIdProvider, PreferencesDeviceIdProvider>();
+        services.AddSingleton(_ => new ShowUpDatabase(Path.Combine(ApplicationData.Current.LocalFolder.Path, "showup.db")));
+        services.AddSingleton<ITrackingRepository, SqliteTrackingRepository>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services
