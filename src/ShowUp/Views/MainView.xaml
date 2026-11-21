@@ -7,6 +7,7 @@
 
     <Grid Padding="24">
         <StackPanel
+            x:Name="ContentPanel"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Spacing="16">
@@ -20,21 +21,6 @@
                 AutomationProperties.AutomationId="HelloTextBlock"
                 Style="{ThemeResource TitleLargeTextBlockStyle}"
                 Text="Hello Uno Platform!" />
-            <StackPanel
-                x:Name="DebugStoragePanel"
-                HorizontalAlignment="Center"
-                Spacing="8"
-                Visibility="Collapsed">
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    AutomationProperties.AutomationId="BonusRowCountText"
-                    Text="{x:Bind ViewModel.BonusRowCount, Mode=OneWay}" />
-                <Button
-                    HorizontalAlignment="Center"
-                    AutomationProperties.AutomationId="AddBonusRowButton"
-                    Command="{x:Bind ViewModel.AddBonusRowCommand}"
-                    Content="Add row" />
-            </StackPanel>
         </StackPanel>
     </Grid>
 </local:MainViewBase>

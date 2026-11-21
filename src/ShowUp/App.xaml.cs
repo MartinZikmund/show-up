@@ -107,8 +107,10 @@ public partial class App : Application, IApplication
         services.AddSingleton<IDeviceIdProvider, PreferencesDeviceIdProvider>();
         services.AddSingleton(_ => new ShowUpDatabase(
             Path.Combine(ApplicationData.Current.LocalFolder.Path, "showup.db"),
-            // On WASM the IDBFS-backed file system loads asynchronously; any StorageFolder await waits for it.
-            async () => await ApplicationData.Current.LocalFolder.CreateFolderAsync("db", CreationCollisionOption.OpenIfExists)));
+            // WASM only: IDBFS loads asynchronously and any StorageFolder await waits for it.
+            OperatingSystem.IsBrowser()
+                ? async () => await ApplicationData.Current.LocalFolder.CreateFolderAsync("db", CreationCollisionOption.OpenIfExists)
+                : null));
         services.AddSingleton<ITrackingRepository, SqliteTrackingRepository>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
