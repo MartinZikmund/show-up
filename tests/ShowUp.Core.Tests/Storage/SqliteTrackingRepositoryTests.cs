@@ -216,6 +216,75 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task Shift_ZeroDays_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 0, DayCount);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_ThirtyOneDays_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 31, DayCount);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_FromTodayWithTodayCrossed_StartsTomorrow()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 9, 0, _today);
+
+        await repo.ShiftScheduleAsync(e.Id, _today, 2, DayCount);
+
+        var shifts = await repo.GetShiftsAsync(e.Id);
+        shifts.Should().BeEquivalentTo([new ScheduleShift(_today.AddDays(1), 2)]);
+        EnrollmentCalendar calendar = new(e.StartDate, DayCount, shifts);
+        calendar.DateOf(9).Should().Be(_today);
+        calendar.DateOf(10).Should().Be(_today.AddDays(3));
+    }
+
+    [TestMethod]
+    public async Task Shift_EndedEnrollment_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Abandoned);
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 1, DayCount);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_OtherUsersEnrollment_Throws()
+    {
+        User.CurrentUserId = "a";
+        var (repo, e) = await EnrolledAsync();
+        User.CurrentUserId = "b";
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 1, DayCount);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_ClampedPastCalendarEnd_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 9, 0, _today);
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 1, 10);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
     public async Task GetShifts_SameCreatedAt_OrdersById()
     {
         var (repo, e) = await EnrolledAsync();
