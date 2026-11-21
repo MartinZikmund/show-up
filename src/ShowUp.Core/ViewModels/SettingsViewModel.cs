@@ -52,10 +52,17 @@ public partial class SettingsViewModel : ViewModelBase
         if (!_isSubscribed)
         {
             _entitlements.Changed += OnEntitlementsChanged;
+            _messenger.Register<SettingsViewModel, PersonalizationReloadedMessage>(this, static (r, _) => r.LoadValues());
             _isSubscribed = true;
         }
 
         OnEntitlementsChanged(null, EventArgs.Empty);
+        LoadValues();
+    }
+
+    // Also after a sign-in or sync brought another account's personalization in.
+    private void LoadValues()
+    {
         try
         {
             _isInitializing = true;
@@ -80,6 +87,7 @@ public partial class SettingsViewModel : ViewModelBase
         if (_isSubscribed)
         {
             _entitlements.Changed -= OnEntitlementsChanged;
+            _messenger.Unregister<PersonalizationReloadedMessage>(this);
             _isSubscribed = false;
         }
     }
