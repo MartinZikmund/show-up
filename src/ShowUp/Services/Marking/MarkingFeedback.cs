@@ -6,8 +6,8 @@ namespace ShowUp.Services.Marking;
 /// <summary>Marker squeak + haptic tick. Every failure degrades to silence: feedback must never break a cross.</summary>
 public sealed partial class MarkingFeedback : IMarkingFeedback
 {
-    private static readonly string[] _strokeSounds = ["marker-1.wav", "marker-2.wav", "marker-3.wav"];
-    private const string TickSound = "marker-tick.wav";
+    private static readonly string[] _strokeSounds = ["marker_1.wav", "marker_2.wav", "marker_3.wav"];
+    private const string TickSound = "marker_tick.wav";
 
     private readonly IAppPreferences _preferences;
     private readonly ILogger<MarkingFeedback> _logger;

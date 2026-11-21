@@ -73,10 +73,10 @@ def write(name, samples):
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
-    write("marker-1.wav", squeak(1, 180))
-    write("marker-2.wav", squeak(2, 180, 1700, 3200))
-    write("marker-3.wav", squeak(3, 180, 1900, 3600))
-    write("marker-tick.wav", squeak(4, 70))
+    write("marker_1.wav", squeak(1, 180))
+    write("marker_2.wav", squeak(2, 180, 1700, 3200))
+    write("marker_3.wav", squeak(3, 180, 1900, 3600))
+    write("marker_tick.wav", squeak(4, 70))
 
 
 if __name__ == "__main__":

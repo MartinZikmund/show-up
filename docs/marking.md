@@ -33,8 +33,8 @@ same X on every head. `SeedFrom(Guid)` is FNV-1a over the GUID bytes, never `Get
 
 `IMarkingFeedback` (Core) is implemented by `Services/Marking/MarkingFeedback.cs`:
 
-- `StrokeDrawn()` at the start of every stroke: a random `marker-{1,2,3}.wav` plus a 12 ms tick.
-- `SessionTicked()` for a 3+ session day that gained a session but no stroke: `marker-tick.wav` + 8 ms.
+- `StrokeDrawn()` at the start of every stroke: a random `marker_{1,2,3}.wav` plus a 12 ms tick.
+- `SessionTicked()` for a 3+ session day that gained a session but no stroke: `marker_tick.wav` + 8 ms.
 - `CrossLanded()` when the cross moment's X completes: a 25 ms tick.
 
 Both toggles persist through `IAppPreferences` (`MarkerSoundEnabled`, `MarkerHapticsEnabled`, on by
