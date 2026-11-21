@@ -197,19 +197,34 @@ public sealed class LapseCoordinatorTests
     }
 
     [TestMethod]
-    public async Task Attach_FirstRefreshNeverAnswers_ChecksAfterTheTimeout()
+    public async Task Attach_FirstRefreshNeverAnswers_WaitsForTheStore()
     {
         await EnrollTwoAsync();
         TaskCompletionSource hung = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        FakeEntitlementService entitlements = new() { IsPro = false, OnRefresh = () => hung.Task };
+        FakeEntitlementService entitlements = new() { IsPro = false, IsConfirmed = false, OnRefresh = () => hung.Task };
         FakePrompt prompt = new();
         LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
 
         coordinator.Attach(prompt);
-        prompt.Asked.Should().BeEmpty("the store gets its chance to answer first");
         _time.Advance(ExpiryWatch.RefreshTimeout + TimeSpan.FromSeconds(1));
+        (await coordinator.CheckAsync()).Should().BeFalse("the cached state may be a renewal the store hasn't reported yet");
 
+        entitlements.IsConfirmed = true;
+        entitlements.SetPro(false);
         await prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));
         prompt.Asked.Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task Check_UnconfirmedLapse_DoesNotAsk()
+    {
+        await EnrollTwoAsync();
+        _entitlements.IsPro = false;
+        _entitlements.IsConfirmed = false;
+
+        var shown = await _coordinator.CheckAsync();
+
+        shown.Should().BeFalse();
+        _prompt.Asked.Should().BeEmpty();
     }
 }
