@@ -171,12 +171,11 @@ public sealed class SqliteTrackingRepository(
 
     private bool IsVisible(SyncableEntity e) => e.DeletedAt is null && e.UserId == user.CurrentUserId;
 
-    // User filter runs in memory: LINQ `== null` on a variable may translate to `= NULL`.
-    private async Task<List<T>> QueryAsync<T>(SQLiteAsyncConnection connection, Expression<Func<T, bool>> where)
+    private Task<List<T>> QueryAsync<T>(SQLiteAsyncConnection connection, Expression<Func<T, bool>> where)
         where T : SyncableEntity, new()
     {
-        var rows = await connection.Table<T>().Where(where).ToListAsync();
-        return rows.Where(IsVisible).ToList();
+        string? uid = user.CurrentUserId;
+        return connection.Table<T>().Where(where).Where(x => x.UserId == uid).ToListAsync();
     }
 
     private Task<List<CompletionEntity>> MatchingCompletionsAsync(
