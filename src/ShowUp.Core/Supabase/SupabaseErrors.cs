@@ -17,7 +17,9 @@ internal static class SupabaseErrors
                 // GoTrue sends error_code/msg (or error/error_description); PostgREST sends code/message.
                 AuthErrorBody? error = JsonSerializer.Deserialize(body, SupabaseJsonContext.Default.AuthErrorBody);
                 // GoTrue's "code" is the HTTP status as a number; PostgREST's is a string.
-                code = error?.ErrorCode ?? (error?.Code is { ValueKind: JsonValueKind.String } text ? text.GetString() : null);
+                code = error?.ErrorCode
+                    ?? (error?.Code is { ValueKind: JsonValueKind.String } text ? text.GetString() : null)
+                    ?? error?.Error;
                 message = error?.Msg ?? error?.Message ?? error?.ErrorDescription ?? error?.Error;
             }
         }

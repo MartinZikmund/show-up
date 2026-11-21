@@ -37,14 +37,18 @@ public sealed class SupabaseRest(HttpClient http, SupabaseOptions options, IAcce
         JsonTypeInfo<T> typeInfo,
         CancellationToken ct = default)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, 0);
+
         StringBuilder query = new("select=*&order=server_updated_at.asc,id.asc&limit=");
         query.Append(limit);
         if (cursor is { } at)
         {
-            string stamp = Uri.EscapeDataString(SupabaseErrors.FormatTimestamp(at));
+            string raw = SupabaseErrors.FormatTimestamp(at);
+            string stamp = Uri.EscapeDataString(raw);
             if (lastId is { } id)
             {
-                query.Append($"&or=(server_updated_at.gt.{stamp},and(server_updated_at.eq.{stamp},id.gt.{id}))");
+                string keyset = $"(server_updated_at.gt.\"{raw}\",and(server_updated_at.eq.\"{raw}\",id.gt.\"{id}\"))";
+                query.Append("&or=").Append(Uri.EscapeDataString(keyset));
             }
             else
             {

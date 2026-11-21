@@ -45,7 +45,7 @@ public sealed class FileTokenStore(string path, ITokenProtector? protector = nul
             Directory.CreateDirectory(dir);
         }
 
-        string temp = path + ".tmp";
+        string temp = $"{path}.{Guid.NewGuid():N}.tmp";
         FileStreamOptions options = new()
         {
             Mode = FileMode.Create,
@@ -56,12 +56,25 @@ public sealed class FileTokenStore(string path, ITokenProtector? protector = nul
             options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
         }
 
-        await using (FileStream stream = new(temp, options))
+        try
         {
-            await stream.WriteAsync(bytes, ct);
-        }
+            await using (FileStream stream = new(temp, options))
+            {
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(temp, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
 
-        File.Move(temp, path, overwrite: true);
+                await stream.WriteAsync(bytes, ct);
+            }
+
+            File.Move(temp, path, overwrite: true);
+        }
+        catch
+        {
+            File.Delete(temp);
+            throw;
+        }
     }
 
     public Task ClearAsync(CancellationToken ct = default)

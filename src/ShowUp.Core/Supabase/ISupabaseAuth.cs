@@ -4,6 +4,10 @@ public interface ISupabaseAuth : IAccessTokenProvider
 {
     Session? Current { get; }
 
+    /// <summary>
+    /// Raised on sign-in, sign-out and refresh (including a forced sign-out), on whatever thread finished the call, so
+    /// marshal to the UI thread before touching it. Not raised by <see cref="RestoreAsync"/>.
+    /// </summary>
     event EventHandler<Session?>? SessionChanged;
 
     /// <summary>Loads the saved session, if any. Call once at startup; does no network.</summary>

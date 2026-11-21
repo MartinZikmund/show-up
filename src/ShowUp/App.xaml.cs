@@ -325,9 +325,7 @@ public partial class App : Application, IApplication
 #elif __IOS__
         return new ShowUp.iOS.Auth.KeychainTokenStore();
 #elif !HAS_UNO
-        return ShowUp.Platforms.Windows.Reminders.WindowsReminderScheduler.IsPackaged
-            ? new ShowUp.Platforms.Windows.Auth.PasswordVaultTokenStore()
-            : new FileTokenStore(SessionFilePath(), new DpapiTokenProtector());
+        return new FileTokenStore(SessionFilePath(), new DpapiTokenProtector());
 #elif __WASM__
         return OperatingSystem.IsBrowser()
             ? new ShowUp.Platforms.WebAssembly.Auth.LocalStorageTokenStore()

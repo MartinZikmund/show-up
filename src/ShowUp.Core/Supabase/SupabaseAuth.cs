@@ -14,8 +14,10 @@ public sealed class SupabaseAuth(
     ILogger<SupabaseAuth>? logger = null) : ISupabaseAuth
 {
     private static readonly TimeSpan _refreshWindow = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan _logoutTimeout = TimeSpan.FromSeconds(5);
 
     private readonly object _gate = new();
+    private readonly SemaphoreSlim _storeGate = new(1, 1);
     private Session? _current;
     private Task<Session?>? _refreshing;
 
@@ -30,6 +32,7 @@ public sealed class SupabaseAuth(
         }
     }
 
+    /// <inheritdoc />
     public event EventHandler<Session?>? SessionChanged;
 
     public async Task RestoreAsync(CancellationToken ct = default)
@@ -50,7 +53,7 @@ public sealed class SupabaseAuth(
             StoredSession? saved = JsonSerializer.Deserialize(json, SupabaseJsonContext.Default.StoredSession);
             if (saved is not null)
             {
-                SetSession(new Session(saved.AccessToken, saved.RefreshToken, DateTimeOffset.FromUnixTimeSeconds(saved.ExpiresAtUnix), saved.UserId, saved.Email), persist: false);
+                SetSession(new Session(saved.AccessToken, saved.RefreshToken, DateTimeOffset.FromUnixTimeSeconds(saved.ExpiresAtUnix), saved.UserId, saved.Email), notify: false);
             }
         }
         catch (JsonException)
@@ -77,8 +80,8 @@ public sealed class SupabaseAuth(
         await EnsureSuccessAsync(response, ct);
 
         Session session = await ReadSessionAsync(response, email, ct);
-        SetSession(session, persist: true);
-        await SaveAsync(session);
+        SetSession(session, notify: true);
+        await PersistAsync();
         return session;
     }
 
@@ -92,8 +95,34 @@ public sealed class SupabaseAuth(
                 return Task.FromResult<Session?>(null);
             }
 
-            // The shared refresh must not die with one caller's token.
-            flight = _refreshing ??= RefreshCoreAsync();
+            if (_refreshing is null)
+            {
+                Session started = _current;
+                Task<Session?>? self = null;
+
+                // Task.Run: a handler that completes synchronously must not run the finally before _refreshing is set.
+                // The shared refresh must also not die with one caller's token, so it ignores ct.
+                self = Task.Run(async () =>
+                {
+                    try
+                    {
+                        return await RefreshCoreAsync(started);
+                    }
+                    finally
+                    {
+                        lock (_gate)
+                        {
+                            if (ReferenceEquals(_refreshing, self))
+                            {
+                                _refreshing = null;
+                            }
+                        }
+                    }
+                });
+                _refreshing = self;
+            }
+
+            flight = _refreshing;
         }
 
         return flight.WaitAsync(ct);
@@ -143,83 +172,106 @@ public sealed class SupabaseAuth(
     public async Task SignOutAsync(CancellationToken ct = default)
     {
         Session? session = Current;
-        if (session is not null && options.IsConfigured)
-        {
-            try
-            {
-                using HttpRequestMessage request = CreateRequest(HttpMethod.Post, "auth/v1/logout?scope=local");
-                request.Headers.Authorization = new("Bearer", session.AccessToken);
-                using HttpResponseMessage response = await SendAsync(request, ct);
-            }
-            catch (SupabaseException)
-            {
-                // Signing out must work offline; the server session expires on its own.
-            }
-        }
-
-        SetSession(null, persist: true);
-        await ClearSavedAsync();
-    }
-
-    private async Task<Session?> RefreshCoreAsync()
-    {
         try
         {
-            Session? session = Current;
-            if (session is null)
+            if (session is not null && options.IsConfigured)
             {
-                return null;
+                using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                timeout.CancelAfter(_logoutTimeout);
+                using HttpRequestMessage request = CreateRequest(HttpMethod.Post, "auth/v1/logout?scope=local");
+                request.Headers.Authorization = new("Bearer", session.AccessToken);
+                using HttpResponseMessage response = await SendAsync(request, timeout.Token);
             }
-
-            using HttpRequestMessage request = CreateRequest(HttpMethod.Post, "auth/v1/token?grant_type=refresh_token");
-            request.Content = JsonContent.Create(new RefreshRequest(session.RefreshToken), SupabaseJsonContext.Default.RefreshRequest);
-            using HttpResponseMessage response = await SendAsync(request, CancellationToken.None);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                SupabaseException error = await SupabaseErrors.FromResponseAsync(response, CancellationToken.None);
-                if (error.Kind is SupabaseErrorKind.Validation or SupabaseErrorKind.Unauthorized or SupabaseErrorKind.Forbidden)
-                {
-                    // The refresh token is spent or revoked: this device is signed out.
-                    SetSession(null, persist: true);
-                    await ClearSavedAsync();
-                    return null;
-                }
-
-                throw error;
-            }
-
-            Session refreshed = await ReadSessionAsync(response, session.Email, CancellationToken.None);
-            SetSession(refreshed, persist: true);
-            await SaveAsync(refreshed);
-            return refreshed;
+        }
+        catch (Exception ex) when (ex is SupabaseException or OperationCanceledException)
+        {
+            // Signing out must work offline; the server session expires on its own.
         }
         finally
         {
-            lock (_gate)
-            {
-                _refreshing = null;
-            }
+            SetSession(null, notify: true);
+            await PersistAsync();
         }
     }
 
-    private void SetSession(Session? session, bool persist)
+    private async Task<Session?> RefreshCoreAsync(Session started)
+    {
+        using HttpRequestMessage request = CreateRequest(HttpMethod.Post, "auth/v1/token?grant_type=refresh_token");
+        request.Content = JsonContent.Create(new RefreshRequest(started.RefreshToken), SupabaseJsonContext.Default.RefreshRequest);
+        using HttpResponseMessage response = await SendAsync(request, CancellationToken.None);
+
+        Session? next = null;
+        if (response.IsSuccessStatusCode)
+        {
+            next = await ReadSessionAsync(response, started.Email, CancellationToken.None);
+        }
+        else
+        {
+            SupabaseException error = await SupabaseErrors.FromResponseAsync(response, CancellationToken.None);
+            if (!IsRefreshRejection(error))
+            {
+                throw error;
+            }
+        }
+
+        // Signed out, or signed in as someone else, while this was in flight: the result is not ours to apply.
+        if (!SwapSession(started, next))
+        {
+            return Current;
+        }
+
+        await PersistAsync();
+        return next;
+    }
+
+    // Only the server saying the refresh token is dead signs the device out; a proxy 403 or a 408 does not.
+    private static bool IsRefreshRejection(SupabaseException error) =>
+        error.StatusCode is 400 or 401
+        && error.ErrorCode is "refresh_token_not_found" or "refresh_token_already_used" or "session_not_found"
+            or "session_expired" or "bad_jwt" or "user_not_found" or "user_banned" or "invalid_grant";
+
+    private bool SwapSession(Session expected, Session? next)
+    {
+        lock (_gate)
+        {
+            if (!ReferenceEquals(_current, expected))
+            {
+                return false;
+            }
+
+            _current = next;
+        }
+
+        SessionChanged?.Invoke(this, next);
+        return true;
+    }
+
+    private void SetSession(Session? session, bool notify)
     {
         lock (_gate)
         {
             _current = session;
         }
 
-        if (persist)
+        if (notify)
         {
             SessionChanged?.Invoke(this, session);
         }
     }
 
-    private async Task SaveAsync(Session session)
+    // Writes whatever is current now, so a slow save can never resurrect a session that was signed out meanwhile.
+    private async Task PersistAsync()
     {
+        await _storeGate.WaitAsync();
         try
         {
+            Session? session = Current;
+            if (session is null)
+            {
+                await store.ClearAsync();
+                return;
+            }
+
             StoredSession saved = new(session.AccessToken, session.RefreshToken, session.ExpiresAt.ToUnixTimeSeconds(), session.UserId, session.Email);
             await store.WriteAsync(JsonSerializer.Serialize(saved, SupabaseJsonContext.Default.StoredSession));
         }
@@ -227,17 +279,9 @@ public sealed class SupabaseAuth(
         {
             logger?.LogWarning("Saving the session failed ({ExceptionType}).", ex.GetType().Name);
         }
-    }
-
-    private async Task ClearSavedAsync()
-    {
-        try
+        finally
         {
-            await store.ClearAsync();
-        }
-        catch (Exception ex)
-        {
-            logger?.LogWarning("Clearing the saved session failed ({ExceptionType}).", ex.GetType().Name);
+            _storeGate.Release();
         }
     }
 

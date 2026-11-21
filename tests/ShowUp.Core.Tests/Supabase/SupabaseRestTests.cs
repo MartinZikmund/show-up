@@ -101,7 +101,7 @@ public sealed class SupabaseRestTests
         await Create().SelectPageAsync("notes", cursor, Id1, 100, TestRowContext.Default.TestRow);
 
         string query = Uri.UnescapeDataString(_handler.Requests.Single().Uri.Query);
-        query.Should().Contain($"&or=(server_updated_at.gt.2026-11-21T09:00:00.000000Z,and(server_updated_at.eq.2026-11-21T09:00:00.000000Z,id.gt.{Id1}))");
+        query.Should().Contain($"&or=(server_updated_at.gt.\"2026-11-21T09:00:00.000000Z\",and(server_updated_at.eq.\"2026-11-21T09:00:00.000000Z\",id.gt.\"{Id1}\"))");
     }
 
     [TestMethod]
