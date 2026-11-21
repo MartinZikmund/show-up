@@ -273,7 +273,7 @@ public sealed class SettingsViewModelTests
     }
 
     private static SettingsViewModel CreateViewModel(FakeAppPreferences preferences, IMessenger? messenger = null, FakeEntitlementService? entitlements = null) =>
-        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger(), entitlements ?? new FakeEntitlementService(), new RecordingNavigationService());
+        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger(), entitlements ?? new FakeEntitlementService(), new RecordingNavigationService(), Accounts.AccountTestFactory.CreateViewModel());
 
     private sealed class FakeAppPreferences : IAppPreferences
     {

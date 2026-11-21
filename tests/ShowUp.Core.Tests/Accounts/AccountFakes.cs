@@ -1,7 +1,18 @@
 using System.Diagnostics.CodeAnalysis;
+using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging.Abstractions;
 using MZikmund.Toolkit.WinUI.Services;
+using ShowUp.Core.Accounts;
+using ShowUp.Core.Messages;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Supabase;
 using ShowUp.Core.Sync;
+using ShowUp.Core.Entitlements;
+using ShowUp.Core.Tests.Entitlements;
+using ShowUp.Core.Tests.Tracking;
+using ShowUp.Core.Tests.ViewModels;
+using ShowUp.Core.ViewModels;
+using ShowUp.Services.Dialogs;
 
 namespace ShowUp.Core.Tests.Accounts;
 
@@ -71,6 +82,42 @@ internal sealed class FakeSupabaseAuth : ISupabaseAuth
     public Task<string?> GetAccessTokenAsync(CancellationToken ct = default) => Task.FromResult(Current?.AccessToken);
 
     public Task<string?> RefreshAfterRejectionAsync(string rejectedToken, CancellationToken ct = default) => Task.FromResult(Current?.AccessToken);
+}
+
+internal static class AccountTestFactory
+{
+    public static AccountService CreateService(
+        ISupabaseAuth? auth = null,
+        ILocalDataClaim? claim = null,
+        IEntitlementService? entitlements = null,
+        UserScope? scope = null)
+    {
+        WeakReferenceMessenger messenger = new();
+        FakeCatalogService catalog = new();
+        var enrollments = TestEnrollments.Create(new FakeTrackingRepository(TimeProvider.System), catalog, messenger);
+        return new(
+            auth ?? new FakeSupabaseAuth(),
+            scope ?? new UserScope(),
+            entitlements ?? new FakeEntitlementService(),
+            claim ?? new NoProgressClaim(),
+            new MemoryPreferences(),
+            new DataChangeAnnouncer(enrollments, catalog, messenger),
+            NullLogger<AccountService>.Instance,
+            () => true);
+    }
+
+    public static AccountViewModel CreateViewModel(
+        AccountService? account = null,
+        ISyncStatus? sync = null,
+        IConfirmationDialogService? confirmation = null) =>
+        new(account ?? CreateService(), sync ?? new FakeSyncStatus(), confirmation ?? new FakeConfirmationDialogService(), new FakeStringLocalizer(), NullLogger<AccountViewModel>.Instance);
+
+    private sealed class NoProgressClaim : ILocalDataClaim
+    {
+        public Task<bool> HasAnonymousProgressAsync() => Task.FromResult(false);
+
+        public Task<int> ClaimAsync(string userId) => Task.FromResult(0);
+    }
 }
 
 internal sealed class FakeSyncStatus : ISyncStatus

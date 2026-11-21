@@ -32,8 +32,10 @@ public partial class SettingsViewModel : ViewModelBase
         IApplication application,
         IMessenger messenger,
         IEntitlementService entitlements,
-        INavigationService navigation)
+        INavigationService navigation,
+        AccountViewModel account)
     {
+        Account = account;
         _entitlements = entitlements;
         _navigation = navigation;
         _messenger = messenger;
@@ -46,9 +48,13 @@ public partial class SettingsViewModel : ViewModelBase
         MarkerSwatches = [.. Enum.GetValues<MarkerColor>().Select(c => new MarkerSwatch(c, _localizer[$"MarkerColor_{c}"]))];
     }
 
+    /// <summary>The account card.</summary>
+    public AccountViewModel Account { get; }
+
     public override void OnNavigatedTo(object? parameter)
     {
         base.OnNavigatedTo(parameter);
+        Account.Activate();
         if (!_isSubscribed)
         {
             _entitlements.Changed += OnEntitlementsChanged;
@@ -84,6 +90,7 @@ public partial class SettingsViewModel : ViewModelBase
     public override void OnNavigatedFrom()
     {
         base.OnNavigatedFrom();
+        Account.Deactivate();
         if (_isSubscribed)
         {
             _entitlements.Changed -= OnEntitlementsChanged;
