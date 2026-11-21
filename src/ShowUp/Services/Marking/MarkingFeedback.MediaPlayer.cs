@@ -1,36 +1,51 @@
-#if !__DESKTOP__
+#if !__DESKTOP__ && !__ANDROID__ && !__IOS__
 using Windows.Media.Core;
 using Windows.Media.Playback;
-using Player = Windows.Media.Playback.MediaPlayer;
 
 namespace ShowUp.Services.Marking;
 
-// Windows, Android, iOS and WASM: Windows.Media.Playback ships with the head's runtime, no UnoFeature needed.
+// Windows and WASM: Windows.Media.Playback ships with the head's runtime, no UnoFeature needed.
 public sealed partial class MarkingFeedback
 {
-    private static readonly Dictionary<string, Player> _players = new();
+    private static readonly Dictionary<string, MediaPlayer> _players = new();
+
+    static partial void PrepareSounds(string[] sounds)
+    {
+        foreach (var sound in sounds)
+        {
+            GetPlayer(sound);
+        }
+    }
 
     private static partial string PlayCore(string sound)
     {
-        if (!_players.TryGetValue(sound, out var player))
-        {
-            player = new Player
-            {
-                Source = MediaSource.CreateFromUri(SoundUri(sound)),
-                AutoPlay = false,
-            };
-            _players[sound] = player;
-        }
+        var player = GetPlayer(sound);
 
-        // Restart instead of queueing: a stroke that starts mid-squeak should squeak from the top.
-        // Never seek while Opening: Uno Android kills the player for good (unoplatform/uno#26158).
+        // Restart instead of queueing; never seek while Opening (Uno kills the player, unoplatform/uno#26158).
         if (player.PlaybackSession.PlaybackState != MediaPlaybackState.Opening)
         {
             player.PlaybackSession.Position = TimeSpan.Zero;
         }
 
         player.Play();
-        return "MediaPlayer";
+        return nameof(MediaPlayer);
+    }
+
+    private static MediaPlayer GetPlayer(string sound)
+    {
+        if (!_players.TryGetValue(sound, out var player))
+        {
+            player = new MediaPlayer
+            {
+                // A sound effect mixes with the user's music instead of taking over the audio session.
+                AudioCategory = MediaPlayerAudioCategory.SoundEffects,
+                Source = MediaSource.CreateFromUri(SoundUri(sound)),
+                AutoPlay = false,
+            };
+            _players[sound] = player;
+        }
+
+        return player;
     }
 }
 #endif

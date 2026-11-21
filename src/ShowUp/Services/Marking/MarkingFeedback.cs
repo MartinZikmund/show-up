@@ -19,6 +19,16 @@ public sealed partial class MarkingFeedback : IMarkingFeedback
     {
         _preferences = preferences;
         _logger = logger;
+
+        try
+        {
+            PrepareSounds([.. _strokeSounds, TickSound]);
+        }
+        catch (Exception ex)
+        {
+            _soundBroken = true;
+            _logger.LogWarning(ex, "Marker sounds could not be prepared; continuing silently");
+        }
     }
 
     public bool SoundEnabled
@@ -89,6 +99,9 @@ public sealed partial class MarkingFeedback : IMarkingFeedback
     }
 
     private static Uri SoundUri(string sound) => new($"ms-appx:///Assets/Sounds/{sound}");
+
+    /// <summary>Optional per-head preload, so the first stroke isn't silent where loading is asynchronous.</summary>
+    static partial void PrepareSounds(string[] sounds);
 
     private static partial string PlayCore(string sound);
 

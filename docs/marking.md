@@ -43,11 +43,20 @@ error logs a warning and the head goes silent.
 
 | Head | Sound | Haptics |
 | --- | --- | --- |
-| Windows (WinUI) | `MediaPlayer` | none |
+| Windows (WinUI) | `MediaPlayer`, `AudioCategory = SoundEffects` | none |
 | Desktop on Windows | winmm `PlaySound` (Uno's desktop `MediaPlayer` needs the LibVLC-based `MediaPlayerElement` feature) | none |
 | Desktop on macOS/Linux | silent | none |
 | WebAssembly | `MediaPlayer` (HTML audio) | none |
-| Android / iOS | `MediaPlayer` | `VibrationDevice` (Android needs `VIBRATE`, declared in the manifest) |
+| Android | `SoundPool`, usage `AssistanceSonification`, no audio focus request | `VibrationDevice` (needs `VIBRATE`, declared in the manifest) |
+| iOS | `AVAudioPlayer`, session category `Ambient` + `MixWithOthers` | `VibrationDevice` |
+
+**The squeak must never pause or duck the user's workout music.** That's why the phones skip Uno's
+`MediaPlayer`: on iOS it forces the `Playback` session category (which stops other audio), and on
+Android a sound-effect pool is lighter and never asks for audio focus. `Ambient` also means the iOS
+silent switch mutes the squeak, like any other UI sound.
+
+Asset names use only lowercase letters, digits and underscores: Android rewrites anything else in
+asset names (`SoundAssets_UseAndroidSafeNames` guards it).
 
 The sounds are synthesized by [`tools/generate-marker-sounds.py`](../tools/generate-marker-sounds.py)
 and released as CC0 (see `src/ShowUp/Assets/Sounds/LICENSE.md`).

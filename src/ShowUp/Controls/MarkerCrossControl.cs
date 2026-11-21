@@ -131,6 +131,9 @@ public sealed partial class MarkerCrossControl : Control
             GetTemplateChild(SecondPartName) as Path,
             GetTemplateChild(SecondUnderPartName) as Path,
         ];
+
+        // Resolve early: some heads load sounds asynchronously, and the first stroke shouldn't be silent.
+        _feedback ??= App.Current.Services.GetService<IMarkingFeedback>();
         Redraw();
     }
 
