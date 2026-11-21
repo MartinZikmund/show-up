@@ -13,11 +13,12 @@ One page per topic. Keep it that way.
 
 ## Architecture
 
-- [calendar.md](./calendar.md) — the program calendar page: the active enrollment service, tap-to-cross flow, and the reusable grid control.
+- [calendar.md](./calendar.md) — the program calendar page: the enrollment service, tap-to-cross flow, and the reusable grid control.
 - [catalog.md](./catalog.md) — how the bundled workout programs are verified, the file format, optional sessions, and held programs.
 - [entitlements.md](./entitlements.md) — Show Up Pro: the feature gate, the paywall, per-head billing (RevenueCat, Microsoft Store, unlocked) and its configuration.
 - [json-aot-serialization.md](./json-aot-serialization.md) — `JsonSerializerContext` conventions for AOT-safe, trim-safe JSON serialization.
 - [marking.md](./marking.md) — the hand-drawn marker X, drawing the cross yourself, sound and haptics, and the cross moment.
+- [multiple-programs.md](./multiple-programs.md) — running several programs at once (Pro): enrollment-addressed APIs, the selected program, Today's groups, and read-only programs after a lapse.
 - [programs.md](./programs.md) — browsing the catalog, the program detail page, starting a program, and the hero fallback.
 - [results.md](./results.md) — notes, logging Fit Test and Max Out results, the day detail sheet and the results table.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.

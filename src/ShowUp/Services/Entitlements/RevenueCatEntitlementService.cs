@@ -24,6 +24,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     private readonly DispatcherQueue? _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly SingleFlight _refresh = new();
     private readonly Dictionary<string, PackageDto> _packages = [];
+    private readonly ExpiryWatch _expiry;
+    private volatile bool _recheckingExpiry;
     private bool _initialized;
 
     public RevenueCatEntitlementService(
@@ -40,9 +42,14 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         _time = time;
         _logger = logger;
         _apiKey = apiKey;
+        _expiry = new(time, logger);
+        WatchExpiry();
     }
 
-    public bool IsPro => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow());
+    // While the expiry recheck asks the store, a renewing subscriber stays Pro.
+    public bool IsPro => _recheckingExpiry || CachedIsPro;
+
+    private bool CachedIsPro => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow());
 
     public bool PurchasesAvailable => _apiKey.Length > 0;
 
@@ -174,7 +181,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
 
     public async Task<Uri?> GetManageSubscriptionUriAsync()
     {
-        if (!EnsureInitialized())
+        if (!EnsureInitialized() || ProCache.IsLifetime(IsPro, _preferences.LastKnownProExpires))
         {
             return null;
         }
@@ -207,6 +214,26 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         return true;
     }
 
+    // At the cached end of a subscription, ask RevenueCat again: a renewal keeps Pro, a real lapse locks it mid-session.
+    private void WatchExpiry() =>
+        _expiry.Schedule(
+            _preferences.LastKnownPro ? _preferences.LastKnownProExpires : null,
+            async () =>
+            {
+                _recheckingExpiry = true;
+                try
+                {
+                    // Bounded here too, so a hung store can't keep IsPro forced on.
+                    await RefreshAsync().WaitAsync(ExpiryWatch.RefreshTimeout, _time);
+                }
+                finally
+                {
+                    _recheckingExpiry = false;
+                }
+            },
+            () => CachedIsPro,
+            () => UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty)));
+
     private static ProOfferKind? KindOf(string identifier) => identifier switch
     {
         DefaultPackageIdentifier.Monthly => ProOfferKind.Monthly,
@@ -223,6 +250,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         _preferences.LastKnownProExpires = entitlement?.ExpirationDate is { } expiry
             ? new DateTimeOffset(DateTime.SpecifyKind(expiry, DateTimeKind.Utc))
             : null;
+        WatchExpiry();
         if (before != IsPro)
         {
             UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));

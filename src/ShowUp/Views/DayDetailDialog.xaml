@@ -23,6 +23,13 @@
                 Foreground="{ThemeResource MutedTextBrush}"
                 Style="{StaticResource BodyTextBlockStyle}"
                 Text="{x:Bind ViewModel.DateLabel, Mode=OneWay}" />
+            <TextBlock
+                AutomationProperties.AutomationId="DayDetailReadOnly"
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Text="{markup:Localize Key=ProgramReadOnlyMessage}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind ViewModel.IsReadOnly, Mode=OneWay}" />
 
             <ItemsRepeater ItemsSource="{x:Bind ViewModel.Sessions, Mode=OneWay}">
                 <ItemsRepeater.Layout>
@@ -88,6 +95,7 @@
                                 AcceptsReturn="True"
                                 AutomationProperties.AutomationId="{x:Bind NoteAutomationId}"
                                 AutomationProperties.Name="{markup:Localize Key=DayDetailNotePlaceholder}"
+                                IsReadOnly="{x:Bind IsLocked}"
                                 MaxLength="4000"
                                 PlaceholderText="{markup:Localize Key=DayDetailNotePlaceholder}"
                                 Text="{x:Bind Note, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -130,6 +138,7 @@
                 AcceptsReturn="True"
                 AutomationProperties.AutomationId="DayDetailDayNote"
                 Header="{markup:Localize Key=DayDetailDayNote}"
+                IsReadOnly="{x:Bind ViewModel.IsReadOnly, Mode=OneWay}"
                 MaxLength="4000"
                 PlaceholderText="{markup:Localize Key=DayDetailNotePlaceholder}"
                 Text="{x:Bind ViewModel.DayNote, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

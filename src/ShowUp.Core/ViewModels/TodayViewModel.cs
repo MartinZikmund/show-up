@@ -12,13 +12,14 @@ using ShowUp.Services.Dialogs;
 
 namespace ShowUp.Core.ViewModels;
 
-/// <summary>What's on today in the active program, with bonus workouts logged outside it.</summary>
+/// <summary>What's on today in every active program, grouped by program, with bonus workouts logged outside them.</summary>
 public partial class TodayViewModel : ViewModelBase
 {
     private const int RecentBonusDays = 7;
 
     private readonly IStringLocalizer _localizer;
     private readonly IActiveEnrollmentService _enrollments;
+    private readonly IScheduleQuery _schedule;
     private readonly ICatalogService _catalog;
     private readonly TimeProvider _time;
     private readonly IMessenger _messenger;
@@ -27,13 +28,10 @@ public partial class TodayViewModel : ViewModelBase
     private readonly IBonusWorkoutDialog _bonusDialog;
     private readonly ISectionNavigator _navigator;
     private readonly IJournalDialogs _journalDialogs;
+    private readonly INavigationService _navigation;
     private readonly ILogger<TodayViewModel> _logger;
 
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
-    private readonly SemaphoreSlim _crossGate = new(1, 1);
-    private IReadOnlyList<DayStatus> _statuses = [];
-    private IReadOnlyList<CompletedSession> _completions = [];
-    private int _dayIndex = -1;
     private DateOnly _loadedToday;
     private int _loadedGreetingHour = -1;
     private readonly LiveRefresher _live;
@@ -41,6 +39,7 @@ public partial class TodayViewModel : ViewModelBase
     public TodayViewModel(
         IStringLocalizer localizer,
         IActiveEnrollmentService enrollments,
+        IScheduleQuery schedule,
         ICatalogService catalog,
         TimeProvider time,
         IMessenger messenger,
@@ -49,10 +48,12 @@ public partial class TodayViewModel : ViewModelBase
         IBonusWorkoutDialog bonusDialog,
         ISectionNavigator navigator,
         IJournalDialogs journalDialogs,
+        INavigationService navigation,
         ILogger<TodayViewModel> logger)
     {
         _localizer = localizer;
         _enrollments = enrollments;
+        _schedule = schedule;
         _catalog = catalog;
         _time = time;
         _messenger = messenger;
@@ -61,6 +62,7 @@ public partial class TodayViewModel : ViewModelBase
         _bonusDialog = bonusDialog;
         _navigator = navigator;
         _journalDialogs = journalDialogs;
+        _navigation = navigation;
         _logger = logger;
         _live = new(time, logger, "Refreshing Today failed.", RefreshAsync, NextChangeIn);
         PageTitle = localizer["Today"];
@@ -69,18 +71,12 @@ public partial class TodayViewModel : ViewModelBase
     [ObservableProperty]
     public partial string Greeting { get; private set; } = "";
 
+    /// <summary>One card group per active program, the selected one first.</summary>
     [ObservableProperty]
-    public partial string? ProgramName { get; private set; }
+    [NotifyPropertyChangedFor(nameof(HasSeveralPrograms))]
+    public partial IReadOnlyList<TodayProgramViewModel> Programs { get; private set; } = [];
 
-    [ObservableProperty]
-    public partial int? DayNumber { get; private set; }
-
-    /// <summary>"Day 12 of 60", empty when today isn't a program day.</summary>
-    [ObservableProperty]
-    public partial string DayText { get; private set; } = "";
-
-    [ObservableProperty]
-    public partial IReadOnlyList<TodaySessionViewModel> Sessions { get; private set; } = [];
+    public bool HasSeveralPrograms => Programs.Count > 1;
 
     /// <summary>The last week's bonus workouts, newest first.</summary>
     [ObservableProperty]
@@ -94,38 +90,11 @@ public partial class TodayViewModel : ViewModelBase
     public bool HasBonuses => Bonuses.Count > 0;
 
     [ObservableProperty]
-    public partial int CurrentStreak { get; private set; }
-
-    [ObservableProperty]
-    public partial string StreakText { get; private set; } = "";
-
-    /// <summary>Today is a rest day (or all of its sessions are optional).</summary>
-    [ObservableProperty]
-    public partial bool IsRestDay { get; private set; }
-
-    [ObservableProperty]
     public partial bool HasEnrollment { get; private set; }
-
-    /// <summary>An enrollment, but nothing scheduled today: before it starts, after it ends, or a gap from a shift.</summary>
-    [ObservableProperty]
-    public partial bool IsOffSchedule { get; private set; }
 
     /// <summary>Loaded and there's no enrollment (not shown while the first load runs).</summary>
     [ObservableProperty]
     public partial bool ShowNoEnrollment { get; private set; }
-
-    /// <summary>Today's generated marker strokes; drawn crosses are in <see cref="Inks"/>.</summary>
-    [ObservableProperty]
-    public partial int MarkStrokes { get; private set; }
-
-    [ObservableProperty]
-    public partial IReadOnlyList<string> Inks { get; private set; } = [];
-
-    [ObservableProperty]
-    public partial int Seed { get; private set; }
-
-    /// <summary>False while a cross moment shows the cross big, so the card lands it without animating.</summary>
-    public bool AnimateMarks { get; private set; } = true;
 
     private DateOnly Today => DateOnly.FromDateTime(_time.GetLocalNow().DateTime);
 
@@ -176,36 +145,30 @@ public partial class TodayViewModel : ViewModelBase
             Bonuses = [.. recent.OrderByDescending(b => b.Date).ThenByDescending(b => b.CreatedAt)];
             BonusItems = [.. Bonuses.Select(b => new BonusItemViewModel(b, b.Title, BonusDetail(b, today)))];
 
-            var active = await _enrollments.GetAsync();
-            if (active is null)
+            var due = await _schedule.GetDueAsync(today);
+            if (due.Count == 0)
             {
                 ShowNoProgram();
                 return;
             }
 
             var workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
-            var completions = await _enrollments.GetCompletionsAsync();
-            var statuses = ProgressCalculator.Build(
-                active.Track,
-                workouts,
-                active.Calendar,
-                completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet());
-
-            _statuses = statuses;
-            _completions = completions;
-            ProgramName = active.Program.Name;
-            CurrentStreak = StreakCalculator.Current(statuses, today);
-            StreakText = _localizer["CrossMomentStreakFormat", CurrentStreak].Value;
-            HasEnrollment = true;
-            ShowNoEnrollment = false;
-
-            if (active.Calendar.DayIndexOn(today) is not { } dayIndex)
+            var existing = Programs.ToDictionary(p => p.EnrollmentId);
+            List<TodayProgramViewModel> programs = [];
+            foreach (var program in due)
             {
-                ShowNothingScheduled();
-                return;
+                var card = existing.GetValueOrDefault(program.Active.Id) ?? new TodayProgramViewModel(program.Active.Id);
+                ShowProgram(card, program, workouts, today);
+                programs.Add(card);
             }
 
-            ShowDay(active, workouts, statuses[dayIndex], [.. completions.Where(c => c.DayIndex == dayIndex)]);
+            if (!Programs.SequenceEqual(programs))
+            {
+                Programs = programs;
+            }
+
+            HasEnrollment = true;
+            ShowNoEnrollment = false;
         }
         finally
         {
@@ -262,45 +225,80 @@ public partial class TodayViewModel : ViewModelBase
     [RelayCommand]
     private void BrowsePrograms() => _navigator.NavigateToSection(NavigationSection.Programs);
 
-    private async Task CrossAsync(TodaySessionViewModel session)
+    [RelayCommand]
+    private void OpenPro() => _navigation.Navigate<ProViewModel>();
+
+    private async Task CrossAsync(TodayProgramViewModel program, TodaySessionViewModel session)
     {
-        if (_dayIndex < 0 || _dayIndex >= _statuses.Count || !await _crossGate.WaitAsync(0))
+        var dayIndex = program.DayIndex;
+        if (program.IsReadOnly || dayIndex < 0 || dayIndex >= program.Statuses.Count || !await program.CrossGate.WaitAsync(0))
         {
             return;
         }
 
         try
         {
-            var status = _statuses[_dayIndex];
+            var status = program.Statuses[dayIndex];
             if (status.CompletedSessions.Contains(session.Index))
             {
                 return;
             }
 
-            var dayCompletions = _completions.Where(c => c.DayIndex == _dayIndex).ToList();
+            var dayCompletions = program.Completions.Where(c => c.DayIndex == dayIndex).ToList();
             await _crossing.CrossAsync(
-                new CrossTarget(_dayIndex, session.Index, session.Name, true, CalendarDayViewModel.SeedFor(dayCompletions, _dayIndex), status, _statuses, dayCompletions, Today),
-                new CrossHooks(_live.WriteAsync, RefreshAsync, animate => AnimateMarks = animate));
+                new CrossTarget(
+                    program.EnrollmentId,
+                    dayIndex,
+                    session.Index,
+                    session.Name,
+                    true,
+                    CalendarDayViewModel.SeedFor(dayCompletions, dayIndex),
+                    status,
+                    program.Statuses,
+                    dayCompletions,
+                    Today),
+                new CrossHooks(_live.WriteAsync, RefreshAsync, animate => program.AnimateMarks = animate));
         }
         catch (InvalidOperationException)
         {
-            // The enrollment ended or the day moved on under us; show what's true now.
+            // The enrollment ended, went read-only or the day moved on under us; show what's true now.
             await RefreshAsync();
         }
         finally
         {
-            AnimateMarks = true;
-            _crossGate.Release();
+            program.AnimateMarks = true;
+            program.CrossGate.Release();
         }
     }
 
-    private void ShowDay(ActiveEnrollment active, IReadOnlyDictionary<string, Workout> workouts, DayStatus status, IReadOnlyList<CompletedSession> dayCompletions)
+    private void ShowProgram(TodayProgramViewModel card, DueProgram due, IReadOnlyDictionary<string, Workout> workouts, DateOnly today)
     {
-        _dayIndex = status.DayIndex;
-        IsOffSchedule = false;
-        IsRestDay = status.CountsAsRest;
-        DayNumber = status.DayIndex + 1;
-        DayText = _localizer["TodayDayFormat", status.DayIndex + 1, active.Calendar.DayCount].Value;
+        var active = due.Active;
+        card.Statuses = due.Statuses;
+        card.Completions = due.Completions;
+        card.ProgramName = active.Program.Name;
+        card.IsReadOnly = due.IsReadOnly;
+        card.CurrentStreak = StreakCalculator.Current(due.Statuses, today);
+        card.StreakText = _localizer["CrossMomentStreakFormat", card.CurrentStreak].Value;
+
+        if (due.Day is not { } status)
+        {
+            card.DayIndex = -1;
+            card.IsOffSchedule = true;
+            card.IsRestDay = false;
+            card.DayNumber = null;
+            card.DayText = "";
+            card.Sessions = [];
+            card.MarkStrokes = 0;
+            card.Inks = [];
+            return;
+        }
+
+        card.DayIndex = status.DayIndex;
+        card.IsOffSchedule = false;
+        card.IsRestDay = status.CountsAsRest;
+        card.DayNumber = status.DayIndex + 1;
+        card.DayText = _localizer["TodayDayFormat", status.DayIndex + 1, active.Calendar.DayCount].Value;
 
         var scheduled = _catalog.GetTrackDays(active.Track)[status.DayIndex].Sessions;
         List<TodaySessionViewModel> sessions = [];
@@ -318,77 +316,57 @@ public partial class TodayViewModel : ViewModelBase
                 _localizer["TodayCrossOffFormat", workout?.Name ?? scheduled[i].WorkoutId].Value,
                 scheduled[i].Optional,
                 status.CompletedSessions.Contains(i),
-                CrossAsync));
+                s => CrossAsync(card, s))
+            {
+                Program = card,
+                IsReadOnly = due.IsReadOnly,
+            });
         }
 
         var lastDone = status.CompletedSessions.Count > 0 ? status.CompletedSessions.Max() : -1;
-        foreach (var card in sessions)
+        foreach (var session in sessions)
         {
-            card.ShowsMarks = card.Index == lastDone;
+            session.ShowsMarks = session.Index == lastDone;
         }
 
-        UpdateSessions(sessions);
+        UpdateSessions(card, sessions);
 
+        var dayCompletions = due.DayCompletions;
         var autos = dayCompletions.Where(c => c.InkJson is null).Select(c => c.SessionIndex).ToHashSet();
         IReadOnlyList<string> inks = [.. dayCompletions.Where(c => c.InkJson is not null).Select(c => c.InkJson!)];
-        Seed = CalendarDayViewModel.SeedFor(dayCompletions, status.DayIndex);
-        if (!Inks.SequenceEqual(inks))
+        card.Seed = CalendarDayViewModel.SeedFor(dayCompletions, status.DayIndex);
+        if (!card.Inks.SequenceEqual(inks))
         {
-            Inks = inks;
+            card.Inks = inks;
         }
 
-        MarkStrokes = MarkerAppearance.StrokesFor(status, autos);
+        card.MarkStrokes = MarkerAppearance.StrokesFor(status, autos);
     }
 
     // Same sessions as before: flip IsDone in place so a card only animates what changed.
-    private void UpdateSessions(List<TodaySessionViewModel> fresh)
+    private static void UpdateSessions(TodayProgramViewModel card, List<TodaySessionViewModel> fresh)
     {
-        if (Sessions.Count == fresh.Count && Sessions.Zip(fresh).All(p => p.First.Name == p.Second.Name))
+        var current = card.Sessions;
+        if (current.Count == fresh.Count && current.Zip(fresh).All(p => p.First.Name == p.Second.Name))
         {
-            foreach (var (old, update) in Sessions.Zip(fresh))
+            foreach (var (old, update) in current.Zip(fresh))
             {
                 old.IsDone = update.IsDone;
                 old.ShowsMarks = update.ShowsMarks;
+                old.IsReadOnly = update.IsReadOnly;
             }
 
             return;
         }
 
-        Sessions = fresh;
-    }
-
-    private void ShowNothingScheduled()
-    {
-        _dayIndex = -1;
-        IsOffSchedule = true;
-        IsRestDay = false;
-        DayNumber = null;
-        DayText = "";
-        ClearDay();
+        card.Sessions = fresh;
     }
 
     private void ShowNoProgram()
     {
-        _dayIndex = -1;
-        _statuses = [];
-        _completions = [];
-        ProgramName = null;
-        DayNumber = null;
-        DayText = "";
-        CurrentStreak = 0;
-        StreakText = "";
+        Programs = [];
         HasEnrollment = false;
-        IsOffSchedule = false;
-        IsRestDay = false;
         ShowNoEnrollment = true;
-        ClearDay();
-    }
-
-    private void ClearDay()
-    {
-        Sessions = [];
-        MarkStrokes = 0;
-        Inks = [];
     }
 
     // The hour a greeting starts at, so the timer and the refresh check agree on when it changes.

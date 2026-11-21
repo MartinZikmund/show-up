@@ -41,5 +41,7 @@ Today lists the last seven days of bonuses with a remove button (confirmation fi
 
 ## Streak
 
-The streak on Today comes from `StreakCalculator.Current` over the active enrollment's days (same as the
-calendar header). Bonus workouts never count toward it.
+Each program group on Today shows its own streak from `StreakCalculator.Current` over that
+enrollment's days (same as the calendar header). With several programs running, Today lists one group
+per program from `IScheduleQuery.GetDueAsync(today)`, the selected one first; see
+[multiple-programs.md](./multiple-programs.md). Bonus workouts never count toward it.

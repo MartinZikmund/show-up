@@ -33,4 +33,7 @@ public interface IAppPreferences
 
     /// <summary>When the cached Pro state lapses; null for lifetime or unknown.</summary>
     DateTimeOffset? LastKnownProExpires { get; set; }
+
+    /// <summary>The program this device's Calendar and Results show (per device, not synced).</summary>
+    Guid? SelectedEnrollmentId { get; set; }
 }

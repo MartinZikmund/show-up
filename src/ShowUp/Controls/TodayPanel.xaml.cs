@@ -4,14 +4,16 @@ using ShowUp.Core.ViewModels;
 
 namespace ShowUp.Controls;
 
-/// <summary>Today's content: greeting, session cards and bonus workouts. Self-contained so it can move into the calendar page later.</summary>
+/// <summary>Today's content: greeting, a card group per active program and bonus workouts. Self-contained so it can move into the calendar page later.</summary>
 public sealed partial class TodayPanel : UserControl
 {
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         nameof(ViewModel), typeof(TodayViewModel), typeof(TodayPanel),
-        new PropertyMetadata(null, (d, e) => ((TodayPanel)d).OnViewModelChanged(e.OldValue as TodayViewModel, e.NewValue as TodayViewModel)));
+        new PropertyMetadata(null, (d, e) => ((TodayPanel)d).OnViewModelChanged()));
 
-    private readonly List<MarkerCrossControl> _crosses = [];
+    // Each marks square draws its program's marks; recycled cards can move to another program.
+    private readonly Dictionary<MarkerCrossControl, TodayProgramViewModel> _crosses = [];
+    private readonly HashSet<TodayProgramViewModel> _watched = [];
 
     public TodayPanel() => InitializeComponent();
 
@@ -23,35 +25,35 @@ public sealed partial class TodayPanel : UserControl
 
     public Visibility NoBonuses(bool hasBonuses) => hasBonuses ? Visibility.Collapsed : Visibility.Visible;
 
-    public string ProgramLine(string? program, string dayText) =>
+    public static string ProgramLine(string? program, string dayText) =>
         string.IsNullOrEmpty(dayText) ? program ?? "" : $"{program} · {dayText}";
 
-    private void OnViewModelChanged(TodayViewModel? oldValue, TodayViewModel? newValue)
+    private void OnViewModelChanged()
     {
-        if (oldValue is not null)
+        foreach (var program in _watched)
         {
-            oldValue.PropertyChanged -= ViewModel_PropertyChanged;
+            program.PropertyChanged -= Program_PropertyChanged;
         }
 
-        if (newValue is not null)
-        {
-            newValue.PropertyChanged += ViewModel_PropertyChanged;
-        }
-
+        _watched.Clear();
         Bindings.Update();
-        foreach (var cross in _crosses)
+        foreach (var cross in _crosses.Keys.ToList())
         {
-            ApplyMarks(cross, animate: false);
+            Track(cross);
         }
     }
 
-    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void Program_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(TodayViewModel.MarkStrokes) or nameof(TodayViewModel.Seed) or nameof(TodayViewModel.Inks))
+        if (sender is TodayProgramViewModel program
+            && e.PropertyName is nameof(TodayProgramViewModel.MarkStrokes) or nameof(TodayProgramViewModel.Seed) or nameof(TodayProgramViewModel.Inks))
         {
-            foreach (var cross in _crosses)
+            foreach (var (cross, owner) in _crosses)
             {
-                ApplyMarks(cross, animate: ViewModel?.AnimateMarks ?? false);
+                if (owner == program)
+                {
+                    ApplyMarks(cross, program, animate: program.AnimateMarks);
+                }
             }
         }
     }
@@ -59,30 +61,48 @@ public sealed partial class TodayPanel : UserControl
     private void Cross_Loaded(object sender, RoutedEventArgs e)
     {
         var cross = (MarkerCrossControl)sender;
-        if (!_crosses.Contains(cross))
-        {
-            _crosses.Add(cross);
-        }
-
-        ApplyMarks(cross, animate: false);
+        cross.DataContextChanged -= Cross_DataContextChanged;
+        cross.DataContextChanged += Cross_DataContextChanged;
+        Track(cross);
     }
 
-    private void Cross_Unloaded(object sender, RoutedEventArgs e) => _crosses.Remove((MarkerCrossControl)sender);
-
-    private void ApplyMarks(MarkerCrossControl cross, bool animate)
+    private void Cross_Unloaded(object sender, RoutedEventArgs e)
     {
-        if (ViewModel is not { } viewModel)
+        var cross = (MarkerCrossControl)sender;
+        cross.DataContextChanged -= Cross_DataContextChanged;
+        _crosses.Remove(cross);
+    }
+
+    private void Cross_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args) => Track((MarkerCrossControl)sender);
+
+    private void Track(MarkerCrossControl cross)
+    {
+        if ((cross.DataContext as TodaySessionViewModel)?.Program is not { } program)
         {
+            _crosses.Remove(cross);
             return;
         }
 
+        _crosses[cross] = program;
+        if (_watched.Add(program))
+        {
+            program.PropertyChanged += Program_PropertyChanged;
+        }
+
+        ApplyMarks(cross, program, animate: false);
+    }
+
+    private static void ApplyMarks(MarkerCrossControl cross, TodayProgramViewModel program, bool animate)
+    {
         // Seed first: a seed change redraws, which would cut the stroke animation short.
-        cross.Seed = viewModel.Seed;
-        cross.Inks = viewModel.Inks;
+        cross.Seed = program.Seed;
+        cross.Inks = program.Inks;
         cross.AnimateChanges = animate;
-        cross.Strokes = viewModel.MarkStrokes;
+        cross.Strokes = program.MarkStrokes;
         cross.AnimateChanges = true;
     }
+
+    private void ProGate_Loaded(object sender, RoutedEventArgs e) => ((ProGateHint)sender).Command = ViewModel?.OpenProCommand;
 
     private void RemoveBonus_Click(object sender, RoutedEventArgs e)
     {

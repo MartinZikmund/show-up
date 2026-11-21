@@ -152,6 +152,7 @@ public partial class ProViewModel : ViewModelBase
                 PurchaseOutcome.Purchased => _localizer["ProPurchased"],
                 PurchaseOutcome.Pending => _localizer["ProPending"],
                 PurchaseOutcome.Unverified => _localizer["ProCheckBack"],
+                PurchaseOutcome.Unconfirmed => _localizer["ProCouldNotConfirm"],
                 PurchaseOutcome.Failed => _localizer["ProFailed"],
                 _ => "",
             };
@@ -163,6 +164,7 @@ public partial class ProViewModel : ViewModelBase
         }
         finally
         {
+            await RefreshManageUriAsync();
             IsBusy = false;
             Sync();
         }
@@ -191,8 +193,22 @@ public partial class ProViewModel : ViewModelBase
         }
         finally
         {
+            await RefreshManageUriAsync();
             IsBusy = false;
             Sync();
+        }
+    }
+
+    // A purchase or restore can turn a subscription into a lifetime (no link) or start one (link).
+    private async Task RefreshManageUriAsync()
+    {
+        try
+        {
+            _manageUri = await _entitlements.GetManageSubscriptionUriAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Reading the manage subscription link failed.");
         }
     }
 

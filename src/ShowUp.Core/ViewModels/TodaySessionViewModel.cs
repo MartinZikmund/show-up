@@ -57,5 +57,15 @@ public sealed partial class TodaySessionViewModel : ObservableObject
     [ObservableProperty]
     public partial bool ShowsMarks { get; set; }
 
+    /// <summary>The program card this session sits in; its marks are drawn on <see cref="ShowsMarks"/> cards.</summary>
+    public TodayProgramViewModel? Program { get; internal set; }
+
+    /// <summary>The program is read-only (Pro lapsed), so the cross button is disabled.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCross))]
+    public partial bool IsReadOnly { get; set; }
+
+    public bool CanCross => !IsReadOnly;
+
     public IAsyncRelayCommand CrossCommand { get; }
 }

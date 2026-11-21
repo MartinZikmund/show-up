@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Catalog;
@@ -17,6 +18,8 @@ public sealed class ProgramDetailViewModelTests
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 21, 10, 0, 0, TimeSpan.Zero));
     private readonly RecordingJournalDialogs _journalDialogs = new();
     private readonly RecordingEnrollmentService _enrollments = new();
+    private readonly CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger _messenger = new();
+    private readonly ShowUp.Core.Tests.Entitlements.FakeEntitlementService _entitlements = new();
     private readonly StubConfirmationDialogService _confirmation = new();
     private readonly RecordingSectionNavigator _navigator = new();
     private readonly RecordingNavigationService _navigation = new();
@@ -108,7 +111,7 @@ public sealed class ProgramDetailViewModelTests
     }
 
     [TestMethod]
-    public async Task Start_WithActiveEnrollment_EndsPreviousAfterConfirm()
+    public async Task Start_FreeWithActive_EndsAfterConfirm()
     {
         _enrollments.Active = ActiveOne();
         var viewModel = await LoadAsync(TestCatalog.Program("new", 1, "run"));
@@ -119,6 +122,127 @@ public sealed class ProgramDetailViewModelTests
         _enrollments.EndReason.Should().Be(EnrollmentEndReason.Abandoned);
         _enrollments.Calls.Should().Equal($"Replace:{EnrollmentEndReason.Abandoned}");
         _navigator.Sections.Should().Equal(NavigationSection.Calendar);
+    }
+
+    [TestMethod]
+    public async Task Start_ProWithActive_StartsAlongside()
+    {
+        _entitlements.IsPro = true;
+        _enrollments.Active = ActiveOne();
+        var viewModel = await LoadAsync(TestCatalog.Program("new", 1, "run"));
+
+        await viewModel.StartAsync();
+
+        _confirmation.Asked.Should().BeEmpty();
+        _enrollments.Calls.Should().Equal("Enroll");
+        _enrollments.All.Should().ContainSingle("the running program stays");
+        _navigator.Sections.Should().Equal(NavigationSection.Calendar);
+    }
+
+    [TestMethod]
+    public async Task Start_ProRestartingARunningProgram_ReplacesIt()
+    {
+        _entitlements.IsPro = true;
+        var running = ActiveOne();
+        _enrollments.Active = running;
+        var viewModel = await LoadAsync(TestCatalog.Program("old", 1, "run"));
+
+        await viewModel.StartAsync();
+
+        _confirmation.Asked.Should().ContainSingle();
+        _enrollments.ReplacedId.Should().Be(running.Id);
+    }
+
+    [TestMethod]
+    public async Task Start_FreeLapsedWithTwo_ReplacesThePrimary()
+    {
+        var primary = ActiveOne();
+        var other = ActiveOne();
+        _enrollments.All = [other, primary];
+        _enrollments.PrimaryId = primary.Id;
+        var viewModel = await LoadAsync(TestCatalog.Program("new", 1, "run"));
+
+        await viewModel.StartAsync();
+
+        _enrollments.ReplacedId.Should().Be(primary.Id);
+    }
+
+    [TestMethod]
+    [DataRow(false, true, true)]
+    [DataRow(true, true, false)]
+    [DataRow(false, false, false)]
+    public async Task Load_MultiProgramHint_ShowsForFreeWithAnotherProgram(bool isPro, bool hasActive, bool expected)
+    {
+        _entitlements.IsPro = isPro;
+        _enrollments.Active = hasActive ? ActiveOne() : null;
+
+        var viewModel = await LoadAsync(TestCatalog.Program("new", 1, "run"));
+
+        viewModel.ShowMultiProgramHint.Should().Be(expected);
+    }
+
+    [TestMethod]
+    public async Task Start_RestartingAReadOnlyProgram_RefusesWithMessage()
+    {
+        var primaryProgram = TestCatalog.Program("primary", 1, "run");
+        ActiveEnrollment primary = new(new EnrollmentEntity { Id = Guid.NewGuid() }, primaryProgram, primaryProgram.Tracks[0], new EnrollmentCalendar(new DateOnly(2026, 11, 1), 1, []));
+        var running = ActiveOne();
+        _enrollments.All = [primary, running];
+        _enrollments.ReadOnlyIds.Add(running.Id);
+        var viewModel = await LoadAsync(running.Program);
+
+        await viewModel.StartAsync();
+
+        _dialogs.Shown.Should().ContainSingle().Which.Title.Should().Be("ProgramReadOnlyRestartTitle");
+        _confirmation.Asked.Should().BeEmpty();
+        _enrollments.Calls.Should().BeEmpty();
+        viewModel.ShowMultiProgramHint.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task MultiProgramHint_ProComesBack_Hides()
+    {
+        _enrollments.Active = ActiveOne();
+        var viewModel = Create(new FakeCatalogService(TestCatalog.Program("new", 1, "run")));
+        viewModel.OnNavigatedTo("new");
+        await Task.Delay(50);
+        viewModel.ShowMultiProgramHint.Should().BeTrue();
+
+        _entitlements.SetPro(true);
+
+        viewModel.ShowMultiProgramHint.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task OpenResults_ActiveProgram_PassesItsIdWithoutSelecting()
+    {
+        var running = ActiveOne();
+        _enrollments.Active = running;
+        var viewModel = await LoadAsync(running.Program);
+
+        viewModel.OpenResultsCommand.Execute(null);
+
+        _navigation.Navigations.Should().ContainSingle().Which.Should().Be((typeof(ProgramResultsViewModel), (object?)running.Id));
+        _enrollments.SelectedEnrollmentId.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task MultiProgramHint_PrimaryChosenAfterLapse_Updates()
+    {
+        var program = TestCatalog.Program("old", 1, "run");
+        var running = ActiveOne();
+        _enrollments.All = [running, ActiveOne()];
+        _enrollments.ReadOnlyIds.Add(running.Id);
+        var viewModel = Create(new FakeCatalogService(program));
+        viewModel.OnNavigatedTo("old");
+        await Task.Delay(50);
+        viewModel.ShowMultiProgramHint.Should().BeTrue();
+
+        _enrollments.ReadOnlyIds.Clear();
+        _messenger.Send(new ShowUp.Core.Messages.TrackingChangedMessage());
+        await Task.Delay(50);
+
+        viewModel.ShowMultiProgramHint.Should().BeFalse("its program is writable again");
     }
 
     [TestMethod]
@@ -238,7 +362,7 @@ public sealed class ProgramDetailViewModelTests
     private static ActiveEnrollment ActiveOne()
     {
         var old = TestCatalog.Program("old", 1, "run");
-        return new ActiveEnrollment(new EnrollmentEntity(), old, old.Tracks[0], new EnrollmentCalendar(new DateOnly(2026, 11, 1), 1, []));
+        return new ActiveEnrollment(new EnrollmentEntity { Id = Guid.NewGuid() }, old, old.Tracks[0], new EnrollmentCalendar(new DateOnly(2026, 11, 1), 1, []));
     }
 
     private async Task<ProgramDetailViewModel> LoadAsync(WorkoutProgram program)
@@ -259,5 +383,7 @@ public sealed class ProgramDetailViewModelTests
             _dialogs,
             _time,
             _journalDialogs,
+            _entitlements,
+            _messenger,
             NullLogger<ProgramDetailViewModel>.Instance);
 }

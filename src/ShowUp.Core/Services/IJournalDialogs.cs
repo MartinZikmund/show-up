@@ -6,11 +6,11 @@ namespace ShowUp.Core.Services;
 public interface IJournalDialogs
 {
     /// <summary>The day's sessions, notes, results and bonus workouts, with uncross.</summary>
-    Task ShowDayAsync(int dayIndex);
+    Task ShowDayAsync(Guid enrollmentId, int dayIndex);
 
-    Task LogResultsAsync(int dayIndex, int sessionIndex);
+    Task LogResultsAsync(Guid enrollmentId, int dayIndex, int sessionIndex);
 
     Task LogBonusResultsAsync(BonusWorkoutEntity bonus);
 
-    Task EditProgramNoteAsync();
+    Task EditProgramNoteAsync(Guid enrollmentId);
 }

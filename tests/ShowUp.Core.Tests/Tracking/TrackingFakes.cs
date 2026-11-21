@@ -61,11 +61,13 @@ internal sealed class FakeCatalogService(params WorkoutProgram[] programs) : ICa
 internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepository
 {
     private readonly List<EnrollmentEntity> _enrollments = [];
-    private readonly List<CompletedSession> _completions = [];
-    private readonly List<ScheduleShift> _shifts = [];
+    private readonly List<(Guid Enrollment, CompletedSession Completion)> _completions = [];
+    private readonly List<(Guid Enrollment, ScheduleShift Shift)> _shifts = [];
     private readonly List<BonusWorkoutEntity> _bonuses = [];
 
     public List<(int Day, int Session, DateOnly Date, string? Ink)> Crosses { get; } = [];
+
+    public List<(Guid Enrollment, int Day, int Session)> CrossesByEnrollment { get; } = [];
 
     public List<(DateOnly From, int Days, int DayCount)> ShiftCalls { get; } = [];
 
@@ -134,26 +136,27 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
         }
 
         Crosses.Add((dayIndex, sessionIndex, dayDate, inkJson));
-        if (!_completions.Any(c => c.DayIndex == dayIndex && c.SessionIndex == sessionIndex))
+        CrossesByEnrollment.Add((enrollmentId, dayIndex, sessionIndex));
+        if (!_completions.Any(c => c.Enrollment == enrollmentId && c.Completion.DayIndex == dayIndex && c.Completion.SessionIndex == sessionIndex))
         {
-            _completions.Add(new(dayIndex, sessionIndex, completionId ?? Guid.NewGuid(), Today, inkJson, time.GetUtcNow()));
+            _completions.Add((enrollmentId, new(dayIndex, sessionIndex, completionId ?? Guid.NewGuid(), Today, inkJson, time.GetUtcNow())));
         }
     }
 
     public Task UncrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
-        _completions.RemoveAll(c => c.DayIndex == dayIndex && c.SessionIndex == sessionIndex);
+        _completions.RemoveAll(c => c.Enrollment == enrollmentId && c.Completion.DayIndex == dayIndex && c.Completion.SessionIndex == sessionIndex);
         return Task.CompletedTask;
     }
 
     public Task<IReadOnlySet<(int Day, int Session)>> GetCompletedSessionsAsync(Guid enrollmentId) =>
-        Task.FromResult<IReadOnlySet<(int Day, int Session)>>(_completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet());
+        Task.FromResult<IReadOnlySet<(int Day, int Session)>>(Of(enrollmentId).Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet());
 
     public Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId) =>
-        Task.FromResult<IReadOnlyList<CompletedSession>>([.. _completions.OrderBy(c => c.DayIndex).ThenBy(c => c.SessionIndex)]);
+        Task.FromResult<IReadOnlyList<CompletedSession>>([.. Of(enrollmentId).OrderBy(c => c.DayIndex).ThenBy(c => c.SessionIndex)]);
 
     public Task<IReadOnlyList<ScheduleShift>> GetShiftsAsync(Guid enrollmentId) =>
-        Task.FromResult<IReadOnlyList<ScheduleShift>>([.. _shifts]);
+        Task.FromResult<IReadOnlyList<ScheduleShift>>([.. _shifts.Where(s => s.Enrollment == enrollmentId).Select(s => s.Shift)]);
 
     public Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days, int dayCount)
     {
@@ -163,7 +166,7 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
         }
 
         ShiftCalls.Add((fromDate, days, dayCount));
-        _shifts.Add(new(fromDate, days));
+        _shifts.Add((enrollmentId, new(fromDate, days)));
         return Task.CompletedTask;
     }
 
@@ -182,4 +185,41 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
         _bonuses.RemoveAll(b => b.Id == id);
         return Task.CompletedTask;
     }
+
+    private IEnumerable<CompletedSession> Of(Guid enrollmentId) => _completions.Where(c => c.Enrollment == enrollmentId).Select(c => c.Completion);
+}
+
+internal sealed class FakeSyncedSettings : ISyncedSettings
+{
+    public Dictionary<string, string> Values { get; } = [];
+
+    public Task<string?> GetAsync(string key) => Task.FromResult(Values.GetValueOrDefault(key));
+
+    public Task<IReadOnlyDictionary<string, string>> GetByPrefixAsync(string prefix) =>
+        Task.FromResult<IReadOnlyDictionary<string, string>>(Values.Where(v => v.Key.StartsWith(prefix, StringComparison.Ordinal)).ToDictionary());
+
+    public Task SetAsync(string key, string value)
+    {
+        Values[key] = value;
+        return Task.CompletedTask;
+    }
+}
+
+internal static class TestEnrollments
+{
+    public static ActiveEnrollmentService Create(
+        ITrackingRepository repository,
+        ICatalogService catalog,
+        CommunityToolkit.Mvvm.Messaging.IMessenger messenger,
+        ISyncedSettings? settings = null,
+        ShowUp.Core.Entitlements.IEntitlementService? entitlements = null,
+        ShowUp.Services.Settings.IAppPreferences? preferences = null) =>
+        new(
+            repository,
+            catalog,
+            settings ?? new FakeSyncedSettings(),
+            preferences ?? new ShowUp.Core.Tests.ViewModels.FakeAppPreferences(),
+            entitlements ?? new ShowUp.Core.Tests.Entitlements.FakeEntitlementService { IsPro = true },
+            messenger,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ActiveEnrollmentService>.Instance);
 }

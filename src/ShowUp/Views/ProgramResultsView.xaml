@@ -47,6 +47,20 @@
                         AutomationProperties.AutomationId="ResultsProgramName"
                         Style="{StaticResource BodyStrongTextBlockStyle}"
                         Text="{x:Bind ViewModel.ProgramName, Mode=OneWay}" />
+                    <ComboBox
+                        MinWidth="200"
+                        AutomationProperties.AutomationId="ResultsProgramSwitcher"
+                        AutomationProperties.Name="{markup:Localize Key=ProgramSwitcherLabel}"
+                        DropDownOpened="ProgramSwitcher_DropDownOpened"
+                        ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.SelectedProgram, Mode=TwoWay}"
+                        Visibility="{x:Bind ViewModel.ShowProgramSwitcher, Mode=OneWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProgramOption">
+                                <TextBlock Text="{x:Bind Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <TextBlock
                         Foreground="{ThemeResource MutedTextBrush}"
                         Style="{StaticResource BodyTextBlockStyle}"

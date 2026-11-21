@@ -5,24 +5,24 @@ next workout. This page covers how it's put together and where to hook in.
 
 ## Crossing goes through one service
 
-`IActiveEnrollmentService` (`src/ShowUp.Core/Tracking`) is the only path that writes tracking data
-for the active enrollment:
+`IActiveEnrollmentService` (`src/ShowUp.Core/Tracking`) is the only path that writes tracking data.
+Several programs can run at once (Pro), so every write names its enrollment:
 
 ```csharp
 using ShowUp.Core.Tracking;
 
-ActiveEnrollment? active = await enrollments.GetAsync(); // program at its pinned revision, track, calendar
-await enrollments.CrossAsync(dayIndex, sessionIndex, inkJson); // dayDate comes from active.Calendar
-await enrollments.UncrossAsync(dayIndex, sessionIndex);
-await enrollments.ShiftAsync(today, days); // repository clamps: crossed days never move
-await enrollments.LogBonusAsync("Evening run", date);
+ActiveEnrollment? active = await enrollments.GetSelectedAsync(); // the one Calendar shows
+await enrollments.CrossAsync(active.Id, dayIndex, sessionIndex, inkJson); // dayDate comes from active.Calendar
+await enrollments.UncrossAsync(active.Id, dayIndex, sessionIndex);
+await enrollments.ShiftAsync(active.Id, today, days); // repository clamps: crossed days never move
+await enrollments.LogBonusAsync(null, "Evening run", date, null); // bonus workouts belong to no enrollment
 ```
 
 Callers never pass a date for a cross, so a shifted schedule can't cross the wrong day. Every write
-raises `Changed` and sends `TrackingChangedMessage` (`ShowUp.Core.Messages`) on the injected
-`IMessenger` (`WeakReferenceMessenger.Default` in the app). With several active enrollments, the
-newest one whose program and track are still in the catalog wins. If its pinned revision has left
-the catalog, the latest revision of that program is used and a warning is logged.
+sends `TrackingChangedMessage` (`ShowUp.Core.Messages`) on the injected `IMessenger`
+(`WeakReferenceMessenger.Default` in the app). An enrollment whose pinned revision has left the
+catalog uses the latest revision of that program (logged as a warning). Selection, the program
+switcher and read-only programs after a lapse are in [multiple-programs.md](./multiple-programs.md).
 
 ## The view model
 

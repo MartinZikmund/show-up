@@ -892,4 +892,37 @@
   <data name="ProBusyName" xml:space="preserve">
     <value>Working</value>
   </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ProgramReadOnlyMessage" xml:space="preserve">
+    <value>Read-only: Free runs one program at a time. Your crosses and notes are kept for when Pro is back.</value>
+  </data>
+  <data name="ProMultiProgramLink" xml:space="preserve">
+    <value>Unlock Pro to run several programs</value>
+  </data>
+  <data name="ProgramSwitcherLabel" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="PrimaryProgramTitle" xml:space="preserve">
+    <value>Which program do you keep?</value>
+  </data>
+  <data name="PrimaryProgramMessage" xml:space="preserve">
+    <value>Show Up Pro has ended, so Free keeps one program going. The others stay just as they are, read-only, and come back with Pro.</value>
+  </data>
+  <data name="PrimaryProgramConfirm" xml:space="preserve">
+    <value>Keep this one</value>
+  </data>
+  <data name="DebugSimulateFree" xml:space="preserve">
+    <value>Simulate Free (debug builds only)</value>
+  </data>
+  <data name="ProCouldNotConfirm" xml:space="preserve">
+    <value>We couldn't confirm your purchase. If you were charged, Pro unlocks shortly; tap Restore purchases to check.</value>
+  </data>
+  <data name="ProgramReadOnlyRestartTitle" xml:space="preserve">
+    <value>This program is read-only</value>
+  </data>
+  <data name="ProgramReadOnlyRestartMessage" xml:space="preserve">
+    <value>Free keeps one program going, so this one stays just as it is until Pro is back. Unlock Pro to restart it.</value>
+  </data>
 </root>

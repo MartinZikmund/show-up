@@ -240,7 +240,7 @@
                 TextWrapping="Wrap" />
 
             <!--  Debug section  -->
-            <StackPanel Visibility="{x:Bind ViewModel.IsDebug}">
+            <StackPanel x:Name="DebugPanel" Visibility="{x:Bind ViewModel.IsDebug}">
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="{markup:Localize Key=Debugging}" />
 
                 <toolkit:SettingsCard Header="{markup:Localize Key=ClearPreferences}">

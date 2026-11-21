@@ -60,4 +60,7 @@ public sealed partial class ProgramCalendarControl : UserControl
                 break;
         }
     }
+
+    private void ProgramSwitcher_DropDownOpened(object sender, object e) =>
+        ShowUp.Controls.ProgramSwitcherAutomation.TagContainers((ComboBox)sender);
 }

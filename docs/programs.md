@@ -27,8 +27,11 @@ selected; a `SelectorBar` appears when there is more than one. The week preview 
 workouts joined with " + ", optional sessions marked "(optional)". The start date defaults to today
 and can go back 30 days, so a program already under way can be caught up.
 
-`StartAsync` asks "End {current} and start {new}?" when an enrollment is active, ends it as
-`Abandoned`, calls `IActiveEnrollmentService.EnrollAsync`, then switches to the Calendar section.
+`StartAsync` starts the program alongside the running ones for Pro. Free with a program running
+(or anyone restarting a program that's already running) gets "End {current} and start {new}?" and
+`IActiveEnrollmentService.ReplaceAsync` ends the old one as `Abandoned`; Free also sees an "Unlock Pro
+to run several programs" link under Start. Either way the new program is selected and the page
+switches to the Calendar section.
 Declining changes nothing. The start date is clamped to 30 days back and a year ahead, and a failed
 end or enroll logs and shows an error dialog instead of crashing. An unknown program id shows a
 not-found message with Start disabled.

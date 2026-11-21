@@ -5,9 +5,11 @@ using ShowUp.Core.Tracking;
 namespace ShowUp.Core.Marking;
 
 /// <summary>One session about to be crossed: the day around it, as the calendar and Today both know it.</summary>
+/// <param name="EnrollmentId">The enrollment the day belongs to; several programs can run at once.</param>
 /// <param name="DaySeed">The marker seed of the day's earliest completion; unused for a day's first cross.</param>
 /// <param name="AllStatuses">Every day of the enrollment, for the streak the cross moment shows.</param>
 public sealed record CrossTarget(
+    Guid EnrollmentId,
     int DayIndex,
     int Session,
     string SessionName,
@@ -59,14 +61,14 @@ public sealed class CrossingCoordinator(
             }
 
             hooks.SetAnimateMarks(false);
-            await hooks.Write(() => enrollments.CrossAsync(target.DayIndex, target.Session, result.InkJson, completionId));
+            await hooks.Write(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, result.InkJson, completionId));
             await hooks.Refresh();
             return true;
         }
 
         var showMoment = CrossMomentPolicy.ShouldShow(preferences.CrossMomentMode, target.IsToday);
         hooks.SetAnimateMarks(!showMoment);
-        await hooks.Write(() => enrollments.CrossAsync(target.DayIndex, target.Session, completionId: completionId));
+        await hooks.Write(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, completionId: completionId));
         await hooks.Refresh();
         if (showMoment)
         {
@@ -81,8 +83,8 @@ public sealed class CrossingCoordinator(
     }
 
     private async Task<Func<Task>?> LogResultsAsync(CrossTarget target) =>
-        await journal.HasMetricsAsync(target.DayIndex, target.Session)
-            ? () => journalDialogs.LogResultsAsync(target.DayIndex, target.Session)
+        await journal.HasMetricsAsync(target.EnrollmentId, target.DayIndex, target.Session)
+            ? () => journalDialogs.LogResultsAsync(target.EnrollmentId, target.DayIndex, target.Session)
             : null;
 
     private static CrossMomentInfo MomentInfo(CrossTarget target, int before, int afterAuto, int seed)

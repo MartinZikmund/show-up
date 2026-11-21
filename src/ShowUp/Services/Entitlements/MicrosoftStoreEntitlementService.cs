@@ -24,6 +24,7 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     private readonly ILogger<MicrosoftStoreEntitlementService> _logger;
     private readonly DispatcherQueue? _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly SingleFlight _refresh = new();
+    private readonly ExpiryWatch _expiry;
     private StoreContext? _context;
     private bool _contextFailed;
     private bool _isPro;
@@ -51,6 +52,8 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         _time = time;
         _logger = logger;
         _isPro = _proStoreIds.Count > 0 && ProCache.IsPro(preferences.LastKnownPro, preferences.LastKnownProExpires, time.GetUtcNow());
+        _expiry = new(time, logger);
+        WatchExpiry();
     }
 
     public bool IsPro => _isPro;
@@ -144,7 +147,7 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
                 await RefreshAsync();
                 return IsPro;
             });
-            if (outcome == PurchaseOutcome.Unverified)
+            if (outcome is PurchaseOutcome.Unverified or PurchaseOutcome.Unconfirmed)
             {
                 _logger.LogError(result.ExtendedError, "Store purchase of {Offer} ended as {Status} without a Pro license.", offer.Id, result.Status);
             }
@@ -165,7 +168,10 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     }
 
     public Task<Uri?> GetManageSubscriptionUriAsync() =>
-        Task.FromResult<Uri?>(_products.Any(p => p.Kind != ProOfferKind.Lifetime) ? new Uri(AccountSubscriptionsPage) : null);
+        Task.FromResult<Uri?>(
+            _products.Any(p => p.Kind != ProOfferKind.Lifetime) && !ProCache.IsLifetime(_isPro, _preferences.LastKnownProExpires)
+                ? new Uri(AccountSubscriptionsPage)
+                : null);
 
     private StoreContext? GetContext()
     {
@@ -191,6 +197,14 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         return _context;
     }
 
+    // At the cached end of a subscription, ask the Store again: a renewal keeps Pro, a real lapse (or no answer) locks it.
+    private void WatchExpiry() =>
+        _expiry.Schedule(
+            _isPro ? _preferences.LastKnownProExpires : null,
+            RefreshAsync,
+            () => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow()),
+            () => UiDispatch.Run(_dispatcher, () => SetPro(false, null)));
+
     // A SKU id looks like "9NXXXXXXXXXX/0010"; the configured ids are the product part.
     private static string BaseId(string storeId) => storeId.Split('/')[0];
 
@@ -202,9 +216,11 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     {
         _preferences.LastKnownPro = value;
         _preferences.LastKnownProExpires = value ? expires : null;
-        if (_isPro != value)
+        var changed = _isPro != value;
+        _isPro = value;
+        WatchExpiry();
+        if (changed)
         {
-            _isPro = value;
             UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));
         }
     }

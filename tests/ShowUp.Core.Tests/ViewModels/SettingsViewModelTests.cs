@@ -137,7 +137,7 @@ public sealed class SettingsViewModelTests
     {
         FakeAppPreferences preferences = new() { MarkerColor = MarkerColor.Purple };
         preferences.Writes.Clear();
-        var viewModel = CreateViewModel(preferences);
+        var viewModel = CreateViewModel(preferences, entitlements: new FakeEntitlementService { IsPro = true });
 
         viewModel.OnNavigatedTo(null);
 
@@ -145,6 +145,21 @@ public sealed class SettingsViewModelTests
         viewModel.SelectedMarkerSwatch!.Color.Should().Be(MarkerColor.Purple);
         viewModel.MarkerSwatches.Where(s => s.IsSelected).Select(s => s.Color).Should().Equal(MarkerColor.Purple);
         preferences.Writes.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void MarkerSwatch_LapsedWithStoredColor_ShowsAutoAndKeepsTheChoice()
+    {
+        FakeAppPreferences preferences = new() { MarkerColor = MarkerColor.Purple };
+        FakeEntitlementService entitlements = new() { IsPro = true };
+        var viewModel = Navigated(preferences, entitlements);
+
+        entitlements.SetPro(false);
+
+        viewModel.SelectedMarkerSwatch!.Color.Should().Be(MarkerColor.Auto);
+        viewModel.MarkerSwatches.Where(s => s.IsSelected).Select(s => s.Color).Should().Equal(MarkerColor.Auto);
+        viewModel.MarkerColor.Should().Be(MarkerColor.Purple);
+        preferences.MarkerColor.Should().Be(MarkerColor.Purple);
     }
 
     [TestMethod]
@@ -297,6 +312,8 @@ public sealed class SettingsViewModelTests
         }
 
         public bool LastKnownPro { get; set; }
+
+        public Guid? SelectedEnrollmentId { get; set; }
 
         public DateTimeOffset? LastKnownProExpires { get; set; }
 

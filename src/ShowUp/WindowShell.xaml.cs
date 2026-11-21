@@ -1,6 +1,7 @@
 ﻿using ShowUp.Core.Marking;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
+using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
 using ShowUp.Services.Navigation;
@@ -15,6 +16,7 @@ public sealed partial class WindowShell : Page, IWindowShell
     private readonly IServiceScope _windowScope;
     private readonly Window _associatedWindow;
     private bool _isWindowClosed;
+    private IDisposable? _lapseWatch;
 
     public WindowShell(IServiceProvider serviceProvider, Window associatedWindow)
     {
@@ -46,6 +48,7 @@ public sealed partial class WindowShell : Page, IWindowShell
         {
             UpdateStatusBarForeground();
             UpdateTitleBarPaneToggle(WidthStates.CurrentState);
+            WatchForLapse();
         };
         ActualThemeChanged += (_, _) => UpdateStatusBarForeground();
 
@@ -53,6 +56,17 @@ public sealed partial class WindowShell : Page, IWindowShell
     }
 
     public IServiceProvider ServiceProvider => _windowScope.ServiceProvider;
+
+    // Pro lapsing with several programs running asks once (app-wide) which one stays primary.
+    private void WatchForLapse()
+    {
+        if (_lapseWatch is not null)
+        {
+            return;
+        }
+
+        _lapseWatch = ServiceProvider.GetRequiredService<LapseCoordinator>().Attach(ServiceProvider.GetRequiredService<IPrimaryProgramPrompt>());
+    }
 
     public WindowShellViewModel ViewModel { get; }
 
@@ -99,6 +113,7 @@ public sealed partial class WindowShell : Page, IWindowShell
     private void OnWindowClosed(object sender, WindowEventArgs args)
     {
         _isWindowClosed = true;
+        _lapseWatch?.Dispose();
         _associatedWindow.Closed -= OnWindowClosed;
         InnerFrame.Navigated -= InnerFrame_Navigated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;

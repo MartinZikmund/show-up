@@ -13,4 +13,7 @@ public sealed partial class ProgramResultsView : ProgramResultsViewBase
     public static string ValueOrDash(string value) => value.Length == 0 ? "–" : value;
 
     public static string EmptyMessage(bool hasEnrollment) => Localizer.Instance[hasEnrollment ? "ResultsEmptyMessage" : "ResultsNoEnrollment"];
+
+    private void ProgramSwitcher_DropDownOpened(object sender, object e) =>
+        ShowUp.Controls.ProgramSwitcherAutomation.TagContainers((ComboBox)sender);
 }

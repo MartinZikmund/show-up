@@ -30,8 +30,8 @@ public sealed class PurchaseResolverTests
     }
 
     [TestMethod]
-    public async Task Resolve_NetworkOrServerAfterCheckout_IsUnverified() =>
-        (await PurchaseResolver.ResolveAsync(BillingResult.NetworkOrServer, () => Task.FromResult(false))).Should().Be(PurchaseOutcome.Unverified);
+    public async Task Resolve_NetworkOrServerAfterCheckout_IsUnconfirmed() =>
+        (await PurchaseResolver.ResolveAsync(BillingResult.NetworkOrServer, () => Task.FromResult(false))).Should().Be(PurchaseOutcome.Unconfirmed);
 
     [TestMethod]
     public async Task Resolve_CancelledAndPending_DoNotRefresh()
