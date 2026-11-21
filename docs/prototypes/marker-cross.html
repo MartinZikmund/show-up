@@ -72,6 +72,12 @@
   .mcap { font-family:"Barlow Condensed","Bahnschrift",sans-serif; font-weight:700; font-size:26px; text-transform:uppercase; letter-spacing:.03em; opacity:0; transition:opacity .3s; text-align:center; }
   .msub { font-size:14px; opacity:0; transition:opacity .3s; }
   .mcap.on, .msub.on { opacity:1; }
+
+  .drawpad { position:absolute; inset:0; touch-action:none; cursor:crosshair; }
+  .mbtns { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .mbtns button { background:transparent; border:1.5px solid currentColor; color:inherit; border-radius:4px; padding:8px 14px; font-weight:600; cursor:pointer; font-size:14px; }
+  .meter { width:min(70vmin,360px); height:6px; border-radius:3px; background:rgba(127,127,127,.25); overflow:hidden; }
+  .meter i { display:block; height:100%; width:0; background:#d9372b; transition:width .1s; }
 </style>
 </head>
 <body>
@@ -112,7 +118,9 @@
       <label><span>Squeak</span><span id="sqV"></span></label>
       <input type="range" id="sq" min="0" max="10" step="1">
       <div class="toggle"><input type="checkbox" id="hap"><label for="hap" style="margin:0">Haptic tick (phones)</label></div>
-      <label><span>Cross moment</span><span></span></label>
+      <label><span>Cross-off style</span><span></span></label>
+      <div class="row"><button class="chip" data-st="draw">Draw it yourself</button><button class="chip" data-st="auto">Auto marker X</button></div>
+      <label><span>Cross moment (auto style)</span><span></span></label>
       <div class="row"><button class="chip" data-mm="today">Only today</button><button class="chip" data-mm="always">Always</button><button class="chip" data-mm="never">Never</button></div>
       <div class="toggle"><input type="checkbox" id="rm"><label for="rm" style="margin:0">Reduced motion (instant X)</label></div>
     </div>
@@ -120,7 +128,7 @@
   </aside>
 
   <main>
-    <div class="hint">Tap a day to cross off its next session. Two-session days draw “/” then complete the X. Three+ sessions tick each one, then the X lands. Right-click / long-press to un-cross. Days after “today” are locked. Crossing <b>today</b> (day 10) plays the full-screen cross moment — narrow the window below 640 px to see the phone version.</div>
+    <div class="hint">Tap a day to cross off its next session. Two-session days draw “/” then complete the X. Three+ sessions tick each one, then the X lands. Right-click / long-press to un-cross. Days after “today” are locked. <b>Draw it yourself</b> (default): tap a day and cross it off with your finger or mouse (X, slash, scribble, scratch-out); it counts once the meter fills and you pause for a moment (or tap Done), so you can lift your finger between the two strokes of an X. <b>Auto marker X</b>: crossing <b>today</b> (day 10) plays the full-screen cross moment — narrow the window below 640 px to see the phone version.</div>
     <section class="board" id="board">
       <header>
         <div class="title">Insanity · Month 1</div>
@@ -137,10 +145,10 @@
   </main>
 </div>
 
-<div class="moment" id="moment"><div class="mcard" id="mcard"><div class="bigcell" id="bigcell"><div class="num" id="mnum"></div><div class="wname" id="mname"></div></div><div class="mcap" id="mcap"></div><div class="msub" id="msub"></div></div></div>
+<div class="moment" id="moment"><div class="mcard" id="mcard"><div class="bigcell" id="bigcell"><div class="num" id="mnum"></div><div class="wname" id="mname"></div></div><div class="meter" id="meter" style="display:none"><i id="meterFill"></i></div><div class="mcap" id="mcap"></div><div class="msub" id="msub"></div><div class="mbtns" id="mbtns" style="display:none"><button id="bDone" style="display:none">Done</button><button id="bAuto">Do it for me</button><button id="bUndo">Undo</button><button id="bCancel">Cancel</button></div></div></div>
 <script>
 const COLORS = { "Marker red":"#d9372b", "Ink blue":"#2457c5", "Sharp black":"#1f1f1f", "Gym green":"#1d8f4e", "Highlighter":"#f4d03f", "Chalk white":"#f3efe4" };
-const DEFAULTS = { mm:"today", theme:"paper", color:"Marker red", dur:180, wid:9, wob:4, ov:8, gap:90, snd:true, sq:4, hap:true, rm:false };
+const DEFAULTS = { st:"draw", mm:"today", theme:"paper", color:"Marker red", dur:180, wid:9, wob:4, ov:8, gap:90, snd:true, sq:4, hap:true, rm:false };
 const PRESETS = {
   "Classic marker": { ...DEFAULTS },
   "Chalkboard": { ...DEFAULTS, theme:"chalk", color:"Chalk white", wid:10, wob:6, dur:220, sq:1 },
@@ -158,6 +166,7 @@ const DAYS = [
 ];
 const TODAY = 9;
 const done = DAYS.map(() => new Set());
+const userInk = DAYS.map(() => []);
 
 // Deterministic per-cell randomness, like seeding by completion id in the app.
 function rng(seed) { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); }
@@ -228,6 +237,18 @@ function renderInk(i, cell, animateFrom) {
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const r = rng(i + 1), m = Math.min(W, H) * .16;
   const s1 = strokePath(m, m, W - m, H - m, r), s2 = strokePath(W - m, m, m, H - m, r);
+  if (userInk[i].length) {
+    const color = COLORS[state.color], sc0 = Math.max(.6, Math.min(W, H) / 96);
+    for (const st of userInk[i].flat()) {
+      for (const [op, mul] of [[.35, 1.35], [.9, 1]]) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", inkPath(st, W, H)); path.setAttribute("fill", "none"); path.setAttribute("stroke", color);
+        path.setAttribute("stroke-width", state.wid * mul * sc0); path.setAttribute("stroke-linecap", "round"); path.setAttribute("stroke-linejoin", "round"); path.setAttribute("opacity", op);
+        svg.appendChild(path);
+      }
+    }
+    return;
+  }
   const n = strokesFor(i);
   const sc = Math.max(.6, Math.min(W, H) / 96);
   const anim = !state.rm && animateFrom !== undefined;
@@ -259,6 +280,7 @@ function cross(i, cell) {
   if (i > TODAY) { cell.animate([{ transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "none" }], { duration: 160 }); return; }
   const n = DAYS[i].length || 1;
   if (done[i].size >= n) { return; }
+  if (state.st === "draw") { openDrawMoment(i); return; }
   const before = strokesFor(i);
   done[i].add([...Array(n).keys()].find(k => !done[i].has(k)));
   const sesList = cell.querySelectorAll(".ses .tick");
@@ -271,6 +293,132 @@ function cross(i, cell) {
 }
 
 
+function inkPath(pts, W, H) {
+  if (!pts.length) { return ""; }
+  let d = `M${(pts[0][0] * W).toFixed(1)},${(pts[0][1] * H).toFixed(1)}`;
+  for (let k = 1; k < pts.length - 1; k++) {
+    const mx = (pts[k][0] + pts[k + 1][0]) / 2 * W, my = (pts[k][1] + pts[k + 1][1]) / 2 * H;
+    d += ` Q${(pts[k][0] * W).toFixed(1)},${(pts[k][1] * H).toFixed(1)} ${mx.toFixed(1)},${my.toFixed(1)}`;
+  }
+  const l = pts[pts.length - 1];
+  d += ` L${(l[0] * W).toFixed(1)},${(l[1] * H).toFixed(1)}`;
+  return d;
+}
+
+// Marker scratch: looped noise whose loudness follows pen speed.
+let scratch;
+function scratchStart() {
+  if (!state.snd) { return; }
+  try { audio ??= new AudioContext(); } catch { return; }
+  const len = audio.sampleRate, buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
+  for (let k = 0; k < len; k++) { d[k] = Math.random() * 2 - 1; }
+  const src = audio.createBufferSource(); src.buffer = buf; src.loop = true;
+  const bp = audio.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 2400; bp.Q.value = 1.2;
+  const g = audio.createGain(); g.gain.value = 0;
+  src.connect(bp).connect(g).connect(audio.destination); src.start();
+  scratch = { src, bp, g };
+}
+function scratchSpeed(v) {
+  if (!scratch) { return; }
+  const t = audio.currentTime;
+  scratch.g.gain.setTargetAtTime(Math.min(.32, v * .9), t, .03);
+  scratch.bp.frequency.setTargetAtTime(1800 + Math.min(2200, v * 4000), t, .05);
+}
+function scratchStop() { if (!scratch) { return; } const s0 = scratch; scratch = null; s0.g.gain.setTargetAtTime(0, audio.currentTime, .04); setTimeout(() => s0.src.stop(), 200); }
+
+// 0..1: enough ink (total length) spread across the square.
+function inkScore(strokes) {
+  let len = 0, minX = 1, minY = 1, maxX = 0, maxY = 0;
+  for (const st of strokes) {
+    for (let k = 0; k < st.length; k++) {
+      const [x, y] = st[k];
+      minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+      if (k) { len += Math.hypot(x - st[k - 1][0], y - st[k - 1][1]); }
+    }
+  }
+  const spread = len > .2 ? Math.min((maxX - minX) / .4, (maxY - minY) / .4, 1) : 0;
+  return Math.min(len / .75, 1) * .6 + spread * .4;
+}
+
+const SETTLE_MS = 900;
+let settleTimer;
+function openDrawMoment(i) {
+  const m = document.getElementById("moment"), card = document.getElementById("mcard"), big = document.getElementById("bigcell");
+  card.className = "mcard " + state.theme;
+  document.getElementById("mnum").textContent = i + 1;
+  document.getElementById("mname").textContent = DAYS[i].join(" + ") || "Rest";
+  const cap = document.getElementById("mcap"), sub = document.getElementById("msub"), fill = document.getElementById("meterFill");
+  const meter = document.getElementById("meter"), btns = document.getElementById("mbtns");
+  const n = DAYS[i].length || 1;
+  cap.classList.remove("on"); cap.textContent = ""; sub.classList.add("on");
+  sub.textContent = "Cross it off your way: X, slash, scribble or scratch it out.";
+  meter.style.display = ""; btns.style.display = "";
+  big.querySelectorAll("svg.ink, svg.drawpad").forEach(e => e.remove());
+  m.classList.add("show");
+  const strokes = [], prior = userInk[i].flat();
+  let finished = false, finishedAt = 0, cur = null, last = null;
+  const pad = document.createElementNS("http://www.w3.org/2000/svg", "svg"); pad.classList.add("drawpad"); big.appendChild(pad);
+  const redraw = () => {
+    const { width: W, height: H } = big.getBoundingClientRect();
+    pad.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const sc = Math.max(.6, Math.min(W, H) / 96), color = COLORS[state.color];
+    pad.innerHTML = [...prior.map(st => [st, .5]), ...strokes.map(st => [st, 1])].map(([st, a]) =>
+      `<path d="${inkPath(st, W, H)}" fill="none" stroke="${color}" stroke-width="${state.wid * 1.35 * sc}" stroke-linecap="round" stroke-linejoin="round" opacity="${.35 * a}"/>` +
+      `<path d="${inkPath(st, W, H)}" fill="none" stroke="${color}" stroke-width="${state.wid * sc}" stroke-linecap="round" stroke-linejoin="round" opacity="${.9 * a}"/>`).join("");
+    fill.style.width = `${Math.round(inkScore(strokes) * 100)}%`;
+  };
+  const pt = e => { const r = big.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; };
+  pad.onpointerdown = e => {
+    if (finished) { return; }
+    clearTimeout(settleTimer);
+    e.preventDefault(); pad.setPointerCapture(e.pointerId);
+    cur = [pt(e)]; strokes.push(cur); last = { t: performance.now(), p: cur[0] };
+    if (state.hap && navigator.vibrate) { navigator.vibrate(8); }
+    scratchStart(); redraw();
+  };
+  pad.onpointermove = e => {
+    if (!cur) { return; }
+    const p = pt(e), now = performance.now(), dt = Math.max(8, now - last.t), dist = Math.hypot(p[0] - last.p[0], p[1] - last.p[1]);
+    if (dist < .004) { return; }
+    cur.push(p); scratchSpeed(dist / dt * 16); last = { t: now, p }; redraw();
+  };
+  pad.onpointerup = pad.onpointercancel = () => {
+    if (!cur) { return; }
+    cur = null; scratchStop();
+    // Enough ink: wait for a pause so a second stroke (the other half of an X) can still land.
+    if (inkScore(strokes) >= 1) { document.getElementById("bDone").style.display = ""; clearTimeout(settleTimer); settleTimer = setTimeout(() => finish(false), SETTLE_MS); }
+  };
+  function finish(auto) {
+    if (finished) { return; }
+    clearTimeout(settleTimer); document.getElementById("bDone").style.display = "none";
+    finished = true; finishedAt = performance.now();
+    done[i].add([...Array(n).keys()].find(x => !done[i].has(x)));
+    if (!auto) { userInk[i].push(strokes.map(st => st.filter((_, j) => j % 2 === 0 || j === st.length - 1))); }
+    else { pad.remove(); renderInk(i, big, Math.max(0, strokesFor(i) - 1)); }
+    if (state.hap && navigator.vibrate) { navigator.vibrate(30); }
+    squeak(90);
+    let streak = 0;
+    for (let q = TODAY; q >= 0; q--) { const rest = !DAYS[q].length, comp = done[q].size >= (DAYS[q].length || 1); if (rest) { continue; } if (comp) { streak++; } else if (q < TODAY) { break; } }
+    cap.textContent = `Day ${i + 1} of ${DAYS.length} · 🔥 ${streak}-day streak`;
+    sub.textContent = done[i].size < n ? `${done[i].size} of ${n} done` : "Day crossed off. Show up again tomorrow.";
+    cap.classList.add("on"); meter.style.display = "none"; btns.style.display = "none";
+    clearTimeout(momentTimer); momentTimer = setTimeout(close, 2200);
+  }
+  function close() {
+    clearTimeout(momentTimer); clearTimeout(settleTimer); scratchStop(); document.getElementById("bDone").style.display = "none"; m.classList.remove("show"); m.onclick = null; document.onkeydown = null; card.onclick = null;
+    pad.remove(); meter.style.display = "none"; btns.style.display = "none";
+    render();
+  }
+  document.getElementById("bDone").onclick = e => { e.stopPropagation(); clearTimeout(settleTimer); finish(false); };
+  document.getElementById("bAuto").onclick = e => { e.stopPropagation(); strokes.length = 0; finish(true); };
+  document.getElementById("bUndo").onclick = e => { e.stopPropagation(); clearTimeout(settleTimer); strokes.pop(); redraw(); document.getElementById("bDone").style.display = inkScore(strokes) >= 1 ? "" : "none"; };
+  document.getElementById("bCancel").onclick = e => { e.stopPropagation(); close(); };
+  card.onclick = e => { e.stopPropagation(); if (finished && performance.now() - finishedAt > 400) { close(); } };
+  m.onclick = () => { if (!finished || performance.now() - finishedAt > 400) { close(); } };
+  document.onkeydown = e => { if (e.key === "Escape" || (finished && ["Enter", " "].includes(e.key))) { close(); } };
+  requestAnimationFrame(redraw);
+}
+
 let momentTimer;
 function openMoment(i, before, onClose) {
   const m = document.getElementById("moment"), card = document.getElementById("mcard"), big = document.getElementById("bigcell");
@@ -280,7 +428,9 @@ function openMoment(i, before, onClose) {
   document.getElementById("mname").textContent = DAYS[i].join(" + ") || "Rest";
   const cap = document.getElementById("mcap"), sub = document.getElementById("msub");
   cap.classList.remove("on"); sub.classList.remove("on");
-  big.querySelector("svg.ink")?.remove();
+  document.getElementById("meter").style.display = "none"; document.getElementById("mbtns").style.display = "none";
+  card.onclick = null;
+  big.querySelectorAll("svg.ink, svg.drawpad").forEach(e => e.remove());
   m.classList.add("show");
   const n = DAYS[i].length || 1, c = done[i].size;
   let streak = 0; for (let k = TODAY; k >= 0; k--) { const rest = !DAYS[k].length, comp = done[k].size >= (DAYS[k].length || 1); if (rest) { continue; } if (comp) { streak++; } else if (k < TODAY) { break; } }
@@ -308,6 +458,7 @@ function updateStreak() {
 
 function updatePrompt() {
   const parts = [];
+  if (state.st !== DEFAULTS.st) { parts.push("default the cross-off style to the automatic marker X instead of drawing it yourself"); }
   if (state.mm !== DEFAULTS.mm) { parts.push(state.mm === "always" ? "show the full-screen cross moment on every cross, including backfilled days" : "never show the full-screen cross moment"); }
   if (state.theme !== DEFAULTS.theme) { parts.push(`default to the dark "chalkboard" surface`); }
   if (state.color !== DEFAULTS.color) { parts.push(`default marker color ${state.color} (${COLORS[state.color]})`); }
@@ -319,7 +470,7 @@ function updatePrompt() {
   if (state.snd !== DEFAULTS.snd) { parts.push(state.snd ? "marker sound on" : "no sound by default"); }
   if (state.sq !== DEFAULTS.sq) { parts.push(`squeak level ${state.sq}/10`); }
   if (state.hap !== DEFAULTS.hap) { parts.push(state.hap ? "haptic tick on" : "no haptics by default"); }
-  const base = "Cross moment: full screen on phones, ~480px popup on larger screens, only when crossing today by default. MarkerCrossControl: two hand-drawn quadratic-Bezier strokes per X, seeded by completion id, a faint wider under-stroke for ink bleed, animated via StrokeDashOffset with ease-out, marker sound + haptic tick per stroke; 2-session days draw '/' first then complete the X; 3+ sessions tick each and draw the X when all are done; reduced-motion shows the X instantly.";
+  const base = "Cross-off: draw it yourself on the big square (counts once enough ink is spread across it; Do it for me / Undo / Cancel; scratch sound follows pen speed; user strokes saved and shown in the cell) or auto marker X. Cross moment: full screen on phones, ~480px popup on larger screens, only when crossing today by default. MarkerCrossControl: two hand-drawn quadratic-Bezier strokes per X, seeded by completion id, a faint wider under-stroke for ink bleed, animated via StrokeDashOffset with ease-out, marker sound + haptic tick per stroke; 2-session days draw '/' first then complete the X; 3+ sessions tick each and draw the X when all are done; reduced-motion shows the X instantly.";
   document.getElementById("prompt").textContent = parts.length ? `${base}\nTune it to: ${parts.join("; ")}.` : `${base}\nKeep the defaults (marker red, 180 ms strokes, 90 ms gap, width 9, wobble 4, overshoot 8, sound + haptics on, paper surface).`;
 }
 
@@ -328,6 +479,7 @@ function sync() {
   for (const k of ["snd", "hap", "rm"]) { document.getElementById(k).checked = state[k]; }
   document.querySelectorAll("[data-theme]").forEach(b => b.classList.toggle("on", b.dataset.theme === state.theme));
   document.querySelectorAll("[data-mm]").forEach(b => b.classList.toggle("on", b.dataset.mm === state.mm));
+  document.querySelectorAll("[data-st]").forEach(b => b.classList.toggle("on", b.dataset.st === state.st));
   document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("on", b.dataset.c === state.color));
 }
 function updateAll() { sync(); render(); updatePrompt(); }
@@ -344,9 +496,10 @@ for (const [name, c] of Object.entries(COLORS)) {
 }
 document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => { state.theme = b.dataset.theme; updateAll(); });
 document.querySelectorAll("[data-mm]").forEach(b => b.onclick = () => { state.mm = b.dataset.mm; updateAll(); });
+document.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { state.st = b.dataset.st; updateAll(); });
 for (const k of ["dur", "wid", "wob", "ov", "gap", "sq"]) { document.getElementById(k).oninput = e => { state[k] = +e.target.value; updateAll(); }; }
 for (const k of ["snd", "hap", "rm"]) { document.getElementById(k).onchange = e => { state[k] = e.target.checked; updateAll(); }; }
-document.getElementById("reset").onclick = () => { done.forEach(s => s.clear()); render(); };
+document.getElementById("reset").onclick = () => { done.forEach(s => s.clear()); userInk.forEach(u => u.length = 0); render(); };
 document.getElementById("copy").onclick = async e => { try { await navigator.clipboard.writeText(document.getElementById("prompt").textContent); e.target.textContent = "Copied!"; } catch { e.target.textContent = "Select the text above to copy"; } setTimeout(() => e.target.textContent = "Copy", 1600); };
 // Pre-cross a few past days so the board doesn't start empty.
 [0, 1, 2, 3].forEach(i => DAYS[i].forEach((_, k) => done[i].add(k)));
