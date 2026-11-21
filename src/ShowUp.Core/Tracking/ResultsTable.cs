@@ -44,8 +44,8 @@ public sealed record ResultsTable(Workout Workout, IReadOnlyList<ResultsColumn> 
 
         var sessionValues = sessionEntries
             .Where(e => e.DayIndex is not null && e.SessionIndex is not null)
-            .DistinctBy(e => (e.DayIndex, e.SessionIndex, e.MetricId))
-            .ToDictionary(e => (e.DayIndex!.Value, e.SessionIndex!.Value, e.MetricId), MetricValue.Of);
+            .DistinctBy(e => (e.DayIndex, e.SessionIndex, e.WorkoutId, e.MetricId))
+            .ToDictionary(e => (e.DayIndex!.Value, e.SessionIndex!.Value, e.WorkoutId, e.MetricId), MetricValue.Of);
         var bonusValues = bonusEntries
             .Where(e => e.BonusWorkoutId is not null)
             .DistinctBy(e => (e.BonusWorkoutId, e.MetricId))
@@ -93,7 +93,7 @@ public sealed record ResultsTable(Workout Workout, IReadOnlyList<ResultsColumn> 
                         .. workout.Metrics!.Select(metric => BuildRow(metric, columns, column => column switch
                         {
                             { BonusWorkoutId: { } bonusId } => bonusValues.TryGetValue((bonusId, metric.Id), out var v) ? v : null,
-                            { DayIndex: { } day, SessionIndex: { } session } => sessionValues.TryGetValue((day, session, metric.Id), out var v) ? v : null,
+                            { DayIndex: { } day, SessionIndex: { } session } => sessionValues.TryGetValue((day, session, workout.Id, metric.Id), out var v) ? v : null,
                             _ => null,
                         })),
                     ];

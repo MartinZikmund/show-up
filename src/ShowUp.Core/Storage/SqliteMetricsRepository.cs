@@ -93,7 +93,7 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
     private static List<MetricEntryEntity> Newest(IEnumerable<MetricEntryEntity> rows) =>
         [
             .. rows
-                .GroupBy(m => (m.SubjectKey, m.MetricId))
+                .GroupBy(m => (m.SubjectKey, m.WorkoutId, m.MetricId))
                 .Select(g => g.OrderByDescending(m => m.UpdatedAt).First())
                 .OrderBy(m => m.DayIndex ?? -1)
                 .ThenBy(m => m.SessionIndex ?? -1),
