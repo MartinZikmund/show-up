@@ -151,5 +151,7 @@ internal sealed class StubJournalService : IJournalService
 
     public Task SaveResultsAsync(MetricTarget target, IReadOnlyDictionary<string, MetricValue> values) => Task.CompletedTask;
 
-    public Task<IReadOnlyList<ResultsTable>> GetResultsAsync() => Task.FromResult<IReadOnlyList<ResultsTable>>([]);
+    public IReadOnlyList<ResultsTable> Results { get; set; } = [];
+
+    public Task<IReadOnlyList<ResultsTable>> GetResultsAsync() => Task.FromResult(Results);
 }

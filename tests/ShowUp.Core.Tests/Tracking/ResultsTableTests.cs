@@ -118,6 +118,28 @@ public sealed class ResultsTableTests
         tables.Select(t => t.Workout.Id).Should().Equal("fit", "sprint");
     }
 
+    [TestMethod]
+    public void UpToNext_FutureOccurrences_KeepsOnlyTheNextOne()
+    {
+        var table = Build([Day("fit"), Day("fit"), Day("fit"), Day("fit")], [Entry(0, "jacks", 40)]).Single();
+
+        var trimmed = table.UpToNext(_start.AddDays(1));
+
+        trimmed.Columns.Select(c => c.DayIndex).Should().Equal(0, 1, 2);
+        trimmed.Rows.Should().OnlyContain(r => r.Cells.Count == 3);
+        trimmed.Rows[0].Cells[0].Value!.Value.Number.Should().Be(40);
+    }
+
+    [TestMethod]
+    public void NextScheduled_TodayOrLater_SkipsThePast()
+    {
+        var table = Build([Day("fit"), Day("run"), Day("fit"), Day("fit")], []).Single();
+
+        table.NextScheduled(_start.AddDays(1))!.DayIndex.Should().Be(2);
+        table.NextScheduled(_start.AddDays(2))!.DayIndex.Should().Be(2);
+        table.NextScheduled(_start.AddDays(4)).Should().BeNull();
+    }
+
     private static IReadOnlyList<ResultsTable> Build(IReadOnlyList<ScheduleDay> days, IEnumerable<MetricEntryEntity> entries) =>
         ResultsTable.Build(days, i => _start.AddDays(i), _workouts, entries, [], []);
 
