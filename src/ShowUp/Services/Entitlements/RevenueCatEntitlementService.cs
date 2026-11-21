@@ -293,13 +293,15 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     {
         var entitlement = info?.Entitlements.FirstOrDefault(e => e.Identifier == EntitlementId && e.IsActive);
         var before = IsPro;
+        var firstAnswer = !_confirmed;
         _confirmed = true;
         _preferences.LastKnownPro = entitlement is not null;
         _preferences.LastKnownProExpires = entitlement?.ExpirationDate is { } expiry
             ? new DateTimeOffset(DateTime.SpecifyKind(expiry, DateTimeKind.Utc))
             : null;
         WatchExpiry();
-        if (before != IsPro)
+        // A first answer that keeps the cached state still matters to the lapse check, which waits for a confirmed one.
+        if (before != IsPro || firstAnswer)
         {
             UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));
         }
