@@ -372,7 +372,72 @@ public sealed class RemindersViewModelTests
 
         _dialogs.Shown.Should().ContainSingle();
         viewModel.Items.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Save_RepositoryFails_KeepsTheEditorOpenWithWhatWasPicked()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        viewModel.EditTime = TimeSpan.FromMinutes(6 * 60 + 30);
+        Pick(viewModel, "Tue");
+        _repository.FailWrites = true;
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        viewModel.IsEditing.Should().BeTrue();
+        viewModel.EditTime.Should().Be(TimeSpan.FromMinutes(6 * 60 + 30));
+        viewModel.Weekdays.Where(d => d.IsChecked).Select(d => d.Label).Should().Equal("Tue");
+    }
+
+    [TestMethod]
+    public async Task Save_Succeeds_ClosesTheEditor()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
         viewModel.IsEditing.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Toggle_OffWhilePermissionPromptIsOpen_StoresOff()
+    {
+        var reminder = await _repository.AddAsync(8 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        _scheduler.PendingPermission = new();
+
+        viewModel.Items[0].IsEnabled = true;
+        await Task.Delay(50);
+        viewModel.Items[0].IsEnabled = false;
+        await Task.Delay(50);
+        _scheduler.PendingPermission.SetResult(true);
+        await Task.Delay(50);
+
+        (await _repository.ListAsync()).Single(r => r.Id == reminder.Id).Enabled.Should().BeFalse();
+        _repository.SetEnabledCalls.Should().Be(2);
+        _scheduler.PermissionRequests.Should().Be(1, "the second toggle doesn't stack another prompt");
+    }
+
+    [TestMethod]
+    public async Task Toggle_TwoRowsOnWhilePromptIsOpen_AsksOnce()
+    {
+        _entitlements.SetPro(true);
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+        await _repository.AddAsync(9 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        _scheduler.PendingPermission = new();
+
+        viewModel.Items[0].IsEnabled = true;
+        viewModel.Items[1].IsEnabled = true;
+        await Task.Delay(50);
+        _scheduler.PendingPermission.SetResult(false);
+        await Task.Delay(50);
+
+        _scheduler.PermissionRequests.Should().Be(1);
+        viewModel.PermissionDenied.Should().BeTrue();
+        (await _repository.ListAsync()).Should().OnlyContain(r => r.Enabled);
     }
 
     [TestMethod]
