@@ -50,7 +50,9 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private readonly IAppPreferences _preferences;
     private readonly TimeProvider _time;
     private readonly ILogger<ProgramResultsViewModel> _logger;
+    private readonly SemaphoreSlim _loadGate = new(1, 1);
     private SynchronizationContext? _context;
+    private bool _isRegistered;
 
     public ProgramResultsViewModel(
         IJournalService journal,
@@ -97,18 +99,42 @@ public partial class ProgramResultsViewModel : ViewModelBase
     {
         base.ViewLoaded();
         _context = SynchronizationContext.Current;
+        if (!_isRegistered)
+        {
+            _isRegistered = true;
+            Register();
+        }
+
+        RunInBackground(LoadAsync);
+    }
+
+    private void Register()
+    {
         _messenger.Register<ProgramResultsViewModel, JournalChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.LoadAsync)));
         _messenger.Register<ProgramResultsViewModel, TrackingChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.LoadAsync)));
-        RunInBackground(LoadAsync);
     }
 
     public override void ViewUnloaded()
     {
         base.ViewUnloaded();
+        _isRegistered = false;
         _messenger.UnregisterAll(this);
     }
 
     public async Task LoadAsync()
+    {
+        await _loadGate.WaitAsync();
+        try
+        {
+            await LoadCoreAsync();
+        }
+        finally
+        {
+            _loadGate.Release();
+        }
+    }
+
+    private async Task LoadCoreAsync()
     {
         var active = await _enrollments.GetAsync();
         HasEnrollment = active is not null;
