@@ -4,9 +4,11 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.UI.Xaml;
+using ShowUp.Core.Catalog;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Tests.Tracking;
 using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
@@ -28,6 +30,7 @@ public sealed class ProgramCalendarViewModelTests
     private readonly FakeCalendarPrompts _prompts = new();
     private readonly FakeSectionNavigator _navigator = new();
     private ActiveEnrollmentService? _service;
+    private CountingEnrollmentService? _counting;
 
     public ProgramCalendarViewModelTests()
     {
@@ -247,6 +250,89 @@ public sealed class ProgramCalendarViewModelTests
         _navigator.Sections.Should().Equal(NavigationSection.Programs);
     }
 
+    [TestMethod]
+    public async Task Message_ExternalCross_Refreshes()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+
+        await _service!.CrossAsync(0, 0);
+
+        Day(viewModel, 0).IsComplete.Should().BeTrue();
+        viewModel.CurrentStreak.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task CrossNext_OwnWrite_RefreshesOnce()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        _counting!.Gets = 0;
+
+        await viewModel.CrossNextCommand.ExecuteAsync(Day(viewModel, 0));
+
+        _counting.Gets.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task RefreshIfDateChanged_NextDay_MovesToday()
+    {
+        var viewModel = await LoadAsync(_today, "run", "run");
+        viewModel.Unload();
+        _time.SetUtcNow(_time.GetUtcNow().AddDays(1));
+
+        await viewModel.RefreshIfDateChangedAsync();
+
+        Day(viewModel, 1).IsToday.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task RefreshIfDateChanged_SameDay_DoesNotReload()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        _counting!.Gets = 0;
+
+        await viewModel.RefreshIfDateChangedAsync();
+
+        _counting.Gets.Should().Be(0);
+    }
+
+    [TestMethod]
+    public async Task LogBonus_TitleGiven_ShowsBonusOnDay()
+    {
+        _prompts.BonusTitle = "  Evening run ";
+        var viewModel = await LoadAsync(_today, "run");
+        var day = Day(viewModel, 0);
+
+        await viewModel.LogBonusCommand.ExecuteAsync(day);
+
+        day.BonusCount.Should().Be(1);
+        (await _repository.GetBonusWorkoutsAsync(_today, _today)).Should().ContainSingle().Which.Title.Should().Be("Evening run");
+    }
+
+    [TestMethod]
+    public async Task LogBonus_FutureDay_DoesNotWrite()
+    {
+        _prompts.BonusTitle = "Evening run";
+        var viewModel = await LoadAsync(_today, "run", "run");
+
+        await viewModel.LogBonusCommand.ExecuteAsync(Day(viewModel, 1));
+
+        (await _repository.GetBonusWorkoutsAsync(_today, _today.AddDays(1))).Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task UncrossLast_WriteFails_RefreshesWithoutThrowing()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        var day = Day(viewModel, 0);
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+        _counting!.FailWrites = true;
+
+        var act = () => viewModel.UncrossLastCommand.ExecuteAsync(day);
+
+        await act.Should().NotThrowAsync();
+        day.IsComplete.Should().BeTrue();
+    }
+
     private static CalendarDayViewModel Day(ProgramCalendarViewModel viewModel, int index) =>
         viewModel.Weeks.SelectMany(w => w.Days).Single(d => d.DayIndex == index);
 
@@ -263,9 +349,10 @@ public sealed class ProgramCalendarViewModelTests
     {
         WeakReferenceMessenger messenger = new();
         _service = new(_repository, catalog, messenger, NullLogger<ActiveEnrollmentService>.Instance);
+        _counting = new(_service);
         return new(
             new FakeStringLocalizer(),
-            _service,
+            _counting,
             catalog,
             _time,
             messenger,
@@ -276,6 +363,47 @@ public sealed class ProgramCalendarViewModelTests
             _prompts,
             _navigator,
             NullLogger<ProgramCalendarViewModel>.Instance);
+    }
+
+    /// <summary>Counts loads, and can fail writes the way an enrollment that ended under the page does.</summary>
+    private sealed class CountingEnrollmentService(IActiveEnrollmentService inner) : IActiveEnrollmentService
+    {
+        public int Gets { get; set; }
+
+        public bool FailWrites { get; set; }
+
+        public event EventHandler? Changed
+        {
+            add => inner.Changed += value;
+            remove => inner.Changed -= value;
+        }
+
+        public Task<ActiveEnrollment?> GetAsync()
+        {
+            Gets++;
+            return inner.GetAsync();
+        }
+
+        public Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync() => inner.GetCompletionsAsync();
+
+        public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync() => inner.GetBonusWorkoutsAsync();
+
+        public Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
+            inner.EnrollAsync(program, track, startDate);
+
+        public Task EndAsync(EnrollmentEndReason reason) => Write(() => inner.EndAsync(reason));
+
+        public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null) =>
+            Write(() => inner.CrossAsync(dayIndex, sessionIndex, inkJson, completionId));
+
+        public Task UncrossAsync(int dayIndex, int sessionIndex) => Write(() => inner.UncrossAsync(dayIndex, sessionIndex));
+
+        public Task ShiftAsync(DateOnly fromDate, int days) => Write(() => inner.ShiftAsync(fromDate, days));
+
+        public Task LogBonusAsync(string title, DateOnly date) => Write(() => inner.LogBonusAsync(title, date));
+
+        private Task Write(Func<Task> write) =>
+            FailWrites ? Task.FromException(new InvalidOperationException("Enrollment ended.")) : write();
     }
 
     private sealed class FakeStringLocalizer : IStringLocalizer
