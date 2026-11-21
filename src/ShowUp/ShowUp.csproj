@@ -56,6 +56,11 @@
         <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
     </ItemGroup>
 
+    <!-- DPAPI for the session file on Windows (packaged builds use the Credential Locker instead). -->
+    <ItemGroup Condition="'$(IsWinAppSdk)' == 'true' or $(TargetFramework.Contains('desktop'))">
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    </ItemGroup>
+
     <ItemGroup Condition="'$(IsTvOS)' != 'true'">
         <PackageReference Include="sqlite-net-e" />
         <PackageReference Include="SourceGear.sqlite3" />
@@ -107,6 +112,7 @@
     <ItemGroup Condition="$(TargetFramework.Contains('browserwasm'))">
         <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MarkerScratch.js" />
         <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\Reminders.js" />
+        <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\TokenStore.js" />
     </ItemGroup>
 
     <ItemGroup>

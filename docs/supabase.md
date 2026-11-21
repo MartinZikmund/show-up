@@ -167,6 +167,63 @@ replaces, even when the clock steps back or two edits land in the same microseco
   `SECURITY DEFINER` in `public`, the trigger on every user table, every user-table policy
   `TO authenticated`, `auth.uid()` in `USING` (SELECT/UPDATE) and in `WITH CHECK` (INSERT/UPDATE).
 
+## The client
+
+A small client in `ShowUp.Core/Supabase/`, no community SDK: `HttpClient` plus `System.Text.Json` source
+generation, so it is trim and AOT safe. It only knows what the app needs.
+
+- `SupabaseOptions` is bound from `Supabase:Url` and `Supabase:PublishableKey` (`appsettings.json`, both
+  empty in the repo). Empty means `IsConfigured` is false: calls throw `SupabaseException` with kind
+  `NotConfigured` and the UI should hide every Supabase feature. Only the publishable key (`sb_publishable_...`)
+  ever ships; it goes in the `apikey` header, never as a bearer token.
+- `ISupabaseAuth` is GoTrue email codes: `SendCodeAsync` (`POST /auth/v1/otp`, `create_user: true`),
+  `VerifyCodeAsync` (`POST /auth/v1/verify`, `type: "email"`), `RefreshAsync`
+  (`POST /auth/v1/token?grant_type=refresh_token`), `SignOutAsync` (`POST /auth/v1/logout?scope=local`, best effort,
+  the local session is always cleared). The Magic Link email template must include `{{ .Token }}` or users get a
+  link instead of a code. `Current` is the `Session`; `SessionChanged` fires on sign-in, refresh and sign-out.
+- Refresh is proactive (the access token expires within 60 s) and reactive (a 401 refreshes once and retries once).
+  Concurrent callers share one refresh (a caller that cancels only stops waiting). Only a real GoTrue rejection
+  signs the device out: HTTP 400, 401 or 403 with `error_code` `refresh_token_not_found`, `refresh_token_already_used`,
+  `session_not_found`, `session_expired`, `bad_jwt`, `user_not_found` or `user_banned` (or `error: invalid_grant`).
+  Anything else (network, timeout, 5xx, a proxy's 403) keeps the session and throws. A refresh result is applied
+  only if the session it started from is still current, so a sign-out or a new sign-in during a refresh wins.
+  `SessionChanged` is raised off the UI thread and not by `RestoreAsync`. `SupabaseOptions.IsConfigured` accepts
+  https, or http only for `localhost` / `127.0.0.1` (the local stack).
+- `ISupabaseRest` is what the sync engine uses. Rows go in and out as `JsonTypeInfo<T>` from a source-generated
+  context, so no reflection: `UpsertAsync` posts to `/rest/v1/{table}?on_conflict=id` with
+  `Prefer: resolution=merge-duplicates,return=representation` and returns the stored rows (a stale update comes
+  back as the winning row). `SelectPageAsync` orders by `server_updated_at.asc,id.asc` with a `limit`; with a cursor
+  only it reads `server_updated_at=gte.<cursor>` (the overlap), with the last row's id too it resumes strictly after
+  that `(server_updated_at, id)`. Timestamps are sent as UTC, truncated to microseconds. No `user_id` filter: RLS
+  scopes the rows. Row records that have an `Id` property must be `partial` (Uno's key-equality analyzer, KE0001).
+- Failures are `SupabaseException` with a `Kind` (`Network`, `InvalidCode`, `Unauthorized`, `RateLimited` with
+  `RetryAfter`, `Validation`, `Server`, ...), the HTTP status and the server's error code. It never contains tokens,
+  and nothing in the client logs them.
+
+### Where the session lives
+
+`ITokenStore` holds one string, the serialized session (access and refresh token). The head picks the store:
+
+| Head | Store | Notes |
+|---|---|---|
+| Windows (packaged or not); Desktop on Windows | `FileTokenStore` in `LocalFolder` + DPAPI | current user, this machine only; no roaming and no shared locker. `LocalFolder` is already per-identity, so worktree builds don't share a session |
+| Desktop on macOS and Linux | `FileTokenStore` in `LocalFolder`, plain | created `0600` (owner only); no keychain integration yet |
+| Android | `FileTokenStore` + AES-GCM with a non-exportable Android Keystore key | `EncryptedSharedPreferences` needs an extra AndroidX package and is deprecated; a restored backup has no key and reads as signed out |
+| iOS | Keychain (`SecKeyChain`) | `AfterFirstUnlockThisDeviceOnly`; Keychain items survive an uninstall, so a reinstall can find the old session |
+| WebAssembly | `localStorage` | **XSS caveat:** any script on the origin can read it; the browser has no secure store. Load no third-party scripts |
+
+A file or keychain entry that cannot be decrypted reads as "signed out", never as an error.
+
+### Hand-off for the sync engine (Task 4)
+
+- **Overlap on the first page of a sync.** Start each pull with the cursor minus a few seconds (cursor only, no
+  `lastId`: `server_updated_at=gte.`), then keep paging with `(server_updated_at, id)` from the last row. A
+  transaction that committed late can show up just below the stored cursor; applying a row twice is harmless.
+- **Row contexts serialize every key.** Do not use `DefaultIgnoreCondition = WhenWritingNull` on the row
+  `JsonSerializerContext`: a batch upsert with different key sets per row fails with PostgREST `PGRST102` (all
+  objects must have the same keys), and a null has to reach the server to clear a column such as `deleted_at`.
+- Chunk big upserts (`UpsertAsync` sends what it is given), and make row records with an `Id` property `partial`.
+
 ## Hosted project
 
 Not created yet. Linking a project, pushing migrations (`--remote` and an explicit confirmation in CLI
