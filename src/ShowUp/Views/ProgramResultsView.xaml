@@ -121,13 +121,17 @@
                                                     BorderBrush="{ThemeResource CalendarCellBorderBrush}"
                                                     BorderThickness="0,1,0,0">
                                                     <TextBlock
-                                                        Margin="0,8,0,0"
+                                                        Margin="0,6,0,0"
                                                         MaxLines="2"
                                                         Style="{StaticResource BodyTextBlockStyle}"
                                                         Text="{x:Bind MetricName}"
                                                         TextTrimming="CharacterEllipsis"
                                                         TextWrapping="Wrap"
                                                         ToolTipService.ToolTip="{x:Bind MetricName}" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource MutedTextBrush}"
+                                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                                        Text="{x:Bind UnitHint}" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
@@ -173,11 +177,12 @@
                                                                     Width="{StaticResource ResultsCellWidth}"
                                                                     Height="{StaticResource ResultsRowHeight}"
                                                                     Padding="8,6"
-                                                                    AutomationProperties.Name="{x:Bind AutomationName}"
                                                                     BorderBrush="{ThemeResource CalendarCellBorderBrush}"
                                                                     BorderThickness="0,1,0,0">
+                                                                    <!--  The value carries the whole cell for screen readers: metric, column, value and change  -->
                                                                     <TextBlock
-                                                                        AutomationProperties.AccessibilityView="Raw"
+                                                                        AutomationProperties.AccessibilityView="Content"
+                                                                        AutomationProperties.Name="{x:Bind AutomationName}"
                                                                         Style="{StaticResource BodyStrongTextBlockStyle}"
                                                                         Text="{x:Bind local:ProgramResultsView.ValueOrDash(ValueText)}" />
                                                                     <StackPanel
@@ -239,6 +244,35 @@
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
+
+            <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.HasPending, Mode=OneWay}">
+                <TextBlock
+                    AutomationProperties.HeadingLevel="Level2"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="{markup:Localize Key=ResultsPendingHeader}" />
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Pending, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="4" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PendingResultsViewModel">
+                            <StackPanel
+                                Padding="12,8"
+                                AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                                Background="{ThemeResource CalendarCellBackgroundBrush}"
+                                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{ThemeResource ControlCornerRadius}">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Title}" />
+                                <TextBlock
+                                    Foreground="{ThemeResource MutedTextBrush}"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{x:Bind Detail}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
         </StackPanel>
 
         <VisualStateManager.VisualStateGroups>

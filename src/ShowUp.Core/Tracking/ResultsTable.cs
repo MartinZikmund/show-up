@@ -25,6 +25,21 @@ public sealed record ResultsTable(Workout Workout, IReadOnlyList<ResultsColumn> 
 {
     public bool HasValues => Rows.Any(r => r.Cells.Any(c => !c.IsEmpty));
 
+    /// <summary>The first scheduled occurrence on or after <paramref name="today"/>, if the program still has one.</summary>
+    public ResultsColumn? NextScheduled(DateOnly today) => Columns.FirstOrDefault(c => !c.IsBonus && c.Date >= today);
+
+    /// <summary>Only the occurrences up to today and the next one after it; later ones would just be empty columns.</summary>
+    public ResultsTable UpToNext(DateOnly today)
+    {
+        var next = Columns.FirstOrDefault(c => c.Date > today);
+        List<int> keep = [.. Enumerable.Range(0, Columns.Count).Where(i => Columns[i].Date <= today || ReferenceEquals(Columns[i], next))];
+        return this with
+        {
+            Columns = [.. keep.Select(i => Columns[i])],
+            Rows = [.. Rows.Select(r => r with { Cells = [.. keep.Select(i => r.Cells[i])] })],
+        };
+    }
+
     /// <summary>
     /// A table per workout with metrics, in order of first appearance. Scheduled occurrences are always columns (empty until
     /// logged); a bonus workout is a column only when it has a value.

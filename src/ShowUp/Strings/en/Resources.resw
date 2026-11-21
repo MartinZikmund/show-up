@@ -730,4 +730,13 @@
   <data name="DayDetailUndo" xml:space="preserve">
     <value>Undo</value>
   </data>
+  <data name="ResultsNotLoggedNextFormat" xml:space="preserve">
+    <value>Not logged yet · next: Day {0}</value>
+  </data>
+  <data name="ResultsNotLogged" xml:space="preserve">
+    <value>Not logged yet</value>
+  </data>
+  <data name="ResultsPendingHeader" xml:space="preserve">
+    <value>Waiting for results</value>
+  </data>
 </root>

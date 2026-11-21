@@ -204,6 +204,10 @@
                     AutomationProperties.AutomationId="CrossMomentLogResultsButton"
                     Click="LogResultsButton_Click"
                     Content="{markup:Localize Key=CrossMomentLogResults}"
+                    GotFocus="LogResultsButton_Engaged"
+                    LostFocus="LogResultsButton_Released"
+                    PointerEntered="LogResultsButton_PointerEntered"
+                    PointerExited="LogResultsButton_PointerExited"
                     Style="{StaticResource AccentButtonStyle}"
                     Visibility="Collapsed" />
             </StackPanel>

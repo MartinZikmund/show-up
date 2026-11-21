@@ -730,4 +730,13 @@
   <data name="DayDetailUndo" xml:space="preserve">
     <value>Vrátit</value>
   </data>
+  <data name="ResultsNotLoggedNextFormat" xml:space="preserve">
+    <value>Zatím nezapsáno · další: den {0}</value>
+  </data>
+  <data name="ResultsNotLogged" xml:space="preserve">
+    <value>Zatím nezapsáno</value>
+  </data>
+  <data name="ResultsPendingHeader" xml:space="preserve">
+    <value>Čeká na výsledky</value>
+  </data>
 </root>

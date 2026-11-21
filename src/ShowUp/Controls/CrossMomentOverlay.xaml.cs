@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Input;
@@ -44,6 +45,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
     private DrawState _drawState;
     private long _finishedAt;
     private bool _inkCrossed;
+    private bool _logResultsHovered;
 
     public CrossMomentOverlay()
     {
@@ -165,6 +167,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         CaptionPanel.Opacity = 0;
         BelowCell.MinHeight = 0;
         LogResultsButton.Visibility = Visibility.Collapsed;
+        _logResultsHovered = false;
 
         Cross.AnimateChanges = false;
         Cross.Seed = info.Seed;
@@ -248,14 +251,46 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         }
     }
 
-    private void LogResultsButton_Click(object sender, RoutedEventArgs e)
+    private async void LogResultsButton_Click(object sender, RoutedEventArgs e)
     {
         var logResults = _info?.LogResults;
         Dismiss();
-        if (logResults is not null)
+        if (logResults is null)
         {
-            _ = logResults();
+            return;
         }
+
+        try
+        {
+            await logResults();
+        }
+        catch (Exception ex)
+        {
+            App.Current.Services.GetService<ILogger<CrossMomentOverlay>>()?.LogError(ex, "Opening Log your results failed.");
+        }
+    }
+
+    // Reaching for the button must not race the auto-dismiss; leaving it starts the countdown again.
+    private void LogResultsButton_Engaged(object sender, RoutedEventArgs e) => _dismissTimer.Stop();
+
+    private void LogResultsButton_Released(object sender, RoutedEventArgs e)
+    {
+        if (IsOpen && !_logResultsHovered && LogResultsButton.FocusState == FocusState.Unfocused)
+        {
+            _dismissTimer.Start();
+        }
+    }
+
+    private void LogResultsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _logResultsHovered = true;
+        _dismissTimer.Stop();
+    }
+
+    private void LogResultsButton_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _logResultsHovered = false;
+        LogResultsButton_Released(sender, e);
     }
 
     private void Pad_InkChanged(InkPad sender, object? args) => UpdateDrawControls();
