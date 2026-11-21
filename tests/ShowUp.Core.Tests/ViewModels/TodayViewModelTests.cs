@@ -20,6 +20,7 @@ public sealed class TodayViewModelTests
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 21, 0, 0, 0, TimeSpan.Zero));
     private readonly FakeTrackingRepository _repository;
     private readonly FakeAppPreferences _preferences = new() { CrossOffStyle = CrossOffStyle.AutoMarker, CrossMomentMode = CrossMomentMode.Never };
+    private readonly RecordingJournalDialogs _journalDialogs = new();
     private readonly FakeCrossMoment _crossMoment = new();
     private readonly FakeConfirmationDialogService _confirmation = new();
     private readonly FakeBonusWorkoutDialog _bonusDialog = new();
@@ -299,10 +300,11 @@ public sealed class TodayViewModelTests
             catalog,
             _time,
             messenger,
-            new CrossingCoordinator(_preferences, _crossMoment, new FakeMarkingFeedback(), service),
+            new CrossingCoordinator(_preferences, _crossMoment, new FakeMarkingFeedback(), service, new StubJournalService(), _journalDialogs),
             _confirmation,
             _bonusDialog,
             new FakeSectionNavigator(),
+            _journalDialogs,
             NullLogger<TodayViewModel>.Instance);
     }
 }

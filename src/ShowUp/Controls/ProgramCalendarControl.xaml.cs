@@ -55,6 +55,9 @@ public sealed partial class ProgramCalendarControl : UserControl
             case CalendarCellAction.LogBonus:
                 viewModel.LogBonusCommand.Execute(day);
                 break;
+            case CalendarCellAction.Details:
+                viewModel.OpenDayCommand.Execute(day);
+                break;
         }
     }
 }

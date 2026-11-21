@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
@@ -121,12 +121,15 @@ public partial class App : Application, IApplication
                 ? async () => await ApplicationData.Current.LocalFolder.CreateFolderAsync("db", CreationCollisionOption.OpenIfExists)
                 : null));
         services.AddSingleton<ITrackingRepository, SqliteTrackingRepository>();
+        services.AddSingleton<INotesRepository, SqliteNotesRepository>();
+        services.AddSingleton<IMetricsRepository, SqliteMetricsRepository>();
         services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
         services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
         services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
+        services.AddSingleton<IJournalService, JournalService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services
@@ -143,6 +146,7 @@ public partial class App : Application, IApplication
         services.AddScoped<ICrossMoment, CrossMomentService>();
         services.AddScoped<ICalendarPrompts, CalendarPrompts>();
         services.AddScoped<IBonusWorkoutDialog, BonusWorkoutDialogService>();
+        services.AddScoped<IJournalDialogs, JournalDialogService>();
         services.AddScoped<ICrossingCoordinator, CrossingCoordinator>();
         services.AddScoped<ISectionNavigator>(sp => sp.GetRequiredService<WindowShellViewModel>());
         services.AddScoped<INavigationService>(sp =>
@@ -152,6 +156,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.ProgramCalendarView), typeof(ProgramCalendarViewModel));
             service.RegisterView(typeof(Views.ProgramsView), typeof(ProgramsViewModel));
             service.RegisterView(typeof(Views.ProgramDetailView), typeof(ProgramDetailViewModel));
+            service.RegisterView(typeof(Views.ProgramResultsView), typeof(ProgramResultsViewModel));
             service.RegisterView(typeof(Views.HistoryView), typeof(HistoryViewModel));
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             return service;
@@ -165,6 +170,9 @@ public partial class App : Application, IApplication
         services.AddTransient<ProgramCalendarViewModel>();
         services.AddTransient<ProgramsViewModel>();
         services.AddTransient<ProgramDetailViewModel>();
+        services.AddTransient<ProgramResultsViewModel>();
+        services.AddTransient<DayDetailViewModel>();
+        services.AddTransient<LogResultsViewModel>();
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
     }

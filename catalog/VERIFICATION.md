@@ -27,3 +27,17 @@ Adversarial pass on 2026-11-21: each program was re-checked cell by cell against
 | seven-minute-workout-30 | main (30) | community | [Cleveland Clinic](https://health.clevelandclinic.org/7-minute-workout), [Top End Sports](https://www.topendsports.com/fitness/programs/7min-workout.htm) | Circuit sourced. The 30-day daily repetition is a product decision |
 
 Durations for the older Insanity workout ids (Pure Cardio, Plyometric Cardio Circuit, Cardio Recovery, Cardio Abs, Fit Test) come from earlier reference data and are not printed on the official calendar.
+
+## Tracked results (workout metrics)
+
+Verified on 2026-11-21 against the official program materials on BODi (`/app/programs/<slug>/program-materials`). Every metric below is `official`; anything a worksheet tracks that is granular or subjective (body measurements, dumbbell weight per move, energy, soreness) is skipped.
+
+| Workout | Metrics | Source | Notes |
+|---|---|---|---|
+| insanity-fit-test | 8 moves, reps: Switch Kicks, Power Jacks, Power Knees, Power Jumps, Globe Jumps, Suicide Jumps, Push-up Jacks, Low Plank Oblique | [Fit Test card (SAN_FitTest.pdf)](https://cdn.sanity.io/files/eonsdgcj/production/422a773669fc8108161ec14b7cf2ab5e0355e656.pdf), [program materials](https://www.bodi.com/app/programs/insanity/program-materials) | As many reps as you can in 1 minute, recorded after every move. Switch Kicks: 2 kicks = 1 rep; Globe Jumps: 4 jumps = 1 rep. The card's Day 1/15/36/50/63 are column headers only |
+| insanity-max-30: cardio-challenge, tabata-power, sweat-intervals, tabata-strength, friday-fight-round-1, friday-fight-round-2, max-out-cardio, max-out-power, max-out-sweat, max-out-strength | Max Out Time (mm:ss) | [Max Out Guide (IM_FitnessGuide)](https://cdn.sanity.io/files/eonsdgcj/production/540d8e66e9d573cf70867c4f1d5d86bbbaf95ba0.pdf) pp. 3, 9-10, 14; [Bodi blog](https://www.bodi.com/blog/insanity-workout-calendars) | "The first time you stop or fail during the workout is your MAX OUT TIME", "do this every day for every workout". Friday Fight is included (the guide's own example). Pulse and Ab Attack get no metric |
+| insanity-asylum-fit-test | 9 moves, reps (Agility Heisman ... Agility Bear Crawl; "Pull-ups/Push-ups" is one row, as printed) | [ASY_Worksheet.pdf](https://cdn.sanity.io/files/eonsdgcj/production/db0240ba7e65de064b72a68c87e021ad3b7ed6f8.pdf) p. 17, [fitness guide](https://cdn.sanity.io/files/eonsdgcj/production/5a06a17beb16dd99df1145539f5d9ecd2c27898f.pdf) | "Mark down the number of reps you can do for each exercise", Day 1/15/30 |
+| insanity-asylum-2-championship-fit-test | Number of Sudden Death Rotations (count) | [A2_Worksheets.pdf](https://cdn.sanity.io/files/eonsdgcj/production/3e4f1a465807b4c6239bdc3438581b1e19466b8f.pdf) p. 2 | 3-minute Sudden Death OT after Championship each week; "record the number of rounds you complete" |
+| insanity-unhinged-fit-test | 6 moves: Hand Release Push Ups, Halo Reverse Lunges, Burpee, Single-Leg V-Ups (reps); Renegade Row and Thrusters (weight + reps each) | [Unhinged Fit Test PDF](https://cdn.sanity.io/files/eonsdgcj/production/2397ad92b72c378f92b6947b84115c10f22f807f.pdf) | Taken at the start, the end of each phase and the end. The calendar has no Fit Test day, so the workout is not scheduled: log it as a bonus workout and it joins the results table |
+
+Not researched yet: Focus T25, P90X3, 21 Day Fix.

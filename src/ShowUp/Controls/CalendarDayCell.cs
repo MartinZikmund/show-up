@@ -14,6 +14,7 @@ public enum CalendarCellAction
     Cross,
     Uncross,
     LogBonus,
+    Details,
 }
 
 /// <summary>
@@ -49,7 +50,7 @@ public sealed partial class CalendarDayCell : Button
 
     private readonly MenuFlyoutItem _uncrossItem;
     private readonly MenuFlyoutItem _bonusItem;
-    private readonly MenuFlyout _completeFlyout;
+    private readonly MenuFlyoutItem _detailsItem;
     private Grid? _content;
     private TranslateTransform? _shake;
     private TextBlock? _dayNumber;
@@ -69,26 +70,19 @@ public sealed partial class CalendarDayCell : Button
     {
         _uncrossItem = MenuItem("CalendarUncross", "CalendarUncrossItem", "", CalendarCellAction.Uncross);
         _bonusItem = MenuItem("CalendarLogBonus", "CalendarLogBonusItem", "", CalendarCellAction.LogBonus);
-        MenuFlyout context = new() { Items = { _uncrossItem, _bonusItem } };
+        _detailsItem = MenuItem("CalendarDayDetails", "CalendarDayDetailsItem", "\uE946", CalendarCellAction.Details);
+        MenuFlyout context = new() { Items = { _detailsItem, _uncrossItem, _bonusItem } };
         context.Opening += (_, _) =>
         {
             _uncrossItem.IsEnabled = Day?.Sessions.Any(s => s.IsDone) == true;
             _bonusItem.IsEnabled = Day is { IsFuture: false };
+            _detailsItem.IsEnabled = Day is { IsFuture: false };
         };
         ContextFlyout = context;
 
-        _completeFlyout = new() { Items = { MenuItem("CalendarUncrossLast", "CalendarUncrossLastItem", "", CalendarCellAction.Uncross) } };
-
         Click += (_, _) =>
         {
-            if (Day is { CanCross: false })
-            {
-                _completeFlyout.ShowAt(this);
-            }
-            else
-            {
-                ActionRequested?.Invoke(this, CalendarCellAction.Cross);
-            }
+            ActionRequested?.Invoke(this, Day is { CanCross: false } ? CalendarCellAction.Details : CalendarCellAction.Cross);
         };
         SizeChanged += (_, e) => UpdateCompact(e.NewSize.Width);
         ActualThemeChanged += (_, _) => ApplyText();

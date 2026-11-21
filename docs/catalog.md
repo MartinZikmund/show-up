@@ -20,7 +20,8 @@ These are ours, not the source's:
 
 ## File format
 
-- `catalog/workouts.json`: every workout (`id`, `name`, `durationMinutes`, `kind`, `family`).
+- `catalog/workouts.json`: every workout (`id`, `name`, `durationMinutes`, `kind`, `family`, optional `metrics`), described by [`catalog/schema/workouts.schema.json`](../catalog/schema/workouts.schema.json).
+- **Metrics** are the numbers a program asks you to write down: `{ "id": "power-jacks", "name": "Power Jacks", "unit": "reps" }`. Units: `reps`, `count`, `seconds`, `duration` (typed `mm:ss`, stored as seconds), `weight`, `distance`, `text`. `higherIsBetter` (default `true`) colours the deltas in the results table. Ids must be unique within a workout. Only add metrics an official worksheet asks for, with the source in `catalog/VERIFICATION.md`.
 - `catalog/programs/<id>.json`: one program, validated by [`catalog/schema/program.schema.json`](../catalog/schema/program.schema.json) and by `CatalogValidator` in `ShowUp.Core.Catalog`.
 - A program has tracks, tracks have phases, phases have weeks, weeks have days, days have sessions. A session is `{ "workoutId": "...", "alternates": [...], "optional": true }`; `alternates` and `optional` can be left out.
 - **Optional sessions** (for example T25's second Friday workout) can be crossed off but never count toward completing the day, streaks or missed days. A day with only optional sessions behaves like a rest day.

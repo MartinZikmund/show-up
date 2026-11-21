@@ -7,6 +7,7 @@ using MZikmund.Toolkit.WinUI.Services;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
+using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
@@ -247,6 +248,12 @@ public sealed class SettingsViewModelTests
         {
             get;
             set => Record(nameof(MarkerColor), () => field = value);
+        }
+
+        public UnitSystem UnitSystem
+        {
+            get;
+            set => Record(nameof(UnitSystem), () => field = value);
         }
 
         private void Record(string name, Action write)

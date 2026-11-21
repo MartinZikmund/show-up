@@ -1,0 +1,168 @@
+using System.Globalization;
+using Microsoft.Extensions.Logging;
+using ShowUp.Core.Storage;
+using ShowUp.Core.Tracking;
+using ShowUp.Services.Settings;
+
+namespace ShowUp.Core.ViewModels;
+
+public sealed partial class DaySessionViewModel : ObservableObject
+{
+    private readonly string _initialNote;
+
+    internal DaySessionViewModel(SessionJournal session, ResultsEditorViewModel? results, string optionalFormat)
+    {
+        Index = session.SessionIndex;
+        Name = session.IsOptional ? string.Format(CultureInfo.CurrentCulture, optionalFormat, session.Name) : session.Name;
+        IsDone = session.IsDone;
+        Note = _initialNote = session.Note;
+        Results = results;
+    }
+
+    public int Index { get; }
+
+    public string Name { get; }
+
+    public ResultsEditorViewModel? Results { get; }
+
+    public IReadOnlyList<MetricInputViewModel> Inputs => Results?.Inputs ?? [];
+
+    public bool HasResults => Results is not null;
+
+    public string NoteAutomationId => $"DayDetailSessionNote_{Index}";
+
+    public string UncrossAutomationId => $"DayDetailUncross_{Index}";
+
+    public string UndoAutomationId => $"DayDetailUndoUncross_{Index}";
+
+    /// <summary>Crossed off when the sheet opened.</summary>
+    public bool IsDone { get; }
+
+    /// <summary>Marked to uncross; applied on Save, dropped on Cancel.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsCrossed), nameof(CanUncross))]
+    public partial bool PendingUncross { get; internal set; }
+
+    public bool ShowsCrossed => IsDone && !PendingUncross;
+
+    public bool CanUncross => IsDone && !PendingUncross;
+
+    [ObservableProperty]
+    public partial string Note { get; set; }
+
+    internal bool NoteChanged => Note.Trim() != _initialNote;
+}
+
+public sealed class DayBonusViewModel(BonusWorkoutEntity bonus, ResultsEditorViewModel? results)
+{
+    public BonusWorkoutEntity Bonus { get; } = bonus;
+
+    public string Title => Bonus.Title;
+
+    public ResultsEditorViewModel? Results { get; } = results;
+
+    public IReadOnlyList<MetricInputViewModel> Inputs => Results?.Inputs ?? [];
+
+    public bool HasResults => Results is not null;
+}
+
+/// <summary>One day of the calendar: its sessions with notes and results, the day's note and its bonus workouts. Saved on <see cref="SaveAsync"/>.</summary>
+public sealed partial class DayDetailViewModel(
+    IJournalService journal,
+    IActiveEnrollmentService enrollments,
+    IStringLocalizer localizer,
+    IAppPreferences preferences,
+    ILogger<DayDetailViewModel> logger) : ObservableObject
+{
+    private string _initialDayNote = "";
+
+    public int DayIndex { get; private set; } = -1;
+
+    [ObservableProperty]
+    public partial string Title { get; private set; } = "";
+
+    [ObservableProperty]
+    public partial string DateLabel { get; private set; } = "";
+
+    [ObservableProperty]
+    public partial IReadOnlyList<DaySessionViewModel> Sessions { get; private set; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBonuses))]
+    public partial IReadOnlyList<DayBonusViewModel> Bonuses { get; private set; } = [];
+
+    [ObservableProperty]
+    public partial string DayNote { get; set; } = "";
+
+    [ObservableProperty]
+    public partial bool CanSave { get; private set; }
+
+    public bool HasBonuses => Bonuses.Count > 0;
+
+    /// <returns>False when there's no enrollment or no such day.</returns>
+    public async Task<bool> LoadAsync(int dayIndex)
+    {
+        if (await journal.GetDayAsync(dayIndex) is not { } day)
+        {
+            return false;
+        }
+
+        var metric = preferences.UnitSystem;
+        DayIndex = dayIndex;
+        Title = localizer["CalendarDayNumberFormat", dayIndex + 1];
+        DateLabel = day.Date.ToString("D", CultureInfo.CurrentCulture);
+        var optional = localizer["ProgramOptionalFormat"].Value;
+        Sessions = [.. day.Sessions.Select(s => new DaySessionViewModel(s, s.Results is { } r ? new ResultsEditorViewModel(r, localizer, metric) : null, optional))];
+        Bonuses = [.. day.Bonuses.Select(b => new DayBonusViewModel(b.Bonus, b.Results is { } r ? new ResultsEditorViewModel(r, localizer, metric) : null))];
+        DayNote = _initialDayNote = day.Note;
+
+        foreach (var input in Editors().SelectMany(e => e.Inputs))
+        {
+            input.PropertyChanged += (_, _) => UpdateCanSave();
+        }
+
+        UpdateCanSave();
+        return true;
+    }
+
+    /// <summary>Marks a crossed session to uncross on Save, or takes that back.</summary>
+    [RelayCommand]
+    private void ToggleUncross(DaySessionViewModel? session)
+    {
+        if (DayIndex >= 0 && session is { IsDone: true })
+        {
+            session.PendingUncross = !session.PendingUncross;
+        }
+    }
+
+    public async Task SaveAsync()
+    {
+        if (DayIndex < 0 || !CanSave)
+        {
+            return;
+        }
+
+        foreach (var session in Sessions.Where(s => s.PendingUncross))
+        {
+            try
+            {
+                await enrollments.UncrossAsync(DayIndex, session.Index);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogWarning(ex, "Uncrossing day {Day} session {Session} failed.", DayIndex, session.Index);
+            }
+        }
+
+        DayEdit edit = new(
+            DayNote.Trim() != _initialDayNote ? DayNote : null,
+            Sessions.Where(s => s.NoteChanged).ToDictionary(s => s.Index, s => s.Note),
+            [.. Editors().Where(e => e.Changes.Count > 0).Select(e => new ResultsEdit(e.Sheet.Target, e.Changes))]);
+        await journal.SaveDayAsync(DayIndex, edit);
+    }
+
+    private IEnumerable<ResultsEditorViewModel> Editors() =>
+        Sessions.Select(s => s.Results).Concat(Bonuses.Select(b => b.Results)).OfType<ResultsEditorViewModel>();
+
+    private void UpdateCanSave() => CanSave = Editors().All(e => e.IsValid);
+}

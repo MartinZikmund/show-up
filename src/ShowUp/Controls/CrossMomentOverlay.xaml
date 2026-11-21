@@ -197,6 +197,19 @@
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
+                <!--  Offered when the workout has numbers to write down; never holds the moment open  -->
+                <Button
+                    x:Name="LogResultsButton"
+                    HorizontalAlignment="Center"
+                    AutomationProperties.AutomationId="CrossMomentLogResultsButton"
+                    Click="LogResultsButton_Click"
+                    Content="{markup:Localize Key=CrossMomentLogResults}"
+                    GotFocus="LogResultsButton_Engaged"
+                    LostFocus="LogResultsButton_Released"
+                    PointerEntered="LogResultsButton_PointerEntered"
+                    PointerExited="LogResultsButton_PointerExited"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Visibility="Collapsed" />
             </StackPanel>
         </Grid>
 

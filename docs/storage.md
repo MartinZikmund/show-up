@@ -23,6 +23,7 @@ Add a new numbered step there; never edit a shipped one.
 |---|---|
 | 1 | Enrollments, completions, schedule shifts, bonus workouts |
 | 2 | `CompletionEntity.InkJson`: the user's drawn strokes for a cross (see [marking.md](./marking.md#draw-it-yourself)) |
+| 3 | `NoteEntity` (program, day and session notes) and `MetricEntryEntity` (logged results), see [results.md](./results.md) |
 
 ## WebAssembly: the async file system catch
 

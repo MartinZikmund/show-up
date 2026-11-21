@@ -86,6 +86,24 @@ public class CatalogParserTests
         CatalogParser.ParseWorkouts(Fixture("sample-workouts.json")).Should().NotBeEmpty();
 
     [TestMethod]
+    public void ParseWorkouts_WithMetrics_ReadsUnitsAndDefaults()
+    {
+        const string json = """
+            [
+              {"id": "w", "name": "W", "durationMinutes": null, "kind": "fitTest", "family": null,
+               "metrics": [{"id": "jacks", "name": "Jacks", "unit": "reps"}, {"id": "time", "name": "Time", "unit": "duration", "higherIsBetter": false}]},
+              {"id": "plain", "name": "Plain", "durationMinutes": 10, "kind": "cardio", "family": null}
+            ]
+            """;
+
+        var workouts = CatalogParser.ParseWorkouts(json);
+
+        workouts[0].Metrics.Should().Equal(new WorkoutMetric("jacks", "Jacks", MetricUnit.Reps), new WorkoutMetric("time", "Time", MetricUnit.Duration, HigherIsBetter: false));
+        workouts[1].Metrics.Should().BeNull();
+        workouts[1].HasMetrics.Should().BeFalse();
+    }
+
+    [TestMethod]
     public void Locate_SecondPhaseFirstDay_ReturnsPhaseAndWeek()
     {
         ScheduleDay day = new([new ScheduledSession("rest")]);

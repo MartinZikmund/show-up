@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://showup.app/catalog/schema/workouts.schema.json",
+  "title": "Workouts",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "durationMinutes", "kind", "family"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "name": { "type": "string", "minLength": 1 },
+      "durationMinutes": { "type": ["integer", "null"], "minimum": 1 },
+      "kind": { "enum": ["cardio", "strength", "abs", "yoga", "stretch", "recovery", "rest", "fitTest", "mixed"] },
+      "family": { "type": ["string", "null"] },
+      "metrics": {
+        "type": ["array", "null"],
+        "description": "Numbers the program asks you to write down. Ids are unique within the workout (CatalogValidator checks this).",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "name", "unit"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 },
+            "unit": { "enum": ["reps", "count", "seconds", "duration", "weight", "distance", "text"] },
+            "higherIsBetter": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    }
+  }
+}

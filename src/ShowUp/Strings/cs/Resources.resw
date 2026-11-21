@@ -349,9 +349,6 @@
   <data name="CalendarUncross" xml:space="preserve">
     <value>Zru&#353;it od&#353;krtnut&#237;</value>
   </data>
-  <data name="CalendarUncrossLast" xml:space="preserve">
-    <value>Zru&#353;it posledn&#237; od&#353;krtnut&#237;</value>
-  </data>
   <data name="CalendarLogBonus" xml:space="preserve">
     <value>Zapsat sem bonusov&#253; tr&#233;nink</value>
   </data>
@@ -615,5 +612,131 @@
   </data>
   <data name="MarkerColorHighContrastNote" xml:space="preserve">
     <value>Při vysokém kontrastu se nepoužívá</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Uložit</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Zpět</value>
+  </data>
+  <data name="CalendarDayDetails" xml:space="preserve">
+    <value>Detail dne</value>
+  </data>
+  <data name="CalendarProgramNotes" xml:space="preserve">
+    <value>Poznámky k programu</value>
+  </data>
+  <data name="CalendarResults" xml:space="preserve">
+    <value>Výsledky</value>
+  </data>
+  <data name="DayDetailDayNote" xml:space="preserve">
+    <value>Poznámka ke dni</value>
+  </data>
+  <data name="DayDetailNotePlaceholder" xml:space="preserve">
+    <value>Přidat poznámku</value>
+  </data>
+  <data name="DayDetailSessionDone" xml:space="preserve">
+    <value>Odškrtnuto</value>
+  </data>
+  <data name="DayDetailSessionNotDone" xml:space="preserve">
+    <value>Zatím neodškrtnuto</value>
+  </data>
+  <data name="DayDetailBonusHeader" xml:space="preserve">
+    <value>Bonusová cvičení</value>
+  </data>
+  <data name="MetricUnitReps" xml:space="preserve">
+    <value>opak.</value>
+  </data>
+  <data name="MetricUnitCount" xml:space="preserve">
+    <value>krát</value>
+  </data>
+  <data name="MetricUnitSeconds" xml:space="preserve">
+    <value>s</value>
+  </data>
+  <data name="MetricUnitKg" xml:space="preserve">
+    <value>kg</value>
+  </data>
+  <data name="MetricUnitLb" xml:space="preserve">
+    <value>lb</value>
+  </data>
+  <data name="MetricUnitKm" xml:space="preserve">
+    <value>km</value>
+  </data>
+  <data name="MetricUnitMi" xml:space="preserve">
+    <value>mi</value>
+  </data>
+  <data name="MetricDurationError" xml:space="preserve">
+    <value>Zadejte minuty:sekundy, třeba 12:30</value>
+  </data>
+  <data name="LogResultsSave" xml:space="preserve">
+    <value>Uložit výsledky</value>
+  </data>
+  <data name="CrossMomentLogResults" xml:space="preserve">
+    <value>Zapsat výsledky</value>
+  </data>
+  <data name="ResultsTitle" xml:space="preserve">
+    <value>Výsledky</value>
+  </data>
+  <data name="ResultsHint" xml:space="preserve">
+    <value>Všechny testy vedle sebe. Změna se počítá od vašeho prvního výsledku.</value>
+  </data>
+  <data name="ResultsEmptyTitle" xml:space="preserve">
+    <value>Zatím není co měřit</value>
+  </data>
+  <data name="ResultsEmptyMessage" xml:space="preserve">
+    <value>Výsledky se tu objeví u cvičení, kde si zapisujete čísla, třeba u fit testu nebo času Max Out.</value>
+  </data>
+  <data name="ResultsNoEnrollment" xml:space="preserve">
+    <value>Začněte program a sledujte jeho výsledky.</value>
+  </data>
+  <data name="ResultsBonusColumn" xml:space="preserve">
+    <value>Bonus</value>
+  </data>
+  <data name="ResultsDayDateFormat" xml:space="preserve">
+    <value>Den {0} · {1}</value>
+  </data>
+  <data name="ResultsBonusDateFormat" xml:space="preserve">
+    <value>Bonusové cvičení · {0}</value>
+  </data>
+  <data name="ResultsCellEmptyFormat" xml:space="preserve">
+    <value>{0}, {1}: nezapsáno</value>
+  </data>
+  <data name="ResultsCellFormat" xml:space="preserve">
+    <value>{0}, {1}: {2}</value>
+  </data>
+  <data name="ResultsCellDeltaFormat" xml:space="preserve">
+    <value>{0}, {1}: {2}, {3} od prvního</value>
+  </data>
+  <data name="ProgramNoteTitle" xml:space="preserve">
+    <value>Poznámky k programu</value>
+  </data>
+  <data name="ProgramNotePlaceholder" xml:space="preserve">
+    <value>Cíle, úpravy, jak to jde...</value>
+  </data>
+  <data name="Units" xml:space="preserve">
+    <value>Jednotky</value>
+  </data>
+  <data name="UnitsDescription" xml:space="preserve">
+    <value>Váha a vzdálenost ve výsledcích</value>
+  </data>
+  <data name="UnitSystem_Metric" xml:space="preserve">
+    <value>Metrické (kg, km)</value>
+  </data>
+  <data name="UnitSystem_Imperial" xml:space="preserve">
+    <value>Imperiální (lb, mi)</value>
+  </data>
+  <data name="DayDetailUncrossPending" xml:space="preserve">
+    <value>Odškrtnutí zrušíte uložením</value>
+  </data>
+  <data name="DayDetailUndo" xml:space="preserve">
+    <value>Vrátit</value>
+  </data>
+  <data name="ResultsNotLoggedNextFormat" xml:space="preserve">
+    <value>Zatím nezapsáno · další: den {0}</value>
+  </data>
+  <data name="ResultsNotLogged" xml:space="preserve">
+    <value>Zatím nezapsáno</value>
+  </data>
+  <data name="ResultsPendingHeader" xml:space="preserve">
+    <value>Čeká na výsledky</value>
   </data>
 </root>

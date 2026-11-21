@@ -5,7 +5,7 @@ namespace ShowUp.Core.Storage;
 // Each version is frozen DDL, never the live entity classes, so later versions can ALTER safely.
 public static class Migrations
 {
-    public const int LatestVersion = 2;
+    public const int LatestVersion = 3;
 
     /// <param name="targetVersion">Stop after this version (tests build older schemas with it).</param>
     public static async Task ApplyAsync(SQLiteAsyncConnection connection, int targetVersion = LatestVersion)
@@ -20,6 +20,11 @@ public static class Migrations
         if (version < 2 && targetVersion >= 2)
         {
             await connection.RunInTransactionAsync(V2);
+        }
+
+        if (version < 3 && targetVersion >= 3)
+        {
+            await connection.RunInTransactionAsync(V3);
         }
     }
 
@@ -93,5 +98,50 @@ public static class Migrations
     {
         c.Execute("""ALTER TABLE "CompletionEntity" ADD COLUMN "InkJson" varchar""");
         c.Execute("PRAGMA user_version = 2");
+    }
+
+    // Notes (program, day, session) and logged workout results.
+    private static void V3(SQLiteConnection c)
+    {
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "NoteEntity" (
+                "Id" varchar(36) primary key not null,
+                "UserId" varchar,
+                "CreatedAt" bigint,
+                "UpdatedAt" bigint,
+                "DeletedAt" bigint,
+                "DeviceId" varchar,
+                "EnrollmentId" varchar(36),
+                "DayIndex" integer,
+                "SessionIndex" integer,
+                "SubjectKey" varchar,
+                "Text" varchar
+            )
+            """);
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_Note_Enrollment" ON "NoteEntity" ("EnrollmentId")""");
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_Note_Subject" ON "NoteEntity" ("SubjectKey")""");
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "MetricEntryEntity" (
+                "Id" varchar(36) primary key not null,
+                "UserId" varchar,
+                "CreatedAt" bigint,
+                "UpdatedAt" bigint,
+                "DeletedAt" bigint,
+                "DeviceId" varchar,
+                "EnrollmentId" varchar(36),
+                "DayIndex" integer,
+                "SessionIndex" integer,
+                "BonusWorkoutId" varchar(36),
+                "SubjectKey" varchar,
+                "WorkoutId" varchar,
+                "MetricId" varchar,
+                "Value" float,
+                "TextValue" varchar
+            )
+            """);
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_MetricEntry_Enrollment" ON "MetricEntryEntity" ("EnrollmentId")""");
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_MetricEntry_Bonus" ON "MetricEntryEntity" ("BonusWorkoutId")""");
+        c.Execute("""CREATE INDEX IF NOT EXISTS "IX_MetricEntry_Subject" ON "MetricEntryEntity" ("SubjectKey", "MetricId")""");
+        c.Execute("PRAGMA user_version = 3");
     }
 }

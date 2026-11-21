@@ -1,0 +1,27 @@
+﻿<ContentDialog
+    x:Class="ShowUp.Views.LogResultsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls"
+    xmlns:markup="using:ShowUp.Markup"
+    Title="{x:Bind ViewModel.Title, Mode=OneWay}"
+    AutomationProperties.AutomationId="LogResultsDialog"
+    CloseButtonText="{markup:Localize Key=Cancel}"
+    DefaultButton="Primary"
+    IsPrimaryButtonEnabled="{x:Bind ViewModel.CanSave, Mode=OneWay}"
+    PrimaryButtonText="{markup:Localize Key=LogResultsSave}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel
+            x:Name="ContentPanel"
+            Padding="0,0,12,0"
+            Spacing="16">
+            <TextBlock
+                AutomationProperties.AutomationId="LogResultsSubtitle"
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Text="{x:Bind ViewModel.Subtitle, Mode=OneWay}" />
+            <controls:MetricInputsControl Inputs="{x:Bind ViewModel.Inputs, Mode=OneWay}" />
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

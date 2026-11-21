@@ -1,0 +1,71 @@
+﻿<UserControl
+    x:Class="ShowUp.Controls.MetricInputsControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:vm="using:ShowUp.Core.ViewModels">
+
+    <ItemsRepeater ItemsSource="{x:Bind Inputs, Mode=OneWay}">
+        <ItemsRepeater.Layout>
+            <StackLayout Spacing="8" />
+        </ItemsRepeater.Layout>
+        <ItemsRepeater.ItemTemplate>
+            <DataTemplate x:DataType="vm:MetricInputViewModel">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="128" />
+                        <ColumnDefinition Width="44" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        Text="{x:Bind Name}"
+                        TextWrapping="Wrap" />
+                    <NumberBox
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="{x:Bind NumberAutomationId}"
+                        AutomationProperties.Name="{x:Bind AccessibleName}"
+                        Maximum="100000"
+                        Minimum="0"
+                        SmallChange="{x:Bind SmallChange}"
+                        SpinButtonPlacementMode="Hidden"
+                        ValidationMode="InvalidInputOverwritten"
+                        Visibility="{x:Bind IsNumberInput}"
+                        Value="{x:Bind Number, Mode=TwoWay}" />
+                    <TextBox
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="{x:Bind TextAutomationId}"
+                        AutomationProperties.HelpText="{x:Bind ErrorText, Mode=OneWay}"
+                        AutomationProperties.Name="{x:Bind AccessibleName}"
+                        InputScope="Number"
+                        PlaceholderText="{x:Bind PlaceholderText}"
+                        Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{x:Bind IsTextInput}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw"
+                        Foreground="{ThemeResource MutedTextBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind UnitHint}" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.ColumnSpan="3"
+                        HorizontalAlignment="Right"
+                        AutomationProperties.LiveSetting="Polite"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Loaded="ErrorText_Loaded"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{markup:Localize Key=MetricDurationError}"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind ShowError, Mode=OneWay}" />
+                </Grid>
+            </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
+</UserControl>

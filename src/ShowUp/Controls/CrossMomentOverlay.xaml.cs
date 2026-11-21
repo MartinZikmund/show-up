@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Input;
@@ -18,6 +19,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 {
     private static readonly TimeSpan AutoDismissDelay = TimeSpan.FromSeconds(2.5);
     private static readonly TimeSpan DrawnDismissDelay = TimeSpan.FromSeconds(2.2);
+
+    // Long enough to reach "Log your results"; the moment still goes away on its own.
+    private static readonly TimeSpan ResultsDismissDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan CaptionDelay = TimeSpan.FromMilliseconds(60);
 
     // The tap or click that finished the drawing must not also dismiss it.
@@ -41,6 +45,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
     private DrawState _drawState;
     private long _finishedAt;
     private bool _inkCrossed;
+    private bool _logResultsHovered;
 
     public CrossMomentOverlay()
     {
@@ -161,6 +166,8 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         HideCaptionFromAutomation();
         CaptionPanel.Opacity = 0;
         BelowCell.MinHeight = 0;
+        LogResultsButton.Visibility = Visibility.Collapsed;
+        _logResultsHovered = false;
 
         Cross.AnimateChanges = false;
         Cross.Seed = info.Seed;
@@ -188,7 +195,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
     private void PlayStrokes(CrossMomentInfo info)
     {
-        _dismissTimer.Interval = AutoDismissDelay;
+        _dismissTimer.Interval = info.LogResults is null ? AutoDismissDelay : ResultsDismissDelay;
         _awaitingStrokes = true;
         if (info.StrokesAfter > info.StrokesBefore)
         {
@@ -238,6 +245,52 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         }
 
         AnnounceCaption();
+        if (_info?.LogResults is not null)
+        {
+            LogResultsButton.Visibility = Visibility.Visible;
+        }
+    }
+
+    private async void LogResultsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var logResults = _info?.LogResults;
+        Dismiss();
+        if (logResults is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await logResults();
+        }
+        catch (Exception ex)
+        {
+            App.Current.Services.GetService<ILogger<CrossMomentOverlay>>()?.LogError(ex, "Opening Log your results failed.");
+        }
+    }
+
+    // Reaching for the button must not race the auto-dismiss; leaving it starts the countdown again.
+    private void LogResultsButton_Engaged(object sender, RoutedEventArgs e) => _dismissTimer.Stop();
+
+    private void LogResultsButton_Released(object sender, RoutedEventArgs e)
+    {
+        if (IsOpen && !_logResultsHovered && LogResultsButton.FocusState == FocusState.Unfocused)
+        {
+            _dismissTimer.Start();
+        }
+    }
+
+    private void LogResultsButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _logResultsHovered = true;
+        _dismissTimer.Stop();
+    }
+
+    private void LogResultsButton_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _logResultsHovered = false;
+        LogResultsButton_Released(sender, e);
     }
 
     private void Pad_InkChanged(InkPad sender, object? args) => UpdateDrawControls();
@@ -291,7 +344,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         }
 
         RevealCaption();
-        _dismissTimer.Interval = DrawnDismissDelay;
+        _dismissTimer.Interval = _info?.LogResults is null ? DrawnDismissDelay : ResultsDismissDelay;
         _dismissTimer.Start();
     }
 

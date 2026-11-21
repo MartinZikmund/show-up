@@ -349,9 +349,6 @@
   <data name="CalendarUncross" xml:space="preserve">
     <value>Uncross</value>
   </data>
-  <data name="CalendarUncrossLast" xml:space="preserve">
-    <value>Uncross last session</value>
-  </data>
   <data name="CalendarLogBonus" xml:space="preserve">
     <value>Log bonus workout here</value>
   </data>
@@ -615,5 +612,131 @@
   </data>
   <data name="MarkerColorHighContrastNote" xml:space="preserve">
     <value>Not used while High Contrast is on</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="CalendarDayDetails" xml:space="preserve">
+    <value>Day details</value>
+  </data>
+  <data name="CalendarProgramNotes" xml:space="preserve">
+    <value>Program notes</value>
+  </data>
+  <data name="CalendarResults" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="DayDetailDayNote" xml:space="preserve">
+    <value>Day note</value>
+  </data>
+  <data name="DayDetailNotePlaceholder" xml:space="preserve">
+    <value>Add a note</value>
+  </data>
+  <data name="DayDetailSessionDone" xml:space="preserve">
+    <value>Crossed off</value>
+  </data>
+  <data name="DayDetailSessionNotDone" xml:space="preserve">
+    <value>Not crossed off yet</value>
+  </data>
+  <data name="DayDetailBonusHeader" xml:space="preserve">
+    <value>Bonus workouts</value>
+  </data>
+  <data name="MetricUnitReps" xml:space="preserve">
+    <value>reps</value>
+  </data>
+  <data name="MetricUnitCount" xml:space="preserve">
+    <value>times</value>
+  </data>
+  <data name="MetricUnitSeconds" xml:space="preserve">
+    <value>s</value>
+  </data>
+  <data name="MetricUnitKg" xml:space="preserve">
+    <value>kg</value>
+  </data>
+  <data name="MetricUnitLb" xml:space="preserve">
+    <value>lb</value>
+  </data>
+  <data name="MetricUnitKm" xml:space="preserve">
+    <value>km</value>
+  </data>
+  <data name="MetricUnitMi" xml:space="preserve">
+    <value>mi</value>
+  </data>
+  <data name="MetricDurationError" xml:space="preserve">
+    <value>Use minutes:seconds, like 12:30</value>
+  </data>
+  <data name="LogResultsSave" xml:space="preserve">
+    <value>Save results</value>
+  </data>
+  <data name="CrossMomentLogResults" xml:space="preserve">
+    <value>Log your results</value>
+  </data>
+  <data name="ResultsTitle" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="ResultsHint" xml:space="preserve">
+    <value>Every test side by side. Changes are against your first result.</value>
+  </data>
+  <data name="ResultsEmptyTitle" xml:space="preserve">
+    <value>Nothing to measure yet</value>
+  </data>
+  <data name="ResultsEmptyMessage" xml:space="preserve">
+    <value>Results show up here for workouts that ask you to write numbers down, like a Fit Test or a Max Out time.</value>
+  </data>
+  <data name="ResultsNoEnrollment" xml:space="preserve">
+    <value>Start a program to track its results.</value>
+  </data>
+  <data name="ResultsBonusColumn" xml:space="preserve">
+    <value>Bonus</value>
+  </data>
+  <data name="ResultsDayDateFormat" xml:space="preserve">
+    <value>Day {0} · {1}</value>
+  </data>
+  <data name="ResultsBonusDateFormat" xml:space="preserve">
+    <value>Bonus workout · {0}</value>
+  </data>
+  <data name="ResultsCellEmptyFormat" xml:space="preserve">
+    <value>{0}, {1}: not logged</value>
+  </data>
+  <data name="ResultsCellFormat" xml:space="preserve">
+    <value>{0}, {1}: {2}</value>
+  </data>
+  <data name="ResultsCellDeltaFormat" xml:space="preserve">
+    <value>{0}, {1}: {2}, {3} since the first</value>
+  </data>
+  <data name="ProgramNoteTitle" xml:space="preserve">
+    <value>Program notes</value>
+  </data>
+  <data name="ProgramNotePlaceholder" xml:space="preserve">
+    <value>Goals, modifications, how it's going...</value>
+  </data>
+  <data name="Units" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="UnitsDescription" xml:space="preserve">
+    <value>Weight and distance in your results</value>
+  </data>
+  <data name="UnitSystem_Metric" xml:space="preserve">
+    <value>Metric (kg, km)</value>
+  </data>
+  <data name="UnitSystem_Imperial" xml:space="preserve">
+    <value>Imperial (lb, mi)</value>
+  </data>
+  <data name="DayDetailUncrossPending" xml:space="preserve">
+    <value>Uncrossed when you save</value>
+  </data>
+  <data name="DayDetailUndo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="ResultsNotLoggedNextFormat" xml:space="preserve">
+    <value>Not logged yet · next: Day {0}</value>
+  </data>
+  <data name="ResultsNotLogged" xml:space="preserve">
+    <value>Not logged yet</value>
+  </data>
+  <data name="ResultsPendingHeader" xml:space="preserve">
+    <value>Waiting for results</value>
   </data>
 </root>

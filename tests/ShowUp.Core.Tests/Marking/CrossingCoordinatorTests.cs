@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Tests.Tracking;
 using ShowUp.Core.Tests.ViewModels;
 using ShowUp.Core.Tracking;
 
@@ -13,6 +14,8 @@ public sealed class CrossingCoordinatorTests
     private readonly FakeAppPreferences _preferences = new() { CrossOffStyle = CrossOffStyle.AutoMarker, CrossMomentMode = CrossMomentMode.Always };
     private readonly FakeCrossMoment _crossMoment = new();
     private readonly RecordingEnrollmentService _enrollments = new();
+    private readonly StubJournalService _journal = new();
+    private readonly RecordingJournalDialogs _journalDialogs = new();
     private readonly List<string> _log = [];
 
     [TestMethod]
@@ -113,7 +116,41 @@ public sealed class CrossingCoordinatorTests
         _crossMoment.DrawRequests.Should().ContainSingle().Which.PriorInks.Should().Equal("[[1,1,2,2]]");
     }
 
-    private CrossingCoordinator Create() => new(_preferences, _crossMoment, new FakeMarkingFeedback(), _enrollments);
+    [TestMethod]
+    public async Task LogResults_WorkoutWithoutMetrics_NotOffered()
+    {
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(), Hooks());
+
+        _crossMoment.Shown.Should().ContainSingle().Which.LogResults.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task LogResults_WorkoutWithMetrics_OpensTheSessionsResults()
+    {
+        _journal.HasMetrics = (day, session) => day == 0 && session == 1;
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+        await _crossMoment.Shown.Single().LogResults!();
+
+        _journalDialogs.Calls.Should().Equal("results:0:1");
+    }
+
+    [TestMethod]
+    public async Task LogResults_DrawMode_OfferedOnTheDrawMoment()
+    {
+        _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
+        _journal.HasMetrics = (_, _) => true;
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(), Hooks());
+
+        _crossMoment.DrawRequests.Should().ContainSingle().Which.Info.LogResults.Should().NotBeNull();
+    }
+
+    private CrossingCoordinator Create() => new(_preferences, _crossMoment, new FakeMarkingFeedback(), _enrollments, _journal, _journalDialogs);
 
     private CrossHooks Hooks() => new(
         async write =>

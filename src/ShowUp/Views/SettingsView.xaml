@@ -7,6 +7,7 @@
     xmlns:marking="using:ShowUp.Core.Marking"
     xmlns:markup="using:ShowUp.Markup"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:tracking="using:ShowUp.Core.Tracking"
     xmlns:vm="using:ShowUp.Core.ViewModels">
 
     <local:SettingsViewBase.Resources>
@@ -174,6 +175,23 @@
                     SelectedItem="{x:Bind ViewModel.CrossMomentMode, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="marking:CrossMomentMode">
+                            <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard Description="{markup:Localize Key=UnitsDescription}" Header="{markup:Localize Key=Units}">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xECC6;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox
+                    AutomationProperties.AutomationId="UnitSystemComboBox"
+                    AutomationProperties.Name="{markup:Localize Key=Units}"
+                    ItemsSource="{x:Bind ViewModel.UnitSystemOptions}"
+                    SelectedItem="{x:Bind ViewModel.UnitSystem, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="tracking:UnitSystem">
                             <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

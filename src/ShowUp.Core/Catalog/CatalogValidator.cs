@@ -17,6 +17,11 @@ public static partial class CatalogValidator
             errors.Add($"Duplicate workout id '{dup.Key}'.");
         }
 
+        foreach (var workout in allWorkouts)
+        {
+            ValidateMetrics(workout, errors);
+        }
+
         foreach (var dup in allPrograms.GroupBy(p => (p.Id, p.Revision)).Where(g => g.Count() > 1))
         {
             errors.Add($"Duplicate program id '{dup.Key.Id}' revision {dup.Key.Revision}.");
@@ -32,6 +37,20 @@ public static partial class CatalogValidator
         }
 
         return errors;
+    }
+
+    private static void ValidateMetrics(Workout workout, List<string> errors)
+    {
+        var metrics = (workout.Metrics ?? []).Where(m => m is not null).ToList();
+        foreach (var metric in metrics.Where(m => string.IsNullOrWhiteSpace(m.Id) || string.IsNullOrWhiteSpace(m.Name)))
+        {
+            errors.Add($"Workout '{workout.Id}': metric '{metric.Id}' needs an id and a name.");
+        }
+
+        foreach (var dup in metrics.GroupBy(m => m.Id).Where(g => g.Count() > 1))
+        {
+            errors.Add($"Workout '{workout.Id}': duplicate metric id '{dup.Key}'.");
+        }
     }
 
     private static void ValidateProgram(WorkoutProgram program, IReadOnlyDictionary<string, Workout> workouts, List<string> errors)

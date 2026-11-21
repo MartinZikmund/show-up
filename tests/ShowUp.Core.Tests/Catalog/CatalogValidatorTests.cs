@@ -121,6 +121,32 @@ public class CatalogValidatorTests
         new ScheduleDay([new ScheduledSession("rest"), new ScheduledSession("abs")]).IsRestDay(catalog.WorkoutsById).Should().BeFalse();
     }
 
+    [TestMethod]
+    public void Validator_DuplicateMetricId_ReturnsError()
+    {
+        var errors = Validate(c => c with
+        {
+            Workouts =
+            [
+                .. c.Workouts.Skip(1),
+                c.Workouts[0] with { Metrics = [new("reps", "Reps", MetricUnit.Reps), new("reps", "Again", MetricUnit.Count)] },
+            ],
+        });
+
+        errors.Should().ContainSingle(e => e.Contains("duplicate metric id 'reps'"));
+    }
+
+    [TestMethod]
+    public void Validate_UniqueMetricIds_ReturnsNoErrors()
+    {
+        var errors = Validate(c => c with
+        {
+            Workouts = [.. c.Workouts.Skip(1), c.Workouts[0] with { Metrics = [new("a", "A", MetricUnit.Reps), new("b", "B", MetricUnit.Duration)] }],
+        });
+
+        errors.Should().BeEmpty();
+    }
+
     private static IReadOnlyList<ScheduleDay> Week(ScheduledSession first) =>
         [new ScheduleDay([first]), .. Enumerable.Repeat(new ScheduleDay([new ScheduledSession("rest")]), 6)];
 
