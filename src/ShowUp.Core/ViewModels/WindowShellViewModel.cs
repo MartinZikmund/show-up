@@ -3,7 +3,7 @@ using ShowUp.Core.Services;
 
 namespace ShowUp.Core.ViewModels;
 
-public partial class WindowShellViewModel : ObservableObject
+public partial class WindowShellViewModel : ObservableObject, ISectionNavigator
 {
     private readonly INavigationService _navigationService;
     private readonly IStringLocalizer _localizer;
