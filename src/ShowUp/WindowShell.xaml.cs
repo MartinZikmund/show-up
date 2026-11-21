@@ -1,5 +1,8 @@
-﻿using ShowUp.Core.Marking;
+using CommunityToolkit.Mvvm.Messaging;
+using ShowUp.Core.Marking;
+using ShowUp.Core.Messages;
 using ShowUp.Core.Navigation;
+using ShowUp.Core.Reminders;
 using ShowUp.Core.Services;
 using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
@@ -17,6 +20,7 @@ public sealed partial class WindowShell : Page, IWindowShell
     private readonly Window _associatedWindow;
     private bool _isWindowClosed;
     private IDisposable? _lapseWatch;
+    private InAppReminderScheduler? _inAppReminders;
 
     public WindowShell(IServiceProvider serviceProvider, Window associatedWindow)
     {
@@ -49,6 +53,7 @@ public sealed partial class WindowShell : Page, IWindowShell
             UpdateStatusBarForeground();
             UpdateTitleBarPaneToggle(WidthStates.CurrentState);
             WatchForLapse();
+            WatchReminders();
         };
         ActualThemeChanged += (_, _) => UpdateStatusBarForeground();
 
@@ -66,6 +71,56 @@ public sealed partial class WindowShell : Page, IWindowShell
         }
 
         _lapseWatch = ServiceProvider.GetRequiredService<LapseCoordinator>().Attach(ServiceProvider.GetRequiredService<IPrimaryProgramPrompt>());
+    }
+
+    // A tapped notification opens Today; heads without OS notifications get a banner instead.
+    private void WatchReminders()
+    {
+        var messenger = ServiceProvider.GetRequiredService<IMessenger>();
+        if (messenger.IsRegistered<ReminderOpenedMessage>(this))
+        {
+            return;
+        }
+
+        messenger.Register<WindowShell, ReminderOpenedMessage>(this, static (shell, _) => shell.DispatcherQueue.TryEnqueue(shell.OpenToday));
+        if (ServiceProvider.GetRequiredService<IReminderScheduler>() is InAppReminderScheduler inApp)
+        {
+            _inAppReminders = inApp;
+            inApp.Due += OnInAppReminderDue;
+        }
+    }
+
+    private void OnInAppReminderDue(object? sender, PlannedReminder reminder) => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (_isWindowClosed)
+        {
+            return;
+        }
+
+        ReminderBanner.Title = reminder.Title;
+        ReminderBanner.Message = reminder.Body;
+        ReminderBannerHost.Visibility = Visibility.Visible;
+        ReminderBanner.IsOpen = true;
+        ServiceProvider.GetRequiredService<IMarkingFeedback>().DayTaken();
+    });
+
+    private void OpenToday()
+    {
+        if (_isWindowClosed)
+        {
+            return;
+        }
+
+        ViewModel.NavigateToSection(NavigationSection.Today);
+        _associatedWindow.Activate();
+    }
+
+    private void ReminderBanner_Closed(InfoBar sender, InfoBarClosedEventArgs args) => ReminderBannerHost.Visibility = Visibility.Collapsed;
+
+    private void ReminderBannerOpen_Click(object sender, RoutedEventArgs e)
+    {
+        ReminderBanner.IsOpen = false;
+        OpenToday();
     }
 
     public WindowShellViewModel ViewModel { get; }
@@ -114,6 +169,11 @@ public sealed partial class WindowShell : Page, IWindowShell
     {
         _isWindowClosed = true;
         _lapseWatch?.Dispose();
+        ServiceProvider.GetRequiredService<IMessenger>().UnregisterAll(this);
+        if (_inAppReminders is not null)
+        {
+            _inAppReminders.Due -= OnInAppReminderDue;
+        }
         _associatedWindow.Closed -= OnWindowClosed;
         InnerFrame.Navigated -= InnerFrame_Navigated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;

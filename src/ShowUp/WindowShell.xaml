@@ -132,6 +132,33 @@
             </not_win:Border>
         </Grid>
 
+        <!--  In-app reminder, for heads where the OS can't deliver one (Desktop)  -->
+        <Border
+            x:Name="ReminderBannerHost"
+            MaxWidth="480"
+            Margin="16,16,16,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            toolkit:VisibleBoundsPadding.PaddingMask="Top"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+            CornerRadius="{ThemeResource OverlayCornerRadius}"
+            Visibility="Collapsed">
+            <InfoBar
+                x:Name="ReminderBanner"
+                AutomationProperties.AutomationId="ReminderBanner"
+                AutomationProperties.Name="{markup:Localize Key=ReminderBannerName}"
+                Closed="ReminderBanner_Closed"
+                IsOpen="False"
+                Severity="Informational">
+                <InfoBar.ActionButton>
+                    <Button
+                        AutomationProperties.AutomationId="ReminderBannerOpenButton"
+                        Click="ReminderBannerOpen_Click"
+                        Content="{markup:Localize Key=ReminderBannerOpen}" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+        </Border>
+
         <!--  Top-most: covers the tab bar and safe areas (it pads its own content)  -->
         <controls:CrossMomentOverlay x:Name="CrossMomentOverlay" />
 

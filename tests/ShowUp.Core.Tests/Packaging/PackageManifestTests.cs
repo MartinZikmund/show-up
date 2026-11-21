@@ -29,6 +29,23 @@ public class PackageManifestTests
         ((string?)identity.Attribute("Version")).Should().Be("0.0.0.0", "Nerdbank.GitVersioning stamps the real version at build time");
     }
 
+    private static readonly XNamespace _com = "http://schemas.microsoft.com/appx/manifest/com/windows10";
+    private static readonly XNamespace _desktop = "http://schemas.microsoft.com/appx/manifest/desktop/windows10";
+
+    [TestMethod]
+    public void ToastActivation_ComServerMatchesTheActivatorClsid()
+    {
+        var manifest = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "ShowUp", "Package.appxmanifest"));
+
+        var activator = (string?)manifest.Descendants(_desktop + "ToastNotificationActivation").Single().Attribute("ToastActivatorCLSID");
+        var server = manifest.Descendants(_com + "ExeServer").Single();
+
+        activator.Should().NotBeNullOrEmpty();
+        ((string?)server.Element(_com + "Class")!.Attribute("Id")).Should().Be(activator);
+        ((string?)server.Attribute("Arguments")).Should().Be("----AppNotificationActivated:", "Windows App SDK reads clicks from this argument");
+        ((string?)server.Attribute("Executable")).Should().Be("ShowUp.exe");
+    }
+
     private static string FindRepoRoot()
     {
         DirectoryInfo? dir = new(AppContext.BaseDirectory);
