@@ -1,8 +1,15 @@
 namespace ShowUp.Core.Marking;
 
+/// <summary>
+/// Opens the draw moment for one session. Get the stroke counts from <see cref="MarkerAppearance.Outcomes"/>:
+/// <c>Info.StrokesBefore</c> = Before, <c>Info.StrokesAfter</c> = AfterAuto (played on "Do it for me"),
+/// <see cref="DrawnStrokesAfter"/> = AfterDrawn (a drawn session can complete a day that has auto sessions,
+/// which then lands the full X).
+/// </summary>
 /// <param name="Info">The day and the caption numbers as they will be once this session is crossed.</param>
 /// <param name="PriorInks">Saved ink (<see cref="InkCodec"/> JSON) of the day's other sessions, shown at 50%.</param>
-public sealed record CrossMomentDrawRequest(CrossMomentInfo Info, IReadOnlyList<string> PriorInks);
+/// <param name="DrawnStrokesAfter">Generated strokes after a drawn cross; usually <c>Info.StrokesBefore</c>.</param>
+public sealed record CrossMomentDrawRequest(CrossMomentInfo Info, IReadOnlyList<string> PriorInks, int DrawnStrokesAfter);
 
 public enum CrossMomentOutcome
 {

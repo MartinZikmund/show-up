@@ -31,6 +31,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
     private readonly DispatcherQueueTimer _captionTimer;
     private TaskCompletionSource? _shown;
     private TaskCompletionSource<CrossMomentResult>? _drawn;
+    private CrossMomentDrawRequest? _drawRequest;
     private CrossMomentInfo? _info;
     private CrossMomentCaption? _caption;
     private readonly List<Storyboard> _fades = [];
@@ -83,7 +84,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         Dismiss();
 
         var drawn = _drawn = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _drawRequest = request;
         _session = new(App.Current.Services.GetService<TimeProvider>() ?? TimeProvider.System);
+
         _session.Finished += (_, _) => DispatcherQueue.TryEnqueue(FinishDrawn);
         _drawState = DrawState.Drawing;
 
@@ -277,6 +280,13 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         App.Current.Services.GetService<IMarkingFeedback>()?.DayTaken();
         _drawn?.TrySetResult(CrossMomentResult.Drawn(session.Encode()));
 
+        // A drawn session that completes a day with auto sessions lands the rest of the X.
+        if (_drawRequest is { DrawnStrokesAfter: var after } && after > Cross.Strokes)
+        {
+            Cross.AnimateChanges = AnimationsEnabled;
+            Cross.Strokes = after;
+        }
+
         RevealCaption();
         _dismissTimer.Interval = DrawnDismissDelay;
         _dismissTimer.Start();
@@ -326,6 +336,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         DrawPanel.Visibility = Visibility.Collapsed;
         _drawn?.TrySetResult(CrossMomentResult.Cancelled);
         _drawn = null;
+        _drawRequest = null;
     }
 
     private bool WithinFinishGuard => Environment.TickCount64 - _finishedAt < FinishTapGuard.TotalMilliseconds;

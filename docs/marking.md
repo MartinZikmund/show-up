@@ -24,9 +24,17 @@ phones and as a popup on wider windows. The feel reference is
 | `Inks` | null | The user's drawn crosses (`InkCodec` JSON), one per session crossed by drawing |
 | `BleedOpacity` | `{ThemeResource MarkerBleedOpacity}` | Opacity of the wider bleed under each stroke |
 
-A mixed day (some sessions auto, some drawn) draws both: `Strokes` counts only the generated
-strokes, so set it from the auto-crossed sessions, and put each drawn session's `InkJson` in
-`Inks`. Ink is scaled to the whole control and rendered by `InkView` with the same two layers.
+Ink is scaled to the whole control, so the control must fill the cell; `InkView` renders it with
+the same two layers.
+
+A mixed day (some sessions auto, some drawn) draws both. Set `Strokes` from
+`MarkerAppearance.StrokesFor(dayStatus, autoCrossedSessions)` and put each drawn session's
+`InkJson` in `Inks`:
+
+- a **complete** day with at least one auto-crossed session gets the full X (plus any ink);
+- a **partial** day applies the stroke rule to its auto-crossed sessions only (two required
+  sessions, one auto = "/");
+- drawn sessions only ever add ink, so a day crossed entirely by hand shows no generated strokes.
 
 Each stroke is three `Path`s: the main line at `9 × min(w, h) / 96` (never below 0.6×, then a
 seeded ±8% per stroke from `MarkerGeometry.WidthFactor`) at 90% opacity; a 1.35× wider bleed,
@@ -51,7 +59,9 @@ callers open the square with `ICrossMoment.DrawAsync`:
 ```csharp
 using ShowUp.Core.Marking;
 
-var result = await crossMoment.DrawAsync(new CrossMomentDrawRequest(info, priorInks));
+var (before, afterAuto, afterDrawn) = MarkerAppearance.Outcomes(dayStatus, autoCrossedSessions, sessionIndex);
+var info = new CrossMomentInfo(/* ... */ StrokesBefore: before, StrokesAfter: afterAuto, /* ... */);
+var result = await crossMoment.DrawAsync(new CrossMomentDrawRequest(info, priorInks, afterDrawn));
 if (result.Crossed)
 {
     // InkJson is null for "Do it for me" (the generated X).
@@ -62,7 +72,9 @@ if (result.Crossed)
 `DrawAsync` completes as soon as the user decides (drawn, Do it for me, or cancelled), so the caller
 persists right away; the caption then stays up and dismisses itself. `info` carries the caption
 numbers as they will be after this cross; `priorInks` are the day's other drawn sessions, shown at
-50%.
+50%. The request carries the generated strokes for both outcomes: `info.StrokesAfter` is played on
+"Do it for me", `DrawnStrokesAfter` lands after a drawn cross (drawing the last session of a day
+that has an auto "/" completes the X).
 
 - **The square.** `InkPad` (`Controls/InkPad.cs`) covers the big cell. It captures one pointer
   (finger, pen, or the left mouse button), normalizes points to 0..1 and feeds an `InkSession`.

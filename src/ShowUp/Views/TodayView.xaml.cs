@@ -3,6 +3,7 @@ using ShowUp.Core.ViewModels;
 #if DEBUG
 using ShowUp.Controls;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Tracking;
 using ShowUp.Services.Localization;
 #endif
 
@@ -23,6 +24,37 @@ public sealed partial class TodayView : TodayViewBase
 
 #if DEBUG
     private int _previewCount;
+
+    // The sample cell is a two-session day: tapping it auto-crosses the next session, drawing crosses one by hand.
+    private const int SampleSessions = 2;
+    private readonly HashSet<int> _sampleDone = [];
+    private readonly HashSet<int> _sampleAutos = [];
+    private readonly List<string> _sampleInks = [];
+
+    private static DayStatus SampleStatus(IReadOnlySet<int> done) =>
+        new(9, DateOnly.FromDateTime(DateTime.Today), SampleSessions, done, IsRestDay: false);
+
+    private void UpdateSample(MarkerCrossControl sample)
+    {
+        sample.Strokes = MarkerAppearance.StrokesFor(SampleStatus(_sampleDone), _sampleAutos);
+        sample.Inks = [.. _sampleInks];
+    }
+
+    private void CrossSample(MarkerCrossControl sample, CrossMomentResult result)
+    {
+        var session = Enumerable.Range(0, SampleSessions).First(i => !_sampleDone.Contains(i));
+        _sampleDone.Add(session);
+        if (result.InkJson is { } ink)
+        {
+            _sampleInks.Add(ink);
+        }
+        else
+        {
+            _sampleAutos.Add(session);
+        }
+
+        UpdateSample(sample);
+    }
 
     // Debug-only playground for the marker until the calendar (Task 5) and Today card (Task 6) land.
     private void AddDebugMarkerTools()
@@ -57,15 +89,19 @@ public sealed partial class TodayView : TodayViewBase
         };
         cell.Click += (_, _) =>
         {
-            if (sample.Strokes >= 2 || sample.Inks is { Count: > 0 })
+            if (_sampleDone.Count >= SampleSessions)
             {
-                sample.Strokes = 0;
-                sample.Inks = null;
+                _sampleDone.Clear();
+                _sampleAutos.Clear();
+                _sampleInks.Clear();
+                sample.AnimateChanges = false;
+                UpdateSample(sample);
+                sample.AnimateChanges = true;
                 sample.Seed++;
             }
             else
             {
-                sample.Strokes++;
+                CrossSample(sample, CrossMomentResult.Auto);
             }
         };
 
@@ -88,33 +124,38 @@ public sealed partial class TodayView : TodayViewBase
                 CurrentStreak: complete ? 9 : 8));
         };
 
-        // Draw it yourself on a two-session day: the second draw shows the first one's ink at 50%.
+        // Draws the sample day's next session; its earlier ink shows at 50%.
         Button draw = new() { Content = Localizer.Instance["DebugDrawMoment"] };
         draw.SetValue(AutomationProperties.AutomationIdProperty, "DebugDrawMomentButton");
         draw.Click += async (_, _) =>
         {
-            var inks = sample.Inks ?? [];
-            var done = Math.Min(2, inks.Count + (sample.Strokes >= 2 ? 2 : 0) + 1);
+            if (_sampleDone.Count >= SampleSessions)
+            {
+                return;
+            }
+
+            var session = Enumerable.Range(0, SampleSessions).First(i => !_sampleDone.Contains(i));
+            var (before, afterAuto, afterDrawn) = MarkerAppearance.Outcomes(SampleStatus(_sampleDone), _sampleAutos, session);
+            var done = _sampleDone.Count + 1;
             var crossMoment = FindWindowShell(XamlRoot?.Content)!.ServiceProvider.GetRequiredService<ICrossMoment>();
             var result = await crossMoment.DrawAsync(new CrossMomentDrawRequest(
                 new CrossMomentInfo(
                     DayNumber: 10,
                     TotalDays: 60,
                     Title: "Cardio + Core",
-                    StrokesBefore: sample.Strokes,
-                    StrokesAfter: 2,
+                    StrokesBefore: before,
+                    StrokesAfter: afterAuto,
                     Seed: sample.Seed,
                     SessionsDone: done,
-                    SessionsRequired: 2,
-                    CurrentStreak: done >= 2 ? 9 : 8),
-                inks));
-            if (result is { Outcome: CrossMomentOutcome.Drawn, InkJson: { } ink })
+                    SessionsRequired: SampleSessions,
+                    CurrentStreak: done >= SampleSessions ? 9 : 8),
+                [.. _sampleInks],
+                afterDrawn));
+            if (result.Crossed)
             {
-                sample.Inks = [.. inks, ink];
-            }
-            else if (result.Outcome == CrossMomentOutcome.Auto)
-            {
-                sample.Strokes = 2;
+                sample.AnimateChanges = false;
+                CrossSample(sample, result);
+                sample.AnimateChanges = true;
             }
         };
 
