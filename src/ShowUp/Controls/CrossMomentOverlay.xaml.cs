@@ -87,7 +87,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         _drawRequest = request;
         _session = new(App.Current.Services.GetService<TimeProvider>() ?? TimeProvider.System);
 
-        _session.Finished += (_, _) => DispatcherQueue.TryEnqueue(FinishDrawn);
+        // Finished can fire on the timer's thread, where DispatcherQueue isn't reachable: capture it here.
+        var dispatcher = DispatcherQueue;
+        _session.Finished += (_, _) => dispatcher.TryEnqueue(FinishDrawn);
         _drawState = DrawState.Drawing;
 
         Pad.Session = _session;
@@ -97,8 +99,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         DrawPanel.Visibility = Visibility.Visible;
         UpdateDrawControls();
 
+        var openedByKeyboard = (XamlRoot is { } root ? FocusManager.GetFocusedElement(root) : null) is Control { FocusState: FocusState.Keyboard };
         _ = Open(request.Info);
-        DoItForMeButton.Focus(FocusState.Programmatic);
+        DoItForMeButton.Focus(openedByKeyboard ? FocusState.Keyboard : FocusState.Programmatic);
         Announce(DrawPanel, Localizer.Instance["DrawAnnouncement"]);
         return drawn.Task;
     }
@@ -452,7 +455,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
                 e.Handled = true;
                 Dismiss();
             }
-            else if (e.Key == VirtualKey.Enter)
+            else if (e.Key == VirtualKey.Enter && XamlRoot is { } root && FocusManager.GetFocusedElement(root) == DoItForMeButton)
             {
                 e.Handled = true;
                 DoItForMe();

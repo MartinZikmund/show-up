@@ -148,6 +148,13 @@ public sealed partial class InkPad : Grid
         if (_pointerId == e.Pointer.PointerId)
         {
             e.Handled = true;
+
+            // The lift point often isn't reported as a move.
+            if (_session?.AddPoint(Normalize(e.GetCurrentPoint(this).Position)) == true)
+            {
+                _ink.RefreshLast();
+            }
+
             ReleasePointerCapture(e.Pointer);
             EndStroke();
         }
