@@ -1,0 +1,49 @@
+<Project>
+    <PropertyGroup>
+        <Copyright>Martin Zikmund 2026</Copyright>
+		<Author>Martin Zikmund</Author>
+
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <WarningsAsErrors>True</WarningsAsErrors>
+
+        <UnoFeatures>
+            Hosting;
+            Logging;
+            Mvvm;
+            Configuration;
+            HttpRefit;
+            Serialization;
+            Localization;
+        </UnoFeatures>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" />
+    </ItemGroup>
+
+    <!-- AppChannel: Dev (default, local + main) or Prod (release/v* CI builds).
+         Drives per-platform identity, display name, icon, and the in-app DEV banner.
+         See docs/versioning.md for the full model. -->
+    <PropertyGroup>
+        <AppChannel Condition="'$(AppChannel)' == ''">Dev</AppChannel>
+        <DefineConstants Condition="'$(AppChannel)' == 'Dev'">$(DefineConstants);APP_CHANNEL_DEV</DefineConstants>
+    </PropertyGroup>
+
+    <!-- Runs before any SDK applies its defaults, so only the command line can fill these. An SDK's
+         default 1 and an injected 1 are otherwise the same value. Read by AssertStoreVersionStamped. -->
+    <PropertyGroup>
+        <_InjectedApplicationVersion>$(ApplicationVersion)</_InjectedApplicationVersion>
+        <_InjectedApplicationDisplayVersion>$(ApplicationDisplayVersion)</_InjectedApplicationDisplayVersion>
+    </PropertyGroup>
+
+    <!-- NBGV's NBGV_SetVersionForMauiAndroid/iOS targets overwrite ApplicationVersion and
+         ApplicationDisplayVersion mid-build, even over -p: values. CI's injected version must win. -->
+    <PropertyGroup Condition="'$(CiVersionInjected)' == 'true'">
+        <NBGV_SetMauiVersionProperties>false</NBGV_SetMauiVersionProperties>
+    </PropertyGroup>
+
+    <!-- Per-worktree app identity (detection + derivation). See docs/worktree-identity.md. -->
+    <Import Project="$(MSBuildThisFileDirectory)WorktreeIdentity.props" />
+</Project>

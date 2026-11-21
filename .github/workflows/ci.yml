@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main", "release/**" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  guards:
+    if: github.event.repository.private == false || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-dotnet-build
+
+      - name: Version sanity
+        uses: ./.github/actions/app-version
+        with:
+          version-code-offset: ${{ vars.VERSION_CODE_OFFSET }}
+
+  test:
+    if: github.event.repository.private == false || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Workloads are required even though the test project is plain net11.0: it
+      # references ShowUp.Core, which is an Uno.Sdk project multi-targeting android,
+      # iOS, Windows, desktop and wasm, so restoring it pulls in every one of those.
+      # Restricting it with -p:TargetFrameworks=net11.0 is not an option - that global
+      # property also reaches the test project and breaks MSTest.Sdk's adapter
+      # registration ("The test framework adapter has not been registered").
+      - uses: ./.github/actions/setup-dotnet-build
+        with:
+          workloads: src/ShowUp.slnx
+
+      # MSTest on Microsoft.Testing.Platform. Do NOT pass VSTest-only flags
+      # (--nologo, --logger); MTP errors out on them.
+      - name: Run unit tests
+        run: dotnet test tests/ShowUp.Core.Tests/ShowUp.Core.Tests.csproj -c Release --report-trx --coverage --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults/
+          if-no-files-found: warn
+
+  build:
+    if: github.event.repository.private == false || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: desktop, tfm: net11.0-desktop,           os: ubuntu-24.04 }
+          - { name: wasm,    tfm: net11.0-browserwasm,       os: ubuntu-24.04 }
+          - { name: android, tfm: net11.0-android,           os: ubuntu-24.04 }
+          - { name: windows, tfm: net11.0-windows10.0.26100, os: windows-2025 }
+          # Compile only, on Windows: macOS runners bill at 10x, and signing, bundling and
+          # AOT run on every push to main (build-main.yml).
+          - { name: ios,     tfm: net11.0-ios,               os: windows-2025 }
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_NOLOGO: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      ContinuousIntegrationBuild: true
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-dotnet-build
+        with:
+          workloads: src/ShowUp.slnx
+
+      - name: Install wasm-tools
+        if: matrix.name == 'wasm'
+        run: dotnet workload install wasm-tools
+
+      # Release, not Debug: trimming and AOT analyzer failures must surface on a PR,
+      # not on a release branch.
+      - name: Build ${{ matrix.name }}
+        run: dotnet build src/ShowUp/ShowUp.csproj -c Release -f ${{ matrix.tfm }} -p:AppChannel=Dev
+
+# Keep this line last: the template engine can't close a block on a file's final line.

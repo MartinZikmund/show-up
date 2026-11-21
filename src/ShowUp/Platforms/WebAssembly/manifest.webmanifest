@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "ShowUp",
+  "display": "standalone",
+  "name": "ShowUp",
+  "short_name": "ShowUp",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff",
+  "scope": "/"
+}

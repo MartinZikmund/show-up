@@ -1,0 +1,31 @@
+{
+  "template": "MZikmund.UnoApp.Templates",
+  "templateVersion": "git-2d60971",
+  "upgradesUrl": "https://github.com/MartinZikmund/uno-app-template/tree/main/docs/upgrades",
+  "name": "ShowUp",
+  "options": {
+    "title": "Show Up",
+    "appId": "dev.mzikmund.showup",
+    "publisher": "Martin Zikmund",
+    "githubRepo": "MartinZikmund/show-up",
+    "platforms": "android|ios|windows|desktop|wasm",
+    "http": "True",
+    "sqlite": "True",
+    "dialogs": "True",
+    "launcher": "True",
+    "rating": "True",
+    "share": "True",
+    "displayRequest": "True",
+    "czech": "True",
+    "devAssets": "True",
+    "worktreeIdentity": "True",
+    "xamlStyler": "True",
+    "tests": "True",
+    "ci": "True",
+    "packaging": "True",
+    "agents": "True",
+    "specKit": "False",
+    "community": "True"
+  },
+  "appliedUpgrades": [ "__APPLIED_UPGRADES__" ]
+}

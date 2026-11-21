@@ -1,0 +1,14 @@
+{
+  "sdk": {
+    "version": "11.0.100",
+    "rollForward": "latestFeature",
+    "allowPrerelease": false
+  },
+  "msbuild-sdks": {
+    "Uno.Sdk": "7.1.0-dev.36",
+    "MSTest.Sdk": "4.2.3"
+  },
+  "test": {
+    "runner": "Microsoft.Testing.Platform"
+  }
+}

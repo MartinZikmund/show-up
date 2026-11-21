@@ -1,0 +1,99 @@
+name: WASM PR preview
+
+# Uploads a per-PR preview of the WebAssembly head to Cloudflare Workers as a
+# non-live version aliased `pr-<number>`, and posts the URL as a sticky comment.
+# Production web deploys live in release.yml.
+#
+# There is no teardown job: a preview is a *version*, not an environment, and
+# Cloudflare retains the 1000 most recent aliases. Nothing accumulates that has to
+# be cleaned up when the PR closes.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+
+concurrency:
+  group: wasm-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      DOTNET_NOLOGO: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      TFM: net11.0-browserwasm
+      # Surfaced as an env var so the deploy step can skip itself when no Cloudflare
+      # credentials are configured (forks) and still leave the workflow green - the
+      # `secrets` context is not usable in a step-level `if:`.
+      HAS_CLOUDFLARE: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-dotnet-build
+        with:
+          workloads: src/ShowUp.slnx
+      - name: Install wasm-tools
+        run: dotnet workload install wasm-tools
+      - name: Publish
+        run: dotnet publish src/ShowUp/ShowUp.csproj -c Release -f "$TFM" -p:AppChannel=Dev
+
+      - uses: ./.github/actions/prepare-wasm-assets
+        with:
+          publish-dir: src/ShowUp/bin/Release/${{ env.TFM }}/publish/wwwroot
+
+      - name: Skip - Cloudflare credentials incomplete
+        if: env.HAS_CLOUDFLARE != 'true'
+        run: echo "::warning::Skipping the preview upload - it needs both CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID."
+
+      # Uploads the version without making it live, and pins it to a stable alias so
+      # the preview URL stays the same across every push to the PR.
+      - name: Upload PR preview
+        id: preview
+        if: env.HAS_CLOUDFLARE == 'true'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload --preview-alias pr-${{ github.event.pull_request.number }}
+
+      - name: Resolve preview URL
+        id: url
+        if: steps.preview.outcome == 'success'
+        env:
+          # wrangler prints two URLs: a per-version one and the stable `pr-<n>` alias.
+          # The action's `deployment-url` output carries the *version* one, which changes
+          # on every push - so scrape the alias instead and keep the comment URL put.
+          COMMAND_OUTPUT: ${{ steps.preview.outputs.command-output }}
+          DEPLOYMENT_URL: ${{ steps.preview.outputs.deployment-url }}
+          ALIAS: pr-${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # Host is <alias>-<worker>.<account subdomain>.workers.dev - the character
+          # class must allow the dots between those segments, not just the hyphens.
+          # grep -m1 rather than `| head -1`: head closing the pipe trips `-o pipefail`.
+          url=$(grep -oE -m1 "https://${ALIAS}-[A-Za-z0-9.-]+\.workers\.dev" <<<"$COMMAND_OUTPUT" || true)
+          if [[ -z "$url" ]]; then
+            echo "::warning::Could not find the ${ALIAS} alias URL in wrangler output; falling back to the per-version URL, which changes on every push."
+            url="$DEPLOYMENT_URL"
+          fi
+          echo "resolved preview URL: $url"
+          echo "value=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL
+        if: steps.url.outputs.value != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: wasm-preview
+          message: |
+            ### 🌐 WASM preview
+
+            **${{ steps.url.outputs.value }}** — Dev channel. This URL is stable; every push to this PR refreshes it in place.

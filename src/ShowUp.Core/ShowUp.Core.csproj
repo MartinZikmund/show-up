@@ -1,0 +1,30 @@
+﻿<Project Sdk="Uno.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>
+            net11.0;
+            net11.0-android;
+            net11.0-ios;
+            net11.0-windows10.0.26100;
+            net11.0-desktop;
+            net11.0-browserwasm;
+        </TargetFrameworks>
+
+        <UnoSingleProject>true</UnoSingleProject>
+        <OutputType>Library</OutputType>
+        <!-- Ensures the .xr.xml files are generated in a proper layout folder -->
+        <GenerateLibraryLayout>true</GenerateLibraryLayout>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MZikmund.Toolkit.WinUI" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(IsTvOS)' != 'true'">
+        <PackageReference Include="sqlite-net-e" />
+        <PackageReference Include="SourceGear.sqlite3" />
+    </ItemGroup>
+
+</Project>
