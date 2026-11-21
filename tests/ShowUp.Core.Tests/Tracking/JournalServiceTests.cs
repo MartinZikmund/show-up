@@ -48,6 +48,26 @@ public sealed class JournalServiceTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task SaveResults_BonusOfThisAccount_Saves()
+    {
+        var bonus = await _enrollments.LogBonusAsync("fit", "Fit Test", _start, null);
+
+        await _journal.SaveResultsAsync(MetricTarget.ForBonus(bonus.Id, "fit"), new Dictionary<string, MetricValue> { ["jacks"] = new(40) });
+
+        (await _journal.GetBonusResultsSheetAsync(bonus))!.Values["jacks"].Number.Should().Be(40);
+    }
+
+    [TestMethod]
+    public async Task SaveResults_BonusNotInThisAccount_Throws()
+    {
+        // E.g. a results sheet left open across an account switch.
+        var save = () => _journal.SaveResultsAsync(MetricTarget.ForBonus(Guid.NewGuid(), "fit"), new Dictionary<string, MetricValue> { ["jacks"] = new(40) });
+
+        await save.Should().ThrowAsync<InvalidOperationException>();
+        _changes.Should().Be(0);
+    }
+
+    [TestMethod]
     public async Task Notes_ProgramDayAndSession_RoundTripThroughTheJournal()
     {
         await _journal.SaveProgramNoteAsync(_id, "Round two");
