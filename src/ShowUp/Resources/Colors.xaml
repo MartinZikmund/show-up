@@ -1,15 +1,66 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Default">
-            <Color x:Key="BrandColor">#005FB8</Color>
-            <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource BrandColor}" />
-            <SolidColorBrush x:Key="AppOverlayBackgroundBrush" Color="#44000000" />
-        </ResourceDictionary>
+        <!--  Paper calendar on the fridge  -->
         <ResourceDictionary x:Key="Light">
-            <Color x:Key="BrandColor">#005FB8</Color>
-            <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource BrandColor}" />
-            <SolidColorBrush x:Key="AppOverlayBackgroundBrush" Color="#44FFFFFF" />
+            <!--  Marker red as the Fluent accent, so standard controls pick it up  -->
+            <Color x:Key="SystemAccentColor">#D9372B</Color>
+            <Color x:Key="SystemAccentColorLight1">#E25A4F</Color>
+            <Color x:Key="SystemAccentColorLight2">#EB7D74</Color>
+            <Color x:Key="SystemAccentColorLight3">#F3A19A</Color>
+            <Color x:Key="SystemAccentColorDark1">#B82A20</Color>
+            <Color x:Key="SystemAccentColorDark2">#96211A</Color>
+            <Color x:Key="SystemAccentColorDark3">#741913</Color>
+
+            <SolidColorBrush x:Key="PaperBackgroundBrush" Color="#F6F1E6" />
+            <SolidColorBrush x:Key="PaperGridLineBrush" Color="#E6DFCF" />
+            <SolidColorBrush x:Key="CalendarCellBackgroundBrush" Color="#FFFDF7" />
+            <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#CFC6B2" />
+            <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#D9372B" />
+            <SolidColorBrush x:Key="MarkerBrush" Color="#D9372B" />
+            <SolidColorBrush x:Key="BonusStickerBackgroundBrush" Color="#F2C14E" />
+            <SolidColorBrush x:Key="BonusStickerForegroundBrush" Color="#2B2A27" />
+            <SolidColorBrush x:Key="MutedTextBrush" Color="#6E6656" />
+            <SolidColorBrush x:Key="TabBarBackgroundBrush" Color="#FFFDF7" />
+            <SolidColorBrush x:Key="TabBarBorderBrush" Color="#CFC6B2" />
+        </ResourceDictionary>
+
+        <!--  Chalkboard  -->
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="SystemAccentColor">#D9372B</Color>
+            <Color x:Key="SystemAccentColorLight1">#E25A4F</Color>
+            <Color x:Key="SystemAccentColorLight2">#EB7D74</Color>
+            <Color x:Key="SystemAccentColorLight3">#F3A19A</Color>
+            <Color x:Key="SystemAccentColorDark1">#B82A20</Color>
+            <Color x:Key="SystemAccentColorDark2">#96211A</Color>
+            <Color x:Key="SystemAccentColorDark3">#741913</Color>
+
+            <SolidColorBrush x:Key="PaperBackgroundBrush" Color="#22262A" />
+            <SolidColorBrush x:Key="PaperGridLineBrush" Color="#2A2E33" />
+            <SolidColorBrush x:Key="CalendarCellBackgroundBrush" Color="#2B3035" />
+            <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#454B52" />
+            <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#F3EFE4" />
+            <SolidColorBrush x:Key="MarkerBrush" Color="#F3EFE4" />
+            <SolidColorBrush x:Key="BonusStickerBackgroundBrush" Color="#F2C14E" />
+            <SolidColorBrush x:Key="BonusStickerForegroundBrush" Color="#2B2A27" />
+            <SolidColorBrush x:Key="MutedTextBrush" Color="#A9A49A" />
+            <SolidColorBrush x:Key="TabBarBackgroundBrush" Color="#2B3035" />
+            <SolidColorBrush x:Key="TabBarBorderBrush" Color="#454B52" />
+        </ResourceDictionary>
+
+        <!--  System colors only; the grid disappears into the window color  -->
+        <ResourceDictionary x:Key="HighContrast">
+            <StaticResource x:Key="PaperBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="PaperGridLineBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="CalendarCellBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="CalendarCellBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="CalendarCellTodayBorderBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="MarkerBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="BonusStickerBackgroundBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="BonusStickerForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
+            <StaticResource x:Key="MutedTextBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="TabBarBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="TabBarBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
