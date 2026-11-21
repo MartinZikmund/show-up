@@ -1,0 +1,28 @@
+﻿<ContentDialog
+    x:Class="ShowUp.Views.ProgramNoteDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:markup="using:ShowUp.Markup"
+    Title="{markup:Localize Key=ProgramNoteTitle}"
+    AutomationProperties.AutomationId="ProgramNoteDialog"
+    CloseButtonText="{markup:Localize Key=Cancel}"
+    DefaultButton="Primary"
+    PrimaryButtonText="{markup:Localize Key=Save}">
+
+    <StackPanel x:Name="ContentPanel" Spacing="8">
+        <TextBlock
+            Foreground="{ThemeResource MutedTextBrush}"
+            Style="{StaticResource BodyTextBlockStyle}"
+            Text="{x:Bind ProgramName}"
+            TextWrapping="Wrap" />
+        <TextBox
+            x:Name="NoteBox"
+            MinHeight="160"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="ProgramNoteBox"
+            AutomationProperties.Name="{markup:Localize Key=ProgramNoteTitle}"
+            MaxLength="4000"
+            PlaceholderText="{markup:Localize Key=ProgramNotePlaceholder}"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</ContentDialog>

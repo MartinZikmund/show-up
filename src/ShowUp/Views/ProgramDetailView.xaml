@@ -138,6 +138,25 @@
                         Command="{x:Bind ViewModel.StartCommand, Mode=OneWay}"
                         Content="{markup:Localize Key=ProgramStart}"
                         Style="{StaticResource AccentButtonStyle}" />
+
+                    <!--  The program being tracked has its results and notes here too  -->
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Visibility="{x:Bind ViewModel.IsActiveProgram, Mode=OneWay}">
+                        <Button AutomationProperties.AutomationId="ProgramResultsButton" Command="{x:Bind ViewModel.OpenResultsCommand, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="16" Glyph="&#xE9D2;" />
+                                <TextBlock Text="{markup:Localize Key=CalendarResults}" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.AutomationId="ProgramNotesButton" Command="{x:Bind ViewModel.EditProgramNoteCommand, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="16" Glyph="&#xE70B;" />
+                                <TextBlock Text="{markup:Localize Key=CalendarProgramNotes}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
 

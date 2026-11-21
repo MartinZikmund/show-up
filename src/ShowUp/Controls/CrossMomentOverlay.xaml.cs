@@ -18,6 +18,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 {
     private static readonly TimeSpan AutoDismissDelay = TimeSpan.FromSeconds(2.5);
     private static readonly TimeSpan DrawnDismissDelay = TimeSpan.FromSeconds(2.2);
+
+    // Long enough to reach "Log your results"; the moment still goes away on its own.
+    private static readonly TimeSpan ResultsDismissDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan CaptionDelay = TimeSpan.FromMilliseconds(60);
 
     // The tap or click that finished the drawing must not also dismiss it.
@@ -161,6 +164,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         HideCaptionFromAutomation();
         CaptionPanel.Opacity = 0;
         BelowCell.MinHeight = 0;
+        LogResultsButton.Visibility = Visibility.Collapsed;
 
         Cross.AnimateChanges = false;
         Cross.Seed = info.Seed;
@@ -188,7 +192,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
     private void PlayStrokes(CrossMomentInfo info)
     {
-        _dismissTimer.Interval = AutoDismissDelay;
+        _dismissTimer.Interval = info.LogResults is null ? AutoDismissDelay : ResultsDismissDelay;
         _awaitingStrokes = true;
         if (info.StrokesAfter > info.StrokesBefore)
         {
@@ -238,6 +242,20 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         }
 
         AnnounceCaption();
+        if (_info?.LogResults is not null)
+        {
+            LogResultsButton.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void LogResultsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var logResults = _info?.LogResults;
+        Dismiss();
+        if (logResults is not null)
+        {
+            _ = logResults();
+        }
     }
 
     private void Pad_InkChanged(InkPad sender, object? args) => UpdateDrawControls();
@@ -291,7 +309,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         }
 
         RevealCaption();
-        _dismissTimer.Interval = DrawnDismissDelay;
+        _dismissTimer.Interval = _info?.LogResults is null ? DrawnDismissDelay : ResultsDismissDelay;
         _dismissTimer.Start();
     }
 
