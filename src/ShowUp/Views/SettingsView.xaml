@@ -67,6 +67,18 @@
                 Style="{StaticResource SectionHeaderTextBlockStyle}"
                 Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
 
+            <!--  Pro  -->
+            <toolkit:SettingsCard
+                AutomationProperties.AutomationId="ProSettingsCard"
+                Command="{x:Bind ViewModel.OpenProCommand}"
+                Description="{x:Bind ViewModel.ProStatusText, Mode=OneWay}"
+                Header="{markup:Localize Key=ProCardTitle}"
+                IsClickEnabled="True">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE734;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
             <!--  General section  -->
             <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="{markup:Localize Key=General}" />
 

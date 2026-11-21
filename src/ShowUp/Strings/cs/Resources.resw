@@ -856,4 +856,10 @@
   <data name="ProUnlockLink" xml:space="preserve">
     <value>Odemknout Pro</value>
   </data>
+  <data name="ProColumnFree" xml:space="preserve">
+    <value>Zdarma</value>
+  </data>
+  <data name="ProColumnPro" xml:space="preserve">
+    <value>Pro</value>
+  </data>
 </root>

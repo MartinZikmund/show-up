@@ -47,6 +47,15 @@
         <PackageReference Include="MZikmund.Toolkit.WinUI" />
     </ItemGroup>
 
+    <!-- RevenueCat only ships Android and iOS bindings. -->
+    <ItemGroup Condition="'$(IsAndroid)' == 'true' or '$(IsIOS)' == 'true'">
+        <PackageReference Include="MZikmund.Uno.RevenueCat" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(IsAndroid)' == 'true'">
+        <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
+    </ItemGroup>
+
     <ItemGroup Condition="'$(IsTvOS)' != 'true'">
         <PackageReference Include="sqlite-net-e" />
         <PackageReference Include="SourceGear.sqlite3" />
