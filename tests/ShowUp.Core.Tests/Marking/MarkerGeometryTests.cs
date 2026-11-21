@@ -101,6 +101,53 @@ public class MarkerGeometryTests
     }
 
     [TestMethod]
+    public void ForCell_ReferenceSize_MatchesCreate()
+    {
+        MarkerGeometry.ForCell(3, 96, 100).Should().Be(MarkerGeometry.Create(3, 96, 100));
+    }
+
+    [TestMethod]
+    public void ForCell_TripleSize_ScalesWobbleAndOvershoot()
+    {
+        MarkerGeometry.ForCell(3, 288, 300).Should().Be(MarkerGeometry.Create(3, 288, 300, wobble: 12, overshoot: 24));
+    }
+
+    [TestMethod]
+    public void ForCell_SmallCell_NeverShrinksWobble()
+    {
+        MarkerGeometry.ForCell(3, 40, 40).Should().Be(MarkerGeometry.Create(3, 40, 40));
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(42)]
+    [DataRow(int.MaxValue)]
+    [DataRow(-7)]
+    public void WidthFactor_AnySeed_StaysWithinEightPercent(int seed)
+    {
+        MarkerGeometry.WidthFactor(seed, 0).Should().BeInRange(0.92, 1.08);
+        MarkerGeometry.WidthFactor(seed, 1).Should().BeInRange(0.92, 1.08);
+    }
+
+    [TestMethod]
+    public void WidthFactor_SameSeed_IsStable()
+    {
+        MarkerGeometry.WidthFactor(1234, 1).Should().Be(MarkerGeometry.WidthFactor(1234, 1));
+    }
+
+    [TestMethod]
+    public void Offset_DiagonalStroke_ShiftsPerpendicularKeepingLength()
+    {
+        MarkerStroke stroke = new(new(0, 0), new(5, 5), new(10, 10));
+
+        var shifted = stroke.Offset(Math.Sqrt(2));
+
+        shifted.Start.X.Should().BeApproximately(-1, 1e-9);
+        shifted.Start.Y.Should().BeApproximately(1, 1e-9);
+        shifted.Length.Should().BeApproximately(stroke.Length, 1e-9);
+    }
+
+    [TestMethod]
     public void SeedFrom_SameGuid_SameSeed()
     {
         Guid id = new("6f9619ff-8b86-d011-b42d-00c04fc964ff");

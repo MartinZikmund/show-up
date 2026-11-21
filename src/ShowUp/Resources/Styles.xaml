@@ -195,16 +195,24 @@
             <Setter.Value>
                 <ControlTemplate TargetType="controls:MarkerCrossControl">
                     <Grid>
+                        <!--  Bleed under both strokes first, then the ink, then the faint texture streaks  -->
                         <Path
-                            x:Name="PART_First"
-                            Opacity="0.9"
+                            x:Name="PART_FirstUnder"
+                            Opacity="0.35"
                             Stroke="{TemplateBinding MarkerBrush}"
                             StrokeDashCap="Round"
                             StrokeEndLineCap="Round"
                             StrokeStartLineCap="Round" />
                         <Path
-                            x:Name="PART_FirstUnder"
+                            x:Name="PART_SecondUnder"
                             Opacity="0.35"
+                            Stroke="{TemplateBinding MarkerBrush}"
+                            StrokeDashCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round" />
+                        <Path
+                            x:Name="PART_First"
+                            Opacity="0.9"
                             Stroke="{TemplateBinding MarkerBrush}"
                             StrokeDashCap="Round"
                             StrokeEndLineCap="Round"
@@ -217,8 +225,15 @@
                             StrokeEndLineCap="Round"
                             StrokeStartLineCap="Round" />
                         <Path
-                            x:Name="PART_SecondUnder"
-                            Opacity="0.35"
+                            x:Name="PART_FirstTexture"
+                            Opacity="0.5"
+                            Stroke="{TemplateBinding MarkerBrush}"
+                            StrokeDashCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeStartLineCap="Round" />
+                        <Path
+                            x:Name="PART_SecondTexture"
+                            Opacity="0.5"
                             Stroke="{TemplateBinding MarkerBrush}"
                             StrokeDashCap="Round"
                             StrokeEndLineCap="Round"

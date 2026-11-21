@@ -15,6 +15,8 @@ namespace ShowUp.Controls;
 [TemplatePart(Name = FirstUnderPartName, Type = typeof(Path))]
 [TemplatePart(Name = SecondPartName, Type = typeof(Path))]
 [TemplatePart(Name = SecondUnderPartName, Type = typeof(Path))]
+[TemplatePart(Name = FirstTexturePartName, Type = typeof(Path))]
+[TemplatePart(Name = SecondTexturePartName, Type = typeof(Path))]
 public sealed partial class MarkerCrossControl : Control
 {
     private static readonly TimeSpan BaseStrokeDuration = TimeSpan.FromMilliseconds(180);
@@ -37,8 +39,15 @@ public sealed partial class MarkerCrossControl : Control
     private const string FirstUnderPartName = "PART_FirstUnder";
     private const string SecondPartName = "PART_Second";
     private const string SecondUnderPartName = "PART_SecondUnder";
+    private const string FirstTexturePartName = "PART_FirstTexture";
+    private const string SecondTexturePartName = "PART_SecondTexture";
+    private const int PartsPerStroke = 3;
     private const double BaseThickness = 9;
     private const double UnderStrokeWidthRatio = 1.35;
+
+    // Ink texture: a thin, faint streak riding off-centre inside the main stroke.
+    private const double TextureWidthRatio = 0.35;
+    private const double TextureOffsetRatio = 0.2;
     private const double ReferenceCellSize = 96;
 
     public static readonly DependencyProperty StrokesProperty = DependencyProperty.Register(
@@ -61,7 +70,8 @@ public sealed partial class MarkerCrossControl : Control
 
     private readonly List<Storyboard> _running = [];
     private readonly List<DispatcherQueueTimer> _pendingFeedback = [];
-    private Path?[] _parts = new Path?[4];
+    // Per stroke: main, under, texture.
+    private Path?[] _parts = new Path?[2 * PartsPerStroke];
     private int? _pendingAnimationFrom;
     private IMarkingFeedback? _feedback;
 
@@ -128,8 +138,10 @@ public sealed partial class MarkerCrossControl : Control
         [
             GetTemplateChild(FirstPartName) as Path,
             GetTemplateChild(FirstUnderPartName) as Path,
+            GetTemplateChild(FirstTexturePartName) as Path,
             GetTemplateChild(SecondPartName) as Path,
             GetTemplateChild(SecondUnderPartName) as Path,
+            GetTemplateChild(SecondTexturePartName) as Path,
         ];
 
         // Resolve early: some heads load sounds asynchronously, and the first stroke shouldn't be silent.
@@ -337,45 +349,49 @@ public sealed partial class MarkerCrossControl : Control
             return false;
         }
 
-        var (first, second) = MarkerGeometry.Create(Seed, width, height);
+        var (first, second) = MarkerGeometry.ForCell(Seed, width, height);
         strokes = [first, second];
         thickness = BaseThickness * Math.Max(0.6, Math.Min(width, height) / ReferenceCellSize) * StrokeThicknessScale;
 
         for (var i = 0; i < 2; i++)
         {
-            if (_parts[i * 2] is { } main)
-            {
-                main.StrokeThickness = thickness;
-            }
-
-            if (_parts[i * 2 + 1] is { } under)
-            {
-                under.StrokeThickness = thickness * UnderStrokeWidthRatio;
-            }
+            var strokeThickness = thickness * MarkerGeometry.WidthFactor(Seed, i);
+            SetThickness(Part(i, 0), strokeThickness);
+            SetThickness(Part(i, 1), strokeThickness * UnderStrokeWidthRatio);
+            SetThickness(Part(i, 2), strokeThickness * TextureWidthRatio);
         }
 
         return true;
     }
 
+    private static void SetThickness(Path? path, double thickness)
+    {
+        if (path is not null)
+        {
+            path.StrokeThickness = thickness;
+        }
+    }
+
+    private Path? Part(int stroke, int kind) => _parts[stroke * PartsPerStroke + kind];
+
     private void SetStroke(int index, MarkerStroke stroke, bool visible)
     {
         foreach (var path in StrokeParts(index))
         {
-            path.Data = ToGeometry(stroke);
+            var shape = path == Part(index, 2) ? stroke.Offset((Part(index, 0)?.StrokeThickness ?? 0) * TextureOffsetRatio) : stroke;
+            path.Data = ToGeometry(shape);
             path.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
     private IEnumerable<Path> StrokeParts(int index)
     {
-        if (_parts[index * 2] is { } main)
+        for (var kind = 0; kind < PartsPerStroke; kind++)
         {
-            yield return main;
-        }
-
-        if (_parts[index * 2 + 1] is { } under)
-        {
-            yield return under;
+            if (Part(index, kind) is { } path)
+            {
+                yield return path;
+            }
         }
     }
 

@@ -39,6 +39,22 @@ public readonly record struct MarkerStroke(Point Start, Point Control, Point End
         return new(Start, Lerp(Start, Control, t), PointAt(t));
     }
 
+    /// <summary>The same stroke shifted sideways (perpendicular to start-end) by <paramref name="distance"/>.</summary>
+    public MarkerStroke Offset(double distance)
+    {
+        var (dx, dy) = (End.X - Start.X, End.Y - Start.Y);
+        var length = Math.Sqrt(dx * dx + dy * dy);
+        if (length == 0)
+        {
+            return this;
+        }
+
+        var (nx, ny) = (-dy / length * distance, dx / length * distance);
+        return new(Shift(Start, nx, ny), Shift(Control, nx, ny), Shift(End, nx, ny));
+    }
+
+    private static Point Shift(Point p, double dx, double dy) => new(p.X + dx, p.Y + dy);
+
     private static Point Lerp(Point a, Point b, double t) => new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
 
     private static double Distance(Point a, Point b) => Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
