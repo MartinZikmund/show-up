@@ -9,13 +9,21 @@ namespace ShowUp.Core.ViewModels;
 public sealed partial class BonusWorkoutDialogViewModel : ObservableObject
 {
     public const int MaxSuggestions = 20;
+    public const int MaxTitleLength = 80;
+    public const int MaxDurationMinutes = 600;
 
-    private readonly IReadOnlyList<Workout> _workouts;
+    private readonly IReadOnlyList<(Workout Workout, string Folded)> _workouts;
 
     public BonusWorkoutDialogViewModel(IEnumerable<Workout> workouts, DateOnly today, DateOnly date)
     {
         ArgumentNullException.ThrowIfNull(workouts);
-        _workouts = [.. workouts.Where(w => w.Kind != WorkoutKind.Rest).OrderBy(w => w.Name, StringComparer.CurrentCultureIgnoreCase)];
+        _workouts =
+        [
+            .. workouts
+                .Where(w => w.Kind != WorkoutKind.Rest)
+                .OrderBy(w => w.Name, StringComparer.CurrentCultureIgnoreCase)
+                .Select(w => (w, Fold(w.Name))),
+        ];
         Today = today;
         Date = date > today ? today : date;
     }
@@ -47,10 +55,19 @@ public sealed partial class BonusWorkoutDialogViewModel : ObservableObject
 
     public string Title => Selected?.Name ?? CustomTitle;
 
-    public bool CanSave => Title.Length > 0 && Date <= Today && DurationMinutes is null or > 0;
+    public bool CanSave => Title.Length > 0 && Date <= Today && DurationMinutes is null or (> 0 and <= MaxDurationMinutes);
+
+    /// <summary>A cleared date picker hands back null; the day falls back to today.</summary>
+    public void SetDate(DateOnly? date) => Date = date is { } d && d <= Today ? d : Today;
 
     partial void OnQueryChanged(string value)
     {
+        if (value.Length > MaxTitleLength)
+        {
+            Query = value[..MaxTitleLength];
+            return;
+        }
+
         if (Selected is { } selected && !string.Equals(selected.Name, value, StringComparison.Ordinal))
         {
             Selected = null;
@@ -86,8 +103,9 @@ public sealed partial class BonusWorkoutDialogViewModel : ObservableObject
         return
         [
             .. _workouts
-                .Where(w => Fold(w.Name).Contains(needle, StringComparison.Ordinal))
-                .OrderByDescending(w => Fold(w.Name).StartsWith(needle, StringComparison.Ordinal))
+                .Where(w => w.Folded.Contains(needle, StringComparison.Ordinal))
+                .OrderByDescending(w => w.Folded.StartsWith(needle, StringComparison.Ordinal))
+                .Select(w => w.Workout)
                 .Take(MaxSuggestions),
         ];
     }

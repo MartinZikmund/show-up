@@ -43,6 +43,7 @@
                 x:Name="DurationBox"
                 AutomationProperties.AutomationId="BonusDurationBox"
                 Header="{markup:Localize Key=BonusDialogDuration}"
+                Maximum="600"
                 Minimum="1"
                 SmallChange="5"
                 SpinButtonPlacementMode="Inline"

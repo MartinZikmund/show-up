@@ -35,6 +35,7 @@ public sealed partial class BonusWorkoutDialog : ContentDialog
             IsPrimaryButtonEnabled = ViewModel.CanSave;
             WorkoutBox.ItemsSource = ViewModel.Suggestions;
             DurationBox.Value = ViewModel.DurationMinutes ?? double.NaN;
+            DatePicker.Date = ToOffset(ViewModel.Date);
             if (WorkoutBox.Text != ViewModel.Query)
             {
                 WorkoutBox.Text = ViewModel.Query;
@@ -72,9 +73,15 @@ public sealed partial class BonusWorkoutDialog : ContentDialog
 
     private void DatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
     {
-        if (!_syncing && args.NewDate is { } date)
+        if (_syncing)
         {
-            ViewModel.Date = DateOnly.FromDateTime(date.DateTime);
+            return;
+        }
+
+        ViewModel.SetDate(args.NewDate is { } date ? DateOnly.FromDateTime(date.DateTime) : null);
+        if (args.NewDate is null)
+        {
+            Apply();
         }
     }
 }
