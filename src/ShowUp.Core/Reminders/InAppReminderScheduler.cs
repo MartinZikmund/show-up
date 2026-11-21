@@ -46,17 +46,20 @@ public sealed class InAppReminderScheduler : IReminderScheduler, IDisposable
 
     public Task<bool> RequestPermissionAsync() => Task.FromResult(true);
 
+    public Task<bool> IsDeniedAsync() => Task.FromResult(false);
+
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {
         // The new plan only holds future times: deliver anything that came due since the last tick first.
         Check();
         var now = _time.GetUtcNow();
+        List<PlannedReminder> pending = [.. reminders.Where(r => r.FireAt > now).OrderBy(r => r.FireAt)];
         lock (_lock)
         {
-            _pending = [.. reminders.Where(r => r.FireAt > now).OrderBy(r => r.FireAt)];
+            _pending = pending;
         }
 
-        _logger.LogInformation("In-app reminders: {Count} pending, next at {Next}", reminders.Count, reminders.Count > 0 ? reminders.Min(r => r.FireAt) : null);
+        _logger.LogInformation("In-app reminders: {Count} pending, next at {Next}", pending.Count, pending.FirstOrDefault()?.FireAt);
         return Task.CompletedTask;
     }
 

@@ -24,7 +24,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements BackgroundColor="transparent" />
-      <!-- Clicking a reminder toast activates the app through this COM server (AppNotificationManager.Register). -->
+      <!-- Clicking a reminder toast activates the app through this COM server (AppNotificationManager.Register).
+           The CLSID is a placeholder: StampToastActivatorClsid (WorktreeIdentity.targets) writes one per package identity. -->
       <Extensions>
         <desktop:Extension Category="windows.toastNotificationActivation">
           <desktop:ToastNotificationActivation ToastActivatorCLSID="B32F2AD4-AD32-4F57-8FA3-7C0784961875" />

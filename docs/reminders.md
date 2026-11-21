@@ -8,6 +8,7 @@ Workout reminders: a time and weekdays, delivered as a notification that names t
 - Days with nothing left to do (everything crossed, or nothing due in any active program) get no notification. A rest day says "Rest day. You earned it."; a workout day says "<workout> is waiting. Show up." With several open sessions the text reads "<first> + N more".
 - `ReminderDayProvider` reads each date from `IScheduleQuery`, so it covers all active programs.
 - `ReminderCoordinator` re-plans on app start, window activation, `TrackingChangedMessage`, `RemindersChangedMessage` and entitlement changes, then calls `IReminderScheduler.ReplaceAllAsync`. It skips scheduling when `IsSupported` is false.
+- `IReminderScheduler.IsDeniedAsync()` reports notifications switched off without prompting; the Reminders page re-checks it on load while a reminder is on.
 - `IReminderScheduler.Limit` says where delivery stops short of the OS (`WhileAppRunning`, `WhileTabOpen`); the Reminders page shows a note for it.
 - Tapping a notification sends `ReminderOpenedMessage`; `WindowShell` switches to Today and brings the window forward. A cold start lands on Today anyway.
 
@@ -17,11 +18,11 @@ Workout reminders: a time and weekdays, delivered as a notification that names t
 
 | Head | Scheduler | Delivery | Permission | Limits |
 |---|---|---|---|---|
-| Android | `AndroidReminderScheduler` (`Platforms/Android/Reminders`) | `AlarmManager` alarm → `ReminderAlarmReceiver` posts a notification on channel `reminders`. Works with the app closed. | `POST_NOTIFICATIONS` asked at runtime on Android 13+. | Exact (`SetExactAndAllowWhileIdle`) only while `SCHEDULE_EXACT_ALARM` is allowed (`CanScheduleExactAlarms()`); otherwise `SetAndAllowWhileIdle`, which Doze can delay by several minutes. |
+| Android | `AndroidReminderScheduler` (`Platforms/Android/Reminders`) | `AlarmManager` alarm → `ReminderAlarmReceiver` posts a notification on channel `reminders`. Works with the app closed. | `POST_NOTIFICATIONS` asked at runtime on Android 13+; the Reminders page re-checks `AreNotificationsEnabled` on load. | Exact (`SetExactAndAllowWhileIdle`) only while `SCHEDULE_EXACT_ALARM` is allowed (`CanScheduleExactAlarms()`); otherwise `SetAndAllowWhileIdle`, which Doze can delay by several minutes. |
 | iOS | `IosReminderScheduler` (`Platforms/iOS/Reminders`) | `UNCalendarNotificationTrigger` per reminder, non-repeating, floating in the device's zone. Shown in the foreground too. | Alert + sound, asked on the first reminder. | iOS keeps 64 pending per app; we send the 60 soonest (14 days × several reminders can exceed that). Re-planning on every launch tops it up. |
 | Windows (packaged) | `WindowsReminderScheduler` (`Platforms/Windows/Reminders`) | `ToastNotifier.AddToSchedule` scheduled toasts (group `reminders`, tag = key), content from `AppNotificationBuilder`. Clicks activate the app through the manifest COM server and `AppNotificationManager.Register()`. | None; reports "denied" when notifications are off in Settings. | Windows drops a scheduled toast if the PC was off more than 5 minutes past its time. Unpackaged runs report `IsSupported = false`. |
-| WebAssembly | `BrowserReminderScheduler` + `WasmScripts/Reminders.js` | `setTimeout` per reminder in the next 24 h, shown with the `Notification` API (service worker fallback on Android Chrome). An hourly refresh and every re-plan on focus move the window along. | `Notification.requestPermission()` on the first reminder. | **Only while a tab with the app is open** - no push server. Reminders found more than 10 minutes late (sleep) are dropped. |
-| Desktop (Skia: Windows, macOS, Linux) | `InAppReminderScheduler` (Core) | Checks the clock every 15 s and shows an `InfoBar` banner at the top of the window plus the marker sound. | None. | **Only while the app is running** (minimized is fine). Reminders more than 10 minutes late are dropped. |
+| WebAssembly | `BrowserReminderScheduler` + `WasmScripts/Reminders.js` (a missing script reports unsupported) | `setTimeout` per reminder in the next 24 h, shown with the `Notification` API. Android Chrome refuses `new Notification`; the fallback uses `showNotification` only if a service worker is registered (the app doesn't register one today), and a click on that one doesn't route to Today. An hourly refresh and every re-plan on focus move the window along. | `Notification.requestPermission()` on the first reminder. | **Only while a tab with the app is open** - no push server; the note points to the native apps. The prompt is started before the reminder is saved so it stays inside the click's user gesture. Reminders found more than 10 minutes late (sleep) are dropped. |
+| Desktop (Skia: Windows, macOS, Linux) | `InAppReminderScheduler` (Core) | Checks the clock every 15 s and shows an `InfoBar` banner (neutral bell icon) at the top of the last activated window plus the marker sound. | None. | **Only while the app is running** (minimized is fine). Reminders more than 10 minutes late are dropped. |
 
 ### Android details
 
@@ -31,7 +32,7 @@ Workout reminders: a time and weekdays, delivered as a notification that names t
 
 ### Windows details
 
-The toast activator CLSID in `Package.appxmanifest` must match the COM server class (`PackageManifestTests`). Worktree builds share the CLSID, so with two worktrees installed a click may activate the other build.
+The toast activator CLSID in `Package.appxmanifest` is a placeholder. `StampToastActivatorClsid` (`src/WorktreeIdentity.targets`) writes a UUIDv5 of `ApplicationId` into both the activator and the COM class of the generated manifest, so Dev, Prod and every worktree build get their own and a click never activates another installed build. Toast XML is built by `ReminderToastXml` (escaped); a toast that fails to schedule is logged and skipped. A cold start from a click is routed through `AppInstance.GetActivatedEventArgs()` after `Register()`.
 
 ## Free and Pro
 

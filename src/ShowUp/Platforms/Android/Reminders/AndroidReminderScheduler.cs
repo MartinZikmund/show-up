@@ -25,9 +25,11 @@ public sealed class AndroidReminderScheduler(ILogger<AndroidReminderScheduler> l
         return NotificationManagerCompat.From(Context)!.AreNotificationsEnabled();
     }
 
+    public Task<bool> IsDeniedAsync() => Task.FromResult(!NotificationManagerCompat.From(Context)!.AreNotificationsEnabled());
+
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders) => Task.Run(() =>
     {
         var exact = ReminderAlarms.Replace(Context, reminders);
-        logger.LogInformation("Scheduled {Count} reminder alarms ({Kind}); next at {Next}", reminders.Count, exact ? "exact" : "inexact", reminders.FirstOrDefault()?.FireAt);
+        logger.LogInformation("Scheduled {Count} reminder alarms ({Kind}); next at {Next}", reminders.Count, exact ? "exact" : "inexact", reminders.Count > 0 ? reminders.Min(r => r.FireAt) : null);
     });
 }

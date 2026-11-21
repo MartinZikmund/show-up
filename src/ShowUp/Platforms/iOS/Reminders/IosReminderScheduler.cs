@@ -36,6 +36,9 @@ public sealed class IosReminderScheduler : IReminderScheduler
         return granted;
     }
 
+    public async Task<bool> IsDeniedAsync() =>
+        (await UNUserNotificationCenter.Current.GetNotificationSettingsAsync()).AuthorizationStatus == UNAuthorizationStatus.Denied;
+
     public async Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {
         var center = UNUserNotificationCenter.Current;

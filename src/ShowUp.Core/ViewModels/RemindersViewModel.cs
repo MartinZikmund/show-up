@@ -233,6 +233,26 @@ public partial class RemindersViewModel : ViewModelBase
         }
 
         RaiseLimitChanged();
+        await RefreshPermissionAsync();
+    }
+
+    // Notifications can be switched off in system settings at any time; show it while a reminder is on.
+    private async Task RefreshPermissionAsync()
+    {
+        if (!_scheduler.IsSupported || !Items.Any(i => i.IsEnabled) || _permission is { IsCompleted: false })
+        {
+            PermissionDenied = false;
+            return;
+        }
+
+        try
+        {
+            PermissionDenied = await _scheduler.IsDeniedAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Checking notification permission failed.");
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanAdd))]
@@ -256,25 +276,24 @@ public partial class RemindersViewModel : ViewModelBase
     {
         var minutes = (int)EditTime.TotalMinutes;
         var mask = Weekdays.Where(d => d.IsChecked).Sum(d => 1 << d.Bit);
+        var editingId = _editingId;
+
+        // Asked before the write: browsers only show the prompt inside the click's user gesture.
+        var permission = editingId is null && CanAdd ? AskPermissionAsync() : Task.CompletedTask;
         await GuardAsync(async () =>
         {
-            var added = false;
-            if (_editingId is { } id)
+            if (editingId is { } id)
             {
                 await _repository.UpdateAsync(id, minutes, mask);
             }
             else if (CanAdd)
             {
                 await _repository.AddAsync(minutes, mask);
-                added = true;
             }
 
             // Only now: a failed write keeps what the user picked on screen.
             IsEditing = false;
-            if (added)
-            {
-                await AskPermissionAsync();
-            }
+            await permission;
 
             await LoadAsync();
             SendChanged();
@@ -312,7 +331,14 @@ public partial class RemindersViewModel : ViewModelBase
     }
 
     // Writes are serialized and store the switch as it is now, so a flip during a pending permission prompt isn't lost.
-    private Task ToggleAsync(ReminderItemViewModel item) => GuardAsync(async () =>
+    private Task ToggleAsync(ReminderItemViewModel item)
+    {
+        // Before the write, inside the switch's user gesture (see SaveAsync).
+        var permission = item.IsEnabled ? AskPermissionAsync() : Task.CompletedTask;
+        return GuardAsync(() => WriteToggleAsync(item, permission));
+    }
+
+    private async Task WriteToggleAsync(ReminderItemViewModel item, Task permission)
     {
         bool enabled;
         await _writeGate.WaitAsync();
@@ -329,11 +355,11 @@ public partial class RemindersViewModel : ViewModelBase
 
         if (enabled)
         {
-            await AskPermissionAsync();
+            await permission;
         }
 
         SendChanged();
-    });
+    }
 
     /// <summary>Runs a write; a failure is logged, shown, and the list reloaded so it matches what is stored.</summary>
     private async Task GuardAsync(Func<Task> write)

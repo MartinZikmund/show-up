@@ -22,6 +22,9 @@ public sealed partial class WindowShell : Page, IWindowShell
     private IDisposable? _lapseWatch;
     private InAppReminderScheduler? _inAppReminders;
 
+    // With several windows, only the last activated one shows reminders and handles a tapped one.
+    private static WindowShell? _reminderShell;
+
     public WindowShell(IServiceProvider serviceProvider, Window associatedWindow)
     {
         InitializeComponent();
@@ -41,6 +44,7 @@ public sealed partial class WindowShell : Page, IWindowShell
 
         _associatedWindow = associatedWindow;
         _associatedWindow.Closed += OnWindowClosed;
+        _associatedWindow.Activated += OnWindowActivated;
         CustomizeWindow();
 
         ViewModel = ServiceProvider.GetRequiredService<WindowShellViewModel>();
@@ -82,6 +86,7 @@ public sealed partial class WindowShell : Page, IWindowShell
             return;
         }
 
+        _reminderShell ??= this;
         messenger.Register<WindowShell, ReminderOpenedMessage>(this, static (shell, _) => shell.DispatcherQueue.TryEnqueue(shell.OpenToday));
         if (ServiceProvider.GetRequiredService<IReminderScheduler>() is InAppReminderScheduler inApp)
         {
@@ -90,9 +95,17 @@ public sealed partial class WindowShell : Page, IWindowShell
         }
     }
 
+    private void OnWindowActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState != WindowActivationState.Deactivated && !_isWindowClosed)
+        {
+            _reminderShell = this;
+        }
+    }
+
     private void OnInAppReminderDue(object? sender, PlannedReminder reminder) => DispatcherQueue.TryEnqueue(() =>
     {
-        if (_isWindowClosed)
+        if (_isWindowClosed || _reminderShell != this)
         {
             return;
         }
@@ -106,7 +119,7 @@ public sealed partial class WindowShell : Page, IWindowShell
 
     private void OpenToday()
     {
-        if (_isWindowClosed)
+        if (_isWindowClosed || _reminderShell != this)
         {
             return;
         }
@@ -175,6 +188,11 @@ public sealed partial class WindowShell : Page, IWindowShell
             _inAppReminders.Due -= OnInAppReminderDue;
         }
         _associatedWindow.Closed -= OnWindowClosed;
+        _associatedWindow.Activated -= OnWindowActivated;
+        if (_reminderShell == this)
+        {
+            _reminderShell = null;
+        }
         InnerFrame.Navigated -= InnerFrame_Navigated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
     }

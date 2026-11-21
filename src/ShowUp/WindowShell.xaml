@@ -150,6 +150,10 @@
                 Closed="ReminderBanner_Closed"
                 IsOpen="False"
                 Severity="Informational">
+                <!--  Neutral bell instead of the severity badge, which takes the red accent  -->
+                <InfoBar.IconSource>
+                    <FontIconSource Foreground="{ThemeResource TextFillColorPrimaryBrush}" Glyph="&#xEA8F;" />
+                </InfoBar.IconSource>
                 <InfoBar.ActionButton>
                     <Button
                         AutomationProperties.AutomationId="ReminderBannerOpenButton"

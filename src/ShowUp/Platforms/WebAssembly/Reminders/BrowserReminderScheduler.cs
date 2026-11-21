@@ -17,21 +17,34 @@ public sealed partial class BrowserReminderScheduler : IReminderScheduler, IDisp
     private readonly TimeProvider _time;
     private readonly ILogger<BrowserReminderScheduler> _logger;
     private readonly ITimer _timer;
+    private readonly bool _available;
     private IReadOnlyList<PlannedReminder> _plan = [];
 
     public BrowserReminderScheduler(TimeProvider time, IMessenger messenger, ILogger<BrowserReminderScheduler> logger)
     {
         _time = time;
         _logger = logger;
-        Js.SetOpenHandler(() => messenger.Send(new ReminderOpenedMessage()));
+        try
+        {
+            Js.SetOpenHandler(() => messenger.Send(new ReminderOpenedMessage()));
+            _available = true;
+        }
+        catch (Exception ex)
+        {
+            // WasmScripts/Reminders.js didn't load: report unsupported rather than failing the whole service graph.
+            _logger.LogWarning(ex, "Browser reminders unavailable");
+        }
+
         _timer = time.CreateTimer(_ => Push(), null, _refresh, _refresh);
     }
 
-    public bool IsSupported => Js.Permission() != "unsupported";
+    public bool IsSupported => _available && Js.Permission() != "unsupported";
 
     public ReminderDeliveryLimit Limit => ReminderDeliveryLimit.WhileTabOpen;
 
-    public async Task<bool> RequestPermissionAsync() => await Js.Request() == "granted";
+    public async Task<bool> RequestPermissionAsync() => _available && await Js.Request() == "granted";
+
+    public Task<bool> IsDeniedAsync() => Task.FromResult(_available && Js.Permission() == "denied");
 
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {
@@ -44,6 +57,11 @@ public sealed partial class BrowserReminderScheduler : IReminderScheduler, IDisp
 
     private void Push()
     {
+        if (!_available)
+        {
+            return;
+        }
+
         var due = ReminderNotifications.Within(_plan, _time.GetUtcNow(), Window);
         var count = Js.Schedule(
             [.. due.Select(ReminderNotifications.Key)],

@@ -1001,7 +1001,7 @@
     <value>On this device reminders show up only while Show Up is running. Minimized is fine, closed is not.</value>
   </data>
   <data name="ReminderOnlyWhileTabOpen" xml:space="preserve">
-    <value>In the browser reminders arrive only while a Show Up tab is open. Keep one open, or install the app.</value>
+    <value>In the browser reminders arrive only while a Show Up tab is open. For reminders that always arrive, use the Show Up app for Android, iOS or Windows.</value>
   </data>
   <data name="ReminderBannerOpen" xml:space="preserve">
     <value>Open Today</value>

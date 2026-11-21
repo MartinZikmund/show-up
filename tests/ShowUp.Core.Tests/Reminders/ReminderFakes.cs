@@ -88,11 +88,18 @@ internal sealed class FakeReminderScheduler : IReminderScheduler
 
     public ReminderDeliveryLimit Limit { get; set; }
 
-    public Task<bool> RequestPermissionAsync()
+    /// <summary>What the OS reports without asking; a refused prompt turns it on, as it would on a device.</summary>
+    public bool Denied { get; set; }
+
+    public async Task<bool> RequestPermissionAsync()
     {
         PermissionRequests++;
-        return PendingPermission?.Task ?? Task.FromResult(PermissionResult);
+        var granted = PendingPermission is null ? PermissionResult : await PendingPermission.Task;
+        Denied = !granted;
+        return granted;
     }
+
+    public Task<bool> IsDeniedAsync() => Task.FromResult(Denied);
 
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {

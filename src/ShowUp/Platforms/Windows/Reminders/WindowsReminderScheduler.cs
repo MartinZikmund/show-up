@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Windows.AppNotifications;
-using Microsoft.Windows.AppNotifications.Builder;
+using Microsoft.Windows.AppLifecycle;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Reminders;
 using Windows.Data.Xml.Dom;
@@ -40,18 +40,29 @@ public sealed class WindowsReminderScheduler(ILogger<WindowsReminderScheduler> l
             return;
         }
 
-        AppNotificationManager.Default.NotificationInvoked += (_, args) =>
-        {
-            if (args.Arguments.TryGetValue("action", out var action) && action == "today")
-            {
-                messenger.Send(new ReminderOpenedMessage());
-            }
-        };
+        AppNotificationManager.Default.NotificationInvoked += (_, args) => Route(args, messenger);
         AppNotificationManager.Default.Register();
+
+        // Must come after Register(). Most cold starts from a click report Launch and arrive through NotificationInvoked instead.
+        if (Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs() is { Kind: ExtendedActivationKind.AppNotification, Data: AppNotificationActivatedEventArgs args })
+        {
+            Route(args, messenger);
+        }
+    }
+
+    private static void Route(AppNotificationActivatedEventArgs args, IMessenger messenger)
+    {
+        if (args.Arguments.TryGetValue("action", out var action) && action == "today")
+        {
+            messenger.Send(new ReminderOpenedMessage());
+        }
     }
 
     public Task<bool> RequestPermissionAsync() =>
         Task.FromResult(IsPackaged && AppNotificationManager.Default.Setting == AppNotificationSetting.Enabled);
+
+    public Task<bool> IsDeniedAsync() =>
+        Task.FromResult(IsPackaged && AppNotificationManager.Default.Setting != AppNotificationSetting.Enabled);
 
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {
@@ -69,20 +80,22 @@ public sealed class WindowsReminderScheduler(ILogger<WindowsReminderScheduler> l
         var count = 0;
         foreach (var reminder in reminders.Where(r => r.FireAt > soon))
         {
-            var payload = new AppNotificationBuilder()
-                .AddArgument("action", "today")
-                .AddText(reminder.Title)
-                .AddText(reminder.Body)
-                .BuildNotification()
-                .Payload;
-            XmlDocument xml = new();
-            xml.LoadXml(payload);
-            notifier.AddToSchedule(new ScheduledToastNotification(xml, reminder.FireAt)
+            // One bad toast must not cost the rest: the old ones are already gone.
+            try
             {
-                Tag = ReminderNotifications.Key(reminder),
-                Group = ReminderNotifications.Channel,
-            });
-            count++;
+                XmlDocument xml = new();
+                xml.LoadXml(ReminderToastXml.Build(reminder));
+                notifier.AddToSchedule(new ScheduledToastNotification(xml, reminder.FireAt)
+                {
+                    Tag = ReminderNotifications.Key(reminder),
+                    Group = ReminderNotifications.Channel,
+                });
+                count++;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Scheduling the reminder toast for {FireAt} failed", reminder.FireAt);
+            }
         }
 
         logger.LogInformation("Scheduled {Count} reminder toasts; next at {Next}", count, reminders.FirstOrDefault(r => r.FireAt > soon)?.FireAt);

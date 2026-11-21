@@ -1001,7 +1001,7 @@
     <value>Na tomhle zařízení se připomínky ukážou, jen když je Show Up spuštěné. Minimalizované stačí, zavřené ne.</value>
   </data>
   <data name="ReminderOnlyWhileTabOpen" xml:space="preserve">
-    <value>V prohlížeči připomínky dorazí, jen když je otevřená karta se Show Up. Nechte ji otevřenou, nebo si nainstalujte aplikaci.</value>
+    <value>V prohlížeči připomínky dorazí, jen když je otevřená karta se Show Up. Aby dorazily vždy, použijte aplikaci Show Up pro Android, iOS nebo Windows.</value>
   </data>
   <data name="ReminderBannerOpen" xml:space="preserve">
     <value>Otevřít Dnes</value>
