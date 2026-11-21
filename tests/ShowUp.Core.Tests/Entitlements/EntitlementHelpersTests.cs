@@ -32,6 +32,84 @@ public sealed class EntitlementHelpersTests
     }
 
     [TestMethod]
+    public async Task SingleFlight_CallWhileRunning_GetsOneTrailingRun()
+    {
+        SingleFlight flight = new();
+        TaskCompletionSource firstGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runs = 0;
+        async Task Work()
+        {
+            if (++runs == 1)
+            {
+                started.SetResult();
+                await firstGate.Task;
+            }
+        }
+
+        var first = flight.RunAsync(Work);
+        await started.Task;
+        var second = flight.RunAsync(Work);
+        var third = flight.RunAsync(Work);
+        firstGate.SetResult();
+        await Task.WhenAll(first, second, third);
+
+        runs.Should().Be(2, "callers arriving mid-run share one fresh run after it");
+        second.Should().BeSameAs(third);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, true)]
+    [DataRow(true, true, false)]
+    [DataRow(false, false, false)]
+    public void ProCache_IsLifetime_ProWithoutEndDate(bool isPro, bool hasExpiry, bool expected) =>
+        ProCache.IsLifetime(isPro, hasExpiry ? Now.AddMonths(1) : null).Should().Be(expected);
+
+    [TestMethod]
+    public void ExpiryWatch_SubscriptionRunsOut_FiresOnce()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+        var fired = 0;
+
+        watch.Schedule(Now.AddHours(2), () => fired++);
+        time.Advance(TimeSpan.FromHours(1));
+        fired.Should().Be(0);
+        time.Advance(TimeSpan.FromHours(2));
+
+        fired.Should().Be(1);
+    }
+
+    [TestMethod]
+    public void ExpiryWatch_YearLongSubscription_StillFiresAtTheEnd()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+        var fired = 0;
+
+        watch.Schedule(Now.AddDays(365), () => fired++);
+        time.Advance(TimeSpan.FromDays(364));
+        fired.Should().Be(0);
+        time.Advance(TimeSpan.FromDays(2));
+
+        fired.Should().Be(1);
+    }
+
+    [TestMethod]
+    public void ExpiryWatch_Rescheduled_OnlyTheLatestFires()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+        List<string> fired = [];
+
+        watch.Schedule(Now.AddHours(1), () => fired.Add("old"));
+        watch.Schedule(null, () => fired.Add("none"));
+        time.Advance(TimeSpan.FromHours(2));
+
+        fired.Should().BeEmpty();
+    }
+
+    [TestMethod]
     public void ProCache_ExpiredSubscription_IsFree() => ProCache.IsPro(true, Now.AddDays(-1), Now).Should().BeFalse();
 
     [TestMethod]

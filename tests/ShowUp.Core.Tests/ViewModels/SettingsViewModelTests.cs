@@ -148,6 +148,21 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
+    public void MarkerSwatch_LapsedWithStoredColor_ShowsAutoAndKeepsTheChoice()
+    {
+        FakeAppPreferences preferences = new() { MarkerColor = MarkerColor.Purple };
+        FakeEntitlementService entitlements = new() { IsPro = true };
+        var viewModel = Navigated(preferences, entitlements);
+
+        entitlements.SetPro(false);
+
+        viewModel.SelectedMarkerSwatch!.Color.Should().Be(MarkerColor.Auto);
+        viewModel.MarkerSwatches.Where(s => s.IsSelected).Select(s => s.Color).Should().Equal(MarkerColor.Auto);
+        viewModel.MarkerColor.Should().Be(MarkerColor.Purple);
+        preferences.MarkerColor.Should().Be(MarkerColor.Purple);
+    }
+
+    [TestMethod]
     public void MarkerSwatches_AreAutoPlusSixInOrder()
     {
         var viewModel = CreateViewModel(new FakeAppPreferences());

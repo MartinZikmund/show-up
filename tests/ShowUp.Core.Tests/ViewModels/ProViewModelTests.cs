@@ -136,6 +136,42 @@ public sealed class ProViewModelTests
     }
 
     [TestMethod]
+    public async Task Purchase_Unconfirmed_SaysItCouldNotConfirm()
+    {
+        FakeEntitlementService service = new() { Outcome = PurchaseOutcome.Unconfirmed };
+        var viewModel = await LoadedAsync(service);
+
+        await viewModel.PurchaseAsync(viewModel.Offers[0]);
+
+        viewModel.StateText.Should().Be("ProCouldNotConfirm");
+    }
+
+    [TestMethod]
+    public async Task Purchase_Purchased_RefreshesTheManageLink()
+    {
+        FakeEntitlementService service = new();
+        var viewModel = await LoadedAsync(service);
+        service.ManageUri = new("https://example.com/manage");
+
+        await viewModel.PurchaseAsync(viewModel.Offers[0]);
+
+        viewModel.CanManageSubscription.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Restore_Lifetime_HidesTheManageLink()
+    {
+        FakeEntitlementService service = new() { IsPro = true, ManageUri = new("https://example.com/manage") };
+        var viewModel = CreateViewModel(service);
+        await viewModel.LoadAsync();
+        service.ManageUri = null;
+
+        await viewModel.RestoreAsync();
+
+        viewModel.CanManageSubscription.Should().BeFalse();
+    }
+
+    [TestMethod]
     public async Task ManageSubscription_Pro_OpensStoreUri()
     {
         FakeEntitlementService service = new() { IsPro = true, ManageUri = new("https://example.com/manage") };
