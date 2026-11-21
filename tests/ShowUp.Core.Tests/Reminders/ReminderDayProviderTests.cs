@@ -25,8 +25,10 @@ public sealed class ReminderDayProviderTests
     {
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
         _repository = new(_time);
-        _service = TestEnrollments.Create(_repository, _catalog, new WeakReferenceMessenger());
+        _service = TestEnrollments.Create(_repository, _catalog, new WeakReferenceMessenger(), entitlements: _entitlements);
     }
+
+    private readonly ShowUp.Core.Tests.Entitlements.FakeEntitlementService _entitlements = new() { IsPro = true };
 
     private async Task<Func<DateOnly, ReminderDay>> LoadAsync(int days = 3) =>
         await new ReminderDayProvider(new ScheduleQuery(_service, _catalog), _catalog, new FakeStringLocalizer()).LoadAsync(_today, days);
@@ -102,5 +104,19 @@ public sealed class ReminderDayProviderTests
         var day = await LoadAsync();
 
         day(_today).IsRest.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Load_LapsedNonPrimaryProgram_IsLeftOut()
+    {
+        var primary = await _repository.EnrollAsync("p", 1, "t", _today);
+        _time.Advance(TimeSpan.FromSeconds(1));
+        await _repository.EnrollAsync("q", 1, "t", _today);
+        await _service.SetPrimaryAsync(primary.Id);
+        _entitlements.SetPro(false);
+
+        var day = await LoadAsync();
+
+        day(_today).Should().Be(new ReminderDay(false, "Run", false), "the read-only program can't be crossed, so it can't be asked for");
     }
 }
