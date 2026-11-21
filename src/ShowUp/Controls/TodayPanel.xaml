@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:ShowUp.Controls"
     xmlns:markup="using:ShowUp.Markup"
-    xmlns:storage="using:ShowUp.Core.Storage"
     xmlns:vm="using:ShowUp.Core.ViewModels">
 
     <StackPanel Spacing="16">
@@ -176,7 +175,7 @@
                                 BorderBrush="{ThemeResource CalendarCellBorderBrush}"
                                 BorderThickness="1.5"
                                 CornerRadius="{ThemeResource ControlCornerRadius}"
-                                Visibility="{x:Bind IsDone, Mode=OneWay}">
+                                Visibility="{x:Bind ShowsMarks, Mode=OneWay}">
                                 <controls:MarkerCrossControl
                                     AutomationProperties.AccessibilityView="Raw"
                                     Loaded="Cross_Loaded"
@@ -188,6 +187,7 @@
                                 Height="48"
                                 HorizontalAlignment="Stretch"
                                 AutomationProperties.AutomationId="CrossItOffButton"
+                                AutomationProperties.Name="{x:Bind CrossAutomationName}"
                                 Command="{x:Bind CrossCommand}"
                                 Content="{markup:Localize Key=TodayCrossItOff}"
                                 Style="{StaticResource AccentButtonStyle}"
@@ -234,12 +234,12 @@
                 Text="{markup:Localize Key=TodayBonusEmpty}"
                 TextWrapping="Wrap"
                 Visibility="{x:Bind NoBonuses(ViewModel.HasBonuses), Mode=OneWay}" />
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Bonuses, Mode=OneWay}">
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.BonusItems, Mode=OneWay}">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="8" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="storage:BonusWorkoutEntity">
+                    <DataTemplate x:DataType="vm:BonusItemViewModel">
                         <Border
                             Padding="12,8,4,8"
                             Background="{ThemeResource CalendarCellBackgroundBrush}"
@@ -267,7 +267,7 @@
                                     <TextBlock
                                         Foreground="{ThemeResource MutedTextBrush}"
                                         Style="{StaticResource CaptionTextBlockStyle}"
-                                        Text="{x:Bind controls:TodayPanel.BonusDetail(DayNumber, DurationMinutes)}" />
+                                        Text="{x:Bind Detail}" />
                                 </StackPanel>
                                 <Button
                                     Grid.Column="2"
@@ -275,7 +275,7 @@
                                     AutomationProperties.Name="{markup:Localize Key=TodayBonusRemove}"
                                     Click="RemoveBonus_Click"
                                     Style="{StaticResource SubtleButtonStyle}"
-                                    Tag="{x:Bind}"
+                                    Tag="{x:Bind Entity}"
                                     ToolTipService.ToolTip="{markup:Localize Key=TodayBonusRemove}">
                                     <FontIcon FontSize="14" Glyph="&#xE74D;" />
                                 </Button>

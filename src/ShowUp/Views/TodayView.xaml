@@ -5,7 +5,7 @@
     xmlns:controls="using:ShowUp.Controls"
     xmlns:local="using:ShowUp.Views">
 
-    <Grid x:Name="RootGrid" ColumnSpacing="0">
+    <Grid x:Name="RootGrid" SizeChanged="RootGrid_SizeChanged">
         <Grid.ColumnDefinitions>
             <ColumnDefinition x:Name="PanelColumn" Width="*" />
             <ColumnDefinition x:Name="CalendarColumn" Width="0" />
@@ -16,7 +16,7 @@
                 x:Name="ContentPanel"
                 MaxWidth="640"
                 Padding="{StaticResource PagePadding}"
-                HorizontalAlignment="Left"
+                HorizontalAlignment="Stretch"
                 Spacing="16">
                 <controls:TodayPanel x:Name="Panel" ViewModel="{x:Bind ViewModel, Mode=OneWay}" />
                 <StackPanel x:Name="DebugPanel" Spacing="8" />
@@ -45,19 +45,6 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ContentPanel.Padding" Value="24,16,24,24" />
-                    </VisualState.Setters>
-                </VisualState>
-                <!--  Today (fixed 360-420) and the calendar side by side  -->
-                <VisualState x:Name="Wider">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1008" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="PanelColumn.Width" Value="400" />
-                        <Setter Target="PanelColumn.MinWidth" Value="360" />
-                        <Setter Target="CalendarColumn.Width" Value="*" />
-                        <Setter Target="ContentPanel.MaxWidth" Value="420" />
-                        <Setter Target="ContentPanel.Padding" Value="24,16,16,24" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

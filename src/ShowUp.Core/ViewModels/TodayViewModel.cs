@@ -1,3 +1,4 @@
+using System.Globalization;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
@@ -33,6 +34,7 @@ public partial class TodayViewModel : ViewModelBase
     private IReadOnlyList<CompletedSession> _completions = [];
     private int _dayIndex = -1;
     private DateOnly _loadedToday;
+    private int _loadedGreetingHour = -1;
     private SynchronizationContext? _context;
     private ITimer? _midnightTimer;
     private bool _isActive;
@@ -85,6 +87,10 @@ public partial class TodayViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasBonuses))]
     public partial IReadOnlyList<BonusWorkoutEntity> Bonuses { get; private set; } = [];
+
+    /// <summary><see cref="Bonuses"/> with their detail lines, for the list.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<BonusItemViewModel> BonusItems { get; private set; } = [];
 
     public bool HasBonuses => Bonuses.Count > 0;
 
@@ -158,7 +164,8 @@ public partial class TodayViewModel : ViewModelBase
     }
 
     /// <summary>For window activation: the app may have slept through midnight.</summary>
-    public Task RefreshIfDateChangedAsync() => Today != _loadedToday ? RefreshAsync() : Task.CompletedTask;
+    public Task RefreshIfDateChangedAsync() =>
+        Today != _loadedToday || GreetingStart(_time.GetLocalNow().Hour) != _loadedGreetingHour ? RefreshAsync() : Task.CompletedTask;
 
     public async Task RefreshAsync()
     {
@@ -168,9 +175,11 @@ public partial class TodayViewModel : ViewModelBase
             var today = Today;
             _loadedToday = today;
             ScheduleMidnightRefresh();
-            Greeting = GreetingFor(_time.GetLocalNow().Hour);
+            _loadedGreetingHour = GreetingStart(_time.GetLocalNow().Hour);
+            Greeting = GreetingFor(_loadedGreetingHour);
             var recent = await _enrollments.GetBonusWorkoutsAsync(today.AddDays(1 - RecentBonusDays), today);
             Bonuses = [.. recent.OrderByDescending(b => b.Date).ThenByDescending(b => b.CreatedAt)];
+            BonusItems = [.. Bonuses.Select(b => new BonusItemViewModel(b, b.Title, BonusDetail(b, today)))];
 
             var active = await _enrollments.GetAsync();
             if (active is null)
@@ -306,9 +315,16 @@ public partial class TodayViewModel : ViewModelBase
                 kind,
                 _localizer[$"WorkoutKind_{kind}"].Value,
                 workout?.DurationMinutes is { } minutes ? _localizer["TodayDurationFormat", minutes].Value : "",
+                _localizer["TodayCrossOffFormat", workout?.Name ?? scheduled[i].WorkoutId].Value,
                 scheduled[i].Optional,
                 status.CompletedSessions.Contains(i),
                 CrossAsync));
+        }
+
+        var lastDone = status.CompletedSessions.Count > 0 ? status.CompletedSessions.Max() : -1;
+        foreach (var card in sessions)
+        {
+            card.ShowsMarks = card.Index == lastDone;
         }
 
         UpdateSessions(sessions);
@@ -332,6 +348,7 @@ public partial class TodayViewModel : ViewModelBase
             foreach (var (old, update) in Sessions.Zip(fresh))
             {
                 old.IsDone = update.IsDone;
+                old.ShowsMarks = update.ShowsMarks;
             }
 
             return;
@@ -374,13 +391,28 @@ public partial class TodayViewModel : ViewModelBase
         Inks = [];
     }
 
-    private string GreetingFor(int hour) => _localizer[hour switch
+    // The hour a greeting starts at, so the timer and the refresh check agree on when it changes.
+    private static int GreetingStart(int hour) => hour switch
     {
-        >= 5 and < 12 => "GreetingMorning",
-        >= 12 and < 18 => "GreetingAfternoon",
-        >= 18 and < 22 => "GreetingEvening",
+        >= 5 and < 12 => 5,
+        >= 12 and < 18 => 12,
+        >= 18 and < 22 => 18,
+        _ => 22,
+    };
+
+    private string GreetingFor(int startHour) => _localizer[startHour switch
+    {
+        5 => "GreetingMorning",
+        12 => "GreetingAfternoon",
+        18 => "GreetingEvening",
         _ => "GreetingNight",
     }].Value;
+
+    private string BonusDetail(BonusWorkoutEntity bonus, DateOnly today)
+    {
+        var day = bonus.Date == today ? _localizer["TodayBonusToday"].Value : bonus.Date.ToString("ddd d MMM", CultureInfo.CurrentCulture);
+        return bonus.DurationMinutes is { } minutes ? $"{day} · {_localizer["TodayDurationFormat", minutes].Value}" : day;
+    }
 
     private void ScheduleMidnightRefresh()
     {
@@ -391,8 +423,10 @@ public partial class TodayViewModel : ViewModelBase
             return;
         }
 
+        // Next change of day or greeting, whichever comes first.
         var now = _time.GetLocalNow();
-        var due = now.Date.AddDays(1) - now.DateTime + TimeSpan.FromSeconds(1);
+        var nextHour = new[] { 5, 12, 18, 22 }.Where(h => h > now.Hour).DefaultIfEmpty(24).First();
+        var due = now.Date.AddHours(nextHour) - now.DateTime + TimeSpan.FromSeconds(1);
         _midnightTimer = _time.CreateTimer(_ => Post(() => RunInBackground(RefreshAsync)), null, due, Timeout.InfiniteTimeSpan);
     }
 

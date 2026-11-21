@@ -583,4 +583,7 @@
   <data name="BonusDialogDate" xml:space="preserve">
     <value>Den</value>
   </data>
+  <data name="TodayCrossOffFormat" xml:space="preserve">
+    <value>Od&#353;krtnout {0}</value>
+  </data>
 </root>

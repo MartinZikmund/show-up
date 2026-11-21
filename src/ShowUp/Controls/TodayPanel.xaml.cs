@@ -1,8 +1,6 @@
 using System.ComponentModel;
-using System.Globalization;
 using ShowUp.Core.Storage;
 using ShowUp.Core.ViewModels;
-using ShowUp.Services.Localization;
 
 namespace ShowUp.Controls;
 
@@ -27,23 +25,6 @@ public sealed partial class TodayPanel : UserControl
 
     public string ProgramLine(string? program, string dayText) =>
         string.IsNullOrEmpty(dayText) ? program ?? "" : $"{program} · {dayText}";
-
-    /// <summary>"Today · 10 min" or "Fri 20 Nov · 10 min", from the bonus's day number.</summary>
-    public static string BonusDetail(int dayNumber, int? durationMinutes)
-    {
-        var date = DateOnly.FromDayNumber(dayNumber);
-        var isToday = date == DateOnly.FromDateTime(DateTime.Now);
-        List<string> parts =
-        [
-            isToday ? Localizer.Instance["TodayBonusToday"] : date.ToString("ddd d MMM", CultureInfo.CurrentCulture),
-        ];
-        if (durationMinutes is { } minutes)
-        {
-            parts.Add(string.Format(CultureInfo.CurrentCulture, Localizer.Instance["TodayDurationFormat"], minutes));
-        }
-
-        return string.Join(" · ", parts);
-    }
 
     private void OnViewModelChanged(TodayViewModel? oldValue, TodayViewModel? newValue)
     {

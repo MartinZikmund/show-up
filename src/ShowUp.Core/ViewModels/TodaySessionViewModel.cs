@@ -12,6 +12,7 @@ public sealed partial class TodaySessionViewModel : ObservableObject
         WorkoutKind kind,
         string kindLabel,
         string durationLabel,
+        string crossAutomationName,
         bool isOptional,
         bool isDone,
         Func<TodaySessionViewModel, Task> cross)
@@ -22,6 +23,7 @@ public sealed partial class TodaySessionViewModel : ObservableObject
         Kind = kind;
         KindLabel = kindLabel;
         DurationLabel = durationLabel;
+        CrossAutomationName = crossAutomationName;
         IsOptional = isOptional;
         IsDone = isDone;
         CrossCommand = new AsyncRelayCommand(() => cross(this));
@@ -40,6 +42,9 @@ public sealed partial class TodaySessionViewModel : ObservableObject
     /// <summary>"30 min", or empty when the workout has no set length.</summary>
     public string DurationLabel { get; }
 
+    /// <summary>"Cross off Upper Body Power 1": every card's button needs its own accessible name.</summary>
+    public string CrossAutomationName { get; }
+
     public bool IsOptional { get; }
 
     [ObservableProperty]
@@ -47,6 +52,10 @@ public sealed partial class TodaySessionViewModel : ObservableObject
     public partial bool IsDone { get; set; }
 
     public bool IsOpen => !IsDone;
+
+    /// <summary>The day's marks sit on the latest crossed session's card only.</summary>
+    [ObservableProperty]
+    public partial bool ShowsMarks { get; set; }
 
     public IAsyncRelayCommand CrossCommand { get; }
 }
