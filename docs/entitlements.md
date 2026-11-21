@@ -5,12 +5,18 @@ How the app decides who is Pro, what each head does about it, and what to config
 ## The pieces
 
 - `FeatureGate` (Core) answers "may a Free user do this?" and holds the limits: 1 active program, 1 reminder (20 for Pro).
-  Marker color falls back to Auto while not Pro; the stored choice is kept for when Pro returns.
+  Marker color falls back to Auto while not Pro (the Settings picker shows Auto too); the stored choice is kept for when
+  Pro returns. Several programs at once: see [multiple-programs.md](./multiple-programs.md).
 - `IEntitlementService` (Core) is the one contract. `IsPro` is live: listen to `Changed`.
 - `ProViewModel` / `ProView` is the paywall. Settings has a "Show Up Pro" card, and `ProGateHint` is the small
-  "Unlock with Pro" link to put under anything a Free user cannot use (bind it to a page's `OpenProCommand`).
+  "Unlock with Pro" link to put under anything a Free user cannot use (bind it to a page's `OpenProCommand`; `Text`
+  overrides the line, e.g. "Unlock Pro to run several programs").
 - `PurchaseResolver` decides the outcome of a purchase. A purchase counts only once Pro actually shows up;
-  otherwise the user is told to check back or tap Restore. `SingleFlight` stops overlapping refreshes.
+  otherwise the user is told to check back or tap Restore. A network or server error after checkout is `Unconfirmed`
+  ("we couldn't confirm your purchase"). `SingleFlight` stops overlapping refreshes; a refresh asked for while one
+  runs gets one trailing run, so it never returns state from before a purchase.
+- `ExpiryWatch` raises `Changed` when a cached subscription runs out mid-session (RevenueCat and Store).
+- The paywall re-reads the manage-subscription link after a purchase or restore; lifetime owners get none.
 
 ## Per head
 
