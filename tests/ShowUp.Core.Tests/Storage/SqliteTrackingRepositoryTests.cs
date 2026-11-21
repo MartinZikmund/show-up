@@ -153,6 +153,32 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task GetShifts_SameCreatedAt_OrdersById()
+    {
+        var (repo, e) = await EnrolledAsync();
+        var connection = await Db.GetConnectionAsync();
+        Guid low = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid high = Guid.Parse("ffffffff-0000-0000-0000-000000000000");
+        foreach ((Guid id, int days) in new[] { (high, 5), (low, 3) })
+        {
+            await connection.InsertAsync(new ScheduleShiftEntity
+            {
+                Id = id,
+                EnrollmentId = e.Id,
+                FromDate = new DateOnly(2026, 12, 20),
+                Days = days,
+                CreatedAt = Time.GetUtcNow(),
+                UpdatedAt = Time.GetUtcNow(),
+                DeviceId = "d",
+            });
+        }
+
+        var shifts = await repo.GetShiftsAsync(e.Id);
+
+        shifts.Select(s => s.Days).Should().Equal(3, 5);
+    }
+
+    [TestMethod]
     public async Task Writes_SetUpdatedAtAndDeviceId()
     {
         Device.DeviceId = "dev-x";
