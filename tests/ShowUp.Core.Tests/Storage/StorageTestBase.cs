@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Storage;
 
@@ -44,7 +45,7 @@ public abstract class StorageTestBase
 
     internal SqliteReminderRepository CreateReminders() => new(Db, Time, User, Device);
 
-    internal SqliteCustomProgramRepository CreateCustomPrograms() => new(Db, Time, User, Device);
+    internal SqliteCustomProgramRepository CreateCustomPrograms() => new(Db, Time, User, Device, CreateSettings(), NullLogger<SqliteCustomProgramRepository>.Instance);
 
     internal SqliteSyncedSettings CreateSettings() => new(Db, Time, User, Device);
 }

@@ -11,6 +11,7 @@ public sealed class CustomProgramEntity : SyncableEntity
 
     public string ProgramJson { get; set; } = "";
 
+    /// <summary>The program id, or null when <see cref="SubjectKey"/> is not a well-formed <c>c:{id}</c>.</summary>
     [Ignore]
-    public string ProgramId => SubjectKey.Length > 2 ? SubjectKey[2..] : "";
+    public string? ProgramId => SubjectKey.Length > 2 && SubjectKey.StartsWith("c:", StringComparison.Ordinal) ? SubjectKey[2..] : null;
 }

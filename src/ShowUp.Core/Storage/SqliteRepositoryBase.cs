@@ -14,6 +14,12 @@ public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time,
 
     protected Task<SQLiteAsyncConnection> ConnectAsync() => db.GetConnectionAsync();
 
+    /// <summary>Newest first: <c>UpdatedAt</c>, then <c>Id</c> (ordinal "D" text), so every device picks the same winner on a tie.</summary>
+    protected static IOrderedEnumerable<T> NewestFirst<T>(IEnumerable<T> rows)
+        where T : SyncableEntity => rows
+        .OrderByDescending(r => r.UpdatedAt)
+        .ThenByDescending(r => r.Id.ToString("D"), StringComparer.Ordinal);
+
     protected T Stamp<T>(T entity)
         where T : SyncableEntity
     {

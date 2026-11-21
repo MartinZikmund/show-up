@@ -13,7 +13,7 @@ public sealed class SqliteNotesRepository(ShowUpDatabase db, TimeProvider time, 
         var rows = await QueryAsync<NoteEntity>(connection, n => n.EnrollmentId == enrollmentId);
         return rows
             .GroupBy(n => n.SubjectKey)
-            .Select(g => g.OrderByDescending(n => n.UpdatedAt).First())
+            .Select(g => NewestFirst(g).First())
             .OrderBy(n => n.DayIndex ?? -1)
             .ThenBy(n => n.SessionIndex ?? -1)
             .ToList();
@@ -31,7 +31,7 @@ public sealed class SqliteNotesRepository(ShowUpDatabase db, TimeProvider time, 
         {
             foreach (var (edit, key, text) in edits)
             {
-                var existing = Query<NoteEntity>(c, n => n.SubjectKey == key).OrderByDescending(n => n.UpdatedAt).ToList();
+                var existing = NewestFirst(Query<NoteEntity>(c, n => n.SubjectKey == key)).ToList();
                 if (text.Length == 0)
                 {
                     Tombstone(c, existing);

@@ -48,7 +48,7 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
             var rows = Query<MetricEntryEntity>(c, m => m.SubjectKey == key).Where(target.Matches).ToList();
             foreach (var (metricId, value) in values)
             {
-                Set(c, target, rows.Where(m => m.MetricId == metricId).OrderByDescending(m => m.UpdatedAt).ToList(), metricId, value);
+                Set(c, target, NewestFirst(rows.Where(m => m.MetricId == metricId)).ToList(), metricId, value);
             }
         });
     }
@@ -94,7 +94,7 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
         [
             .. rows
                 .GroupBy(m => (m.SubjectKey, m.WorkoutId, m.MetricId))
-                .Select(g => g.OrderByDescending(m => m.UpdatedAt).First())
+                .Select(g => NewestFirst(g).First())
                 .OrderBy(m => m.DayIndex ?? -1)
                 .ThenBy(m => m.SessionIndex ?? -1),
         ];

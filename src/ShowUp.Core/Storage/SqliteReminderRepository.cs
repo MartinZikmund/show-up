@@ -12,17 +12,22 @@ public sealed class SqliteReminderRepository(ShowUpDatabase db, TimeProvider tim
 
     public async Task<ReminderEntity> AddAsync(int minutesOfDay, int daysMask, bool enabled = true)
     {
+        Validate(minutesOfDay, daysMask);
         var connection = await ConnectAsync();
         var reminder = Stamp(new ReminderEntity { MinutesOfDay = minutesOfDay, DaysMask = daysMask, Enabled = enabled });
         await connection.InsertAsync(reminder);
         return reminder;
     }
 
-    public Task UpdateAsync(Guid id, int minutesOfDay, int daysMask) => ModifyAsync(id, r =>
+    public async Task UpdateAsync(Guid id, int minutesOfDay, int daysMask)
     {
-        r.MinutesOfDay = minutesOfDay;
-        r.DaysMask = daysMask;
-    });
+        Validate(minutesOfDay, daysMask);
+        await ModifyAsync(id, r =>
+        {
+            r.MinutesOfDay = minutesOfDay;
+            r.DaysMask = daysMask;
+        });
+    }
 
     public Task SetEnabledAsync(Guid id, bool enabled) => ModifyAsync(id, r => r.Enabled = enabled);
 
@@ -30,6 +35,14 @@ public sealed class SqliteReminderRepository(ShowUpDatabase db, TimeProvider tim
     {
         var connection = await ConnectAsync();
         await connection.RunInTransactionAsync(c => Tombstone(c, Query<ReminderEntity>(c, r => r.Id == id)));
+    }
+
+    private static void Validate(int minutesOfDay, int daysMask)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(minutesOfDay);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minutesOfDay, 1439);
+        ArgumentOutOfRangeException.ThrowIfLessThan(daysMask, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(daysMask, 127);
     }
 
     private async Task ModifyAsync(Guid id, Action<ReminderEntity> change)

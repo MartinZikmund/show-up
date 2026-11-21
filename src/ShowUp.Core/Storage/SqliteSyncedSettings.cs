@@ -10,7 +10,17 @@ public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, I
         string subject = KeyOf(key);
         var connection = await ConnectAsync();
         var rows = await QueryAsync<SyncedSettingEntity>(connection, s => s.SubjectKey == subject);
-        return rows.OrderByDescending(s => s.UpdatedAt).FirstOrDefault()?.Value;
+        return NewestFirst(rows).FirstOrDefault()?.Value;
+    }
+
+    public async Task<IReadOnlyDictionary<string, string>> GetByPrefixAsync(string prefix)
+    {
+        string subjectPrefix = KeyOf(prefix);
+        var connection = await ConnectAsync();
+        var rows = await QueryAsync<SyncedSettingEntity>(connection, s => s.SubjectKey.StartsWith(subjectPrefix));
+        return rows
+            .GroupBy(s => s.Key)
+            .ToDictionary(g => g.Key, g => NewestFirst(g).First().Value);
     }
 
     public async Task SetAsync(string key, string value)
@@ -19,7 +29,7 @@ public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, I
         var connection = await ConnectAsync();
         await connection.RunInTransactionAsync(c =>
         {
-            var existing = Query<SyncedSettingEntity>(c, s => s.SubjectKey == subject).OrderByDescending(s => s.UpdatedAt).ToList();
+            var existing = NewestFirst(Query<SyncedSettingEntity>(c, s => s.SubjectKey == subject)).ToList();
             if (existing.Count == 0)
             {
                 c.Insert(Stamp(new SyncedSettingEntity { SubjectKey = subject, Key = key, Value = value }));

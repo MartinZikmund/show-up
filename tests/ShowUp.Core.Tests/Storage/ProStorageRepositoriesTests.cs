@@ -59,28 +59,31 @@ public class ProStorageRepositoriesTests : StorageTestBase
         var (sameId, second) = await programs.SaveNewRevisionAsync("{\"v\":2}", id);
 
         id.Should().StartWith("custom-");
-        (sameId, first, second).Should().Be((id, 1, 2));
+        (sameId, first, second).Should().Be((id, Stamp(), Stamp() + 1));
         (await programs.GetAsync(id))!.ProgramJson.Should().Be("{\"v\":2}");
-        (await programs.GetAsync(id, 1))!.ProgramJson.Should().Be("{\"v\":1}");
-        (await programs.GetAsync(id, 3)).Should().BeNull();
+        (await programs.GetAsync(id, first))!.ProgramJson.Should().Be("{\"v\":1}");
+        (await programs.GetAsync(id, second + 1)).Should().BeNull();
         var all = await programs.GetAllAsync();
-        all.Should().ContainSingle().Which.Revision.Should().Be(2);
+        all.Should().ContainSingle().Which.Revision.Should().Be(second);
         all[0].ProgramId.Should().Be(id);
     }
 
     [TestMethod]
-    public async Task CustomPrograms_Delete_TombstonesEveryRevision()
+    public async Task CustomPrograms_Delete_HidesButPinnedRevisionResolves()
     {
         var programs = CreateCustomPrograms();
-        var (id, _) = await programs.SaveNewRevisionAsync("a");
-        await programs.SaveNewRevisionAsync("b", id);
+        var (id, first) = await programs.SaveNewRevisionAsync("a");
+        var (_, second) = await programs.SaveNewRevisionAsync("b", id);
+        Time.Advance(TimeSpan.FromMinutes(1));
 
         await programs.DeleteAsync(id);
 
         (await programs.GetAllAsync()).Should().BeEmpty();
-        (await programs.GetAsync(id, 1)).Should().BeNull();
+        (await programs.GetAsync(id)).Should().BeNull();
+        (await programs.GetAsync(id, first))!.ProgramJson.Should().Be("a");
+        (await programs.GetAsync(id, second))!.ProgramJson.Should().Be("b");
         var connection = await Db.GetConnectionAsync();
-        (await connection.Table<CustomProgramEntity>().ToListAsync()).Should().HaveCount(2).And.OnlyContain(p => p.DeletedAt != null);
+        (await connection.Table<CustomProgramEntity>().ToListAsync()).Should().HaveCount(2).And.OnlyContain(p => p.DeletedAt == null);
     }
 
     [TestMethod]
@@ -93,7 +96,7 @@ public class ProStorageRepositoriesTests : StorageTestBase
         (await programs.GetAllAsync()).Should().BeEmpty();
         (await programs.GetAsync(id)).Should().BeNull();
         var (_, revision) = await programs.SaveNewRevisionAsync("b", id);
-        revision.Should().Be(1);
+        revision.Should().Be(Stamp());
     }
 
     [TestMethod]
@@ -161,6 +164,8 @@ public class ProStorageRepositoriesTests : StorageTestBase
         (await connection.Table<SyncedSettingEntity>().ToListAsync()).Count(s => s.DeletedAt is null).Should().Be(1);
         (await CreateSettings().GetAsync("marker")).Should().Be("merged");
     }
+
+    private int Stamp() => (int)(Time.GetUtcNow() - new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds;
 
     private CustomProgramEntity Program(string key, int revision, string json, DateTimeOffset updatedAt) => new()
     {
