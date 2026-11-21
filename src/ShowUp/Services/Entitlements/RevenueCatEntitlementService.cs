@@ -24,6 +24,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     private readonly DispatcherQueue? _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly SingleFlight _refresh = new();
     private readonly Dictionary<string, PackageDto> _packages = [];
+    private readonly ExpiryWatch _expiry;
     private bool _initialized;
 
     public RevenueCatEntitlementService(
@@ -40,6 +41,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         _time = time;
         _logger = logger;
         _apiKey = apiKey;
+        _expiry = new(time);
+        WatchExpiry();
     }
 
     public bool IsPro => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow());
@@ -174,7 +177,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
 
     public async Task<Uri?> GetManageSubscriptionUriAsync()
     {
-        if (!EnsureInitialized())
+        if (!EnsureInitialized() || ProCache.IsLifetime(IsPro, _preferences.LastKnownProExpires))
         {
             return null;
         }
@@ -207,6 +210,12 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         return true;
     }
 
+    // A subscription that runs out mid-session locks Pro features without waiting for a refresh.
+    private void WatchExpiry() =>
+        _expiry.Schedule(
+            _preferences.LastKnownPro ? _preferences.LastKnownProExpires : null,
+            () => UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty)));
+
     private static ProOfferKind? KindOf(string identifier) => identifier switch
     {
         DefaultPackageIdentifier.Monthly => ProOfferKind.Monthly,
@@ -223,6 +232,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         _preferences.LastKnownProExpires = entitlement?.ExpirationDate is { } expiry
             ? new DateTimeOffset(DateTime.SpecifyKind(expiry, DateTimeKind.Utc))
             : null;
+        WatchExpiry();
         if (before != IsPro)
         {
             UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));

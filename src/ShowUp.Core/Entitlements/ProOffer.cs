@@ -17,6 +17,8 @@ public enum PurchaseOutcome
     Pending,
     /// <summary>The store took the purchase but Pro has not shown up yet; check back or Restore.</summary>
     Unverified,
+    /// <summary>The store didn't answer after checkout (network or server error): we can't tell whether it went through.</summary>
+    Unconfirmed,
     Failed,
     Unavailable,
 }

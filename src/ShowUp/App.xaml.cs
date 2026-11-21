@@ -88,6 +88,9 @@ public partial class App : Application, IApplication
         Host = builder.Build();
         IoC.SetProvider(Host.Services);
 
+        // Store and RevenueCat services capture the UI dispatcher when built: build them here, on the UI thread.
+        Host.Services.GetRequiredService<IEntitlementService>();
+
         // Run app lifecycle updates
         var appPreferences = Host.Services.GetRequiredService<IAppPreferences>();
         var appUpdater = Host.Services.GetRequiredService<IAppUpdater>();

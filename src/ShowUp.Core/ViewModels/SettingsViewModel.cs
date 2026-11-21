@@ -89,6 +89,8 @@ public partial class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanChangeMarkerColor));
         OnPropertyChanged(nameof(IsMarkerColorLocked));
         OnPropertyChanged(nameof(ProStatusText));
+        SyncSwatches();
+        OnPropertyChanged(nameof(SelectedMarkerSwatch));
     }
 
     /// <summary>Status line of the "Show Up Pro" card.</summary>
@@ -181,7 +183,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         foreach (var swatch in MarkerSwatches)
         {
-            swatch.IsSelected = swatch.Color == MarkerColor;
+            swatch.IsSelected = swatch.Color == ShownMarkerColor;
         }
     }
 
@@ -206,10 +208,13 @@ public partial class SettingsViewModel : ViewModelBase
         _messenger.Send(new MarkerColorChangedMessage(value));
     }
 
+    /// <summary>The ink actually drawn: a lapsed user's stored choice is kept but shows as Auto.</summary>
+    public MarkerColor ShownMarkerColor => FeatureGate.EffectiveMarkerColor(MarkerColor, _entitlements.IsPro);
+
     /// <summary>Two-way target for the picker; null while the selection is being cleared.</summary>
     public MarkerSwatch? SelectedMarkerSwatch
     {
-        get => MarkerSwatches.FirstOrDefault(s => s.Color == MarkerColor);
+        get => MarkerSwatches.FirstOrDefault(s => s.Color == ShownMarkerColor);
         set
         {
             if (value is not null && CanChangeMarkerColor)

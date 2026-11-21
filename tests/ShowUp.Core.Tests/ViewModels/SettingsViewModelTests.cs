@@ -137,7 +137,7 @@ public sealed class SettingsViewModelTests
     {
         FakeAppPreferences preferences = new() { MarkerColor = MarkerColor.Purple };
         preferences.Writes.Clear();
-        var viewModel = CreateViewModel(preferences);
+        var viewModel = CreateViewModel(preferences, entitlements: new FakeEntitlementService { IsPro = true });
 
         viewModel.OnNavigatedTo(null);
 

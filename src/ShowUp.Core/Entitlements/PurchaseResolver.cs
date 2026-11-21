@@ -15,7 +15,8 @@ public static class PurchaseResolver
 {
     /// <summary>
     /// Turns a store result into an outcome. A purchase only counts as <see cref="PurchaseOutcome.Purchased"/> once
-    /// <paramref name="refreshIsPro"/> confirms the entitlement; otherwise the user is told to check back or Restore.
+    /// <paramref name="refreshIsPro"/> confirms the entitlement; otherwise the user is told to check back or Restore. A network or server error can't say whether the purchase
+    /// went through, so it's <see cref="PurchaseOutcome.Unconfirmed"/>.
     /// </summary>
     public static async Task<PurchaseOutcome> ResolveAsync(BillingResult result, Func<Task<bool>> refreshIsPro)
     {
@@ -29,7 +30,7 @@ public static class PurchaseResolver
             case BillingResult.Pending:
                 return PurchaseOutcome.Pending;
             case BillingResult.NetworkOrServer:
-                return PurchaseOutcome.Unverified;
+                return PurchaseOutcome.Unconfirmed;
             default:
                 return PurchaseOutcome.Failed;
         }
