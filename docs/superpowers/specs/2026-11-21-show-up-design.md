@@ -75,7 +75,12 @@ It ships to the stores as a real product under Martin's brand, built in public.
 - **Pro:** cloud sync across devices, custom schedule builder, multiple concurrent programs, multiple
   reminders, full stats/streak history, extra themes and marker styles (colors, stroke styles).
 - **Billing:** Android + iOS via Martin's `Uno.RevenueCat` (one entitlement `pro`; monthly, yearly,
-  lifetime). **All other heads unlock Pro** for now (`IEntitlementService` returns Pro).
+  lifetime). **Windows (WinAppSDK, packaged Store build)** via the Microsoft Store (`StoreContext`
+  subscription + durable lifetime add-ons). **Desktop Skia (macOS/Linux/unpackaged Windows) and WASM
+  unlock Pro** for now. Store entitlements stay per store until Supabase account entitlements land.
+- **Custom marker color** (Settings): Auto + 6 colors with light/dark variants, part of Pro
+  Personalization. **Cross-off style:** *Draw it yourself* (default; freehand ink saved per completion)
+  or *Auto marker X*; a full-screen *cross moment* plays when crossing today (configurable).
 - **Account:** optional. App is fully usable signed-out. Sign-in (Supabase Auth: email magic link first,
   Apple/Google OAuth later) is required only for sync. Signing in can claim existing local progress (see Sync).
 
