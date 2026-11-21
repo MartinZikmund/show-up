@@ -15,10 +15,11 @@ public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, I
 
     public async Task<IReadOnlyDictionary<string, string>> GetByPrefixAsync(string prefix)
     {
-        string subjectPrefix = KeyOf(prefix);
         var connection = await ConnectAsync();
-        var rows = await QueryAsync<SyncedSettingEntity>(connection, s => s.SubjectKey.StartsWith(subjectPrefix));
+        // StartsWith becomes LIKE in SQL, where % and _ in the prefix are wildcards; match the prefix in memory instead.
+        var rows = await QueryAsync<SyncedSettingEntity>(connection, s => s.SubjectKey.StartsWith("k:"));
         return rows
+            .Where(s => s.Key.StartsWith(prefix, StringComparison.Ordinal))
             .GroupBy(s => s.Key)
             .ToDictionary(g => g.Key, g => NewestFirst(g).First().Value);
     }
