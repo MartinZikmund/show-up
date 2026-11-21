@@ -13,6 +13,8 @@ public sealed class CatalogService : ICatalogService
 {
     public const int BundledCatalogVersion = 1;
 
+    public const string UnknownWorkoutName = "Unknown workout";
+
     private readonly IBundledCatalogSource _source;
     private readonly ICustomProgramRepository _customPrograms;
     private readonly ILogger<CatalogService> _logger;
@@ -202,14 +204,41 @@ public sealed class CatalogService : ICatalogService
             return null;
         }
 
-        var errors = CatalogValidator.Validate(new WorkoutCatalog(BundledCatalogVersion, bundledWorkouts, [program]));
+        var placeholders = PlaceholdersForMissingWorkouts(program, bundledWorkouts);
+        if (placeholders.Count > 0)
+        {
+            _logger.LogWarning(
+                "Custom program '{ProgramId}' revision {Revision} uses workouts that left the catalog ({Ids}); showing them as '{Name}'.",
+                program.Id,
+                program.Revision,
+                string.Join(", ", placeholders.Select(w => w.Id)),
+                UnknownWorkoutName);
+        }
+
+        var errors = CatalogValidator.Validate(new WorkoutCatalog(BundledCatalogVersion, [.. bundledWorkouts, .. placeholders], [program]));
         if (errors.Count > 0)
         {
             _logger.LogWarning("Skipping invalid custom program '{ProgramId}': {Errors}", program.Id, string.Join(" ", errors));
             return null;
         }
 
-        return program;
+        return placeholders.Count == 0 ? program : program with { Workouts = [.. program.Workouts ?? [], .. placeholders] };
+    }
+
+    // A catalog update must never lock a user out of their own schedule, even if it dropped a workout id.
+    private static List<Workout> PlaceholdersForMissingWorkouts(WorkoutProgram program, IReadOnlyList<Workout> bundledWorkouts)
+    {
+        HashSet<string> known = [.. bundledWorkouts.Select(w => w.Id), .. (program.Workouts ?? []).Select(w => w.Id)];
+        return
+        [
+            .. program.Tracks
+                .SelectMany(t => t.Phases).SelectMany(p => p.Weeks).SelectMany(w => w.Days).SelectMany(d => d.Sessions)
+                .SelectMany(s => (string?[])[s.WorkoutId, .. s.Alternates ?? []])
+                .OfType<string>()
+                .Where(id => !known.Contains(id))
+                .Distinct()
+                .Select(id => new Workout(id, UnknownWorkoutName, null, WorkoutKind.Mixed, null)),
+        ];
     }
 
     private async Task<WorkoutCatalog> LoadBundledAsync()
