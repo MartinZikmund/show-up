@@ -297,23 +297,38 @@
                             Stroke="{ThemeResource MutedTextBrush}"
                             StrokeThickness="1"
                             Visibility="Collapsed" />
+                        <!--  The X and drawn ink span the whole cell; the text sits above them  -->
+                        <controls:MarkerCrossControl x:Name="PART_Cross" AutomationProperties.AccessibilityView="Raw" />
                         <Grid x:Name="PART_Content" Padding="8,4,8,4">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <TextBlock
-                                x:Name="PART_DayNumber"
+                            <!--  Backplates keep the day number and date readable over the marks  -->
+                            <Border
+                                x:Name="PART_DayNumberPlate"
+                                Margin="-2,0,0,0"
+                                Padding="2,0"
                                 HorizontalAlignment="Left"
-                                Style="{StaticResource DisplayNumberTextBlockStyle}" />
-                            <TextBlock
-                                x:Name="PART_Date"
-                                Margin="0,4,0,0"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource CalendarCellPlateBrush}"
+                                CornerRadius="4">
+                                <TextBlock x:Name="PART_DayNumber" Style="{StaticResource DisplayNumberTextBlockStyle}" />
+                            </Border>
+                            <Border
+                                x:Name="PART_DatePlate"
+                                Margin="0,4,-2,0"
+                                Padding="2,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
-                                Foreground="{ThemeResource MutedTextBrush}"
-                                Style="{StaticResource CaptionTextBlockStyle}" />
+                                Background="{ThemeResource CalendarCellPlateBrush}"
+                                CornerRadius="4">
+                                <TextBlock
+                                    x:Name="PART_Date"
+                                    Foreground="{ThemeResource MutedTextBrush}"
+                                    Style="{StaticResource CaptionTextBlockStyle}" />
+                            </Border>
                             <StackPanel
                                 x:Name="PART_Ticks"
                                 Grid.Row="1"
@@ -328,9 +343,7 @@
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="Wrap" />
                         </Grid>
-                        <!--  Inset below the header row from code, so the day number and date stay readable  -->
-                        <controls:MarkerCrossControl x:Name="PART_Cross" AutomationProperties.AccessibilityView="Raw" />
-                        <!--  Bonus sticker above the X, slightly askew like a real one; the date moves aside for it  -->
+                        <!--  Bonus sticker on top, slightly askew like a real one; the date moves aside for it  -->
                         <Border
                             x:Name="PART_Bonus"
                             Height="20"

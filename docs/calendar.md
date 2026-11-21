@@ -66,8 +66,9 @@ vector flame, Shift schedule), the grid and the empty state, and takes the view 
 - `CalendarDayCell` is a `Button` filled from code (not x:Bind), so a recycled row lands its
   crosses instantly. It names itself for screen readers ("Day 5, Pure Cardio and Cardio Abs, 1 of
   2 done, today, Nov 21") and carries the `CalendarDay{N}` automation id. Right-click or
-  long-press: Uncross, Log bonus workout here. The X sits in a square below the header row
-  (bottom-right in compact cells), so the day number and date stay readable. Missed training days
+  long-press: Uncross, Log bonus workout here. The X and drawn ink span the whole cell like a
+  marker on paper; the day number and date sit above them on a translucent backplate
+  (`CalendarCellPlateBrush`), and the bonus sticker sits on top. Missed training days
   get a faint hatch. Below 64 px a cell shows only the day number, session ticks and "Rest".
 
 The shift and bonus dialogs live behind `ICalendarPrompts`; the empty state's Browse programs

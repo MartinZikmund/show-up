@@ -24,6 +24,7 @@ public enum CalendarCellAction
 [TemplatePart(Name = "PART_Shake", Type = typeof(TranslateTransform))]
 [TemplatePart(Name = "PART_DayNumber", Type = typeof(TextBlock))]
 [TemplatePart(Name = "PART_Date", Type = typeof(TextBlock))]
+[TemplatePart(Name = "PART_DatePlate", Type = typeof(Border))]
 [TemplatePart(Name = "PART_Title", Type = typeof(TextBlock))]
 [TemplatePart(Name = "PART_Ticks", Type = typeof(StackPanel))]
 [TemplatePart(Name = "PART_Bonus", Type = typeof(Border))]
@@ -47,6 +48,7 @@ public sealed partial class CalendarDayCell : Button
     private TranslateTransform? _shake;
     private TextBlock? _dayNumber;
     private TextBlock? _date;
+    private Border? _datePlate;
     private TextBlock? _title;
     private StackPanel? _ticks;
     private Border? _bonus;
@@ -101,6 +103,7 @@ public sealed partial class CalendarDayCell : Button
         _shake = GetTemplateChild("PART_Shake") as TranslateTransform;
         _dayNumber = GetTemplateChild("PART_DayNumber") as TextBlock;
         _date = GetTemplateChild("PART_Date") as TextBlock;
+        _datePlate = GetTemplateChild("PART_DatePlate") as Border;
         _title = GetTemplateChild("PART_Title") as TextBlock;
         _ticks = GetTemplateChild("PART_Ticks") as StackPanel;
         _bonus = GetTemplateChild("PART_Bonus") as Border;
@@ -205,7 +208,7 @@ public sealed partial class CalendarDayCell : Button
         _title!.Text = day.Title;
         _today!.Visibility = day.IsToday ? Visibility.Visible : Visibility.Collapsed;
         _bonus!.Visibility = day.BonusCount > 0 ? Visibility.Visible : Visibility.Collapsed;
-        _date.Margin = new Thickness(0, 4, day.BonusCount > 0 ? 28 : 0, 0);
+        _datePlate!.Margin = new Thickness(0, 4, day.BonusCount > 0 ? 24 : -2, 0);
         _missed!.Visibility = day.IsMissed ? Visibility.Visible : Visibility.Collapsed;
         _bonusText!.Text = day.BonusCount > 1 ? $"+{day.BonusCount}" : "+";
 
@@ -225,27 +228,12 @@ public sealed partial class CalendarDayCell : Button
 
         _isCompact = width < CompactWidth;
         _dayNumber.FontSize = Math.Clamp(width * 0.26, 14, 26);
-        _date!.Visibility = _isCompact ? Visibility.Collapsed : Visibility.Visible;
+        _datePlate!.Visibility = _isCompact ? Visibility.Collapsed : Visibility.Visible;
 
         // Compact cells have no room for workout names, but a rest day still says so.
         var showTitle = !_isCompact || Day is { IsRestDay: true };
         _title!.Visibility = showTitle ? Visibility.Visible : Visibility.Collapsed;
         _title.MaxLines = _isCompact ? 1 : 2;
-
-        // The X sits in a square below the header row, so the day number and date stay readable;
-        // compact cells tuck it bottom-right, clear of the number.
-        if (_cross is not null)
-        {
-            var height = ActualHeight > 0 ? ActualHeight : width;
-            var inset = _isCompact ? 2 : 4;
-            var top = 4 + _dayNumber.FontSize * (_isCompact ? 0.8 : 1.2);
-            var side = Math.Max(0, Math.Min(width - 2 * inset, height - top - inset));
-            _cross.Width = side;
-            _cross.Height = side;
-            _cross.Margin = new Thickness(inset);
-            _cross.HorizontalAlignment = _isCompact ? HorizontalAlignment.Right : HorizontalAlignment.Center;
-            _cross.VerticalAlignment = VerticalAlignment.Bottom;
-        }
 
         UpdateTicks();
     }

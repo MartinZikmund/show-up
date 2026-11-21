@@ -15,6 +15,11 @@
             <SolidColorBrush x:Key="PaperBackgroundBrush" Color="#F6F1E6" />
             <SolidColorBrush x:Key="PaperGridLineBrush" Color="#E6DFCF" />
             <SolidColorBrush x:Key="CalendarCellBackgroundBrush" Color="#FFFDF7" />
+            <!--  Backplate keeping the day number and date readable over the X  -->
+            <SolidColorBrush
+                x:Key="CalendarCellPlateBrush"
+                Opacity="0.8"
+                Color="#FFFDF7" />
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#CFC6B2" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#D9372B" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#D9372B" />
@@ -40,6 +45,10 @@
             <SolidColorBrush x:Key="PaperBackgroundBrush" Color="#22262A" />
             <SolidColorBrush x:Key="PaperGridLineBrush" Color="#2A2E33" />
             <SolidColorBrush x:Key="CalendarCellBackgroundBrush" Color="#2B3035" />
+            <SolidColorBrush
+                x:Key="CalendarCellPlateBrush"
+                Opacity="0.8"
+                Color="#2B3035" />
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#454B52" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#F3EFE4" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#F3EFE4" />
@@ -58,6 +67,7 @@
             <StaticResource x:Key="PaperBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="PaperGridLineBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="CalendarCellBackgroundBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="CalendarCellPlateBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="CalendarCellBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="CalendarCellTodayBorderBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="MarkerBrush" ResourceKey="SystemColorHighlightColorBrush" />
