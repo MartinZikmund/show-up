@@ -21,11 +21,13 @@ public interface IAppPreferences
 
     CrossMomentMode CrossMomentMode { get; set; }
 
+    /// <summary>Synced: stored through <c>SyncedPersonalization</c>, not per device.</summary>
     CrossOffStyle CrossOffStyle { get; set; }
 
+    /// <summary>Synced.</summary>
     MarkerColor MarkerColor { get; set; }
 
-    /// <summary>Kg/km or lb/mi for logged results; seeded from the region the first time it's read.</summary>
+    /// <summary>Synced. Kg/km or lb/mi for logged results; seeded from the region the first time it's read.</summary>
     UnitSystem UnitSystem { get; set; }
 
     /// <summary>Points <see cref="LastKnownPro"/> and <see cref="LastKnownProExpires"/> at the user's own cache (null: anonymous).</summary>

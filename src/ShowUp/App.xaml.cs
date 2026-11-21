@@ -98,6 +98,15 @@ public partial class App : Application, IApplication
         var appPreferences = Host.Services.GetRequiredService<IAppPreferences>();
         var appUpdater = Host.Services.GetRequiredService<IAppUpdater>();
         await appUpdater.EnsureAppUpToDateAsync();
+        try
+        {
+            await Host.Services.GetRequiredService<SyncedPersonalization>().InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            // The old per-device values stay in effect.
+            Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Loading the synced settings failed.");
+        }
         appPreferences.LaunchCount++;
         Host.Services.GetRequiredService<MarkerBrushUpdater>().Apply();
 
@@ -141,6 +150,7 @@ public partial class App : Application, IApplication
         // Singleton services
         services.AddSingleton<IApplication>(sp => Current);
         services.AddSingleton<MZikmund.Toolkit.WinUI.Services.IPreferences, Preferences>();
+        services.AddSingleton<SyncedPersonalization>();
         services.AddSingleton<IAppPreferences, AppPreferences>();
         services.AddSingleton<IDisplayRequestManager, DisplayRequestManager>();
         services.AddSingleton<IAppUpdater, Infrastructure.AppUpdater>();
