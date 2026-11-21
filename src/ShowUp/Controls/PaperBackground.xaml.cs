@@ -3,20 +3,25 @@ using Microsoft.UI.Xaml.Media.Imaging;
 namespace ShowUp.Controls;
 
 /// <summary>
-/// Plain paper with a faint grain: a 256 px tileable PNG laid out as a grid of images, rebuilt only when the
-/// window needs more tiles or the theme swaps the texture. Nothing runs per frame.
+/// Plain paper with a faint grain: 1024 px tileable PNGs laid out as a grid of images (WinUI has no tiling brush).
+/// The tile set is resized only when the window size or the theme's texture changes; nothing runs per frame.
 /// </summary>
 public sealed partial class PaperBackground : UserControl
 {
-    private const double TileSize = 256;
+    private const double TileSize = 1024;
 
+    // Beyond 4x4 tiles (4096 px) the grain just stops; the paper color underneath carries on.
+    private const int MaxTilesPerSide = 4;
+
+    private readonly RectangleGeometry _clip = new();
     private readonly List<Image> _tiles = [];
+    private string? _source;
     private BitmapImage? _bitmap;
-    private (int Columns, int Rows) _grid;
 
     public PaperBackground()
     {
         InitializeComponent();
+        Grain.Clip = _clip;
         SizeChanged += (_, _) => Layout();
         GrainSource.RegisterPropertyChangedCallback(TextBlock.TextProperty, (_, _) => Rebuild());
         Loaded += (_, _) => Rebuild();
@@ -24,10 +29,15 @@ public sealed partial class PaperBackground : UserControl
 
     private void Rebuild()
     {
+        if (GrainSource.Text == _source)
+        {
+            return;
+        }
+
+        _source = GrainSource.Text;
+        _bitmap = _source.StartsWith("ms-appx:", StringComparison.Ordinal) ? new BitmapImage(new Uri(_source)) : null;
         Grain.Children.Clear();
         _tiles.Clear();
-        _grid = (0, 0);
-        _bitmap = GrainSource.Text.StartsWith("ms-appx:", StringComparison.Ordinal) ? new BitmapImage(new Uri(GrainSource.Text)) : null;
         Layout();
     }
 
@@ -38,33 +48,28 @@ public sealed partial class PaperBackground : UserControl
             return;
         }
 
-        Grain.Clip = new RectangleGeometry { Rect = new Rect(0, 0, ActualWidth, ActualHeight) };
-        var columns = (int)Math.Ceiling(ActualWidth / TileSize);
-        var rows = (int)Math.Ceiling(ActualHeight / TileSize);
-        if (columns <= _grid.Columns && rows <= _grid.Rows)
+        _clip.Rect = new Rect(0, 0, ActualWidth, ActualHeight);
+        var columns = Math.Min(MaxTilesPerSide, (int)Math.Ceiling(ActualWidth / TileSize));
+        var rows = Math.Min(MaxTilesPerSide, (int)Math.Ceiling(ActualHeight / TileSize));
+        var count = columns * rows;
+
+        while (_tiles.Count < count)
         {
-            return;
+            Image tile = new() { Source = _bitmap, Width = TileSize, Height = TileSize, Stretch = Stretch.Fill };
+            _tiles.Add(tile);
+            Grain.Children.Add(tile);
         }
 
-        // Only ever grows: shrinking the window just clips the tiles already there.
-        (columns, rows) = (Math.Max(columns, _grid.Columns), Math.Max(rows, _grid.Rows));
-        for (var row = 0; row < rows; row++)
+        while (_tiles.Count > count)
         {
-            for (var column = 0; column < columns; column++)
-            {
-                if (column < _grid.Columns && row < _grid.Rows)
-                {
-                    continue;
-                }
-
-                Image tile = new() { Source = _bitmap, Width = TileSize, Height = TileSize, Stretch = Stretch.Fill };
-                Canvas.SetLeft(tile, column * TileSize);
-                Canvas.SetTop(tile, row * TileSize);
-                Grain.Children.Add(tile);
-                _tiles.Add(tile);
-            }
+            Grain.Children.Remove(_tiles[^1]);
+            _tiles.RemoveAt(_tiles.Count - 1);
         }
 
-        _grid = (columns, rows);
+        for (var i = 0; i < count; i++)
+        {
+            Canvas.SetLeft(_tiles[i], i % columns * TileSize);
+            Canvas.SetTop(_tiles[i], i / columns * TileSize);
+        }
     }
 }

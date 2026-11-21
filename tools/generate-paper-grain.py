@@ -1,4 +1,4 @@
-"""Generates the tileable paper grain PNGs in src/ShowUp/Assets/Paper (stdlib only, deterministic).
+"""Generates the tileable 1024 px paper grain PNGs in src/ShowUp/Assets/Paper (stdlib only, deterministic).
 
 Fractal value noise (three octaves, wrapping so the tiles join without a seam) baked into the alpha
 channel of a flat tint: warm brown for the light paper, chalk-white for the dark board.
@@ -12,7 +12,7 @@ import random
 import struct
 import zlib
 
-SIZE = 256
+SIZE = 1024
 SEED = 5300
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "src", "ShowUp", "Assets", "Paper")
 

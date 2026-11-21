@@ -16,9 +16,9 @@ flame repaint at once. High Contrast ignores the setting. The bottom tab underli
 
 ## Paper background
 
-Plain paper (or chalkboard) plus a faint grain, no grid lines. `PaperBackground` lays out 256 px tiles of
-`Assets/Paper/paper_grain_{light,dark}.png` (WinUI has no tiling brush) and only rebuilds when the window
-needs more tiles or the theme changes. The `PaperGrainSource` theme resource picks the texture; High
+Plain paper (or chalkboard) plus a faint grain, no grid lines. `PaperBackground` lays out 1024 px tiles of
+`Assets/Paper/paper_grain_{light,dark}.png` (WinUI has no tiling brush), at most 4x4, and only resizes the
+tile set when the window size or the theme's texture changes. The `PaperGrainSource` theme resource picks the texture; High
 Contrast sets it to `none` and gets the flat window color.
 
 The PNGs are generated, deterministic and committed. To tweak strength or tint, edit `VARIANTS` and rerun:
