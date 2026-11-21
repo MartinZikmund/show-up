@@ -7,7 +7,7 @@ public static class StreakCalculator
         int streak = 0;
         foreach (DayStatus day in days.Where(d => d.Date <= today).OrderByDescending(d => d.Date))
         {
-            if (day.IsRestDay)
+            if (day.CountsAsRest)
             {
                 continue;
             }
@@ -31,7 +31,7 @@ public static class StreakCalculator
         int run = 0;
         foreach (DayStatus day in days.Where(d => d.Date <= today).OrderBy(d => d.Date))
         {
-            if (day.IsRestDay)
+            if (day.CountsAsRest)
             {
                 continue;
             }
