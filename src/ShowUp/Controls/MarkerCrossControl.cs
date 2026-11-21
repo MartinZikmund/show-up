@@ -154,6 +154,7 @@ public sealed partial class MarkerCrossControl : Control
             return;
         }
 
+        _pendingAnimationFrom = null;
         Redraw();
         StrokesDrawn?.Invoke(this, null);
     }
@@ -163,7 +164,17 @@ public sealed partial class MarkerCrossControl : Control
         if (_pendingAnimationFrom is { } from && ActualWidth > 0 && ActualHeight > 0)
         {
             _pendingAnimationFrom = null;
-            Animate(from, ClampStrokes(Strokes));
+            var to = ClampStrokes(Strokes);
+            if (to > from)
+            {
+                Animate(from, to);
+            }
+            else
+            {
+                Redraw();
+                StrokesDrawn?.Invoke(this, null);
+            }
+
             return;
         }
 
@@ -219,8 +230,8 @@ public sealed partial class MarkerCrossControl : Control
         {
             last.Completed += (_, _) =>
             {
-                ClearDashes();
-                _running.Clear();
+                // Stop releases the HoldEnd values, so a reused control starts its next draw from scratch.
+                StopAnimations();
                 StrokesDrawn?.Invoke(this, null);
             };
         }
