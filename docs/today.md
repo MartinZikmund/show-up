@@ -37,3 +37,8 @@ Today lists the last seven days of bonuses with a remove button (confirmation fi
 "Log bonus workout here" opens the same dialog. Writes go through `IActiveEnrollmentService`
 (`LogBonusAsync`, `RemoveBonusAsync`, `GetBonusWorkoutsAsync(from, to)`), which need no enrollment.
 `SqliteTrackingRepository.LogBonusAsync` throws `ArgumentException` for blank titles and future dates.
+
+## Streak
+
+The streak on Today comes from `StreakCalculator.Current` over the active enrollment's days (same as the
+calendar header). Bonus workouts never count toward it.
