@@ -55,8 +55,7 @@
                         Margin="16,12,16,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        FontSize="44"
-                        Style="{StaticResource DisplayNumberTextBlockStyle}" />
+                        Style="{StaticResource DisplayNumberLargeTextBlockStyle}" />
                     <TextBlock
                         x:Name="TitleText"
                         Margin="16,0,16,14"
@@ -71,23 +70,53 @@
                         AutomationProperties.AccessibilityView="Raw" />
                 </Grid>
 
-                <TextBlock
-                    x:Name="CaptionText"
+                <!--  Read as one plain sentence (the panel's Name), so the parts stay out of the UIA tree  -->
+                <StackPanel
+                    x:Name="CaptionPanel"
                     AutomationProperties.AutomationId="CrossMomentCaption"
                     AutomationProperties.LiveSetting="Assertive"
-                    CharacterSpacing="30"
-                    FontSize="26"
                     Opacity="0"
-                    Style="{StaticResource SectionHeaderTextBlockStyle}"
-                    TextAlignment="Center" />
-                <TextBlock
-                    x:Name="ProgressText"
-                    AutomationProperties.AutomationId="CrossMomentProgress"
-                    Foreground="{ThemeResource MutedTextBrush}"
-                    Opacity="0"
-                    Style="{StaticResource BodyTextBlockStyle}"
-                    TextAlignment="Center"
-                    TextWrapping="Wrap" />
+                    Spacing="8">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <TextBlock
+                            x:Name="DayText"
+                            VerticalAlignment="Center"
+                            AutomationProperties.AccessibilityView="Raw"
+                            Style="{StaticResource CrossMomentCaptionTextBlockStyle}" />
+                        <StackPanel
+                            x:Name="StreakPanel"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"
+                                Style="{StaticResource CrossMomentCaptionTextBlockStyle}"
+                                Text="·" />
+                            <Path
+                                Height="24"
+                                VerticalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"
+                                Data="M8,0 C9,3.2 13,5.4 13,10 C13,13.6 10.8,16 8,16 C5.2,16 3,13.8 3,10.8 C3,8.4 4.2,6.8 5.6,5.6 C5.6,7.6 6.4,8.8 7.4,9.2 C6.8,6 7.6,2.8 8,0 Z M8,16 C6.6,16 5.6,14.9 5.6,13.5 C5.6,12.2 6.4,11.3 7.2,10.6 C7.3,11.6 7.9,12.2 8.6,12.4 C8.5,11.4 8.9,10.5 9.6,9.8 C10.1,10.9 10.4,12.1 10.4,13.3 C10.4,14.8 9.4,16 8,16 Z"
+                                Fill="{ThemeResource MarkerBrush}"
+                                Stretch="Uniform" />
+                            <TextBlock
+                                x:Name="StreakText"
+                                VerticalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"
+                                Style="{StaticResource CrossMomentCaptionTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock
+                        x:Name="ProgressText"
+                        AutomationProperties.AccessibilityView="Raw"
+                        Foreground="{ThemeResource MutedTextBrush}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                </StackPanel>
             </StackPanel>
         </Grid>
 

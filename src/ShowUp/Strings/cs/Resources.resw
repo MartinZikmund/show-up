@@ -223,9 +223,13 @@
   <data name="CrossMomentMode_Never" xml:space="preserve">
     <value>Nikdy</value>
   </data>
-  <data name="CrossMomentCaptionFormat" xml:space="preserve">
-    <value>Den {0} z {1} &#183; 🔥 v &#345;ad&#283;: {2}</value>
-    <comment>{0} day number, {1} total days, {2} current streak in days.</comment>
+  <data name="CrossMomentDayFormat" xml:space="preserve">
+    <value>Den {0} z {1}</value>
+    <comment>{0} day number, {1} total days.</comment>
+  </data>
+  <data name="CrossMomentStreakFormat" xml:space="preserve">
+    <value>{0} v &#345;ad&#283;</value>
+    <comment>{0} current streak in days (at least 1). Shown after a flame icon.</comment>
   </data>
   <data name="CrossMomentProgressFormat" xml:space="preserve">
     <value>Hotovo {0} z {1}</value>

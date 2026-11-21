@@ -3,7 +3,6 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using ShowUp.Core.Marking;
-using ShowUp.Services.Localization;
 using VirtualKey = Windows.System.VirtualKey;
 using Windows.UI.ViewManagement;
 
@@ -53,17 +52,17 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         _info = info;
         _shown = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var localizer = Localizer.Instance;
+        var caption = CrossMomentCaption.Create(info, App.Current.Services.GetRequiredService<IStringLocalizer>());
         DayNumberText.Text = info.DayNumber.ToString(CultureInfo.CurrentCulture);
         TitleText.Text = info.Title;
-        CaptionText.Text = Format(localizer.GetString("CrossMomentCaptionFormat"), info.DayNumber, info.TotalDays, info.CurrentStreak);
-        ProgressText.Text = info.SessionsDone < info.SessionsRequired
-            ? Format(localizer.GetString("CrossMomentProgressFormat"), info.SessionsDone, info.SessionsRequired)
-            : localizer.GetString("CrossMomentDayComplete");
+        DayText.Text = caption.Day;
+        StreakText.Text = caption.Streak ?? string.Empty;
+        StreakPanel.Visibility = caption.Streak is null ? Visibility.Collapsed : Visibility.Visible;
+        ProgressText.Text = caption.Progress;
+        AutomationProperties.SetName(CaptionPanel, caption.Streak is null ? caption.Day : $"{caption.Day}, {caption.Streak}");
 
         var animate = AnimationsEnabled;
-        CaptionText.Opacity = 0;
-        ProgressText.Opacity = 0;
+        CaptionPanel.Opacity = 0;
 
         Cross.AnimateChanges = false;
         Cross.Seed = info.Seed;
@@ -120,8 +119,6 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         shown.TrySetResult();
     }
 
-    private static string Format(string format, params object[] args) => string.Format(CultureInfo.CurrentCulture, format, args);
-
     private static bool AnimationsEnabled
     {
         get
@@ -166,13 +163,11 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
         if (AnimationsEnabled)
         {
-            Fade(CaptionText, 0, 1, TimeSpan.FromMilliseconds(300));
-            Fade(ProgressText, 0, 1, TimeSpan.FromMilliseconds(300));
+            Fade(CaptionPanel, 0, 1, TimeSpan.FromMilliseconds(300));
         }
         else
         {
-            CaptionText.Opacity = 1;
-            ProgressText.Opacity = 1;
+            CaptionPanel.Opacity = 1;
         }
     }
 
@@ -208,6 +203,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         var size = Math.Min(Math.Min(width, height) * CellToShorterSideRatio, Math.Min(available, MaxCellSize));
         BigCell.Width = size;
         BigCell.Height = size;
+
+        // Keep the ink clear of the day number (top) and the title (bottom).
+        Cross.Margin = new(size * 0.12, size * 0.2, size * 0.12, size * 0.12);
     }
 
     private void Root_Tapped(object sender, TappedRoutedEventArgs e)

@@ -14,6 +14,21 @@
         <Setter Property="FontSize" Value="24" />
     </Style>
 
+    <Style
+        x:Key="DisplayNumberLargeTextBlockStyle"
+        BasedOn="{StaticResource DisplayNumberTextBlockStyle}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="44" />
+    </Style>
+
+    <!--  Cross moment caption: "Day 10 of 60 · (flame) 9-day streak"  -->
+    <Style x:Key="CrossMomentCaptionTextBlockStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource DisplayFontFamily}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="CharacterSpacing" Value="30" />
+    </Style>
+
     <Style x:Key="SectionHeaderTextBlockStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource DisplayFontFamily}" />
         <Setter Property="FontWeight" Value="SemiBold" />

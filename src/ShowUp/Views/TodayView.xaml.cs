@@ -77,7 +77,7 @@ public sealed partial class TodayView : TodayViewBase
             await crossMoment.ShowAsync(new CrossMomentInfo(
                 DayNumber: 10,
                 TotalDays: 60,
-                Title: "Pure Cardio + Cardio Abs",
+                Title: "Cardio + Core",
                 StrokesBefore: 0,
                 StrokesAfter: complete ? 2 : 1,
                 Seed: MarkerGeometry.SeedFrom(Guid.NewGuid()),

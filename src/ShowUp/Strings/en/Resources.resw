@@ -223,9 +223,13 @@
   <data name="CrossMomentMode_Never" xml:space="preserve">
     <value>Never</value>
   </data>
-  <data name="CrossMomentCaptionFormat" xml:space="preserve">
-    <value>Day {0} of {1} · 🔥 {2}-day streak</value>
-    <comment>{0} day number, {1} total days, {2} current streak in days.</comment>
+  <data name="CrossMomentDayFormat" xml:space="preserve">
+    <value>Day {0} of {1}</value>
+    <comment>{0} day number, {1} total days.</comment>
+  </data>
+  <data name="CrossMomentStreakFormat" xml:space="preserve">
+    <value>{0}-day streak</value>
+    <comment>{0} current streak in days (at least 1). Shown after a flame icon.</comment>
   </data>
   <data name="CrossMomentProgressFormat" xml:space="preserve">
     <value>{0} of {1} done</value>
