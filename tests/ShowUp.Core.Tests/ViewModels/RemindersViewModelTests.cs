@@ -513,4 +513,66 @@ public sealed class RemindersViewModelTests
 
         viewModel.HasLimitNote.Should().BeFalse();
     }
+
+    [TestMethod]
+    public async Task Add_RepositoryFails_PromptWasStillStartedBeforeTheWrite()
+    {
+        // The browser only shows its prompt inside the click, so it can't wait for the write.
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        _repository.FailWrites = true;
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        _scheduler.PermissionRequests.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Toggle_OnAndRepositoryFails_PromptWasStillStartedBeforeTheWrite()
+    {
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        _repository.FailWrites = true;
+
+        viewModel.Items[0].IsEnabled = true;
+        await Task.Delay(100);
+
+        _scheduler.PermissionRequests.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Open_ReminderOnAndNotificationsOff_ShowsTheNotice()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        _scheduler.Denied = true;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.PermissionDenied.Should().BeTrue();
+        _scheduler.PermissionRequests.Should().Be(0, "checking never prompts");
+    }
+
+    [TestMethod]
+    public async Task Open_NotificationsOffButNoReminderOn_NoNotice()
+    {
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+        _scheduler.Denied = true;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.PermissionDenied.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Load_NotificationsSwitchedBackOn_ClearsTheNotice()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        _scheduler.Denied = true;
+        var viewModel = await OpenAsync();
+
+        _scheduler.Denied = false;
+        await viewModel.LoadAsync();
+
+        viewModel.PermissionDenied.Should().BeFalse();
+    }
 }

@@ -46,6 +46,18 @@ public class PackageManifestTests
         ((string?)server.Attribute("Executable")).Should().Be("ShowUp.exe");
     }
 
+    [TestMethod]
+    public void ToastActivation_ClsidIsStampedPerIdentityIntoBothPlaces()
+    {
+        // The manifest GUID is a placeholder; the build writes a UUIDv5 of ApplicationId into the activator and the COM class.
+        var targets = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "WorktreeIdentity.targets"));
+
+        targets.Should().Contain("Target Name=\"StampToastActivatorClsid\"");
+        targets.Should().Contain("<NameBasedGuid Name=\"$(ApplicationId)\">");
+        targets.Should().Contain("//desktop:ToastNotificationActivation/@ToastActivatorCLSID");
+        targets.Should().Contain("//com:ExeServer[@Arguments='----AppNotificationActivated:']/com:Class/@Id");
+    }
+
     private static string FindRepoRoot()
     {
         DirectoryInfo? dir = new(AppContext.BaseDirectory);
