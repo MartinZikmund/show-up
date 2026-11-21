@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Catalog;
@@ -223,6 +224,25 @@ public sealed class ProgramDetailViewModelTests
 
         _navigation.Navigations.Should().ContainSingle().Which.Should().Be((typeof(ProgramResultsViewModel), (object?)running.Id));
         _enrollments.SelectedEnrollmentId.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task MultiProgramHint_PrimaryChosenAfterLapse_Updates()
+    {
+        var program = TestCatalog.Program("old", 1, "run");
+        var running = ActiveOne();
+        _enrollments.All = [running, ActiveOne()];
+        _enrollments.ReadOnlyIds.Add(running.Id);
+        var viewModel = Create(new FakeCatalogService(program));
+        viewModel.OnNavigatedTo("old");
+        await Task.Delay(50);
+        viewModel.ShowMultiProgramHint.Should().BeTrue();
+
+        _enrollments.ReadOnlyIds.Clear();
+        _messenger.Send(new ShowUp.Core.Messages.TrackingChangedMessage());
+        await Task.Delay(50);
+
+        viewModel.ShowMultiProgramHint.Should().BeFalse("its program is writable again");
     }
 
     [TestMethod]

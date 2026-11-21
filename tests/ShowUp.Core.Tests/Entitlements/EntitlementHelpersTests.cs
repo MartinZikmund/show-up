@@ -138,6 +138,34 @@ public sealed class EntitlementHelpersTests
     }
 
     [TestMethod]
+    public async Task ExpiryWatch_StoreNeverAnswers_LapsesAfterTheTimeout()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+        TaskCompletionSource hung = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource lapsed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        watch.Schedule(Now.AddHours(1), () => hung.Task, () => false, () => lapsed.TrySetResult());
+        time.Advance(TimeSpan.FromHours(1));
+        lapsed.Task.IsCompleted.Should().BeFalse("the store gets its chance to answer first");
+        time.Advance(ExpiryWatch.RefreshTimeout);
+
+        await lapsed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [TestMethod]
+    public void ExpiryWatch_LapseHandlerThrows_DoesNotEscape()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+
+        watch.Schedule(Now.AddHours(1), () => Task.CompletedTask, () => throw new InvalidOperationException("broken cache"), () => { });
+        var act = () => time.Advance(TimeSpan.FromHours(2));
+
+        act.Should().NotThrow();
+    }
+
+    [TestMethod]
     public void ProCache_ExpiredSubscription_IsFree() => ProCache.IsPro(true, Now.AddDays(-1), Now).Should().BeFalse();
 
     [TestMethod]

@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Services;
 using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Tracking;
@@ -185,5 +186,23 @@ public sealed class LapseCoordinatorTests
         await Task.Delay(50);
 
         (first.Asked.Count + second.Asked.Count).Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Attach_FirstRefreshNeverAnswers_ChecksAfterTheTimeout()
+    {
+        await EnrollTwoAsync();
+        TaskCompletionSource hung = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeEntitlementService entitlements = new() { IsPro = false, OnRefresh = () => hung.Task };
+        FakePrompt prompt = new();
+        LapseCoordinator coordinator = new(_service, entitlements, _time, NullLogger<LapseCoordinator>.Instance);
+
+        coordinator.Attach(prompt);
+        await Task.Delay(50);
+        prompt.Asked.Should().BeEmpty("the store gets its chance to answer first");
+        _time.Advance(ExpiryWatch.RefreshTimeout + TimeSpan.FromSeconds(1));
+
+        await prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        prompt.Asked.Should().ContainSingle();
     }
 }
