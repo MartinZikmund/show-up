@@ -58,6 +58,20 @@
   .prompt { background:var(--ui-panel); border:1px solid var(--ui-line); border-radius:8px; padding:16px; }
   .prompt pre { white-space:pre-wrap; font-family: ui-monospace, Consolas, monospace; font-size:13px; margin:0 0 12px; color:#d8d8dc; }
   .copy { background:#e2463c; color:#fff; border:0; border-radius:4px; padding:8px 14px; cursor:pointer; font-weight:600; }
+
+  .moment { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:10; background:rgba(0,0,0,.45); }
+  .moment.show { display:flex; animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity:0 } to { opacity:1 } }
+  .mcard { width:min(480px, 92vw); padding:32px; border-radius:8px; box-shadow: 0 24px 64px rgba(0,0,0,.35); display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .mcard.paper { background:#f6f1e6; color:#2b2a27; } .mcard.chalk { background:#22262a; color:#e9e6dc; }
+  @media (max-width: 640px) { .mcard { width:100vw; height:100vh; border-radius:0; justify-content:center; } }
+  .bigcell { position:relative; width:min(70vmin, 360px); aspect-ratio:1; border-radius:4px; }
+  .paper .bigcell { background:#fffdf7; border:2px solid #cfc6b2; } .chalk .bigcell { background:#2b3035; border:2px solid #454b52; }
+  .bigcell .num { position:absolute; left:16px; top:12px; font-size:44px; }
+  .bigcell .wname { position:absolute; left:16px; bottom:14px; right:16px; font-size:15px; font-weight:600; }
+  .mcap { font-family:"Barlow Condensed","Bahnschrift",sans-serif; font-weight:700; font-size:26px; text-transform:uppercase; letter-spacing:.03em; opacity:0; transition:opacity .3s; text-align:center; }
+  .msub { font-size:14px; opacity:0; transition:opacity .3s; }
+  .mcap.on, .msub.on { opacity:1; }
 </style>
 </head>
 <body>
@@ -98,13 +112,15 @@
       <label><span>Squeak</span><span id="sqV"></span></label>
       <input type="range" id="sq" min="0" max="10" step="1">
       <div class="toggle"><input type="checkbox" id="hap"><label for="hap" style="margin:0">Haptic tick (phones)</label></div>
+      <label><span>Cross moment</span><span></span></label>
+      <div class="row"><button class="chip" data-mm="today">Only today</button><button class="chip" data-mm="always">Always</button><button class="chip" data-mm="never">Never</button></div>
       <div class="toggle"><input type="checkbox" id="rm"><label for="rm" style="margin:0">Reduced motion (instant X)</label></div>
     </div>
     <button class="chip" id="reset">Clear all crosses</button>
   </aside>
 
   <main>
-    <div class="hint">Tap a day to cross off its next session. Two-session days draw “/” then complete the X. Three+ sessions tick each one, then the X lands. Right-click / long-press to un-cross. Days after “today” are locked.</div>
+    <div class="hint">Tap a day to cross off its next session. Two-session days draw “/” then complete the X. Three+ sessions tick each one, then the X lands. Right-click / long-press to un-cross. Days after “today” are locked. Crossing <b>today</b> (day 10) plays the full-screen cross moment — narrow the window below 640 px to see the phone version.</div>
     <section class="board" id="board">
       <header>
         <div class="title">Insanity · Month 1</div>
@@ -121,9 +137,10 @@
   </main>
 </div>
 
+<div class="moment" id="moment"><div class="mcard" id="mcard"><div class="bigcell" id="bigcell"><div class="num" id="mnum"></div><div class="wname" id="mname"></div></div><div class="mcap" id="mcap"></div><div class="msub" id="msub"></div></div></div>
 <script>
 const COLORS = { "Marker red":"#d9372b", "Ink blue":"#2457c5", "Sharp black":"#1f1f1f", "Gym green":"#1d8f4e", "Highlighter":"#f4d03f", "Chalk white":"#f3efe4" };
-const DEFAULTS = { theme:"paper", color:"Marker red", dur:180, wid:9, wob:4, ov:8, gap:90, snd:true, sq:4, hap:true, rm:false };
+const DEFAULTS = { mm:"today", theme:"paper", color:"Marker red", dur:180, wid:9, wob:4, ov:8, gap:90, snd:true, sq:4, hap:true, rm:false };
 const PRESETS = {
   "Classic marker": { ...DEFAULTS },
   "Chalkboard": { ...DEFAULTS, theme:"chalk", color:"Chalk white", wid:10, wob:6, dur:220, sq:1 },
@@ -136,7 +153,7 @@ const state = { ...DEFAULTS };
 const DAYS = [
   ["Fit Test"], ["Plyometric Cardio Circuit"], ["Cardio Power & Resistance"], ["Cardio Recovery"],
   ["Pure Cardio", "Cardio Abs"], ["Plyometric Cardio Circuit"], [],
-  ["Cardio Power & Resistance"], ["Pure Cardio", "Cardio Abs"], ["Plyometric Cardio Circuit", "Cardio Abs", "Stretch (demo 3rd)"],
+  ["Cardio Power & Resistance"], ["Plyometric Cardio Circuit", "Cardio Abs", "Stretch (demo 3rd)"], ["Pure Cardio", "Cardio Abs"],
   ["Cardio Recovery"], ["Pure Cardio", "Cardio Abs"], ["Plyometric Cardio Circuit"], [],
 ];
 const TODAY = 9;
@@ -184,12 +201,12 @@ function strokesFor(i) {
   return n === 2 && c === 1 ? 1 : 0;
 }
 
-function drawStroke(svg, d, animate, delay) {
+function drawStroke(svg, d, animate, delay, scale = 1) {
   const color = COLORS[state.color];
   const mk = (opacity, widthMul) => {
     const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
     p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", color);
-    p.setAttribute("stroke-width", state.wid * widthMul); p.setAttribute("stroke-linecap", "round");
+    p.setAttribute("stroke-width", state.wid * widthMul * scale); p.setAttribute("stroke-linecap", "round");
     p.setAttribute("opacity", opacity); p.setAttribute("filter", "url(#rough)");
     svg.appendChild(p);
     if (animate) {
@@ -206,15 +223,16 @@ function drawStroke(svg, d, animate, delay) {
 function renderInk(i, cell, animateFrom) {
   let svg = cell.querySelector("svg.ink");
   if (!svg) { svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.classList.add("ink"); cell.appendChild(svg); }
-  svg.innerHTML = `<defs><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${i}"/><feDisplacementMap in="SourceGraphic" scale="${1 + state.wob / 3}"/></filter></defs>`;
+  svg.innerHTML = `<defs><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${i}"/><feDisplacementMap in="SourceGraphic" scale="${(1 + state.wob / 3) * Math.max(1, Math.min(cell.getBoundingClientRect().width, cell.getBoundingClientRect().height) / 120)}"/></filter></defs>`;
   const { width: W, height: H } = cell.getBoundingClientRect();
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const r = rng(i + 1), m = Math.min(W, H) * .16;
   const s1 = strokePath(m, m, W - m, H - m, r), s2 = strokePath(W - m, m, m, H - m, r);
   const n = strokesFor(i);
+  const sc = Math.max(.6, Math.min(W, H) / 96);
   const anim = !state.rm && animateFrom !== undefined;
-  if (n >= 1) { drawStroke(svg, s1, anim && animateFrom < 1, 0); }
-  if (n >= 2) { drawStroke(svg, s2, anim && animateFrom < 2, animateFrom < 1 ? state.dur + state.gap : 0); }
+  if (n >= 1) { drawStroke(svg, s1, anim && animateFrom < 1, 0, sc); }
+  if (n >= 2) { drawStroke(svg, s2, anim && animateFrom < 2, animateFrom < 1 ? state.dur + state.gap : 0, sc); }
 }
 
 function render() {
@@ -245,9 +263,37 @@ function cross(i, cell) {
   done[i].add([...Array(n).keys()].find(k => !done[i].has(k)));
   const sesList = cell.querySelectorAll(".ses .tick");
   if (n >= 3) { sesList.forEach((t, k) => t.textContent = done[i].has(k) ? "✓" : ""); }
-  if (strokesFor(i) !== before) { renderInk(i, cell, before); }
+  const showMoment = state.mm === "always" || (state.mm === "today" && i === TODAY);
+  if (showMoment) { openMoment(i, before, () => renderInk(i, cell)); }
+  else if (strokesFor(i) !== before) { renderInk(i, cell, before); }
   else { squeak(70); if (state.hap && navigator.vibrate) { navigator.vibrate(8); } }
   updateStreak();
+}
+
+
+let momentTimer;
+function openMoment(i, before, onClose) {
+  const m = document.getElementById("moment"), card = document.getElementById("mcard"), big = document.getElementById("bigcell");
+  card.className = "mcard " + state.theme;
+  document.getElementById("mnum").textContent = i + 1;
+  document.getElementById("mnum").className = "num";
+  document.getElementById("mname").textContent = DAYS[i].join(" + ") || "Rest";
+  const cap = document.getElementById("mcap"), sub = document.getElementById("msub");
+  cap.classList.remove("on"); sub.classList.remove("on");
+  big.querySelector("svg.ink")?.remove();
+  m.classList.add("show");
+  const n = DAYS[i].length || 1, c = done[i].size;
+  let streak = 0; for (let k = TODAY; k >= 0; k--) { const rest = !DAYS[k].length, comp = done[k].size >= (DAYS[k].length || 1); if (rest) { continue; } if (comp) { streak++; } else if (k < TODAY) { break; } }
+  cap.textContent = `Day ${i + 1} of ${DAYS.length} · 🔥 ${streak}-day streak`;
+  sub.textContent = c < n ? `${c} of ${n} done` : "Day crossed off. Show up again tomorrow.";
+  requestAnimationFrame(() => {
+    renderInk(i, big, before);
+    const total = (strokesFor(i) - before) * state.dur + (before === 0 && strokesFor(i) === 2 ? state.gap : 0);
+    setTimeout(() => { cap.classList.add("on"); sub.classList.add("on"); if (state.hap && navigator.vibrate) { navigator.vibrate(25); } }, total + 60);
+    clearTimeout(momentTimer); momentTimer = setTimeout(close, total + 2500);
+  });
+  function close() { clearTimeout(momentTimer); m.classList.remove("show"); m.onclick = null; document.onkeydown = null; onClose(); }
+  m.onclick = close; document.onkeydown = e => { if (["Escape", "Enter", " "].includes(e.key)) { close(); } };
 }
 
 function updateStreak() {
@@ -262,6 +308,7 @@ function updateStreak() {
 
 function updatePrompt() {
   const parts = [];
+  if (state.mm !== DEFAULTS.mm) { parts.push(state.mm === "always" ? "show the full-screen cross moment on every cross, including backfilled days" : "never show the full-screen cross moment"); }
   if (state.theme !== DEFAULTS.theme) { parts.push(`default to the dark "chalkboard" surface`); }
   if (state.color !== DEFAULTS.color) { parts.push(`default marker color ${state.color} (${COLORS[state.color]})`); }
   if (state.dur !== DEFAULTS.dur) { parts.push(`${state.dur} ms per stroke (${state.dur < 150 ? "snappy" : state.dur > 260 ? "slow and deliberate" : "medium"})`); }
@@ -272,7 +319,7 @@ function updatePrompt() {
   if (state.snd !== DEFAULTS.snd) { parts.push(state.snd ? "marker sound on" : "no sound by default"); }
   if (state.sq !== DEFAULTS.sq) { parts.push(`squeak level ${state.sq}/10`); }
   if (state.hap !== DEFAULTS.hap) { parts.push(state.hap ? "haptic tick on" : "no haptics by default"); }
-  const base = "MarkerCrossControl: two hand-drawn quadratic-Bezier strokes per X, seeded by completion id, a faint wider under-stroke for ink bleed, animated via StrokeDashOffset with ease-out, marker sound + haptic tick per stroke; 2-session days draw '/' first then complete the X; 3+ sessions tick each and draw the X when all are done; reduced-motion shows the X instantly.";
+  const base = "Cross moment: full screen on phones, ~480px popup on larger screens, only when crossing today by default. MarkerCrossControl: two hand-drawn quadratic-Bezier strokes per X, seeded by completion id, a faint wider under-stroke for ink bleed, animated via StrokeDashOffset with ease-out, marker sound + haptic tick per stroke; 2-session days draw '/' first then complete the X; 3+ sessions tick each and draw the X when all are done; reduced-motion shows the X instantly.";
   document.getElementById("prompt").textContent = parts.length ? `${base}\nTune it to: ${parts.join("; ")}.` : `${base}\nKeep the defaults (marker red, 180 ms strokes, 90 ms gap, width 9, wobble 4, overshoot 8, sound + haptics on, paper surface).`;
 }
 
@@ -280,6 +327,7 @@ function sync() {
   for (const k of ["dur", "wid", "wob", "ov", "gap", "sq"]) { document.getElementById(k).value = state[k]; document.getElementById(k + "V").textContent = state[k]; }
   for (const k of ["snd", "hap", "rm"]) { document.getElementById(k).checked = state[k]; }
   document.querySelectorAll("[data-theme]").forEach(b => b.classList.toggle("on", b.dataset.theme === state.theme));
+  document.querySelectorAll("[data-mm]").forEach(b => b.classList.toggle("on", b.dataset.mm === state.mm));
   document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("on", b.dataset.c === state.color));
 }
 function updateAll() { sync(); render(); updatePrompt(); }
@@ -295,6 +343,7 @@ for (const [name, c] of Object.entries(COLORS)) {
   b.onclick = () => { state.color = name; updateAll(); }; sw.appendChild(b);
 }
 document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => { state.theme = b.dataset.theme; updateAll(); });
+document.querySelectorAll("[data-mm]").forEach(b => b.onclick = () => { state.mm = b.dataset.mm; updateAll(); });
 for (const k of ["dur", "wid", "wob", "ov", "gap", "sq"]) { document.getElementById(k).oninput = e => { state[k] = +e.target.value; updateAll(); }; }
 for (const k of ["snd", "hap", "rm"]) { document.getElementById(k).onchange = e => { state[k] = e.target.checked; updateAll(); }; }
 document.getElementById("reset").onclick = () => { done.forEach(s => s.clear()); render(); };
