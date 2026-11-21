@@ -21,4 +21,6 @@ public interface IAppPreferences
     CrossMomentMode CrossMomentMode { get; set; }
 
     CrossOffStyle CrossOffStyle { get; set; }
+
+    MarkerColor MarkerColor { get; set; }
 }

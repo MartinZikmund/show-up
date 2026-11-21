@@ -586,4 +586,31 @@
   <data name="TodayCrossOffFormat" xml:space="preserve">
     <value>Od&#353;krtnout {0}</value>
   </data>
+  <data name="MarkerColor" xml:space="preserve">
+    <value>Barva fixy</value>
+  </data>
+  <data name="MarkerColorDescription" xml:space="preserve">
+    <value>Čím odškrtáváš splněné dny</value>
+  </data>
+  <data name="MarkerColor_Auto" xml:space="preserve">
+    <value>Automaticky</value>
+  </data>
+  <data name="MarkerColor_Red" xml:space="preserve">
+    <value>Červená</value>
+  </data>
+  <data name="MarkerColor_Blue" xml:space="preserve">
+    <value>Modrá</value>
+  </data>
+  <data name="MarkerColor_Green" xml:space="preserve">
+    <value>Zelená</value>
+  </data>
+  <data name="MarkerColor_Purple" xml:space="preserve">
+    <value>Fialová</value>
+  </data>
+  <data name="MarkerColor_Orange" xml:space="preserve">
+    <value>Oranžová</value>
+  </data>
+  <data name="MarkerColor_Contrast" xml:space="preserve">
+    <value>Vysoký kontrast</value>
+  </data>
 </root>

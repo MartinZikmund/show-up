@@ -1,5 +1,7 @@
 using ShowUp.Core.Infrastructure;
+using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Messages;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
 using MZikmund.Toolkit.WinUI.Services;
@@ -13,6 +15,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IThemeManager _themeManager;
     private readonly IPreferences _preferences;
     private readonly IApplication _application;
+    private readonly IMessenger _messenger;
     private bool _isInitializing;
 
     public SettingsViewModel(
@@ -20,14 +23,17 @@ public partial class SettingsViewModel : ViewModelBase
         IAppPreferences appPreferences,
         IThemeManager themeManager,
         IPreferences preferences,
-        IApplication application)
+        IApplication application,
+        IMessenger messenger)
     {
+        _messenger = messenger;
         _localizer = localizer;
         _appPreferences = appPreferences;
         _themeManager = themeManager;
         _preferences = preferences;
         _application = application;
         PageTitle = _localizer["Settings"];
+        MarkerSwatches = [.. Enum.GetValues<MarkerColor>().Select(c => new MarkerSwatch(c, _localizer[$"MarkerColor_{c}"]))];
     }
 
     public override void OnNavigatedTo(object? parameter)
@@ -41,6 +47,7 @@ public partial class SettingsViewModel : ViewModelBase
             MarkerHapticsEnabled = _appPreferences.MarkerHapticsEnabled;
             CrossMomentMode = _appPreferences.CrossMomentMode;
             CrossOffStyle = _appPreferences.CrossOffStyle;
+            MarkerColor = _appPreferences.MarkerColor;
         }
         finally
         {
@@ -109,6 +116,44 @@ public partial class SettingsViewModel : ViewModelBase
         if (!_isInitializing)
         {
             _appPreferences.CrossOffStyle = value;
+        }
+    }
+
+    public MarkerSwatch[] MarkerSwatches { get; }
+
+    /// <summary>Whether the marker color picker is unlocked; Plan 3 wires this to the Personalization feature gate.</summary>
+    public bool CanChangeMarkerColor => true;
+
+    [ObservableProperty]
+    public partial MarkerColor MarkerColor { get; set; }
+
+    partial void OnMarkerColorChanged(MarkerColor value)
+    {
+        foreach (var swatch in MarkerSwatches)
+        {
+            swatch.IsSelected = swatch.Color == value;
+        }
+
+        if (_isInitializing)
+        {
+            return;
+        }
+
+        _appPreferences.MarkerColor = value;
+        _messenger.Send(new MarkerColorChangedMessage(value));
+    }
+
+    /// <summary>Two-way target for the picker; null while the selection is being cleared.</summary>
+    public MarkerSwatch? SelectedMarkerSwatch
+    {
+        get => MarkerSwatches.FirstOrDefault(s => s.Color == MarkerColor);
+        set
+        {
+            if (value is not null && CanChangeMarkerColor)
+            {
+                MarkerColor = value.Color;
+                OnPropertyChanged();
+            }
         }
     }
 

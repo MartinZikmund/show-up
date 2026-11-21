@@ -79,4 +79,13 @@ public sealed class AppPreferences : IAppPreferences
             : CrossOffStyle.DrawYourself;
         set => _preferences.Set(CrossOffStyleKey, (int)value);
     }
+
+    private const string MarkerColorKey = "MarkerColor";
+    public MarkerColor MarkerColor
+    {
+        get => _preferences.Get(MarkerColorKey, (int)MarkerColor.Auto) is var raw && Enum.IsDefined((MarkerColor)raw)
+            ? (MarkerColor)raw
+            : MarkerColor.Auto;
+        set => _preferences.Set(MarkerColorKey, (int)value);
+    }
 }

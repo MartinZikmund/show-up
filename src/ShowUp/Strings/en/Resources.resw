@@ -586,4 +586,31 @@
   <data name="TodayCrossOffFormat" xml:space="preserve">
     <value>Cross off {0}</value>
   </data>
+  <data name="MarkerColor" xml:space="preserve">
+    <value>Marker color</value>
+  </data>
+  <data name="MarkerColorDescription" xml:space="preserve">
+    <value>The ink you cross days off with</value>
+  </data>
+  <data name="MarkerColor_Auto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="MarkerColor_Red" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="MarkerColor_Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="MarkerColor_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="MarkerColor_Purple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="MarkerColor_Orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="MarkerColor_Contrast" xml:space="preserve">
+    <value>High contrast</value>
+  </data>
 </root>
