@@ -168,7 +168,8 @@ public partial class App : Application, IApplication
         services.AddSingleton<IDisplayRequestManager, DisplayRequestManager>();
         services.AddSingleton<IAppUpdater, Infrastructure.AppUpdater>();
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<IUserScope, AnonymousUserScope>();
+        services.AddSingleton<UserScope>();
+        services.AddSingleton<IUserScope>(sp => sp.GetRequiredService<UserScope>());
         services.AddSingleton<IDeviceIdProvider, PreferencesDeviceIdProvider>();
         services.AddSingleton(_ => new ShowUpDatabase(
             Path.Combine(ApplicationData.Current.LocalFolder.Path, "showup.db"),
