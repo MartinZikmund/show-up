@@ -1,0 +1,55 @@
+name: Supabase
+
+# Migrations, RLS (pgTAP) and advisors against a throwaway local stack on the runner.
+# Never touches a hosted project: CLI v3 targets the local stack unless --remote is passed.
+on:
+  pull_request:
+    branches: [ "main", "release/**" ]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase.yml"
+  push:
+    branches: [ "main" ]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    if: github.event.repository.private == false || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 3.2.0
+
+      # Only Postgres, Auth (auth schema/auth.uid()), the API gateway, PostgREST and postgres-meta.
+      - name: Start local stack
+        run: supabase start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Apply migrations from scratch
+        run: supabase db reset
+
+      - name: pgTAP tests
+        run: supabase test db
+
+      - name: Lint (plpgsql_check)
+        run: supabase db lint --level warning --fail-on error
+
+      - name: Advisors
+        run: supabase db advisors --type all --level info --fail-on error
+
+      - name: Stop local stack
+        if: always()
+        run: supabase stop --no-backup
