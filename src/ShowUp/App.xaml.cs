@@ -1,4 +1,4 @@
-using ShowUp.Core.Catalog;
+﻿using ShowUp.Core.Catalog;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
@@ -36,6 +36,10 @@ public partial class App : Application, IApplication
     public App()
     {
         this.InitializeComponent();
+#if !HAS_UNO
+        // Our HighContrast theme dictionary already maps every custom brush to system colors.
+        HighContrastAdjustment = ApplicationHighContrastAdjustment.None;
+#endif
     }
 
     protected Window? MainWindow { get; private set; }
@@ -131,7 +135,10 @@ public partial class App : Application, IApplication
         services.AddScoped<INavigationService>(sp =>
         {
             var service = new NavigationService(sp.GetRequiredService<IFrameProvider>());
-            service.RegisterView(typeof(Views.MainView), typeof(MainViewModel));
+            service.RegisterView(typeof(Views.TodayView), typeof(TodayViewModel));
+            service.RegisterView(typeof(Views.ProgramCalendarView), typeof(ProgramCalendarViewModel));
+            service.RegisterView(typeof(Views.ProgramsView), typeof(ProgramsViewModel));
+            service.RegisterView(typeof(Views.HistoryView), typeof(HistoryViewModel));
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             return service;
         });
@@ -140,7 +147,10 @@ public partial class App : Application, IApplication
         services.AddScoped<WindowShellViewModel>();
 
         // Transient ViewModels (new instance per navigation)
-        services.AddTransient<MainViewModel>();
+        services.AddTransient<TodayViewModel>();
+        services.AddTransient<ProgramCalendarViewModel>();
+        services.AddTransient<ProgramsViewModel>();
+        services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
     }
 

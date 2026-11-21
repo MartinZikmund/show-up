@@ -166,13 +166,31 @@
   <data name="ElementTheme_Dark" xml:space="preserve">
     <value>Dark</value>
   </data>
-  <data name="Home" xml:space="preserve">
-    <value>Home</value>
-  </data>
   <data name="RateAppTitle" xml:space="preserve">
     <value>Enjoying the app?</value>
   </data>
   <data name="RateAppMessage" xml:space="preserve">
     <value>If you enjoy using this app, would you mind taking a moment to rate it? Your feedback helps us improve!</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Calendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Programs" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="HistoryComingSoon" xml:space="preserve">
+    <value>Finished programs and bonus workouts will show up here. Coming soon.</value>
+  </data>
+  <data name="AboutDisclaimer" xml:space="preserve">
+    <value>Show Up is an independent app. It is not affiliated with, endorsed by, or sponsored by Bodi (formerly Beachbody) or any program creator. Program names are trademarks of their respective owners and are used only to identify the workout schedules they describe.</value>
+  </data>
+  <data name="SectionsTabBarName" xml:space="preserve">
+    <value>Sections</value>
   </data>
 </root>

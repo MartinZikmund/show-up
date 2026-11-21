@@ -1,4 +1,4 @@
-using ShowUp.Core.Navigation;
+﻿using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
@@ -6,7 +6,6 @@ using ShowUp.Services.Navigation;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
 using Microsoft.UI.Windowing;
-using Windows.Foundation.Metadata;
 
 namespace ShowUp;
 
@@ -15,7 +14,6 @@ public sealed partial class WindowShell : Page, IWindowShell
     private readonly IServiceScope _windowScope;
     private readonly Window _associatedWindow;
     private bool _isWindowClosed;
-    private ViewModelBase? _currentPageViewModel;
 
     public WindowShell(IServiceProvider serviceProvider, Window associatedWindow)
     {
@@ -42,7 +40,11 @@ public sealed partial class WindowShell : Page, IWindowShell
 
         InnerFrame.Navigated += InnerFrame_Navigated;
         Loading += WindowShell_Loading;
-        Loaded += (_, _) => UpdateStatusBarForeground();
+        Loaded += (_, _) =>
+        {
+            UpdateStatusBarForeground();
+            UpdateTitleBarPaneToggle(WidthStates.CurrentState);
+        };
         ActualThemeChanged += (_, _) => UpdateStatusBarForeground();
 
         UpdateWindowTitle();
@@ -60,60 +62,34 @@ public sealed partial class WindowShell : Page, IWindowShell
         {
             UpdateWindowTitle();
         }
+        else if (e.PropertyName == nameof(WindowShellViewModel.SelectedSection))
+        {
+            UpdateNavigationViewSelection();
+        }
     }
 
     private void UpdateWindowTitle()
     {
-        if (ViewModel.Title is not null && !_isWindowClosed)
+        if (_isWindowClosed)
         {
-            _associatedWindow.Title =
-                // Worktree builds carry their own package identity; showing the worktree here is what
-                // makes two simultaneously-running builds tellable apart in the taskbar and Alt-Tab.
-                AppEnvironment.WorktreeName is { Length: > 0 } worktree ? $"{ViewModel.Title} — {worktree}" :
-                ViewModel.Title;
+            return;
         }
+
+        var title = ServiceProvider.GetRequiredService<IStringLocalizer>()["ApplicationName"].Value;
+        if (ViewModel.Title is { Length: > 0 } section)
+        {
+            title = $"{section} · {title}";
+        }
+
+        // Worktree builds carry their own package identity; showing the worktree here is what
+        // makes two simultaneously-running builds tellable apart in the taskbar and Alt-Tab.
+        _associatedWindow.Title = AppEnvironment.WorktreeName is { Length: > 0 } worktree ? $"{title} — {worktree}" : title;
     }
 
     private void InnerFrame_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
-        // Unsubscribe from previous page's ViewModel
-        if (_currentPageViewModel is not null)
-        {
-            _currentPageViewModel.PropertyChanged -= PageViewModel_PropertyChanged;
-            _currentPageViewModel = null;
-        }
-
-        // Subscribe to new page's ViewModel for title updates
-        if (e.Content is FrameworkElement { DataContext: ViewModelBase pageViewModel })
-        {
-            _currentPageViewModel = pageViewModel;
-            _currentPageViewModel.PropertyChanged += PageViewModel_PropertyChanged;
-            UpdatePageTitle();
-        }
-        else
-        {
-            ViewModel.Title = ServiceProvider.GetRequiredService<IStringLocalizer>()["ApplicationName"];
-        }
-
-        ViewModel.NotifyCanGoBackChanged();
+        ViewModel.SyncWithNavigation();
         UpdateNavigationViewSelection();
-    }
-
-    private void PageViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ViewModelBase.PageTitle))
-        {
-            UpdatePageTitle();
-        }
-    }
-
-    private void UpdatePageTitle()
-    {
-        if (_currentPageViewModel is not null)
-        {
-            ViewModel.Title = _currentPageViewModel.PageTitle
-                ?? ServiceProvider.GetRequiredService<IStringLocalizer>()["ApplicationName"];
-        }
     }
 
     private void OnWindowClosed(object sender, WindowEventArgs args)
@@ -122,11 +98,6 @@ public sealed partial class WindowShell : Page, IWindowShell
         _associatedWindow.Closed -= OnWindowClosed;
         InnerFrame.Navigated -= InnerFrame_Navigated;
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-        if (_currentPageViewModel is not null)
-        {
-            _currentPageViewModel.PropertyChanged -= PageViewModel_PropertyChanged;
-            _currentPageViewModel = null;
-        }
     }
 
     // The Android theme asks for dark status bar icons, which vanish against the dark theme.
@@ -168,86 +139,70 @@ public sealed partial class WindowShell : Page, IWindowShell
             _associatedWindow.SetTitleBar(AppTitleBar);
         }
 #endif
-
-        if (ApiInformation.IsPropertyPresent("Microsoft.UI.Xaml.Window", "SystemBackdrop"))
-        {
-            _associatedWindow.SystemBackdrop = new MicaBackdrop();
-            Background = null;
-        }
     }
 
     #region Navigation
 
     private void NavView_Loaded(object sender, RoutedEventArgs e)
-        => NavigateToSection(NavigationSection.Main);
+        => ViewModel.NavigateToSection(NavigationSection.Today);
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.SelectedItemContainer is not NavigationViewItem item)
+        if (args.IsSettingsSelected)
         {
-            return;
+            ViewModel.NavigateToSection(NavigationSection.Settings);
         }
-
-        var tag = item.Tag?.ToString();
-        if (tag is null && item == (NavigationViewItem)sender.SettingsItem)
+        else if (args.SelectedItemContainer is NavigationViewItem { Tag: string tag }
+            && Enum.TryParse<NavigationSection>(tag, out var section))
         {
-            tag = NavigationSection.Settings.ToString();
-        }
-
-        if (Enum.TryParse<NavigationSection>(tag, out var section))
-        {
-            NavigateToSection(section);
-        }
-    }
-
-    private void NavigateToSection(NavigationSection section)
-    {
-        var nav = ServiceProvider.GetRequiredService<INavigationService>();
-        switch (section)
-        {
-            case NavigationSection.Main:
-                nav.Navigate<MainViewModel>();
-                break;
-            case NavigationSection.Settings:
-                nav.Navigate<SettingsViewModel>();
-                break;
-            default:
-                throw new NotSupportedException($"Navigation section not supported: {section}");
+            ViewModel.NavigateToSection(section);
         }
     }
 
     private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
     {
         var nav = ServiceProvider.GetRequiredService<INavigationService>();
-        if (nav.GoBack())
-        {
-            UpdateNavigationViewSelection();
-        }
+        nav.GoBack();
     }
 
 #if !HAS_UNO
     private void AppTitleBar_BackRequested(TitleBar sender, object args)
     {
         var nav = ServiceProvider.GetRequiredService<INavigationService>();
-        if (nav.GoBack())
-        {
-            UpdateNavigationViewSelection();
-        }
+        nav.GoBack();
     }
 
     private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
         => NavView.IsPaneOpen = !NavView.IsPaneOpen;
 #endif
 
+    // The TitleBar only exists on Windows, so its pane toggle follows the width state from code.
+    private void WidthStates_CurrentStateChanged(object sender, VisualStateChangedEventArgs e)
+        => UpdateTitleBarPaneToggle(e.NewState);
+
+    private void UpdateTitleBarPaneToggle(VisualState? widthState)
+    {
+#if !HAS_UNO
+        AppTitleBar.IsPaneToggleButtonVisible = widthState != Narrow;
+#endif
+    }
+
     private void UpdateNavigationViewSelection()
     {
-        var section = ServiceProvider.GetRequiredService<INavigationService>().CurrentSection;
-        NavView.SelectedItem = section switch
+        object? item = ViewModel.SelectedSection switch
         {
-            NavigationSection.Main => MainNavItem,
+            NavigationSection.Today => TodayNavItem,
+            NavigationSection.Calendar => CalendarNavItem,
+            NavigationSection.Programs => ProgramsNavItem,
+            NavigationSection.History => HistoryNavItem,
             NavigationSection.Settings => NavView.SettingsItem,
-            _ => NavView.SelectedItem,
+            _ => null,
         };
+
+        if (item is not null && !ReferenceEquals(NavView.SelectedItem, item))
+        {
+            NavView.SelectedItem = item;
+        }
     }
 
     #endregion

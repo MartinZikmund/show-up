@@ -1,0 +1,16 @@
+﻿<local:ProgramCalendarViewBase
+    x:Class="ShowUp.Views.ProgramCalendarView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ShowUp.Views">
+
+    <ScrollViewer>
+        <StackPanel Padding="{StaticResource PagePadding}" Spacing="8">
+            <TextBlock
+                AutomationProperties.AutomationId="ProgramCalendarHeader"
+                AutomationProperties.HeadingLevel="Level1"
+                Style="{StaticResource SectionHeaderTextBlockStyle}"
+                Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
+        </StackPanel>
+    </ScrollViewer>
+</local:ProgramCalendarViewBase>

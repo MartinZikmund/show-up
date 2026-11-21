@@ -2,6 +2,9 @@ namespace ShowUp.Core.Navigation;
 
 public enum NavigationSection
 {
-    Main,
+    Today,
+    Calendar,
+    Programs,
+    History,
     Settings,
 }

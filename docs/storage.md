@@ -41,5 +41,6 @@ The database file itself lives at `LocalFolder/showup.db`; the `db` folder is ju
 
 ## Debug check
 
-In DEBUG builds only (the VM members and the panel are compiled out of Release), the main page
-shows the bonus row count with an "Add row" button, and the view model logs `ShowUp storage: bonus rows = N` to the console on load.
+The DEBUG-only "bonus rows" panel used for this spike was removed when the real shell landed
+(Today replaced the template's main page). To re-check persistence, log a bonus workout from the app
+and reload.
