@@ -8,6 +8,7 @@ namespace ShowUp.Core.Tests.Storage;
 public class SqliteTrackingRepositoryTests : StorageTestBase
 {
     private static readonly DateOnly _today = new(2026, 12, 10);
+    private const int DayCount = 30;
 
     private async Task<(SqliteTrackingRepository Repo, EnrollmentEntity Enrollment)> EnrolledAsync()
     {
@@ -37,6 +38,68 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
         var connection = await Db.GetConnectionAsync();
         var row = await connection.Table<CompletionEntity>().FirstAsync();
         row.CompletedOnDayNumber.Should().Be(_today.DayNumber);
+    }
+
+    [TestMethod]
+    public async Task CrossSession_EndedEnrollment_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Abandoned);
+
+        Func<Task> act = () => repo.CrossSessionAsync(e.Id, 0, 0, _today);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task CrossSession_OtherUsersEnrollment_Throws()
+    {
+        User.CurrentUserId = "a";
+        var (repo, e) = await EnrolledAsync();
+        User.CurrentUserId = "b";
+
+        Func<Task> act = () => repo.CrossSessionAsync(e.Id, 0, 0, _today);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task CrossSession_NegativeIndex_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+
+        Func<Task> negativeDay = () => repo.CrossSessionAsync(e.Id, -1, 0, _today);
+        Func<Task> negativeSession = () => repo.CrossSessionAsync(e.Id, 0, -1, _today);
+
+        await negativeDay.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await negativeSession.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task UncrossSession_EndedEnrollment_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Finished);
+
+        Func<Task> act = () => repo.UncrossSessionAsync(e.Id, 0, 0);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task Recross_AfterUncross_AddsNewRowAndKeepsTombstone()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 0, 0, _today);
+        await repo.UncrossSessionAsync(e.Id, 0, 0);
+
+        await repo.CrossSessionAsync(e.Id, 0, 0, _today);
+
+        var connection = await Db.GetConnectionAsync();
+        var rows = await connection.Table<CompletionEntity>().ToListAsync();
+        rows.Should().HaveCount(2);
+        rows.Count(r => r.DeletedAt != null).Should().Be(1);
+        (await repo.GetCompletedSessionsAsync(e.Id)).Should().BeEquivalentTo([(0, 0)]);
     }
 
     [TestMethod]
@@ -146,10 +209,135 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     {
         var (repo, e) = await EnrolledAsync();
 
-        await repo.ShiftScheduleAsync(e.Id, new DateOnly(2026, 12, 5), 2);
+        await repo.ShiftScheduleAsync(e.Id, new DateOnly(2026, 12, 5), 2, DayCount);
 
         var shifts = await repo.GetShiftsAsync(e.Id);
         shifts.Should().BeEquivalentTo([new ScheduleShift(new DateOnly(2026, 12, 5), 2)]);
+    }
+
+    [TestMethod]
+    public async Task Shift_ZeroDays_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 0, DayCount);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_ThirtyOneDays_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 31, DayCount);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_FromTodayWithTodayCrossed_StartsTomorrow()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 9, 0, _today);
+
+        await repo.ShiftScheduleAsync(e.Id, _today, 2, DayCount);
+
+        var shifts = await repo.GetShiftsAsync(e.Id);
+        shifts.Should().BeEquivalentTo([new ScheduleShift(_today.AddDays(1), 2)]);
+        EnrollmentCalendar calendar = new(e.StartDate, DayCount, shifts);
+        calendar.DateOf(9).Should().Be(_today);
+        calendar.DateOf(10).Should().Be(_today.AddDays(3));
+    }
+
+    [TestMethod]
+    public async Task Shift_EndedEnrollment_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Abandoned);
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 1, DayCount);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_OtherUsersEnrollment_Throws()
+    {
+        User.CurrentUserId = "a";
+        var (repo, e) = await EnrolledAsync();
+        User.CurrentUserId = "b";
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 1, DayCount);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task Shift_ClampedPastCalendarEnd_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 9, 0, _today);
+
+        Func<Task> act = () => repo.ShiftScheduleAsync(e.Id, _today, 1, 10);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task GetShifts_SameCreatedAt_OrdersById()
+    {
+        var (repo, e) = await EnrolledAsync();
+        var connection = await Db.GetConnectionAsync();
+        Guid low = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid high = Guid.Parse("ffffffff-0000-0000-0000-000000000000");
+        foreach ((Guid id, int days) in new[] { (high, 5), (low, 3) })
+        {
+            await connection.InsertAsync(new ScheduleShiftEntity
+            {
+                Id = id,
+                EnrollmentId = e.Id,
+                FromDate = new DateOnly(2026, 12, 20),
+                Days = days,
+                CreatedAt = Time.GetUtcNow(),
+                UpdatedAt = Time.GetUtcNow(),
+                DeviceId = "d",
+            });
+        }
+
+        var shifts = await repo.GetShiftsAsync(e.Id);
+
+        shifts.Select(s => s.Days).Should().Equal(3, 5);
+    }
+
+    [TestMethod]
+    public async Task GetCompletions_DuplicateRows_KeepsEarliestDeterministically()
+    {
+        var (repo, e) = await EnrolledAsync();
+        Guid low = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid high = Guid.Parse("ffffffff-0000-0000-0000-000000000000");
+        Guid later = Guid.Parse("00000000-0000-0000-0000-000000000000");
+        await InsertCompletionAsync(e.Id, "a", high, Time.GetUtcNow());
+        await InsertCompletionAsync(e.Id, "b", low, Time.GetUtcNow());
+        await InsertCompletionAsync(e.Id, "c", later, Time.GetUtcNow().AddMinutes(5));
+
+        var completions = await repo.GetCompletionsAsync(e.Id);
+
+        completions.Should().ContainSingle().Which.CompletionId.Should().Be(low);
+    }
+
+    [TestMethod]
+    public async Task GetCompletions_ReturnsCompletedOnDate()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 3, 1, _today.AddDays(-2));
+
+        var completions = await repo.GetCompletionsAsync(e.Id);
+
+        completions.Should().ContainSingle();
+        completions[0].DayIndex.Should().Be(3);
+        completions[0].SessionIndex.Should().Be(1);
+        completions[0].CompletedOn.Should().Be(_today);
     }
 
     [TestMethod]
@@ -172,17 +360,20 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
         row.EndedAt.Should().Be(Time.GetUtcNow());
     }
 
-    private async Task InsertCompletionAsync(Guid enrollmentId, string deviceId)
+    private Task InsertCompletionAsync(Guid enrollmentId, string deviceId) =>
+        InsertCompletionAsync(enrollmentId, deviceId, Guid.NewGuid(), Time.GetUtcNow());
+
+    private async Task InsertCompletionAsync(Guid enrollmentId, string deviceId, Guid id, DateTimeOffset completedAt)
     {
         var connection = await Db.GetConnectionAsync();
         await connection.InsertAsync(new CompletionEntity
         {
-            Id = Guid.NewGuid(),
+            Id = id,
             EnrollmentId = enrollmentId,
             DayIndex = 1,
             SessionIndex = 0,
             CompletedOnDayNumber = _today.DayNumber,
-            CompletedAt = Time.GetUtcNow(),
+            CompletedAt = completedAt,
             CreatedAt = Time.GetUtcNow(),
             UpdatedAt = Time.GetUtcNow(),
             DeviceId = deviceId,

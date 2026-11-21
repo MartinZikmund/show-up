@@ -10,6 +10,8 @@ public sealed class SqliteTrackingRepository(
     IUserScope user,
     IDeviceIdProvider device) : ITrackingRepository
 {
+    private const int MaxShiftDays = 30;
+
     private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
     public async Task<EnrollmentEntity> EnrollAsync(string programId, int revision, string trackId, DateOnly startDate)
@@ -51,6 +53,9 @@ public sealed class SqliteTrackingRepository(
 
     public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(dayIndex);
+        ArgumentOutOfRangeException.ThrowIfNegative(sessionIndex);
+
         DateOnly today = Today;
         if (!CrossingPolicy.CanCross(dayDate, today))
         {
@@ -58,6 +63,7 @@ public sealed class SqliteTrackingRepository(
         }
 
         var connection = await db.GetConnectionAsync();
+        await RequireActiveEnrollmentAsync(connection, enrollmentId);
         var existing = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
         if (existing.Count > 0)
         {
@@ -78,6 +84,7 @@ public sealed class SqliteTrackingRepository(
     public async Task UncrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
         var connection = await db.GetConnectionAsync();
+        await RequireActiveEnrollmentAsync(connection, enrollmentId);
         var rows = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
         DateTimeOffset now = time.GetUtcNow();
         foreach (CompletionEntity row in rows)
@@ -90,9 +97,21 @@ public sealed class SqliteTrackingRepository(
 
     public async Task<IReadOnlySet<(int Day, int Session)>> GetCompletedSessionsAsync(Guid enrollmentId)
     {
+        var completions = await GetCompletionsAsync(enrollmentId);
+        return completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet();
+    }
+
+    public async Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId)
+    {
         var connection = await db.GetConnectionAsync();
         var rows = await QueryAsync<CompletionEntity>(connection, c => c.EnrollmentId == enrollmentId && c.DeletedAt == null);
-        return rows.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet();
+        return rows
+            .GroupBy(c => (c.DayIndex, c.SessionIndex))
+            .Select(g => g.OrderBy(c => c.CompletedAt).ThenBy(c => c.Id.ToString("D"), StringComparer.Ordinal).First())
+            .OrderBy(c => c.DayIndex)
+            .ThenBy(c => c.SessionIndex)
+            .Select(c => new CompletedSession(c.DayIndex, c.SessionIndex, c.Id, c.CompletedOn))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<ScheduleShift>> GetShiftsAsync(Guid enrollmentId)
@@ -101,13 +120,36 @@ public sealed class SqliteTrackingRepository(
         var rows = await QueryAsync<ScheduleShiftEntity>(connection, s => s.EnrollmentId == enrollmentId && s.DeletedAt == null);
         return rows
             .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.Id.ToString("D"), StringComparer.Ordinal)
             .Select(s => new ScheduleShift(s.FromDate, s.Days))
             .ToList();
     }
 
-    public async Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days)
+    public async Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days, int dayCount)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(days, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(days, MaxShiftDays);
+
         var connection = await db.GetConnectionAsync();
+        EnrollmentEntity enrollment = await RequireActiveEnrollmentAsync(connection, enrollmentId);
+
+        EnrollmentCalendar calendar = new(enrollment.StartDate, dayCount, await GetShiftsAsync(enrollmentId));
+        var completions = await GetCompletionsAsync(enrollmentId);
+        int lastCrossed = completions.Where(c => c.DayIndex < dayCount).Select(c => c.DayIndex).DefaultIfEmpty(-1).Max();
+        if (lastCrossed >= 0)
+        {
+            DateOnly earliest = calendar.DateOf(lastCrossed).AddDays(1);
+            if (fromDate < earliest)
+            {
+                fromDate = earliest;
+            }
+        }
+
+        if (fromDate > calendar.EndDate)
+        {
+            throw new InvalidOperationException($"Nothing left to shift from {fromDate}; the schedule ends on {calendar.EndDate}.");
+        }
+
         var entity = Stamp(new ScheduleShiftEntity
         {
             EnrollmentId = enrollmentId,
@@ -155,6 +197,17 @@ public sealed class SqliteTrackingRepository(
         row.DeletedAt = now;
         row.UpdatedAt = now;
         await connection.UpdateAsync(row);
+    }
+
+    private async Task<EnrollmentEntity> RequireActiveEnrollmentAsync(SQLiteAsyncConnection connection, Guid enrollmentId)
+    {
+        var row = await connection.FindAsync<EnrollmentEntity>(enrollmentId);
+        if (row is null || !IsVisible(row) || row.EndedAt is not null)
+        {
+            throw new InvalidOperationException($"Enrollment {enrollmentId} does not exist or is not active.");
+        }
+
+        return row;
     }
 
     private T Stamp<T>(T entity)

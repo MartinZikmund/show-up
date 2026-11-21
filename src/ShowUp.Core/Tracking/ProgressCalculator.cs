@@ -11,8 +11,7 @@ public static class ProgressCalculator
         IReadOnlySet<(int Day, int Session)> completed)
     {
         IReadOnlyList<ScheduleDay> days = track.Days;
-        int calendarDays = calendar.DayIndexOn(calendar.EndDate) is int last ? last + 1 : 0;
-        if (calendarDays != days.Count)
+        if (calendar.DayCount != days.Count)
         {
             throw new ArgumentException("Calendar day count must match the track's day count.", nameof(calendar));
         }

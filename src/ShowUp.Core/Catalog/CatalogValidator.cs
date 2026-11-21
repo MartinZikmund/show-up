@@ -9,19 +9,24 @@ public static partial class CatalogValidator
     public static IReadOnlyList<string> Validate(WorkoutCatalog catalog)
     {
         List<string> errors = new();
+        var allWorkouts = (catalog.Workouts ?? []).Where(w => w is not null).ToList();
+        var allPrograms = (catalog.Programs ?? []).Where(p => p is not null).ToList();
 
-        foreach (var dup in catalog.Workouts.GroupBy(w => w.Id).Where(g => g.Count() > 1))
+        foreach (var dup in allWorkouts.GroupBy(w => w.Id).Where(g => g.Count() > 1))
         {
             errors.Add($"Duplicate workout id '{dup.Key}'.");
         }
 
-        foreach (var dup in catalog.Programs.GroupBy(p => p.Id).Where(g => g.Count() > 1))
+        foreach (var dup in allPrograms.GroupBy(p => (p.Id, p.Revision)).Where(g => g.Count() > 1))
         {
-            errors.Add($"Duplicate program id '{dup.Key}'.");
+            errors.Add($"Duplicate program id '{dup.Key.Id}' revision {dup.Key.Revision}.");
         }
 
-        var workouts = catalog.WorkoutsById;
-        foreach (var program in catalog.Programs)
+        var workouts = allWorkouts
+            .Where(w => w.Id is not null)
+            .GroupBy(w => w.Id)
+            .ToDictionary(g => g.Key, g => g.First());
+        foreach (var program in allPrograms)
         {
             ValidateProgram(program, workouts, errors);
         }
@@ -33,37 +38,44 @@ public static partial class CatalogValidator
     {
         var p = $"Program '{program.Id}'";
 
-        if (!AccentColorRegex().IsMatch(program.AccentColor))
+        if (program.AccentColor is null || !AccentColorRegex().IsMatch(program.AccentColor))
         {
             errors.Add($"{p}: accent color '{program.AccentColor}' must look like #RRGGBB.");
         }
 
+        var sources = program.Sources ?? [];
         var minSources = program.Verification == VerificationLevel.Official ? 1 : 2;
-        if (program.Sources.Count < minSources)
+        if (sources.Count < minSources)
         {
-            errors.Add($"{p}: {program.Verification} programs need at least {minSources} source(s), found {program.Sources.Count}.");
+            errors.Add($"{p}: {program.Verification} programs need at least {minSources} source(s), found {sources.Count}.");
         }
 
-        if (program.Tracks.Count == 0)
+        var tracks = (program.Tracks ?? []).Where(t => t is not null).ToList();
+        if (tracks.Count == 0)
         {
             errors.Add($"{p}: has no tracks.");
         }
 
-        foreach (var track in program.Tracks)
+        foreach (var track in tracks)
         {
-            foreach (var phase in track.Phases)
+            foreach (var phase in (track.Phases ?? []).Where(ph => ph is not null))
             {
-                for (var w = 0; w < phase.Weeks.Count; w++)
+                var weeks = phase.Weeks ?? [];
+                for (var w = 0; w < weeks.Count; w++)
                 {
-                    var week = phase.Weeks[w];
+                    var week = weeks[w];
                     var where = $"{p}, track '{track.Id}', phase '{phase.Name}', week {w + 1}";
+                    var dayCount = week?.Days?.Count ?? 0;
 
-                    if (week.Days.Count is 0 or > MaxDaysPerWeek)
+                    if (dayCount is 0 or > MaxDaysPerWeek)
                     {
-                        errors.Add($"{where}: has {week.Days.Count} days, expected 1 to {MaxDaysPerWeek}.");
+                        errors.Add($"{where}: has {dayCount} days, expected 1 to {MaxDaysPerWeek}.");
                     }
 
-                    ValidateSessions(week, where, workouts, errors);
+                    if (week?.Days is not null)
+                    {
+                        ValidateSessions(week, where, workouts, errors);
+                    }
                 }
             }
         }
@@ -73,17 +85,17 @@ public static partial class CatalogValidator
     {
         for (var d = 0; d < week.Days.Count; d++)
         {
-            var sessions = week.Days[d].Sessions;
+            var sessions = week.Days[d]?.Sessions ?? [];
             if (sessions.Count == 0)
             {
                 errors.Add($"{where}, day {d + 1}: has no sessions.");
             }
 
-            foreach (var session in sessions)
+            foreach (var session in sessions.Where(s => s is not null))
             {
-                foreach (var id in (string[])[session.WorkoutId, .. session.Alternates ?? []])
+                foreach (var id in (string?[])[session.WorkoutId, .. session.Alternates ?? []])
                 {
-                    if (!workouts.ContainsKey(id))
+                    if (id is null || !workouts.ContainsKey(id))
                     {
                         errors.Add($"{where}, day {d + 1}: unknown workout '{id}'.");
                     }

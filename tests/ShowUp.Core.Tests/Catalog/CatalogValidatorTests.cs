@@ -68,6 +68,32 @@ public class CatalogValidatorTests
     }
 
     [TestMethod]
+    public void Validate_TwoRevisionsOfSameProgram_IsValid()
+    {
+        var errors = Validate(c => c with { Programs = [c.Programs[0], c.Programs[0] with { Revision = c.Programs[0].Revision + 1 }] });
+
+        errors.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Validate_DuplicateIdAndRevision_ReturnsError()
+    {
+        var errors = Validate(c => c with { Programs = [c.Programs[0], c.Programs[0] with { Name = "Other" }] });
+
+        errors.Should().ContainSingle(e => e.Contains("Duplicate program id"));
+    }
+
+    [TestMethod]
+    public void Validate_NullFieldsOnConstructedObjects_DoesNotThrow()
+    {
+        WorkoutProgram broken = new("p", 1, "P", "F", "D", null, null!, VerificationLevel.Official, null!, new DateOnly(2026, 1, 1), null!);
+
+        Func<IReadOnlyList<string>> act = () => CatalogValidator.Validate(new WorkoutCatalog(1, [], [broken]));
+
+        act.Should().NotThrow();
+    }
+
+    [TestMethod]
     public void Validate_DuplicateWorkoutIds_ReturnsError()
     {
         var errors = Validate(c => c with { Workouts = [.. c.Workouts, c.Workouts[0]] });

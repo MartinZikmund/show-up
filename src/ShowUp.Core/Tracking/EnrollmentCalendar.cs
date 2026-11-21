@@ -29,6 +29,8 @@ public sealed class EnrollmentCalendar
         }
     }
 
+    public int DayCount => _dates.Length;
+
     public DateOnly EndDate => _dates[^1];
 
     public DateOnly DateOf(int dayIndex)
