@@ -156,6 +156,7 @@ public partial class App : Application, IApplication
             new Uri(context.Configuration["Legal:PrivacyUrl"] is { Length: > 0 } privacy ? privacy : "https://github.com/MartinZikmund/show-up/blob/main/docs/privacy.md")));
         services.AddSingleton<IJournalService, JournalService>();
         services.AddSingleton<IScheduleQuery, ScheduleQuery>();
+        services.AddSingleton<LapseCoordinator>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services
@@ -176,7 +177,6 @@ public partial class App : Application, IApplication
         services.AddScoped<IJournalDialogs, JournalDialogService>();
         services.AddScoped<ICrossingCoordinator, CrossingCoordinator>();
         services.AddScoped<IPrimaryProgramPrompt, PrimaryProgramPrompt>();
-        services.AddScoped<LapseCoordinator>();
         services.AddScoped<ISectionNavigator>(sp => sp.GetRequiredService<WindowShellViewModel>());
         services.AddScoped<INavigationService>(sp =>
         {
@@ -214,9 +214,13 @@ public partial class App : Application, IApplication
     {
         var real = services.Last(d => d.ServiceType == typeof(IEntitlementService));
         services.Remove(real);
-        services.AddSingleton(sp => new DebugEntitlementOverride(real.ImplementationFactory is { } factory
-            ? (IEntitlementService)factory(sp)
-            : (IEntitlementService)ActivatorUtilities.CreateInstance(sp, real.ImplementationType!)));
+        services.AddSingleton(sp => new DebugEntitlementOverride(real switch
+        {
+            { ImplementationInstance: IEntitlementService instance } => instance,
+            { ImplementationFactory: { } factory } => (IEntitlementService)factory(sp),
+            { ImplementationType: { } type } => (IEntitlementService)ActivatorUtilities.CreateInstance(sp, type),
+            _ => throw new InvalidOperationException("The entitlement registration has no implementation."),
+        }));
         services.AddSingleton<IEntitlementService>(sp => sp.GetRequiredService<DebugEntitlementOverride>());
     }
 #endif

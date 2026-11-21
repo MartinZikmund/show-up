@@ -105,6 +105,13 @@ public sealed class AppPreferences : IAppPreferences
         set => _preferences.Set(LastKnownProExpiresKey, value?.UtcTicks ?? 0L);
     }
 
+    private const string SelectedEnrollmentIdKey = "SelectedEnrollmentId";
+    public Guid? SelectedEnrollmentId
+    {
+        get => Guid.TryParse(_preferences.Get(SelectedEnrollmentIdKey, ""), out var id) ? id : null;
+        set => _preferences.Set(SelectedEnrollmentIdKey, value?.ToString("D") ?? "");
+    }
+
     private const string UnitSystemKey = "UnitSystem";
     public UnitSystem UnitSystem
     {

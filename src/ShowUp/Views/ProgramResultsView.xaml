@@ -51,12 +51,13 @@
                         MinWidth="200"
                         AutomationProperties.AutomationId="ResultsProgramSwitcher"
                         AutomationProperties.Name="{markup:Localize Key=ProgramSwitcherLabel}"
+                        DropDownOpened="ProgramSwitcher_DropDownOpened"
                         ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}"
                         SelectedItem="{x:Bind ViewModel.SelectedProgram, Mode=TwoWay}"
                         Visibility="{x:Bind ViewModel.ShowProgramSwitcher, Mode=OneWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:ProgramOption">
-                                <TextBlock AutomationProperties.AutomationId="{x:Bind AutomationId}" Text="{x:Bind Name}" />
+                                <TextBlock Text="{x:Bind Name}" />
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>

@@ -35,6 +35,8 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
     private bool _isStarting;
     private ActiveEnrollment? _enrollment;
+    private IReadOnlyList<ActiveEnrollment> _all = [];
+    private bool _listening;
 
     public ProgramDetailViewModel(
         IStringLocalizer localizer,
@@ -86,7 +88,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsActiveProgram { get; private set; }
 
-    /// <summary>Free with another program running: starting this one replaces it, Pro runs both.</summary>
+    /// <summary>Free with another program running (starting this one replaces it), or this one is read-only after a lapse.</summary>
     [ObservableProperty]
     public partial bool ShowMultiProgramHint { get; private set; }
 
@@ -115,6 +117,12 @@ public partial class ProgramDetailViewModel : ViewModelBase
     public override void OnNavigatedTo(object? parameter)
     {
         base.OnNavigatedTo(parameter);
+        if (!_listening)
+        {
+            _listening = true;
+            _entitlements.Changed += OnEntitlementsChanged;
+        }
+
         if (parameter is string programId)
         {
             RunInBackground(() => LoadAsync(programId));
@@ -135,10 +143,10 @@ public partial class ProgramDetailViewModel : ViewModelBase
             }
 
             _workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
-            var all = await _enrollments.GetAllAsync();
-            _enrollment = all.FirstOrDefault(e => e.Program.Id == program.Id);
+            _all = await _enrollments.GetAllAsync();
+            _enrollment = _all.FirstOrDefault(e => e.Program.Id == program.Id);
             IsActiveProgram = _enrollment is not null;
-            ShowMultiProgramHint = !_entitlements.IsPro && all.Count > 0 && _enrollment is null;
+            UpdateMultiProgramHint();
             Program = program;
             PageTitle = program.Name;
             SelectedTrack = program.Tracks.FirstOrDefault();
@@ -160,16 +168,19 @@ public partial class ProgramDetailViewModel : ViewModelBase
     [RelayCommand]
     private void GoBack() => _navigation.GoBack();
 
-    [RelayCommand]
-    private async Task OpenResultsAsync()
+    public override void OnNavigatedFrom()
     {
-        if (_enrollment is { } enrollment)
+        base.OnNavigatedFrom();
+        if (_listening)
         {
-            await _enrollments.SelectAsync(enrollment.Id);
+            _listening = false;
+            _entitlements.Changed -= OnEntitlementsChanged;
         }
-
-        _navigation.Navigate<ProgramResultsViewModel>();
     }
+
+    /// <summary>Results of this program, without changing which program Calendar shows.</summary>
+    [RelayCommand]
+    private void OpenResults() => _navigation.Navigate<ProgramResultsViewModel>(_enrollment?.Id);
 
     [RelayCommand]
     private Task EditProgramNoteAsync() => _enrollment is { } enrollment ? _journalDialogs.EditProgramNoteAsync(enrollment.Id) : Task.CompletedTask;
@@ -194,6 +205,12 @@ public partial class ProgramDetailViewModel : ViewModelBase
             var all = await _enrollments.GetAllAsync();
             var replaced = all.FirstOrDefault(e => e.Program.Id == program.Id)
                 ?? (FeatureGate.MaxActivePrograms(_entitlements.IsPro) <= all.Count ? await _enrollments.GetPrimaryAsync() : null);
+            if (replaced is not null && _enrollments.IsReadOnly(replaced))
+            {
+                await _dialogs.ShowAsync(_localizer["ProgramReadOnlyRestartTitle"], _localizer["ProgramReadOnlyRestartMessage"]);
+                return;
+            }
+
             if (replaced is not null)
             {
                 var answer = await _confirmation.ShowAsync(
@@ -239,6 +256,13 @@ public partial class ProgramDetailViewModel : ViewModelBase
         DateOnly max = DateOnly.FromDateTime(MaxStartDate.DateTime);
         return picked < min ? min : picked > max ? max : picked;
     }
+
+    private void OnEntitlementsChanged(object? sender, EventArgs e) => UpdateMultiProgramHint();
+
+    private void UpdateMultiProgramHint() =>
+        ShowMultiProgramHint = !_entitlements.IsPro
+            && _all.Count > 0
+            && (_enrollment is null || _enrollments.IsReadOnly(_enrollment));
 
     partial void OnProgramChanged(WorkoutProgram? value) => StartCommand.NotifyCanExecuteChanged();
 

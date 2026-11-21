@@ -197,10 +197,12 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         return _context;
     }
 
-    // A subscription that runs out mid-session locks Pro features without waiting for the Store.
+    // At the cached end of a subscription, ask the Store again: a renewal keeps Pro, a real lapse (or no answer) locks it.
     private void WatchExpiry() =>
         _expiry.Schedule(
             _isPro ? _preferences.LastKnownProExpires : null,
+            RefreshAsync,
+            () => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow()),
             () => UiDispatch.Run(_dispatcher, () => SetPro(false, null)));
 
     // A SKU id looks like "9NXXXXXXXXXX/0010"; the configured ids are the product part.

@@ -21,6 +21,7 @@ public sealed class ActiveEnrollmentServiceTests
 
     private readonly WeakReferenceMessenger _messenger = new();
     private readonly FakeSyncedSettings _settings = new();
+    private readonly ShowUp.Core.Tests.ViewModels.FakeAppPreferences _preferences = new();
     private readonly FakeEntitlementService _entitlements = new() { IsPro = true };
     private readonly FakeTrackingRepository _repository;
     private readonly ActiveEnrollmentService _service;
@@ -29,7 +30,7 @@ public sealed class ActiveEnrollmentServiceTests
     {
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
         _repository = new(_time);
-        _service = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements);
+        _service = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements, _preferences);
     }
 
     [TestMethod]
@@ -203,13 +204,16 @@ public sealed class ActiveEnrollmentServiceTests
     }
 
     [TestMethod]
-    public async Task Select_Persists_SurvivesANewService()
+    public async Task Select_PersistsPerDevice_SurvivesANewServiceButIsNotSynced()
     {
         var a = await EnrollAsync("p");
         await EnrollAsync("q");
 
         await _service.SelectAsync(a.Id);
-        var reloaded = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements);
+        var reloaded = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements, _preferences);
+
+        _preferences.SelectedEnrollmentId.Should().Be(a.Id);
+        _settings.Values.Keys.Should().NotContain(k => k.Contains("selected"));
 
         (await reloaded.GetSelectedAsync())!.Id.Should().Be(a.Id);
         reloaded.SelectedEnrollmentId.Should().Be(a.Id);

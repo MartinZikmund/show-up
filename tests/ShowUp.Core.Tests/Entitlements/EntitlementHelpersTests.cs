@@ -72,7 +72,7 @@ public sealed class EntitlementHelpersTests
         using ExpiryWatch watch = new(time);
         var fired = 0;
 
-        watch.Schedule(Now.AddHours(2), () => fired++);
+        watch.Schedule(Now.AddHours(2), () => Task.CompletedTask, () => false, () => fired++);
         time.Advance(TimeSpan.FromHours(1));
         fired.Should().Be(0);
         time.Advance(TimeSpan.FromHours(2));
@@ -87,7 +87,7 @@ public sealed class EntitlementHelpersTests
         using ExpiryWatch watch = new(time);
         var fired = 0;
 
-        watch.Schedule(Now.AddDays(365), () => fired++);
+        watch.Schedule(Now.AddDays(365), () => Task.CompletedTask, () => false, () => fired++);
         time.Advance(TimeSpan.FromDays(364));
         fired.Should().Be(0);
         time.Advance(TimeSpan.FromDays(2));
@@ -102,8 +102,8 @@ public sealed class EntitlementHelpersTests
         using ExpiryWatch watch = new(time);
         List<string> fired = [];
 
-        watch.Schedule(Now.AddHours(1), () => fired.Add("old"));
-        watch.Schedule(null, () => fired.Add("none"));
+        watch.Schedule(Now.AddHours(1), () => Task.CompletedTask, () => false, () => fired.Add("old"));
+        watch.Schedule(null, () => Task.CompletedTask, () => false, () => fired.Add("none"));
         time.Advance(TimeSpan.FromHours(2));
 
         fired.Should().BeEmpty();

@@ -92,13 +92,16 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
     /// <summary>Every active program, for the switcher.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowProgramSwitcher))]
+    [NotifyPropertyChangedFor(nameof(ShowProgramSwitcher), nameof(ShowProgramTitle))]
     public partial IReadOnlyList<ProgramOption> Programs { get; private set; } = [];
 
     [ObservableProperty]
     public partial ProgramOption? SelectedProgram { get; set; }
 
     public bool ShowProgramSwitcher => Programs.Count > 1;
+
+    /// <summary>With several programs the switcher is the title.</summary>
+    public bool ShowProgramTitle => !ShowProgramSwitcher;
 
     /// <summary>Pro lapsed and this isn't the primary program: shown, not crossed.</summary>
     [ObservableProperty]

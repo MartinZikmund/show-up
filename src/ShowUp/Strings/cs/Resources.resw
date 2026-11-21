@@ -919,4 +919,10 @@
   <data name="ProCouldNotConfirm" xml:space="preserve">
     <value>Nákup se nepodařilo ověřit. Pokud vám byla stržena platba, Pro se brzy odemkne; ověřit to můžete klepnutím na Obnovit nákupy.</value>
   </data>
+  <data name="ProgramReadOnlyRestartTitle" xml:space="preserve">
+    <value>Tento program je jen pro čtení</value>
+  </data>
+  <data name="ProgramReadOnlyRestartMessage" xml:space="preserve">
+    <value>Verze Free nechá běžet jeden program, takže tento zůstane přesně tak, jak je, dokud se Pro nevrátí. Chcete-li ho začít znovu, odemkněte Pro.</value>
+  </data>
 </root>

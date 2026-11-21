@@ -15,7 +15,8 @@ How the app decides who is Pro, what each head does about it, and what to config
   otherwise the user is told to check back or tap Restore. A network or server error after checkout is `Unconfirmed`
   ("we couldn't confirm your purchase"). `SingleFlight` stops overlapping refreshes; a refresh asked for while one
   runs gets one trailing run, so it never returns state from before a purchase.
-- `ExpiryWatch` raises `Changed` when a cached subscription runs out mid-session (RevenueCat and Store).
+- `ExpiryWatch` rechecks the store when a cached subscription reaches its end mid-session (RevenueCat and Store):
+  a renewal keeps Pro, a real lapse (or no answer) raises `Changed`.
 - The paywall re-reads the manage-subscription link after a purchase or restore; lifetime owners get none.
 
 ## Per head

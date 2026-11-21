@@ -26,17 +26,23 @@
                             AutomationProperties.AutomationId="CalendarProgramName"
                             AutomationProperties.HeadingLevel="Level1"
                             Style="{StaticResource SectionHeaderTextBlockStyle}"
-                            Text="{x:Bind ViewModel.ProgramName, Mode=OneWay}" />
+                            Text="{x:Bind ViewModel.ProgramName, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.ShowProgramTitle, Mode=OneWay}" />
+                        <!--  Several programs: the switcher is the title  -->
                         <ComboBox
-                            MinWidth="200"
+                            MinWidth="240"
                             AutomationProperties.AutomationId="CalendarProgramSwitcher"
                             AutomationProperties.Name="{markup:Localize Key=ProgramSwitcherLabel}"
+                            DropDownOpened="ProgramSwitcher_DropDownOpened"
+                            FontFamily="{StaticResource DisplayFontFamily}"
+                            FontSize="28"
+                            FontWeight="SemiBold"
                             ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}"
                             SelectedItem="{x:Bind ViewModel.SelectedProgram, Mode=TwoWay}"
                             Visibility="{x:Bind ViewModel.ShowProgramSwitcher, Mode=OneWay}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="vm:ProgramOption">
-                                    <TextBlock AutomationProperties.AutomationId="{x:Bind AutomationId}" Text="{x:Bind Name}" />
+                                    <TextBlock Text="{x:Bind Name}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>

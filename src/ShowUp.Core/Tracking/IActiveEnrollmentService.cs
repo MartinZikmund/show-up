@@ -31,10 +31,10 @@ public interface IActiveEnrollmentService
     /// <summary>Null when it isn't active (ended, or never was).</summary>
     Task<ActiveEnrollment?> GetAsync(Guid enrollmentId);
 
-    /// <summary>The stored selection as of the last load (may name an ended enrollment).</summary>
+    /// <summary>This device's stored selection (may name an ended enrollment).</summary>
     Guid? SelectedEnrollmentId { get; }
 
-    /// <summary>Persists the selection (synced setting) and sends a <c>TrackingChangedMessage</c>.</summary>
+    /// <summary>Persists the selection on this device (not synced) and sends a <c>TrackingChangedMessage</c>.</summary>
     Task SelectAsync(Guid enrollmentId);
 
     /// <summary>The one a lapsed user keeps: the stored choice while it's active, else the most recently started.</summary>
@@ -58,7 +58,7 @@ public interface IActiveEnrollmentService
 
     /// <summary>
     /// Ends <paramref name="enrollmentId"/> and starts a new one atomically: a failed start leaves the old one active.
-    /// The new one is selected, and becomes primary if the old one was.
+    /// The new one is selected, and becomes primary if the old one was. A read-only enrollment throws <see cref="EnrollmentReadOnlyException"/>.
     /// </summary>
     Task<ActiveEnrollment> ReplaceAsync(Guid enrollmentId, EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate);
 

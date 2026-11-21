@@ -25,6 +25,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     private readonly SingleFlight _refresh = new();
     private readonly Dictionary<string, PackageDto> _packages = [];
     private readonly ExpiryWatch _expiry;
+    private volatile bool _recheckingExpiry;
     private bool _initialized;
 
     public RevenueCatEntitlementService(
@@ -45,7 +46,10 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         WatchExpiry();
     }
 
-    public bool IsPro => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow());
+    // While the expiry recheck asks the store, a renewing subscriber stays Pro.
+    public bool IsPro => _recheckingExpiry || CachedIsPro;
+
+    private bool CachedIsPro => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow());
 
     public bool PurchasesAvailable => _apiKey.Length > 0;
 
@@ -210,10 +214,23 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         return true;
     }
 
-    // A subscription that runs out mid-session locks Pro features without waiting for a refresh.
+    // At the cached end of a subscription, ask RevenueCat again: a renewal keeps Pro, a real lapse locks it mid-session.
     private void WatchExpiry() =>
         _expiry.Schedule(
             _preferences.LastKnownPro ? _preferences.LastKnownProExpires : null,
+            async () =>
+            {
+                _recheckingExpiry = true;
+                try
+                {
+                    await RefreshAsync();
+                }
+                finally
+                {
+                    _recheckingExpiry = false;
+                }
+            },
+            () => CachedIsPro,
             () => UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty)));
 
     private static ProOfferKind? KindOf(string identifier) => identifier switch

@@ -38,6 +38,7 @@ public sealed class ProgramCalendarViewModelTests
     private CountingEnrollmentService? _counting;
     private Guid _enrollmentId;
     private readonly FakeSyncedSettings _settings = new();
+    private readonly FakeAppPreferences _selection = new();
     private readonly ShowUp.Core.Tests.Entitlements.FakeEntitlementService _entitlements = new() { IsPro = true };
 
     public ProgramCalendarViewModelTests()
@@ -448,7 +449,7 @@ public sealed class ProgramCalendarViewModelTests
 
         viewModel.ProgramName.Should().Be("Program p r1");
         viewModel.Weeks.SelectMany(w => w.Days).Should().HaveCount(3);
-        _settings.Values[ActiveEnrollmentService.SelectedKey].Should().Be(p.ToString("D"));
+        _selection.SelectedEnrollmentId.Should().Be(p);
     }
 
     [TestMethod]
@@ -505,7 +506,7 @@ public sealed class ProgramCalendarViewModelTests
     private ProgramCalendarViewModel CreateViewModel(FakeCatalogService catalog)
     {
         WeakReferenceMessenger messenger = new();
-        _service = TestEnrollments.Create(_repository, catalog, messenger, _settings, _entitlements);
+        _service = TestEnrollments.Create(_repository, catalog, messenger, _settings, _entitlements, _selection);
         _counting = new(_service);
         return new(
             new FakeStringLocalizer(),

@@ -212,11 +212,13 @@ internal static class TestEnrollments
         ICatalogService catalog,
         CommunityToolkit.Mvvm.Messaging.IMessenger messenger,
         ISyncedSettings? settings = null,
-        ShowUp.Core.Entitlements.IEntitlementService? entitlements = null) =>
+        ShowUp.Core.Entitlements.IEntitlementService? entitlements = null,
+        ShowUp.Services.Settings.IAppPreferences? preferences = null) =>
         new(
             repository,
             catalog,
             settings ?? new FakeSyncedSettings(),
+            preferences ?? new ShowUp.Core.Tests.ViewModels.FakeAppPreferences(),
             entitlements ?? new ShowUp.Core.Tests.Entitlements.FakeEntitlementService { IsPro = true },
             messenger,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<ActiveEnrollmentService>.Instance);

@@ -919,4 +919,10 @@
   <data name="ProCouldNotConfirm" xml:space="preserve">
     <value>We couldn't confirm your purchase. If you were charged, Pro unlocks shortly; tap Restore purchases to check.</value>
   </data>
+  <data name="ProgramReadOnlyRestartTitle" xml:space="preserve">
+    <value>This program is read-only</value>
+  </data>
+  <data name="ProgramReadOnlyRestartMessage" xml:space="preserve">
+    <value>Free keeps one program going, so this one stays just as it is until Pro is back. Unlock Pro to restart it.</value>
+  </data>
 </root>

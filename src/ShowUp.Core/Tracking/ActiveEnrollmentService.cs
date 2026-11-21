@@ -4,24 +4,25 @@ using ShowUp.Core.Catalog;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
+using ShowUp.Services.Settings;
 
 namespace ShowUp.Core.Tracking;
 
 public sealed class ActiveEnrollmentService : IActiveEnrollmentService
 {
-    public const string SelectedKey = "selected-enrollment";
+    /// <summary>Synced: the program a lapsed user keeps is the same on every device.</summary>
     public const string PrimaryKey = "primary-enrollment";
 
     private readonly ITrackingRepository _repository;
     private readonly ICatalogService _catalog;
     private readonly ISyncedSettings _settings;
+    private readonly IAppPreferences _preferences;
     private readonly IEntitlementService _entitlements;
     private readonly IMessenger _messenger;
     private readonly ILogger<ActiveEnrollmentService> _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private IReadOnlyList<ActiveEnrollment> _all = [];
-    private Guid? _selectedId;
-    private Guid? _primaryId;
+    // Replaced whole after each load, so IsReadOnly (synchronous, any thread) never sees a half-updated state.
+    private volatile Snapshot _snapshot = new([], null);
     private int _version;
     private int _loadedVersion = -1;
 
@@ -29,6 +30,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         ITrackingRepository repository,
         ICatalogService catalog,
         ISyncedSettings settings,
+        IAppPreferences preferences,
         IEntitlementService entitlements,
         IMessenger messenger,
         ILogger<ActiveEnrollmentService> logger)
@@ -36,6 +38,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         _repository = repository;
         _catalog = catalog;
         _settings = settings;
+        _preferences = preferences;
         _entitlements = entitlements;
         _messenger = messenger;
         _logger = logger;
@@ -44,7 +47,8 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         _entitlements.Changed += (_, _) => _messenger.Send(new TrackingChangedMessage());
     }
 
-    public Guid? SelectedEnrollmentId => _selectedId;
+    /// <summary>Per device (<see cref="IAppPreferences"/>): each device's Calendar can show a different program.</summary>
+    public Guid? SelectedEnrollmentId => _preferences.SelectedEnrollmentId;
 
     public async Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync()
     {
@@ -55,13 +59,11 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
             var version = Volatile.Read(ref _version);
             if (_loadedVersion != version)
             {
-                _all = await LoadAsync();
-                _selectedId = ParseId(await _settings.GetAsync(SelectedKey));
-                _primaryId = ParseId(await _settings.GetAsync(PrimaryKey));
+                _snapshot = new(await LoadAsync(), ParseId(await _settings.GetAsync(PrimaryKey)));
                 _loadedVersion = version;
             }
 
-            return _all;
+            return _snapshot.All;
         }
         finally
         {
@@ -72,7 +74,8 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
     public async Task<ActiveEnrollment?> GetSelectedAsync()
     {
         var all = await GetAllAsync();
-        return all.FirstOrDefault(e => e.Id == _selectedId) ?? all.FirstOrDefault();
+        var selected = SelectedEnrollmentId;
+        return all.FirstOrDefault(e => e.Id == selected) ?? all.FirstOrDefault();
     }
 
     public async Task<ActiveEnrollment?> GetAsync(Guid enrollmentId) =>
@@ -85,20 +88,21 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
             throw new InvalidOperationException($"Enrollment {enrollmentId} is not active.");
         }
 
-        await _settings.SetAsync(SelectedKey, enrollmentId.ToString("D"));
-        NotifyChanged();
+        _preferences.SelectedEnrollmentId = enrollmentId;
+        _messenger.Send(new TrackingChangedMessage());
     }
 
     public async Task<ActiveEnrollment?> GetPrimaryAsync()
     {
-        var all = await GetAllAsync();
-        return Primary(all);
+        await GetAllAsync();
+        return _snapshot.Primary;
     }
 
     public async Task<bool> HasPrimaryChoiceAsync()
     {
-        var all = await GetAllAsync();
-        return all.Any(e => e.Id == _primaryId);
+        await GetAllAsync();
+        var snapshot = _snapshot;
+        return snapshot.All.Any(e => e.Id == snapshot.PrimaryId);
     }
 
     public async Task SetPrimaryAsync(Guid enrollmentId)
@@ -115,10 +119,10 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
     public bool IsReadOnly(ActiveEnrollment enrollment)
     {
         ArgumentNullException.ThrowIfNull(enrollment);
-        var all = _all;
+        var snapshot = _snapshot;
         return !_entitlements.IsPro
-            && all.Count > FeatureGate.MaxActivePrograms(isPro: false)
-            && Primary(all)?.Id != enrollment.Id;
+            && snapshot.All.Count > FeatureGate.MaxActivePrograms(isPro: false)
+            && snapshot.Primary?.Id != enrollment.Id;
     }
 
     public async Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId) =>
@@ -140,7 +144,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         }
 
         var created = await _repository.EnrollAsync(program.Id, program.Revision, track.Id, startDate);
-        await _settings.SetAsync(SelectedKey, created.Id.ToString("D"));
+        _preferences.SelectedEnrollmentId = created.Id;
         NotifyChanged();
         return await GetAsync(created.Id) ?? throw new InvalidOperationException($"Enrollment in '{program.Id}' could not be resolved.");
     }
@@ -150,8 +154,9 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         ArgumentNullException.ThrowIfNull(program);
         ArgumentNullException.ThrowIfNull(track);
 
-        var old = await RequireAsync(enrollmentId);
-        var wasPrimary = _primaryId == old.Id;
+        // A read-only program stays as it was until Pro is back; restarting it would edit it.
+        var old = await RequireWritableAsync(enrollmentId);
+        var wasPrimary = _snapshot.PrimaryId == old.Id;
         EnrollmentEntity created;
         try
         {
@@ -163,7 +168,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
             throw;
         }
 
-        await _settings.SetAsync(SelectedKey, created.Id.ToString("D"));
+        _preferences.SelectedEnrollmentId = created.Id;
         if (wasPrimary)
         {
             await _settings.SetAsync(PrimaryKey, created.Id.ToString("D"));
@@ -218,9 +223,6 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         NotifyChanged();
     }
 
-    private ActiveEnrollment? Primary(IReadOnlyList<ActiveEnrollment> all) =>
-        all.FirstOrDefault(e => e.Id == _primaryId) ?? all.FirstOrDefault();
-
     private async Task<ActiveEnrollment> RequireAsync(Guid enrollmentId) =>
         await GetAsync(enrollmentId) ?? throw new InvalidOperationException($"Enrollment {enrollmentId} is not active.");
 
@@ -267,6 +269,12 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         }
 
         return result;
+    }
+
+    private sealed record Snapshot(IReadOnlyList<ActiveEnrollment> All, Guid? PrimaryId)
+    {
+        /// <summary>The stored choice while it's active, else the most recently started.</summary>
+        public ActiveEnrollment? Primary { get; } = All.FirstOrDefault(e => e.Id == PrimaryId) ?? All.FirstOrDefault();
     }
 
     private void NotifyChanged()

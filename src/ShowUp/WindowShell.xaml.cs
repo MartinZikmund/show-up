@@ -57,7 +57,7 @@ public sealed partial class WindowShell : Page, IWindowShell
 
     public IServiceProvider ServiceProvider => _windowScope.ServiceProvider;
 
-    // Pro lapsing with several programs running asks once which one stays primary.
+    // Pro lapsing with several programs running asks once (app-wide) which one stays primary.
     private void WatchForLapse()
     {
         if (_lapseWatch is not null)
@@ -65,9 +65,7 @@ public sealed partial class WindowShell : Page, IWindowShell
             return;
         }
 
-        var lapse = ServiceProvider.GetRequiredService<LapseCoordinator>();
-        _lapseWatch = lapse.Watch();
-        _ = lapse.CheckAsync();
+        _lapseWatch = ServiceProvider.GetRequiredService<LapseCoordinator>().Attach(ServiceProvider.GetRequiredService<IPrimaryProgramPrompt>());
     }
 
     public WindowShellViewModel ViewModel { get; }

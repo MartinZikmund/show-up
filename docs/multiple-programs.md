@@ -22,9 +22,11 @@ program's sheet. `IJournalDialogs` methods take the id too.
 ## The selected program
 
 Calendar and Results show one program at a time: `GetSelectedAsync()` returns the stored selection
-while it's active, else the newest. `SelectAsync(id)` writes the synced setting
-`selected-enrollment` (newest write wins across devices). Both pages show a program `ComboBox`
-(`ProgramOption`) when more than one program runs. Starting a program selects it.
+while it's active, else the newest. The selection is per device (`IAppPreferences.SelectedEnrollmentId`,
+not synced), so a phone and a laptop can each show a different program. With more than one program
+running, a program `ComboBox` (`ProgramOption`) replaces the Calendar title; Results has one too.
+Starting a program selects it. A program's page opens Results for that program
+(`Navigate<ProgramResultsViewModel>(enrollmentId)`) without changing the selection.
 
 ## Today
 
@@ -42,8 +44,10 @@ replaces. `EnrollAsync` itself refuses a second program for Free.
 
 Nothing is deleted. With more programs running than Free allows:
 
-- `LapseCoordinator` (per window, started from `WindowShell`) asks once which program stays
-  primary (`IPrimaryProgramPrompt`, a `ContentDialog`). Dismissing keeps the most recently started.
+- `LapseCoordinator` (app-wide singleton; each `WindowShell` attaches its `IPrimaryProgramPrompt`)
+  asks once which program stays primary. It waits for the first entitlement refresh after launch, so a
+  subscription that renewed while the app was closed never prompts. Dismissing keeps the most recently
+  started.
   The choice is the synced setting `primary-enrollment`; while it names an active enrollment the
   prompt doesn't come back.
 - `IsReadOnly(enrollment)` is true for the others. Crossing, uncrossing, shifting and journal writes
@@ -51,8 +55,11 @@ Nothing is deleted. With more programs running than Free allows:
   several programs", the day sheet and program note open without Save.
 - Getting Pro back clears read-only at once: the service re-sends `TrackingChangedMessage` on every
   `IEntitlementService.Changed`.
+- At a cached subscription's end mid-session, the Store and RevenueCat services ask the store again
+  (`ExpiryWatch`) and only lock when the answer is still "not Pro" or the store can't be reached.
 
-Replacing the primary program makes the new one primary.
+Replacing the primary program makes the new one primary. A read-only program can't be restarted
+(Program detail explains why and shows the Pro link).
 
 ## Trying it out
 

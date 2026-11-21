@@ -27,7 +27,8 @@ public sealed class LapseCoordinatorTests
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
         _repository = new(_time);
         _service = TestEnrollments.Create(_repository, _catalog, new WeakReferenceMessenger(), _settings, _entitlements);
-        _coordinator = new(_service, _entitlements, _prompt, NullLogger<LapseCoordinator>.Instance);
+        _coordinator = new(_service, _entitlements, NullLogger<LapseCoordinator>.Instance);
+        _coordinator.Attach(_prompt);
     }
 
     [TestMethod]
@@ -80,10 +81,9 @@ public sealed class LapseCoordinatorTests
     }
 
     [TestMethod]
-    public async Task Watch_ProFlipsFalse_Asks()
+    public async Task Changed_ProFlipsFalse_Asks()
     {
         await EnrollTwoAsync();
-        using var watch = _coordinator.Watch();
 
         _entitlements.SetPro(false);
         await _prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));

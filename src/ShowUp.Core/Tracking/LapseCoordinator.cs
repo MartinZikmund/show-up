@@ -7,39 +7,80 @@ namespace ShowUp.Core.Tracking;
 /// <summary>
 /// When Pro lapses with more programs running than Free allows, asks once which one stays primary;
 /// the others turn read-only. Dismissing keeps the most recently started one. Nothing is deleted.
+/// App-wide: one prompt however many windows are open, shown in the window attached last.
 /// </summary>
-public sealed class LapseCoordinator(
-    IActiveEnrollmentService enrollments,
-    IEntitlementService entitlements,
-    IPrimaryProgramPrompt prompt,
-    ILogger<LapseCoordinator> logger)
+public sealed class LapseCoordinator
 {
+    private readonly IActiveEnrollmentService _enrollments;
+    private readonly IEntitlementService _entitlements;
+    private readonly ILogger<LapseCoordinator> _logger;
+    private readonly object _gate = new();
+    private readonly List<IPrimaryProgramPrompt> _prompts = [];
+    private Task? _firstRefresh;
     private int _running;
+
+    public LapseCoordinator(IActiveEnrollmentService enrollments, IEntitlementService entitlements, ILogger<LapseCoordinator> logger)
+    {
+        _enrollments = enrollments;
+        _entitlements = entitlements;
+        _logger = logger;
+        _entitlements.Changed += (_, _) => _ = CheckWhenSettledAsync();
+    }
+
+    /// <summary>
+    /// Lets a window show the prompt, and on the first call checks once the store has answered: a cached
+    /// "not Pro" at launch may be a subscription that renewed while the app was closed.
+    /// </summary>
+    /// <returns>Dispose when the window closes.</returns>
+    public IDisposable Attach(IPrimaryProgramPrompt prompt)
+    {
+        ArgumentNullException.ThrowIfNull(prompt);
+        lock (_gate)
+        {
+            _prompts.Add(prompt);
+            _firstRefresh ??= RefreshQuietlyAsync();
+        }
+
+        _ = CheckWhenSettledAsync();
+        return new Detacher(() =>
+        {
+            lock (_gate)
+            {
+                _prompts.Remove(prompt);
+            }
+        });
+    }
 
     /// <returns>True when the prompt was shown.</returns>
     public async Task<bool> CheckAsync()
     {
-        if (entitlements.IsPro || Interlocked.Exchange(ref _running, 1) == 1)
+        IPrimaryProgramPrompt? prompt;
+        lock (_gate)
+        {
+            prompt = _prompts.LastOrDefault();
+        }
+
+        if (prompt is null || _entitlements.IsPro || Interlocked.Exchange(ref _running, 1) == 1)
         {
             return false;
         }
 
         try
         {
-            var all = await enrollments.GetAllAsync();
-            if (all.Count <= FeatureGate.MaxActivePrograms(isPro: false) || await enrollments.HasPrimaryChoiceAsync())
+            var all = await _enrollments.GetAllAsync();
+            if (all.Count <= FeatureGate.MaxActivePrograms(isPro: false) || await _enrollments.HasPrimaryChoiceAsync())
             {
                 return false;
             }
 
-            var suggested = (await enrollments.GetPrimaryAsync())!.Id;
+            var suggested = (await _enrollments.GetPrimaryAsync())!.Id;
             var picked = await prompt.PickAsync(all, suggested);
-            await enrollments.SetPrimaryAsync(picked is { } id && all.Any(e => e.Id == id) ? id : suggested);
+            await _enrollments.SetPrimaryAsync(picked is { } id && all.Any(e => e.Id == id) ? id : suggested);
             return true;
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            logger.LogWarning(ex, "Choosing the primary program failed.");
+            _logger.LogWarning(ex, "Choosing the primary program failed.");
             return false;
         }
         finally
@@ -48,16 +89,37 @@ public sealed class LapseCoordinator(
         }
     }
 
-    /// <summary>Runs <see cref="CheckAsync"/> whenever Pro may have lapsed; dispose to stop.</summary>
-    public IDisposable Watch()
+    private async Task<bool> CheckWhenSettledAsync()
     {
-        EventHandler handler = (_, _) => _ = CheckAsync();
-        entitlements.Changed += handler;
-        return new Unsubscriber(() => entitlements.Changed -= handler);
+        Task? first;
+        lock (_gate)
+        {
+            first = _firstRefresh;
+        }
+
+        if (first is null)
+        {
+            return false;
+        }
+
+        await first;
+        return await CheckAsync();
     }
 
-    private sealed class Unsubscriber(Action dispose) : IDisposable
+    private async Task RefreshQuietlyAsync()
     {
-        public void Dispose() => dispose();
+        try
+        {
+            await _entitlements.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Refreshing Pro before the lapse check failed.");
+        }
+    }
+
+    private sealed class Detacher(Action detach) : IDisposable
+    {
+        public void Dispose() => detach();
     }
 }

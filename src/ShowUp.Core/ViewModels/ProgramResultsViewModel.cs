@@ -55,6 +55,8 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private bool _isRegistered;
     private bool _syncingSelection;
     private Guid? _enrollmentId;
+    private Guid? _requestedId;
+    private int _ownWrites;
 
     public ProgramResultsViewModel(
         IJournalService journal,
@@ -107,6 +109,13 @@ public partial class ProgramResultsViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool ShowEmptyState { get; private set; }
 
+    /// <param name="parameter">An enrollment id to show instead of the selected program (from a program's page).</param>
+    public override void OnNavigatedTo(object? parameter)
+    {
+        base.OnNavigatedTo(parameter);
+        _requestedId = parameter as Guid?;
+    }
+
     public override void ViewLoaded()
     {
         base.ViewLoaded();
@@ -123,7 +132,14 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private void Register()
     {
         _messenger.Register<ProgramResultsViewModel, JournalChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.LoadAsync)));
-        _messenger.Register<ProgramResultsViewModel, TrackingChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.LoadAsync)));
+        _messenger.Register<ProgramResultsViewModel, TrackingChangedMessage>(this, static (r, _) =>
+        {
+            // Our own selection change reloads by itself.
+            if (Volatile.Read(ref r._ownWrites) == 0)
+            {
+                r.Post(() => r.RunInBackground(r.LoadAsync));
+            }
+        });
     }
 
     public override void ViewUnloaded()
@@ -149,7 +165,8 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private async Task LoadCoreAsync()
     {
         var all = await _enrollments.GetAllAsync();
-        var active = await _enrollments.GetSelectedAsync();
+        var active = (_requestedId is { } requested ? all.FirstOrDefault(e => e.Id == requested) : null)
+            ?? await _enrollments.GetSelectedAsync();
         _enrollmentId = active?.Id;
         HasEnrollment = active is not null;
         ProgramName = active?.Program.Name ?? "";
@@ -175,6 +192,8 @@ public partial class ProgramResultsViewModel : ViewModelBase
             return;
         }
 
+        _requestedId = null;
+        Interlocked.Increment(ref _ownWrites);
         try
         {
             await _enrollments.SelectAsync(option.Id);
@@ -182,6 +201,10 @@ public partial class ProgramResultsViewModel : ViewModelBase
         catch (InvalidOperationException)
         {
             // It ended under us; the reload shows what's true now.
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _ownWrites);
         }
 
         await LoadAsync();

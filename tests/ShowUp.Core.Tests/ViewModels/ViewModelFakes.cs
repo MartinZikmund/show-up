@@ -113,6 +113,8 @@ internal sealed class FakeAppPreferences : IAppPreferences
     public bool LastKnownPro { get; set; }
 
     public DateTimeOffset? LastKnownProExpires { get; set; }
+
+    public Guid? SelectedEnrollmentId { get; set; }
 }
 
 internal sealed class RecordingJournalDialogs : IJournalDialogs
