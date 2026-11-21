@@ -182,8 +182,13 @@ generation, so it is trim and AOT safe. It only knows what the app needs.
   the local session is always cleared). The Magic Link email template must include `{{ .Token }}` or users get a
   link instead of a code. `Current` is the `Session`; `SessionChanged` fires on sign-in, refresh and sign-out.
 - Refresh is proactive (the access token expires within 60 s) and reactive (a 401 refreshes once and retries once).
-  Concurrent callers share one refresh. A refresh token the server rejects signs the device out; a network or
-  server error keeps the session.
+  Concurrent callers share one refresh (a caller that cancels only stops waiting). Only a real GoTrue rejection
+  signs the device out: HTTP 400/401 with `error_code` `refresh_token_not_found`, `refresh_token_already_used`,
+  `session_not_found`, `session_expired`, `bad_jwt`, `user_not_found` or `user_banned` (or `error: invalid_grant`).
+  Anything else (network, timeout, 5xx, a proxy's 403) keeps the session and throws. A refresh result is applied
+  only if the session it started from is still current, so a sign-out or a new sign-in during a refresh wins.
+  `SessionChanged` is raised off the UI thread and not by `RestoreAsync`. `SupabaseOptions.IsConfigured` accepts
+  https, or http only for `localhost` / `127.0.0.1` (the local stack).
 - `ISupabaseRest` is what the sync engine uses. Rows go in and out as `JsonTypeInfo<T>` from a source-generated
   context, so no reflection: `UpsertAsync` posts to `/rest/v1/{table}?on_conflict=id` with
   `Prefer: resolution=merge-duplicates,return=representation` and returns the stored rows (a stale update comes
@@ -201,14 +206,23 @@ generation, so it is trim and AOT safe. It only knows what the app needs.
 
 | Head | Store | Notes |
 |---|---|---|
-| Windows, packaged | Credential Locker (`PasswordVault`) | split into 400-character credentials: one credential can't hold a session |
-| Windows, unpackaged; Desktop on Windows | `FileTokenStore` in `LocalFolder` + DPAPI | current user only |
+| Windows (packaged or not); Desktop on Windows | `FileTokenStore` in `LocalFolder` + DPAPI | current user, this machine only; no roaming and no shared locker. `LocalFolder` is already per-identity, so worktree builds don't share a session |
 | Desktop on macOS and Linux | `FileTokenStore` in `LocalFolder`, plain | created `0600` (owner only); no keychain integration yet |
 | Android | `FileTokenStore` + AES-GCM with a non-exportable Android Keystore key | `EncryptedSharedPreferences` needs an extra AndroidX package and is deprecated; a restored backup has no key and reads as signed out |
-| iOS | Keychain (`SecKeyChain`) | `AfterFirstUnlockThisDeviceOnly` |
+| iOS | Keychain (`SecKeyChain`) | `AfterFirstUnlockThisDeviceOnly`; Keychain items survive an uninstall, so a reinstall can find the old session |
 | WebAssembly | `localStorage` | **XSS caveat:** any script on the origin can read it; the browser has no secure store. Load no third-party scripts |
 
 A file or keychain entry that cannot be decrypted reads as "signed out", never as an error.
+
+### Hand-off for the sync engine (Task 4)
+
+- **Overlap on the first page of a sync.** Start each pull with the cursor minus a few seconds (cursor only, no
+  `lastId`: `server_updated_at=gte.`), then keep paging with `(server_updated_at, id)` from the last row. A
+  transaction that committed late can show up just below the stored cursor; applying a row twice is harmless.
+- **Row contexts serialize every key.** Do not use `DefaultIgnoreCondition = WhenWritingNull` on the row
+  `JsonSerializerContext`: a batch upsert with different key sets per row fails with PostgREST `PGRST102` (all
+  objects must have the same keys), and a null has to reach the server to clear a column such as `deleted_at`.
+- Chunk big upserts (`UpsertAsync` sends what it is given), and make row records with an `Id` property `partial`.
 
 ## Hosted project
 
