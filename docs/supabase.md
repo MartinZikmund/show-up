@@ -29,7 +29,7 @@ unless you pass `--remote`, so none of these touch a hosted project.
 npx supabase@3 start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
 npx supabase@3 db reset          # re-applies every migration from scratch
 npx supabase@3 test db           # pgTAP
-npx supabase@3 db lint --fail-on error
+npx supabase@3 db lint -s public,private --fail-on error
 npx supabase@3 db advisors --type all --fail-on error
 npx supabase@3 stop --no-backup
 ```

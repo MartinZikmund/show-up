@@ -45,7 +45,7 @@ jobs:
         run: supabase test db
 
       - name: Lint (plpgsql_check)
-        run: supabase db lint --level warning --fail-on error
+        run: supabase db lint -s public,private --level warning --fail-on error
 
       - name: Advisors
         run: supabase db advisors --type all --level info --fail-on error
