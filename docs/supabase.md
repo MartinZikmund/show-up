@@ -183,7 +183,7 @@ generation, so it is trim and AOT safe. It only knows what the app needs.
   link instead of a code. `Current` is the `Session`; `SessionChanged` fires on sign-in, refresh and sign-out.
 - Refresh is proactive (the access token expires within 60 s) and reactive (a 401 refreshes once and retries once).
   Concurrent callers share one refresh (a caller that cancels only stops waiting). Only a real GoTrue rejection
-  signs the device out: HTTP 400/401 with `error_code` `refresh_token_not_found`, `refresh_token_already_used`,
+  signs the device out: HTTP 400, 401 or 403 with `error_code` `refresh_token_not_found`, `refresh_token_already_used`,
   `session_not_found`, `session_expired`, `bad_jwt`, `user_not_found` or `user_banned` (or `error: invalid_grant`).
   Anything else (network, timeout, 5xx, a proxy's 403) keeps the session and throws. A refresh result is applied
   only if the session it started from is still current, so a sign-out or a new sign-in during a refresh wins.
