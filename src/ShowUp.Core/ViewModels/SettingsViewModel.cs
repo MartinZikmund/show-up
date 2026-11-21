@@ -140,6 +140,7 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnMarkerColorChanged(MarkerColor value)
     {
         SyncSwatches();
+        OnPropertyChanged(nameof(SelectedMarkerSwatch));
         if (_isInitializing)
         {
             return;
@@ -158,7 +159,6 @@ public partial class SettingsViewModel : ViewModelBase
             if (value is not null && CanChangeMarkerColor)
             {
                 MarkerColor = value.Color;
-                OnPropertyChanged();
             }
         }
     }

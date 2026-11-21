@@ -1,25 +1,17 @@
 using ShowUp.Core.Marking;
-using Microsoft.UI.Xaml.Shapes;
 
 namespace ShowUp.Controls;
 
-/// <summary>A round sample of a <see cref="MarkerColor"/> as it looks in the current theme.</summary>
-public sealed partial class MarkerSwatchDot : Grid
+/// <summary>A round sample of a <see cref="MarkerColor"/>; Auto is split because it has no single color.</summary>
+public sealed partial class MarkerSwatchDot : UserControl
 {
     public static readonly DependencyProperty ColorProperty = DependencyProperty.Register(
         nameof(Color), typeof(MarkerColor), typeof(MarkerSwatchDot),
         new PropertyMetadata(MarkerColor.Auto, (d, _) => ((MarkerSwatchDot)d).UpdateFill()));
 
-    private readonly Ellipse _dot = new();
-    private readonly SolidColorBrush _fill = new();
-
     public MarkerSwatchDot()
     {
-        _dot.Fill = _fill;
-        // A faint rim keeps Contrast (near black) and chalk swatches readable on both papers.
-        _dot.Stroke = new SolidColorBrush(Windows.UI.Color.FromArgb(0x55, 0x80, 0x80, 0x80));
-        _dot.StrokeThickness = 1;
-        Children.Add(_dot);
+        InitializeComponent();
         Loaded += (_, _) => UpdateFill();
         ActualThemeChanged += (_, _) => UpdateFill();
     }
@@ -33,6 +25,15 @@ public sealed partial class MarkerSwatchDot : Grid
     private void UpdateFill()
     {
         var (light, dark) = MarkerPalette.Resolve(Color);
-        _fill.Color = ActualTheme == ElementTheme.Dark ? dark : light;
+        if (Color == MarkerColor.Auto)
+        {
+            DotFill.Color = dark;
+            PaperHalfFill.Color = light;
+            PaperHalf.Visibility = Visibility.Visible;
+            return;
+        }
+
+        PaperHalf.Visibility = Visibility.Collapsed;
+        DotFill.Color = ActualTheme == ElementTheme.Dark ? dark : light;
     }
 }

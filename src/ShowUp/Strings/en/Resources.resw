@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -133,7 +133,7 @@
     <value>About</value>
   </data>
   <data name="AboutAppDescription" xml:space="preserve">
-    <value>An Uno Platform application</value>
+    <value>Cross off your workouts, one marker X at a time</value>
   </data>
   <data name="WorktreeFormat" xml:space="preserve">
     <value>Worktree: {0}</value>
@@ -593,7 +593,7 @@
     <value>The ink you cross days off with</value>
   </data>
   <data name="MarkerColor_Auto" xml:space="preserve">
-    <value>Auto</value>
+    <value>Auto: red on paper, chalk on the board</value>
   </data>
   <data name="MarkerColor_Red" xml:space="preserve">
     <value>Red</value>
@@ -611,6 +611,9 @@
     <value>Orange</value>
   </data>
   <data name="MarkerColor_Contrast" xml:space="preserve">
-    <value>High contrast</value>
+    <value>Ink</value>
+  </data>
+  <data name="MarkerColorHighContrastNote" xml:space="preserve">
+    <value>Not used while High Contrast is on</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -133,7 +133,7 @@
     <value>O aplikaci</value>
   </data>
   <data name="AboutAppDescription" xml:space="preserve">
-    <value>Aplikace Uno Platform</value>
+    <value>Odškrtávej tréninky fixou, jeden křížek po druhém</value>
   </data>
   <data name="WorktreeFormat" xml:space="preserve">
     <value>Pracovn&#237; strom: {0}</value>
@@ -593,7 +593,7 @@
     <value>Čím odškrtáváš splněné dny</value>
   </data>
   <data name="MarkerColor_Auto" xml:space="preserve">
-    <value>Automaticky</value>
+    <value>Auto: červená na papíře, křída na tabuli</value>
   </data>
   <data name="MarkerColor_Red" xml:space="preserve">
     <value>Červená</value>
@@ -611,6 +611,9 @@
     <value>Oranžová</value>
   </data>
   <data name="MarkerColor_Contrast" xml:space="preserve">
-    <value>Vysoký kontrast</value>
+    <value>Inkoust</value>
+  </data>
+  <data name="MarkerColorHighContrastNote" xml:space="preserve">
+    <value>Při vysokém kontrastu se nepoužívá</value>
   </data>
 </root>

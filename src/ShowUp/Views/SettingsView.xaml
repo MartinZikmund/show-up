@@ -16,15 +16,37 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="MinHeight" Value="0" />
-            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="IsTabStop" Value="True" />
+            <Setter Property="UseSystemFocusVisuals" Value="False" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
-                        <ContentPresenter
-                            x:Name="ContentPresenter"
-                            Padding="{TemplateBinding Padding}"
-                            Content="{TemplateBinding Content}"
-                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        <Grid>
+                            <ContentPresenter
+                                x:Name="ContentPresenter"
+                                Padding="{TemplateBinding Padding}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            <Rectangle
+                                x:Name="FocusVisual"
+                                IsHitTestVisible="False"
+                                Opacity="0"
+                                RadiusX="6"
+                                RadiusY="6"
+                                Stroke="{ThemeResource FocusStrokeColorOuterBrush}"
+                                StrokeThickness="2" />
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="FocusStates">
+                                    <VisualState x:Name="Unfocused" />
+                                    <VisualState x:Name="PointerFocused" />
+                                    <VisualState x:Name="Focused">
+                                        <VisualState.Setters>
+                                            <Setter Target="FocusVisual.Opacity" Value="1" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -104,45 +126,41 @@
             </toolkit:SettingsCard>
 
             <toolkit:SettingsCard
+                x:Name="MarkerColorCard"
+                ContentAlignment="Vertical"
                 Description="{markup:Localize Key=MarkerColorDescription}"
-                Header="{markup:Localize Key=MarkerColor}"
-                IsEnabled="{x:Bind ViewModel.CanChangeMarkerColor, Mode=OneWay}">
-                <toolkit:SettingsCard.HeaderIcon>
-                    <FontIcon Glyph="&#xE790;" />
-                </toolkit:SettingsCard.HeaderIcon>
-                <ListView
+                Header="{markup:Localize Key=MarkerColor}">
+                <controls:MarkerSwatchPicker
+                    x:Name="MarkerColorPicker"
                     AutomationProperties.AutomationId="MarkerColorPicker"
                     AutomationProperties.Name="{markup:Localize Key=MarkerColor}"
+                    IsEnabled="{x:Bind ViewModel.CanChangeMarkerColor, Mode=OneWay}"
                     IsItemClickEnabled="False"
                     ItemContainerStyle="{StaticResource MarkerSwatchItemStyle}"
                     ItemsSource="{x:Bind ViewModel.MarkerSwatches}"
                     SelectedItem="{x:Bind ViewModel.SelectedMarkerSwatch, Mode=TwoWay}"
                     SelectionMode="Single">
-                    <ListView.ItemsPanel>
+                    <controls:MarkerSwatchPicker.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal" />
                         </ItemsPanelTemplate>
-                    </ListView.ItemsPanel>
-                    <ListView.ItemTemplate>
+                    </controls:MarkerSwatchPicker.ItemsPanel>
+                    <controls:MarkerSwatchPicker.ItemTemplate>
                         <DataTemplate x:DataType="vm:MarkerSwatch">
                             <Grid
-                                Width="36"
-                                Height="36"
-                                AutomationProperties.AutomationId="{x:Bind AutomationId}"
-                                AutomationProperties.Name="{x:Bind Name}"
+                                Width="38"
+                                Height="38"
                                 ToolTipService.ToolTip="{x:Bind Name}">
                                 <Ellipse
+                                    Margin="1"
                                     Stroke="{ThemeResource TextFillColorPrimaryBrush}"
                                     StrokeThickness="2"
                                     Visibility="{x:Bind IsSelected, Mode=OneWay}" />
-                                <controls:MarkerSwatchDot
-                                    Width="32"
-                                    Height="32"
-                                    Color="{x:Bind Color}" />
+                                <controls:MarkerSwatchDot Color="{x:Bind Color}" />
                             </Grid>
                         </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                    </controls:MarkerSwatchPicker.ItemTemplate>
+                </controls:MarkerSwatchPicker>
             </toolkit:SettingsCard>
 
             <toolkit:SettingsCard Description="{markup:Localize Key=CrossMomentDescription}" Header="{markup:Localize Key=CrossMoment}">
