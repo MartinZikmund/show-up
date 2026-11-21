@@ -18,6 +18,7 @@ One page per topic. Keep it that way.
 - [json-aot-serialization.md](./json-aot-serialization.md) — `JsonSerializerContext` conventions for AOT-safe, trim-safe JSON serialization.
 - [marking.md](./marking.md) — the hand-drawn marker X, drawing the cross yourself, sound and haptics, and the cross moment.
 - [programs.md](./programs.md) — browsing the catalog, the program detail page, starting a program, and the hero fallback.
+- [results.md](./results.md) — notes, logging Fit Test and Max Out results, the day detail sheet and the results table.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
 - [theme.md](./theme.md) — marker color picker, how it repaints live, and the grain paper background.
 - [today.md](./today.md) — the Today page, the shared crossing flow, and bonus workouts.
