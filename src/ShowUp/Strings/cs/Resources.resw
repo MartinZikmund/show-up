@@ -859,6 +859,9 @@
   <data name="ProFeatureSyncPro" xml:space="preserve">
     <value>Všechna vaše zařízení</value>
   </data>
+  <data name="ProFeatureSyncSoon" xml:space="preserve">
+    <value>Již brzy</value>
+  </data>
   <data name="ProOffersHeader" xml:space="preserve">
     <value>Vyberte si, jak přejít na Pro</value>
   </data>

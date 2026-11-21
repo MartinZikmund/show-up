@@ -46,7 +46,9 @@ public partial class ProViewModel : ViewModelBase
             Row("ProFeatureHistory"),
             Row("ProFeatureCustom"),
             Row("ProFeaturePersonalization"),
-            Row("ProFeatureSync"),
+            FeatureGate.IsAvailable(ProFeature.CloudSync)
+                ? Row("ProFeatureSync")
+                : new(_localizer["ProFeatureSync"], _localizer["ProFeatureSyncFree"], _localizer["ProFeatureSyncSoon"]),
         ];
         SubscriptionDisclosure = localizer["ProSubscriptionDisclosure"];
         IsPro = entitlements.IsPro;

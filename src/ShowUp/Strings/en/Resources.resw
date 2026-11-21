@@ -859,6 +859,9 @@
   <data name="ProFeatureSyncPro" xml:space="preserve">
     <value>All your devices</value>
   </data>
+  <data name="ProFeatureSyncSoon" xml:space="preserve">
+    <value>Coming soon</value>
+  </data>
   <data name="ProOffersHeader" xml:space="preserve">
     <value>Choose how to go Pro</value>
   </data>
