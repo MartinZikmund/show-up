@@ -4,6 +4,8 @@ using Microsoft.UI.Xaml.Controls;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
+using ShowUp.Core.Tracking;
+using ShowUp.Core.Storage;
 using ShowUp.Services.Dialogs;
 using ShowUp.Services.Settings;
 
@@ -115,7 +117,7 @@ internal sealed class RecordingJournalDialogs : IJournalDialogs
 
     public Task LogResultsAsync(int dayIndex, int sessionIndex) => Record($"results:{dayIndex}:{sessionIndex}");
 
-    public Task LogBonusResultsAsync(ShowUp.Core.Storage.BonusWorkoutEntity bonus) => Record($"bonus:{bonus.WorkoutId}");
+    public Task LogBonusResultsAsync(BonusWorkoutEntity bonus) => Record($"bonus:{bonus.WorkoutId}");
 
     public Task EditProgramNoteAsync() => Record("program-note");
 
@@ -126,25 +128,26 @@ internal sealed class RecordingJournalDialogs : IJournalDialogs
     }
 }
 
-/// <summary>A journal with no notes; a session has results to log only when <see cref="SheetFor"/> returns a sheet.</summary>
-internal sealed class StubJournalService : ShowUp.Core.Tracking.IJournalService
+/// <summary>A journal with no notes or results; a session has metrics only when <see cref="HasMetrics"/> says so.</summary>
+internal sealed class StubJournalService : IJournalService
 {
-    public Func<int, int, ShowUp.Core.Tracking.ResultsSheet?> SheetFor { get; set; } = (_, _) => null;
+    public Func<int, int, bool> HasMetrics { get; set; } = (_, _) => false;
 
     public Task<string> GetProgramNoteAsync() => Task.FromResult("");
 
     public Task SaveProgramNoteAsync(string? text) => Task.CompletedTask;
 
-    public Task<ShowUp.Core.Tracking.DayJournal?> GetDayAsync(int dayIndex) => Task.FromResult<ShowUp.Core.Tracking.DayJournal?>(null);
+    public Task<DayJournal?> GetDayAsync(int dayIndex) => Task.FromResult<DayJournal?>(null);
 
-    public Task SaveNoteAsync(int dayIndex, int? sessionIndex, string? text) => Task.CompletedTask;
+    public Task SaveDayAsync(int dayIndex, DayEdit edit) => Task.CompletedTask;
 
-    public Task<ShowUp.Core.Tracking.ResultsSheet?> GetResultsSheetAsync(int dayIndex, int sessionIndex) => Task.FromResult(SheetFor(dayIndex, sessionIndex));
+    public Task<bool> HasMetricsAsync(int dayIndex, int sessionIndex) => Task.FromResult(HasMetrics(dayIndex, sessionIndex));
 
-    public Task<ShowUp.Core.Tracking.ResultsSheet?> GetBonusResultsSheetAsync(ShowUp.Core.Storage.BonusWorkoutEntity bonus) =>
-        Task.FromResult<ShowUp.Core.Tracking.ResultsSheet?>(null);
+    public Task<ResultsSheet?> GetResultsSheetAsync(int dayIndex, int sessionIndex) => Task.FromResult<ResultsSheet?>(null);
 
-    public Task SaveResultsAsync(ShowUp.Core.Tracking.MetricTarget target, IReadOnlyDictionary<string, ShowUp.Core.Tracking.MetricValue> values) => Task.CompletedTask;
+    public Task<ResultsSheet?> GetBonusResultsSheetAsync(BonusWorkoutEntity bonus) => Task.FromResult<ResultsSheet?>(null);
 
-    public Task<IReadOnlyList<ShowUp.Core.Tracking.ResultsTable>> GetResultsAsync() => Task.FromResult<IReadOnlyList<ShowUp.Core.Tracking.ResultsTable>>([]);
+    public Task SaveResultsAsync(MetricTarget target, IReadOnlyDictionary<string, MetricValue> values) => Task.CompletedTask;
+
+    public Task<IReadOnlyList<ResultsTable>> GetResultsAsync() => Task.FromResult<IReadOnlyList<ResultsTable>>([]);
 }

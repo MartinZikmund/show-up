@@ -28,7 +28,15 @@ public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time,
         return connection.Table<T>().Where(where).Where(x => x.UserId == uid && x.DeletedAt == null).ToListAsync();
     }
 
-    protected async Task TouchAsync(SQLiteAsyncConnection connection, SyncableEntity entity, bool delete = false)
+    /// <summary><see cref="QueryAsync{T}"/> inside a transaction.</summary>
+    protected List<T> Query<T>(SQLiteConnection connection, Expression<Func<T, bool>> where)
+        where T : SyncableEntity, new()
+    {
+        string? uid = user.CurrentUserId;
+        return connection.Table<T>().Where(where).Where(x => x.UserId == uid && x.DeletedAt == null).ToList();
+    }
+
+    protected void Touch(SQLiteConnection connection, SyncableEntity entity, bool delete = false)
     {
         DateTimeOffset now = time.GetUtcNow();
         entity.UpdatedAt = now;
@@ -38,15 +46,15 @@ public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time,
             entity.DeletedAt = now;
         }
 
-        await connection.UpdateAsync(entity);
+        connection.Update(entity);
     }
 
-    /// <summary>Keeps the newest row and tombstones the rest (two devices can write the same key before they sync).</summary>
-    protected async Task TombstoneDuplicatesAsync(SQLiteAsyncConnection connection, IEnumerable<SyncableEntity> duplicates)
+    /// <summary>Tombstones rows that share a key with the kept one (two devices can write the same key before they sync).</summary>
+    protected void Tombstone(SQLiteConnection connection, IEnumerable<SyncableEntity> rows)
     {
-        foreach (var duplicate in duplicates)
+        foreach (var row in rows)
         {
-            await TouchAsync(connection, duplicate, delete: true);
+            Touch(connection, row, delete: true);
         }
     }
 }

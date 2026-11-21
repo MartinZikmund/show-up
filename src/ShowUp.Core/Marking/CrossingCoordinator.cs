@@ -81,9 +81,9 @@ public sealed class CrossingCoordinator(
     }
 
     private async Task<Func<Task>?> LogResultsAsync(CrossTarget target) =>
-        await journal.GetResultsSheetAsync(target.DayIndex, target.Session) is null
-            ? null
-            : () => journalDialogs.LogResultsAsync(target.DayIndex, target.Session);
+        await journal.HasMetricsAsync(target.DayIndex, target.Session)
+            ? () => journalDialogs.LogResultsAsync(target.DayIndex, target.Session)
+            : null;
 
     private static CrossMomentInfo MomentInfo(CrossTarget target, int before, int afterAuto, int seed)
     {

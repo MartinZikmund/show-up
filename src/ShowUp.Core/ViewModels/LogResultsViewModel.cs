@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Globalization;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
 
 namespace ShowUp.Core.ViewModels;
@@ -26,7 +28,7 @@ public sealed partial class LogResultsViewModel(IJournalService journal, IString
     /// <returns>False when the session's workout has nothing to log.</returns>
     public async Task<bool> LoadForSessionAsync(int dayIndex, int sessionIndex) => Load(await journal.GetResultsSheetAsync(dayIndex, sessionIndex));
 
-    public async Task<bool> LoadForBonusAsync(Storage.BonusWorkoutEntity bonus) => Load(await journal.GetBonusResultsSheetAsync(bonus));
+    public async Task<bool> LoadForBonusAsync(BonusWorkoutEntity bonus) => Load(await journal.GetBonusResultsSheetAsync(bonus));
 
     public async Task SaveAsync()
     {
@@ -71,5 +73,5 @@ public sealed partial class LogResultsViewModel(IJournalService journal, IString
         return true;
     }
 
-    private void Input_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => CanSave = Editor?.IsValid == true;
+    private void Input_PropertyChanged(object? sender, PropertyChangedEventArgs e) => CanSave = Editor?.IsValid == true;
 }

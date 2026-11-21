@@ -139,23 +139,11 @@ public sealed partial class DayDetailViewModel(
             return;
         }
 
-        if (DayNote.Trim() != _initialDayNote)
-        {
-            await journal.SaveNoteAsync(DayIndex, null, DayNote);
-        }
-
-        foreach (var session in Sessions.Where(s => s.NoteChanged))
-        {
-            await journal.SaveNoteAsync(DayIndex, session.Index, session.Note);
-        }
-
-        foreach (var editor in Editors())
-        {
-            if (editor.Changes is { Count: > 0 } changes)
-            {
-                await journal.SaveResultsAsync(editor.Sheet.Target, changes);
-            }
-        }
+        DayEdit edit = new(
+            DayNote.Trim() != _initialDayNote ? DayNote : null,
+            Sessions.Where(s => s.NoteChanged).ToDictionary(s => s.Index, s => s.Note),
+            [.. Editors().Where(e => e.Changes.Count > 0).Select(e => new ResultsEdit(e.Sheet.Target, e.Changes))]);
+        await journal.SaveDayAsync(DayIndex, edit);
     }
 
     private IEnumerable<ResultsEditorViewModel> Editors() =>

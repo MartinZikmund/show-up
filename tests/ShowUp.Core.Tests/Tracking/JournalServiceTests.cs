@@ -47,15 +47,14 @@ public sealed class JournalServiceTests : StorageTestBase
     public async Task Notes_ProgramDayAndSession_RoundTripThroughTheJournal()
     {
         await _journal.SaveProgramNoteAsync("Round two");
-        await _journal.SaveNoteAsync(1, null, "Hot day");
-        await _journal.SaveNoteAsync(1, 1, "New record");
+        await _journal.SaveDayAsync(1, new DayEdit("Hot day", new Dictionary<int, string> { [1] = "New record" }, []));
 
         (await _journal.GetProgramNoteAsync()).Should().Be("Round two");
         var day = await _journal.GetDayAsync(1);
         day!.Note.Should().Be("Hot day");
         day.Sessions[1].Note.Should().Be("New record");
         day.Sessions[0].Note.Should().BeEmpty();
-        _changes.Should().Be(3);
+        _changes.Should().Be(2);
     }
 
     [TestMethod]
@@ -104,7 +103,7 @@ public sealed class JournalServiceTests : StorageTestBase
         var day = await _journal.GetDayAsync(1);
         day!.Sessions[1].Note.Should().Be("Felt strong");
         day.Sessions[1].Results!.Values.Should().BeEquivalentTo(new Dictionary<string, MetricValue> { ["jacks"] = new(52), ["time"] = new(105) });
-        _changes.Should().Be(2, "one note and one set of results");
+        _changes.Should().Be(1, "the day sheet saves as one change");
     }
 
     [TestMethod]

@@ -14,9 +14,7 @@ public class JournalRepositoriesTests : StorageTestBase
     {
         var notes = CreateNotesRepository();
 
-        await notes.SetNoteAsync(_enrollment, null, null, "  Going all in  ");
-        await notes.SetNoteAsync(_enrollment, 3, null, "Legs sore");
-        await notes.SetNoteAsync(_enrollment, 3, 1, "Skipped the last round");
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(null, null, "  Going all in  "), new NoteEdit(3, null, "Legs sore"), new NoteEdit(3, 1, "Skipped the last round")]);
 
         var all = await notes.GetNotesAsync(_enrollment);
 
@@ -31,11 +29,11 @@ public class JournalRepositoriesTests : StorageTestBase
     public async Task Notes_SetAgain_UpdatesInPlace()
     {
         var notes = CreateNotesRepository();
-        await notes.SetNoteAsync(_enrollment, 0, null, "first");
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, "first")]);
         var id = (await notes.GetNotesAsync(_enrollment)).Single().Id;
         Time.Advance(TimeSpan.FromMinutes(1));
 
-        await notes.SetNoteAsync(_enrollment, 0, null, "second");
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, "second")]);
 
         var note = (await notes.GetNotesAsync(_enrollment)).Should().ContainSingle().Subject;
         note.Id.Should().Be(id);
@@ -47,9 +45,9 @@ public class JournalRepositoriesTests : StorageTestBase
     public async Task Notes_Blank_LeavesATombstone()
     {
         var notes = CreateNotesRepository();
-        await notes.SetNoteAsync(_enrollment, 0, null, "note");
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, "note")]);
 
-        await notes.SetNoteAsync(_enrollment, 0, null, "   ");
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, "   ")]);
 
         (await notes.GetNotesAsync(_enrollment)).Should().BeEmpty();
         var connection = await Db.GetConnectionAsync();
@@ -60,7 +58,7 @@ public class JournalRepositoriesTests : StorageTestBase
     public async Task Notes_OtherUser_AreNotVisible()
     {
         var notes = CreateNotesRepository();
-        await notes.SetNoteAsync(_enrollment, null, null, "mine");
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(null, null, "mine")]);
 
         User.CurrentUserId = "someone-else";
 
@@ -73,8 +71,8 @@ public class JournalRepositoriesTests : StorageTestBase
         var metrics = CreateMetricsRepository();
         var target = MetricTarget.ForSession(_enrollment, 0, 0, "fit-test");
 
-        await metrics.SetValueAsync(target, "jacks", new MetricValue(40));
-        await metrics.SetValueAsync(target, "jacks", new MetricValue(52));
+        await metrics.SetValuesAsync(target, new Dictionary<string, MetricValue> { ["jacks"] = new MetricValue(40) });
+        await metrics.SetValuesAsync(target, new Dictionary<string, MetricValue> { ["jacks"] = new MetricValue(52) });
 
         var entry = (await metrics.GetSessionEntriesAsync(_enrollment)).Should().ContainSingle().Subject;
         entry.Value.Should().Be(52);
@@ -88,9 +86,9 @@ public class JournalRepositoriesTests : StorageTestBase
     {
         var metrics = CreateMetricsRepository();
         var target = MetricTarget.ForSession(_enrollment, 0, 0, "fit-test");
-        await metrics.SetValueAsync(target, "jacks", new MetricValue(40));
+        await metrics.SetValuesAsync(target, new Dictionary<string, MetricValue> { ["jacks"] = new MetricValue(40) });
 
-        await metrics.SetValueAsync(target, "jacks", new MetricValue(null));
+        await metrics.SetValuesAsync(target, new Dictionary<string, MetricValue> { ["jacks"] = new MetricValue(null) });
 
         (await metrics.GetSessionEntriesAsync(_enrollment)).Should().BeEmpty();
         var connection = await Db.GetConnectionAsync();
@@ -102,10 +100,10 @@ public class JournalRepositoriesTests : StorageTestBase
     {
         var metrics = CreateMetricsRepository();
         var bonusId = Guid.NewGuid();
-        await metrics.SetValueAsync(MetricTarget.ForSession(_enrollment, 2, 0, "w"), "m", new MetricValue(1));
-        await metrics.SetValueAsync(MetricTarget.ForSession(_enrollment, 2, 1, "w"), "m", new MetricValue(2));
-        await metrics.SetValueAsync(MetricTarget.ForBonus(bonusId, "w"), "m", new MetricValue(3));
-        await metrics.SetValueAsync(MetricTarget.ForBonus(bonusId, "w"), "note", new MetricValue(null, " felt good "));
+        await metrics.SetValuesAsync(MetricTarget.ForSession(_enrollment, 2, 0, "w"), new Dictionary<string, MetricValue> { ["m"] = new MetricValue(1) });
+        await metrics.SetValuesAsync(MetricTarget.ForSession(_enrollment, 2, 1, "w"), new Dictionary<string, MetricValue> { ["m"] = new MetricValue(2) });
+        await metrics.SetValuesAsync(MetricTarget.ForBonus(bonusId, "w"), new Dictionary<string, MetricValue> { ["m"] = new MetricValue(3) });
+        await metrics.SetValuesAsync(MetricTarget.ForBonus(bonusId, "w"), new Dictionary<string, MetricValue> { ["note"] = new MetricValue(null, " felt good ") });
 
         (await metrics.GetSessionEntriesAsync(_enrollment)).Select(e => e.Value).Should().Equal(1, 2);
         var bonus = await metrics.GetBonusEntriesAsync([bonusId]);
@@ -117,7 +115,7 @@ public class JournalRepositoriesTests : StorageTestBase
     public async Task Metrics_OtherUser_AreNotVisible()
     {
         var metrics = CreateMetricsRepository();
-        await metrics.SetValueAsync(MetricTarget.ForSession(_enrollment, 0, 0, "w"), "m", new MetricValue(1));
+        await metrics.SetValuesAsync(MetricTarget.ForSession(_enrollment, 0, 0, "w"), new Dictionary<string, MetricValue> { ["m"] = new MetricValue(1) });
 
         User.CurrentUserId = "someone-else";
 
@@ -129,7 +127,7 @@ public class JournalRepositoriesTests : StorageTestBase
     {
         var metrics = CreateMetricsRepository();
 
-        Func<Task> act = () => metrics.SetValueAsync(MetricTarget.ForSession(_enrollment, 0, 0, "w"), "m", new MetricValue(double.NaN));
+        Func<Task> act = () => metrics.SetValuesAsync(MetricTarget.ForSession(_enrollment, 0, 0, "w"), new Dictionary<string, MetricValue> { ["m"] = new MetricValue(double.NaN) });
 
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
     }

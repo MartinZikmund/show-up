@@ -9,5 +9,8 @@ public sealed class NoteEntity : SyncableEntity
 
     public int? SessionIndex { get; set; }
 
+    /// <summary><see cref="Tracking.SubjectKeys.Note"/>: the natural key the note is upserted by.</summary>
+    public string SubjectKey { get; set; } = "";
+
     public string Text { get; set; } = "";
 }

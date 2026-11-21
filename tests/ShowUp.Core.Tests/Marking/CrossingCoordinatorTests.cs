@@ -129,9 +129,7 @@ public sealed class CrossingCoordinatorTests
     [TestMethod]
     public async Task LogResults_WorkoutWithMetrics_OpensTheSessionsResults()
     {
-        _journal.SheetFor = (day, session) => day == 0 && session == 1
-            ? new ResultsSheet(TestCatalog.Workouts.Single(w => w.Id == "fit"), MetricTarget.ForSession(Guid.NewGuid(), 0, 1, "fit"), _today, 1, new Dictionary<string, MetricValue>())
-            : null;
+        _journal.HasMetrics = (day, session) => day == 0 && session == 1;
         var coordinator = Create();
 
         await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
@@ -144,7 +142,7 @@ public sealed class CrossingCoordinatorTests
     public async Task LogResults_DrawMode_OfferedOnTheDrawMoment()
     {
         _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
-        _journal.SheetFor = (_, _) => new ResultsSheet(TestCatalog.Workouts.Single(w => w.Id == "fit"), MetricTarget.ForSession(Guid.NewGuid(), 0, 0, "fit"), _today, 1, new Dictionary<string, MetricValue>());
+        _journal.HasMetrics = (_, _) => true;
         var coordinator = Create();
 
         await coordinator.CrossAsync(Target(), Hooks());

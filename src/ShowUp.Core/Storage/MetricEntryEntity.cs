@@ -14,6 +14,9 @@ public sealed class MetricEntryEntity : SyncableEntity
 
     public Guid? BonusWorkoutId { get; set; }
 
+    /// <summary><see cref="Tracking.MetricTarget.SubjectKey"/>: with <see cref="MetricId"/>, the natural key the value is upserted by.</summary>
+    public string SubjectKey { get; set; } = "";
+
     public string WorkoutId { get; set; } = "";
 
     public string MetricId { get; set; } = "";

@@ -1,5 +1,4 @@
 using ShowUp.Core.Tracking;
-using SQLite;
 
 namespace ShowUp.Core.Storage;
 
@@ -29,39 +28,49 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
         return Newest(rows.Where(m => m.BonusWorkoutId is { } b && wanted.Contains(b)));
     }
 
-    public async Task SetValueAsync(MetricTarget target, string metricId, MetricValue value)
+    public async Task SetValuesAsync(MetricTarget target, IReadOnlyDictionary<string, MetricValue> values)
     {
         ArgumentNullException.ThrowIfNull(target);
-        ArgumentException.ThrowIfNullOrWhiteSpace(metricId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(target.WorkoutId);
-        if (!target.IsBonus && (target.EnrollmentId is null || target.DayIndex is null || target.SessionIndex is null))
+        ArgumentNullException.ThrowIfNull(values);
+        foreach (var (metricId, value) in values)
         {
-            throw new ArgumentException("A session result needs its enrollment, day and session.", nameof(target));
+            ArgumentException.ThrowIfNullOrWhiteSpace(metricId);
+            if (value.Number is { } number && !double.IsFinite(number))
+            {
+                throw new ArgumentOutOfRangeException(nameof(values), number, "A result must be a finite number.");
+            }
         }
 
-        if (value.Number is { } number && !double.IsFinite(number))
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), number, "A result must be a finite number.");
-        }
-
-        var text = value.Text?.Trim() is { Length: > 0 } t ? t[..Math.Min(t.Length, MaxTextLength)] : null;
+        var key = target.SubjectKey;
         var connection = await ConnectAsync();
-        var existing = await MatchingAsync(connection, target, metricId);
+        await connection.RunInTransactionAsync(c =>
+        {
+            var rows = Query<MetricEntryEntity>(c, m => m.SubjectKey == key).Where(target.Matches).ToList();
+            foreach (var (metricId, value) in values)
+            {
+                Set(c, target, rows.Where(m => m.MetricId == metricId).OrderByDescending(m => m.UpdatedAt).ToList(), metricId, value);
+            }
+        });
+    }
 
+    private void Set(SQLite.SQLiteConnection c, MetricTarget target, List<MetricEntryEntity> existing, string metricId, MetricValue value)
+    {
+        var text = value.Text?.Trim() is { Length: > 0 } t ? t[..Math.Min(t.Length, MaxTextLength)] : null;
         if (value.Number is null && text is null)
         {
-            await TombstoneDuplicatesAsync(connection, existing);
+            Tombstone(c, existing);
             return;
         }
 
         if (existing.Count == 0)
         {
-            await connection.InsertAsync(Stamp(new MetricEntryEntity
+            c.Insert(Stamp(new MetricEntryEntity
             {
                 EnrollmentId = target.EnrollmentId,
                 DayIndex = target.DayIndex,
                 SessionIndex = target.SessionIndex,
                 BonusWorkoutId = target.BonusWorkoutId,
+                SubjectKey = target.SubjectKey,
                 WorkoutId = target.WorkoutId,
                 MetricId = metricId,
                 Value = value.Number,
@@ -75,26 +84,16 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
         {
             keep.Value = value.Number;
             keep.TextValue = text;
-            await TouchAsync(connection, keep);
+            Touch(c, keep);
         }
 
-        await TombstoneDuplicatesAsync(connection, existing.Skip(1));
-    }
-
-    private async Task<List<MetricEntryEntity>> MatchingAsync(SQLiteAsyncConnection connection, MetricTarget target, string metricId)
-    {
-        Guid? enrollmentId = target.EnrollmentId;
-        Guid? bonusId = target.BonusWorkoutId;
-        var rows = target.IsBonus
-            ? await QueryAsync<MetricEntryEntity>(connection, m => m.MetricId == metricId && m.BonusWorkoutId == bonusId)
-            : await QueryAsync<MetricEntryEntity>(connection, m => m.MetricId == metricId && m.EnrollmentId == enrollmentId);
-        return [.. rows.Where(target.Matches).OrderByDescending(m => m.UpdatedAt)];
+        Tombstone(c, existing.Skip(1));
     }
 
     private static List<MetricEntryEntity> Newest(IEnumerable<MetricEntryEntity> rows) =>
         [
             .. rows
-                .GroupBy(m => (m.EnrollmentId, m.DayIndex, m.SessionIndex, m.BonusWorkoutId, m.MetricId))
+                .GroupBy(m => (m.SubjectKey, m.MetricId))
                 .Select(g => g.OrderByDescending(m => m.UpdatedAt).First())
                 .OrderBy(m => m.DayIndex ?? -1)
                 .ThenBy(m => m.SessionIndex ?? -1),
