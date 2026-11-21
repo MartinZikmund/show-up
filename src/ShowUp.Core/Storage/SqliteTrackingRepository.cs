@@ -90,9 +90,21 @@ public sealed class SqliteTrackingRepository(
 
     public async Task<IReadOnlySet<(int Day, int Session)>> GetCompletedSessionsAsync(Guid enrollmentId)
     {
+        var completions = await GetCompletionsAsync(enrollmentId);
+        return completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet();
+    }
+
+    public async Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId)
+    {
         var connection = await db.GetConnectionAsync();
         var rows = await QueryAsync<CompletionEntity>(connection, c => c.EnrollmentId == enrollmentId && c.DeletedAt == null);
-        return rows.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet();
+        return rows
+            .GroupBy(c => (c.DayIndex, c.SessionIndex))
+            .Select(g => g.OrderBy(c => c.CompletedAt).ThenBy(c => c.Id.ToString("D"), StringComparer.Ordinal).First())
+            .OrderBy(c => c.DayIndex)
+            .ThenBy(c => c.SessionIndex)
+            .Select(c => new CompletedSession(c.DayIndex, c.SessionIndex, c.Id, c.CompletedOn))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<ScheduleShift>> GetShiftsAsync(Guid enrollmentId)

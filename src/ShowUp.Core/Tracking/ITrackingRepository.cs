@@ -16,6 +16,8 @@ public interface ITrackingRepository
 
     Task<IReadOnlySet<(int Day, int Session)>> GetCompletedSessionsAsync(Guid enrollmentId);
 
+    Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId);
+
     Task<IReadOnlyList<ScheduleShift>> GetShiftsAsync(Guid enrollmentId);
 
     Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days);
