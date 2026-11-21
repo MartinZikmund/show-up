@@ -209,7 +209,13 @@
     <value>Dokončen</value>
   </data>
   <data name="HistoryStatusStopped" xml:space="preserve">
-    <value>Ukončen</value>
+    <value>Zastaven</value>
+  </data>
+  <data name="HistoryCalendarNameFormat" xml:space="preserve">
+    <value>Kalendář, {0}</value>
+  </data>
+  <data name="HistoryResultsNameFormat" xml:space="preserve">
+    <value>Výsledky, {0}</value>
   </data>
   <data name="HistoryResultsLink" xml:space="preserve">
     <value>Výsledky</value>

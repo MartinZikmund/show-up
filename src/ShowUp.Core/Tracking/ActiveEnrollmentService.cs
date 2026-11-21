@@ -72,21 +72,18 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         }
     }
 
-    public async Task<IReadOnlyList<EnrollmentRecord>> GetHistoryAsync()
+    public async Task<IReadOnlyList<ActiveEnrollment>> GetHistoryAsync()
     {
         var all = await LoadAsync(await _repository.GetAllEnrollmentsAsync());
-        List<EnrollmentRecord> records = [];
-        foreach (var enrollment in all)
-        {
-            records.Add(new(enrollment, await _repository.GetCompletionsAsync(enrollment.Id)));
-        }
-
         return
         [
-            .. records.Where(r => r.IsActive),
-            .. records.Where(r => !r.IsActive).OrderByDescending(r => r.Enrollment.Enrollment.EndedAt),
+            .. all.Where(e => e.Enrollment.EndedAt is null),
+            .. all.Where(e => e.Enrollment.EndedAt is not null).OrderByDescending(e => e.Enrollment.EndedAt),
         ];
     }
+
+    public Task<IReadOnlyList<CompletedSession>> GetHistoryCompletionsAsync(Guid enrollmentId) =>
+        _repository.GetCompletionsAsync(enrollmentId);
 
     public async Task<ActiveEnrollment?> GetSelectedAsync()
     {

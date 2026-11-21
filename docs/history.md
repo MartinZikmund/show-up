@@ -10,10 +10,11 @@ The History tab lists every program you have started and the bonus workouts you 
 
 ## Free and Pro
 
-Free sees the primary program and the last 30 days of bonus workouts. When more exists, a Pro gate row (`ProGateHint`) opens the paywall. Pro sees everything (`ProFeature.FullHistory`).
+Free sees the current program, which is the primary one (the most recent ended program when none is active), and the last 30 days of bonus workouts. When more exists, a Pro gate row (`ProGateHint`) opens the paywall. Pro sees everything (`ProFeature.FullHistory`).
 
 ## Where it lives
 
 - `HistoryViewModel` (Core) builds the cards and months and reloads on `TrackingChangedMessage` and at midnight (`LiveRefresher`).
-- `IActiveEnrollmentService.GetHistoryAsync()` returns `EnrollmentRecord`s (enrollment, its pinned program revision and its completions), ended ones included, via `ITrackingRepository.GetAllEnrollmentsAsync()`.
+- `IActiveEnrollmentService.GetHistoryAsync()` returns every enrollment with its pinned program revision (ended ones included, via `ITrackingRepository.GetAllEnrollmentsAsync()`); `GetHistoryCompletionsAsync(id)` loads one enrollment's crossed sessions, so Free never loads the ones it hides.
+- Dates follow the culture: short date for programs, `MonthDayPattern` and `YearMonthPattern` for bonus workouts and month headers.
 - Charts and statistics are tracked in #22.

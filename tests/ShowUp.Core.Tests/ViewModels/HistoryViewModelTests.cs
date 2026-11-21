@@ -25,6 +25,7 @@ public sealed class HistoryViewModelTests
     private readonly FakeCatalogService _catalog = new(
         TestCatalog.Program("old", 1, "run", "run", "abs", "fit", "run", "rest", "rest"),
         TestCatalog.Program("new", 1, "run", "run", "abs", "run", "run", "rest", "rest"));
+    private readonly FakeSyncedSettings _settings = new();
     private readonly WeakReferenceMessenger _messenger = new();
     private readonly RecordingNavigationService _navigation = new();
     private readonly RecordingSectionNavigator _navigator = new();
@@ -113,7 +114,7 @@ public sealed class HistoryViewModelTests
         program.ProgressText.Should().Be("TodayDayFormat(5,7)");
         program.CrossedText.Should().Be("HistoryCrossedFormat(4)");
         program.BestText.Should().Be("CalendarLongestStreakFormat(3)");
-        program.DatesText.Should().Be("HistoryStartedFormat(17 Nov 2026)");
+        program.DatesText.Should().Be("HistoryStartedFormat(11/17/2026)");
     }
 
     [TestMethod]
@@ -126,7 +127,7 @@ public sealed class HistoryViewModelTests
         await viewModel.LoadAsync();
 
         var ended = viewModel.Programs.Single(p => !p.IsActive);
-        ended.DatesText.Should().Be("HistoryRangeFormat(1 Nov 2026,21 Nov 2026)");
+        ended.DatesText.Should().Be("HistoryRangeFormat(11/1/2026,11/21/2026)");
         ended.ShowResultsLink.Should().BeFalse();
         await viewModel.OpenCalendarCommand.ExecuteAsync(ended);
         _navigator.Sections.Should().BeEmpty();
@@ -201,19 +202,27 @@ public sealed class HistoryViewModelTests
     {
         var viewModel = Create();
         viewModel.ViewLoaded();
-        await Task.Delay(50);
-
+        await viewModel.LoadAsync();
         await _repository.LogBonusAsync(null, "Late", _today, 10);
-        _messenger.Send(new TrackingChangedMessage());
-        await Task.Delay(50);
+        TaskCompletionSource reloaded = new();
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(HistoryViewModel.HasBonuses))
+            {
+                reloaded.TrySetResult();
+            }
+        };
 
+        _messenger.Send(new TrackingChangedMessage());
+
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
         viewModel.HasBonuses.Should().BeTrue();
         viewModel.ViewUnloaded();
     }
 
     private HistoryViewModel Create()
     {
-        _service = TestEnrollments.Create(_repository, _catalog, _messenger, new FakeSyncedSettings(), _entitlements);
+        _service = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements);
         return new(
             _service,
             _catalog,

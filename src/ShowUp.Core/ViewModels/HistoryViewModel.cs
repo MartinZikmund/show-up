@@ -30,7 +30,9 @@ public sealed record HistoryProgramViewModel(
     string CrossedText,
     string BestText,
     string DatesText,
-    bool HasResults)
+    bool HasResults,
+    string CalendarAutomationName,
+    string ResultsAutomationName)
 {
     public bool IsActive => Status == HistoryStatus.Active;
 
@@ -39,6 +41,10 @@ public sealed record HistoryProgramViewModel(
     public string SummaryText => $"{ProgressText} · {CrossedText}";
 
     public string AutomationId => $"HistoryProgram_{EnrollmentId}";
+
+    public string CalendarAutomationId => $"HistoryCalendar_{EnrollmentId}";
+
+    public string ResultsAutomationId => $"HistoryResults_{EnrollmentId}";
 
     public string AutomationName => $"{Name}, {StatusText}, {ProgressText}, {CrossedText}, {BestText}, {DatesText}";
 }
@@ -154,9 +160,20 @@ public partial class HistoryViewModel : ViewModelBase
         var workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
 
         var records = await _enrollments.GetHistoryAsync();
-        var primaryId = isPro ? null : (await _enrollments.GetPrimaryAsync())?.Id;
-        var shown = isPro ? records : [.. records.Where(r => r.Enrollment.Id == primaryId)];
-        var programs = shown.Select(r => ToProgram(r, workouts, today)).ToList();
+        IReadOnlyList<ActiveEnrollment> shown = records;
+        if (!isPro)
+        {
+            // The current program is the primary one; with none active, the most recent ended one stands in.
+            var primaryId = (await _enrollments.GetPrimaryAsync())?.Id;
+            var current = records.FirstOrDefault(e => e.Id == primaryId) ?? records.FirstOrDefault();
+            shown = current is null ? [] : [current];
+        }
+
+        List<HistoryProgramViewModel> programs = [];
+        foreach (var enrollment in shown)
+        {
+            programs.Add(ToProgram(enrollment, await _enrollments.GetHistoryCompletionsAsync(enrollment.Id), workouts, today));
+        }
 
         var bonuses = await _enrollments.GetBonusWorkoutsAsync(DateOnly.MinValue, today);
         var from = today.AddDays(1 - FreeBonusDays);
@@ -200,22 +217,22 @@ public partial class HistoryViewModel : ViewModelBase
     [RelayCommand]
     private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
-    private HistoryProgramViewModel ToProgram(EnrollmentRecord record, IReadOnlyDictionary<string, Workout> workouts, DateOnly today)
+    private HistoryProgramViewModel ToProgram(ActiveEnrollment active, IReadOnlyList<CompletedSession> completions, IReadOnlyDictionary<string, Workout> workouts, DateOnly today)
     {
-        var active = record.Enrollment;
         var enrollment = active.Enrollment;
+        var isActive = enrollment.EndedAt is null;
         var calendar = active.Calendar;
-        var completed = record.Completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet();
+        var completed = completions.Select(c => (c.DayIndex, c.SessionIndex)).ToHashSet();
         var statuses = ProgressCalculator.Build(active.Track, workouts, calendar, completed);
         var crossed = statuses.Count(s => s.Progress == DayProgress.Complete);
         var best = StreakCalculator.Longest(statuses, today);
 
-        var status = record.IsActive ? HistoryStatus.Active
+        var status = isActive ? HistoryStatus.Active
             : enrollment.EndReason == EnrollmentEndReason.Abandoned ? HistoryStatus.Stopped
             : HistoryStatus.Finished;
 
         string progress;
-        if (record.IsActive)
+        if (isActive)
         {
             var reached = Enumerable.Range(0, calendar.DayCount).Count(i => calendar.DateOf(i) <= today);
             progress = reached == 0
@@ -229,10 +246,10 @@ public partial class HistoryViewModel : ViewModelBase
 
         var started = FormatDate(enrollment.StartDate);
         var dates = enrollment.EndedAt is { } ended
-            ? _localizer["HistoryRangeFormat", started, FormatDate(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(ended, _time.LocalTimeZone).DateTime))].Value
+            ? _localizer["HistoryRangeFormat", started, FormatDate(LocalDateOf(ended))].Value
             : _localizer["HistoryStartedFormat", started].Value;
 
-        var hasResults = record.IsActive && _catalog.GetTrackDays(active.Track)
+        var hasResults = isActive && _catalog.GetTrackDays(active.Track)
             .Any(d => d.Sessions.Any(s => workouts.GetValueOrDefault(s.WorkoutId) is { HasMetrics: true }));
 
         return new HistoryProgramViewModel(
@@ -245,7 +262,9 @@ public partial class HistoryViewModel : ViewModelBase
             _localizer["HistoryCrossedFormat", crossed].Value,
             _localizer["CalendarLongestStreakFormat", best].Value,
             dates,
-            hasResults);
+            hasResults,
+            _localizer["HistoryCalendarNameFormat", active.Program.Name].Value,
+            _localizer["HistoryResultsNameFormat", active.Program.Name].Value);
     }
 
     private IReadOnlyList<HistoryMonthViewModel> GroupByMonth(IReadOnlyList<BonusWorkoutEntity> bonuses) =>
@@ -260,16 +279,21 @@ public partial class HistoryViewModel : ViewModelBase
 
     private HistoryBonusViewModel ToBonus(BonusWorkoutEntity bonus)
     {
-        var date = bonus.Date.ToString("ddd d MMM", CultureInfo.CurrentCulture);
+        var format = CultureInfo.CurrentCulture.DateTimeFormat;
+        var date = $"{bonus.Date.ToString("ddd", format)} {bonus.Date.ToString(format.MonthDayPattern, format)}";
         var duration = bonus.DurationMinutes is { } minutes ? _localizer["TodayDurationFormat", minutes].Value : "";
         return new(bonus.Title, duration, date, duration.Length == 0 ? $"{bonus.Title}, {date}" : $"{bonus.Title}, {duration}, {date}");
     }
 
-    private static string FormatDate(DateOnly date) => date.ToString("d MMM yyyy", CultureInfo.CurrentCulture);
+    private static string FormatDate(DateOnly date) => date.ToString("d", CultureInfo.CurrentCulture);
+
+    private DateOnly LocalDateOf(DateTimeOffset moment) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(moment, _time.LocalTimeZone).DateTime);
 
     private static string MonthName(DateOnly date)
     {
-        var text = date.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        var format = CultureInfo.CurrentCulture.DateTimeFormat;
+        var text = date.ToString(format.YearMonthPattern, format);
         return char.ToUpper(text[0], CultureInfo.CurrentCulture) + text[1..];
     }
 }

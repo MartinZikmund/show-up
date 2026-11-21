@@ -211,6 +211,12 @@
   <data name="HistoryStatusStopped" xml:space="preserve">
     <value>Stopped</value>
   </data>
+  <data name="HistoryCalendarNameFormat" xml:space="preserve">
+    <value>Calendar, {0}</value>
+  </data>
+  <data name="HistoryResultsNameFormat" xml:space="preserve">
+    <value>Results, {0}</value>
+  </data>
   <data name="HistoryResultsLink" xml:space="preserve">
     <value>Results</value>
   </data>
