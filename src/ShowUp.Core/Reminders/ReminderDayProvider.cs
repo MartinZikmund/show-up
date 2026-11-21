@@ -27,7 +27,7 @@ public sealed class ReminderDayProvider(IScheduleQuery schedule, ICatalogService
 
     private ReminderDay Describe(IReadOnlyList<DueProgram> due, IReadOnlyDictionary<string, Workout> workouts)
     {
-        var scheduled = due.Where(d => d.Day is not null).ToList();
+        var scheduled = due.Where(d => d.Day is not null && !d.IsReadOnly).ToList();
         if (scheduled.Count == 0)
         {
             return new ReminderDay(true, null, false);
