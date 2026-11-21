@@ -49,6 +49,17 @@ public sealed class ActiveEnrollmentServiceTests
     }
 
     [TestMethod]
+    public async Task GetAsync_PinnedRevisionMissing_FallsBackToLatest()
+    {
+        await _repository.EnrollAsync("p", 7, "t", _today);
+
+        var active = await _service.GetAsync();
+
+        active!.Program.Revision.Should().Be(2);
+        active.Calendar.DayCount.Should().Be(5);
+    }
+
+    [TestMethod]
     public async Task CrossAsync_ShiftedSchedule_UsesCalendarDate()
     {
         await _repository.EnrollAsync("p", 1, "t", _today.AddDays(-5));
