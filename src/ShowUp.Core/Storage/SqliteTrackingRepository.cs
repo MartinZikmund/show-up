@@ -101,6 +101,7 @@ public sealed class SqliteTrackingRepository(
         var rows = await QueryAsync<ScheduleShiftEntity>(connection, s => s.EnrollmentId == enrollmentId && s.DeletedAt == null);
         return rows
             .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.Id.ToString("D"), StringComparer.Ordinal)
             .Select(s => new ScheduleShift(s.FromDate, s.Days))
             .ToList();
     }
