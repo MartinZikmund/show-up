@@ -14,12 +14,81 @@ public partial class TodayViewBase : ViewBase<TodayViewModel> { }
 [NavigationInfo(NavigationSection.Today)]
 public sealed partial class TodayView : TodayViewBase
 {
+    private Window? _window;
+
     public TodayView()
     {
         InitializeComponent();
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+        WidthStates.CurrentStateChanged += (_, _) => UpdateCalendarVisibility();
 #if DEBUG
         AddDebugMarkerTools();
 #endif
+    }
+
+    /// <summary>The calendar shown beside Today when the window is wide.</summary>
+    public ProgramCalendarViewModel? CalendarViewModel { get; private set; }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var shell = FindWindowShell(XamlRoot?.Content);
+        if (CalendarViewModel is null && shell is not null)
+        {
+            CalendarViewModel = shell.ServiceProvider.GetRequiredService<ProgramCalendarViewModel>();
+            CalendarViewModel.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(ProgramCalendarViewModel.HasEnrollment))
+                {
+                    UpdateCalendarVisibility();
+                }
+            };
+        }
+
+        Bindings.Update();
+        CalendarViewModel?.ViewLoaded();
+        UpdateCalendarVisibility();
+
+        _window = shell?.ServiceProvider.GetRequiredService<IWindowShellProvider>().Window;
+        if (_window is not null)
+        {
+            _window.Activated += Window_Activated;
+        }
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        CalendarViewModel?.ViewUnloaded();
+        if (_window is not null)
+        {
+            _window.Activated -= Window_Activated;
+            _window = null;
+        }
+    }
+
+    // Wide and enrolled: the calendar sits beside Today (without a program Today already invites to Programs).
+    private void UpdateCalendarVisibility() =>
+        CalendarHost.Visibility = WidthStates.CurrentState == Wider && CalendarViewModel?.HasEnrollment == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+    // Coming back to the app the next morning moves today on.
+    private void Window_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            return;
+        }
+
+        if (ViewModel is { } viewModel)
+        {
+            _ = viewModel.RefreshIfDateChangedAsync();
+        }
+
+        if (CalendarViewModel is { } calendar)
+        {
+            _ = calendar.RefreshIfDateChangedAsync();
+        }
     }
 
 #if DEBUG
@@ -163,10 +232,10 @@ public sealed partial class TodayView : TodayViewBase
         slowMotion.SetValue(AutomationProperties.AutomationIdProperty, "DebugSlowMotionToggle");
         slowMotion.Toggled += (_, _) => MarkerCrossControl.DebugTimeScale = slowMotion.IsOn ? 25 : 1;
 
-        ContentPanel.Children.Add(cell);
-        ContentPanel.Children.Add(preview);
-        ContentPanel.Children.Add(draw);
-        ContentPanel.Children.Add(slowMotion);
+        DebugPanel.Children.Add(cell);
+        DebugPanel.Children.Add(preview);
+        DebugPanel.Children.Add(draw);
+        DebugPanel.Children.Add(slowMotion);
     }
 #endif
 }

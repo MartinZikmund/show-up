@@ -1,0 +1,289 @@
+﻿<UserControl
+    x:Class="ShowUp.Controls.TodayPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls"
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:storage="using:ShowUp.Core.Storage"
+    xmlns:vm="using:ShowUp.Core.ViewModels">
+
+    <StackPanel Spacing="16">
+
+        <!--  Greeting, program and streak  -->
+        <StackPanel Spacing="4">
+            <TextBlock
+                AutomationProperties.AutomationId="TodayGreeting"
+                AutomationProperties.HeadingLevel="Level1"
+                Style="{StaticResource SectionHeaderTextBlockStyle}"
+                Text="{x:Bind ViewModel.Greeting, Mode=OneWay}" />
+            <TextBlock
+                AutomationProperties.AutomationId="TodayProgramLine"
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Text="{x:Bind ProgramLine(ViewModel.ProgramName, ViewModel.DayText), Mode=OneWay}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind ViewModel.HasEnrollment, Mode=OneWay}" />
+            <StackPanel
+                AutomationProperties.AutomationId="TodayStreak"
+                Orientation="Horizontal"
+                Spacing="8"
+                Visibility="{x:Bind ViewModel.HasEnrollment, Mode=OneWay}">
+                <!--  Vector flame (no emoji font on WebAssembly)  -->
+                <Path
+                    Height="18"
+                    VerticalAlignment="Center"
+                    AutomationProperties.AccessibilityView="Raw"
+                    Data="M8,0 C9,3.2 13,5.4 13,10 C13,13.6 10.8,16 8,16 C5.2,16 3,13.8 3,10.8 C3,8.4 4.2,6.8 5.6,5.6 C5.6,7.6 6.4,8.8 7.4,9.2 C6.8,6 7.6,2.8 8,0 Z M8,16 C6.6,16 5.6,14.9 5.6,13.5 C5.6,12.2 6.4,11.3 7.2,10.6 C7.3,11.6 7.9,12.2 8.6,12.4 C8.5,11.4 8.9,10.5 9.6,9.8 C10.1,10.9 10.4,12.1 10.4,13.3 C10.4,14.8 9.4,16 8,16 Z"
+                    Fill="{ThemeResource MarkerBrush}"
+                    Stretch="Uniform" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="{x:Bind ViewModel.StreakText, Mode=OneWay}" />
+            </StackPanel>
+        </StackPanel>
+
+        <!--  No program: invite to Programs  -->
+        <Border
+            Padding="16"
+            Background="{ThemeResource CalendarCellBackgroundBrush}"
+            BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{ThemeResource OverlayCornerRadius}"
+            Visibility="{x:Bind ViewModel.ShowNoEnrollment, Mode=OneWay}">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    AutomationProperties.AutomationId="TodayNoProgramTitle"
+                    Style="{StaticResource DisplayNumberTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayNoProgramTitle}" />
+                <TextBlock
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayNoProgramMessage}"
+                    TextWrapping="Wrap" />
+                <Button
+                    AutomationProperties.AutomationId="TodayBrowseProgramsButton"
+                    Command="{x:Bind ViewModel.BrowseProgramsCommand, Mode=OneWay}"
+                    Content="{markup:Localize Key=TodayBrowsePrograms}"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </StackPanel>
+        </Border>
+
+        <!--  Enrolled but nothing today  -->
+        <Border
+            Padding="16"
+            Background="{ThemeResource CalendarCellBackgroundBrush}"
+            BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{ThemeResource OverlayCornerRadius}"
+            Visibility="{x:Bind ViewModel.IsOffSchedule, Mode=OneWay}">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    AutomationProperties.AutomationId="TodayOffScheduleTitle"
+                    Style="{StaticResource DisplayNumberTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayOffScheduleTitle}" />
+                <TextBlock
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayOffScheduleMessage}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <!--  Rest day: calm  -->
+        <Border
+            Padding="16"
+            Background="{ThemeResource CalendarCellBackgroundBrush}"
+            BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{ThemeResource OverlayCornerRadius}"
+            Visibility="{x:Bind ViewModel.IsRestDay, Mode=OneWay}">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    AutomationProperties.AutomationId="TodayRestDayTitle"
+                    Style="{StaticResource DisplayNumberTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayRestDayTitle}" />
+                <TextBlock
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayRestDayMessage}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <!--  Today's sessions  -->
+        <ItemsRepeater x:Name="SessionsRepeater" ItemsSource="{x:Bind ViewModel.Sessions, Mode=OneWay}">
+            <ItemsRepeater.Layout>
+                <StackLayout Spacing="12" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="vm:TodaySessionViewModel">
+                    <Border
+                        Padding="16"
+                        Background="{ThemeResource CalendarCellBackgroundBrush}"
+                        BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{ThemeResource OverlayCornerRadius}">
+                        <Grid ColumnSpacing="12" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Spacing="8">
+                                <TextBlock
+                                    AutomationProperties.AutomationId="TodaySessionName"
+                                    Style="{StaticResource DisplayNumberTextBlockStyle}"
+                                    Text="{x:Bind Name}"
+                                    TextWrapping="WrapWholeWords" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border
+                                        Padding="8,2"
+                                        BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{ThemeResource ControlCornerRadius}">
+                                        <TextBlock
+                                            Foreground="{ThemeResource MutedTextBrush}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Text="{x:Bind KindLabel}" />
+                                    </Border>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource MutedTextBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind DurationLabel}" />
+                                    <Border
+                                        Padding="8,2"
+                                        Background="{ThemeResource BonusStickerBackgroundBrush}"
+                                        CornerRadius="{ThemeResource ControlCornerRadius}"
+                                        Visibility="{x:Bind IsOptional}">
+                                        <TextBlock
+                                            Foreground="{ThemeResource BonusStickerForegroundBrush}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Text="{markup:Localize Key=TodayOptionalBadge}" />
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                            <!--  Done: the day's marks on a paper square  -->
+                            <Border
+                                Grid.Column="1"
+                                Width="72"
+                                Height="72"
+                                Background="{ThemeResource CalendarCellBackgroundBrush}"
+                                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                                BorderThickness="1.5"
+                                CornerRadius="{ThemeResource ControlCornerRadius}"
+                                Visibility="{x:Bind IsDone, Mode=OneWay}">
+                                <controls:MarkerCrossControl
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Loaded="Cross_Loaded"
+                                    Unloaded="Cross_Unloaded" />
+                            </Border>
+                            <Button
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Height="48"
+                                HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="CrossItOffButton"
+                                Command="{x:Bind CrossCommand}"
+                                Content="{markup:Localize Key=TodayCrossItOff}"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Visibility="{x:Bind IsOpen, Mode=OneWay}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                AutomationProperties.AutomationId="TodaySessionDone"
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                Text="{markup:Localize Key=TodaySessionDone}"
+                                Visibility="{x:Bind IsDone, Mode=OneWay}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+
+        <!--  Bonus workouts  -->
+        <StackPanel Spacing="8">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    AutomationProperties.HeadingLevel="Level2"
+                    Style="{StaticResource CalendarPhaseHeaderTextBlockStyle}"
+                    Text="{markup:Localize Key=TodayBonusHeader}" />
+                <Button
+                    Grid.Column="1"
+                    AutomationProperties.AutomationId="LogBonusButton"
+                    Command="{x:Bind ViewModel.LogBonusCommand, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="16" Glyph="&#xE710;" />
+                        <TextBlock Text="{markup:Localize Key=TodayBonusAdd}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <TextBlock
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Text="{markup:Localize Key=TodayBonusEmpty}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind NoBonuses(ViewModel.HasBonuses), Mode=OneWay}" />
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Bonuses, Mode=OneWay}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="8" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="storage:BonusWorkoutEntity">
+                        <Border
+                            Padding="12,8,4,8"
+                            Background="{ThemeResource CalendarCellBackgroundBrush}"
+                            BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{ThemeResource ControlCornerRadius}">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Width="12"
+                                    Height="12"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource BonusStickerBackgroundBrush}"
+                                    CornerRadius="6" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock
+                                        AutomationProperties.AutomationId="TodayBonusTitle"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        Text="{x:Bind Title}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Foreground="{ThemeResource MutedTextBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind controls:TodayPanel.BonusDetail(DayNumber, DurationMinutes)}" />
+                                </StackPanel>
+                                <Button
+                                    Grid.Column="2"
+                                    AutomationProperties.AutomationId="RemoveBonusButton"
+                                    AutomationProperties.Name="{markup:Localize Key=TodayBonusRemove}"
+                                    Click="RemoveBonus_Click"
+                                    Style="{StaticResource SubtleButtonStyle}"
+                                    Tag="{x:Bind}"
+                                    ToolTipService.ToolTip="{markup:Localize Key=TodayBonusRemove}">
+                                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

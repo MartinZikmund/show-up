@@ -140,6 +140,8 @@ public partial class App : Application, IApplication
         services.AddScoped<IShareService, ShareService>();
         services.AddScoped<ICrossMoment, CrossMomentService>();
         services.AddScoped<ICalendarPrompts, CalendarPrompts>();
+        services.AddScoped<IBonusWorkoutDialog, BonusWorkoutDialogService>();
+        services.AddScoped<ICrossingCoordinator, CrossingCoordinator>();
         services.AddScoped<ISectionNavigator>(sp => sp.GetRequiredService<WindowShellViewModel>());
         services.AddScoped<INavigationService>(sp =>
         {
