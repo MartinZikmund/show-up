@@ -245,7 +245,7 @@
     <value>N&#225;hled velk&#233;ho od&#353;krtnut&#237;</value>
   </data>
   <data name="DebugMarkerSample" xml:space="preserve">
-    <value>Uk&#225;zka fixy: klepnut&#237;m od&#353;krtni</value>
+    <value>Uk&#225;zka fixy: klepnut&#237;m od&#353;krtn&#283;te</value>
   </data>
   <data name="DebugSlowMotion" xml:space="preserve">
     <value>Zpomalen&#237; (25&#215;)</value>
@@ -266,7 +266,7 @@
     <value>Od&#353;krtn&#283;te to po sv&#233;m: X, &#269;&#225;rou, &#269;m&#225;ranic&#237; nebo p&#345;e&#353;krtnut&#237;m.</value>
   </data>
   <data name="DrawAnnouncement" xml:space="preserve">
-    <value>Od&#353;krtn&#283;te kreslen&#237;m, nebo stiskn&#283;te Ud&#283;lej to za m&#283;</value>
+    <value>Od&#353;krtn&#283;te kreslen&#237;m, nebo stiskn&#283;te Ud&#283;lejte to za m&#283;</value>
   </data>
   <data name="DrawPadName" xml:space="preserve">
     <value>Plocha na kreslen&#237;</value>
@@ -275,7 +275,7 @@
     <value>Inkoust</value>
   </data>
   <data name="DrawDoItForMe" xml:space="preserve">
-    <value>Ud&#283;lej to za m&#283;</value>
+    <value>Ud&#283;lejte to za m&#283;</value>
   </data>
   <data name="DrawUndo" xml:space="preserve">
     <value>Zp&#283;t</value>
