@@ -6,7 +6,7 @@
 
 **Architecture:** Schema-in-repo (`supabase/` with migrations, RLS, seed) applied locally with the Supabase CLI for tests. The app talks to Supabase through a **thin, AOT-safe REST client** over `HttpClient` + System.Text.Json source generation (GoTrue auth endpoints, PostgREST, Storage public URLs) — no community SDK, so WASM trimming stays safe and the dependency surface stays tiny. Sync is row-based: push rows with `UpdatedAt > lastPush`, pull rows with `server_updated_at > cursor`, last-write-wins on `UpdatedAt` for mutable rows, tombstones never hard-deleted.
 
-**Tech Stack:** Supabase (Postgres 17, Auth, PostgREST, Storage), Supabase CLI v3 (local by default), Docker for the local stack in CI tests, .NET 11 HttpClient + STJ source-gen.
+**Tech Stack:** Supabase (Postgres 17, Auth, PostgREST, Storage), Supabase CLI v3 via `npx supabase@3` (local by default), Docker only in CI for the local stack, .NET 11 HttpClient + STJ source-gen.
 
 **Spec:** `docs/superpowers/specs/2026-11-21-show-up-design.md` (Sync, Account switching, Catalog delivery).
 
@@ -17,6 +17,10 @@
 - **Auth UX:** email **one-time code** (6 digits via `signInWithOtp` + `verifyOtp` type `email`) — works on every head without deep links; Apple/Google OAuth deferred. Sign-in is optional; sync is Pro (`FeatureGate.CanUse(CloudSync)`).
 - Config: `Supabase:Url`, `Supabase:PublishableKey` (appsettings; empty → all Supabase features hidden, app fully offline). Tokens stored via a platform secure store (Windows `PasswordVault`/DPAPI, Android Keystore-backed prefs, iOS Keychain, WASM `localStorage` with a documented caveat, desktop DPAPI on Windows / file with 0600 on macOS/Linux).
 - Account switching (spec): first sign-in asks "Bring your local progress into this account?" — yes claims `UserId = null` rows; data of different accounts never mixes.
+
+- **Plan 3 hand-offs (binding):** use `IEntitlementService.SetUserAsync(userId)` after sign-in / `null` after sign-out (RevenueCat `LoginAsync`/`LogOutAsync`, Pro cache keyed by account); after every sync pull, claim, user switch and OTA catalog swap send `DataChangedMessage` (Core) — `ActiveEnrollmentService`/`CatalogService` `Invalidate()` and LiveRefresher VMs + `ReminderCoordinator` re-plan react to it; flip the paywall's Cloud sync row from "Coming soon" to available via the ProFeature availability flag when sync ships; sync only what `docs/sync-classification.md` marks as synced (rows + `ISyncedSettings`), never per-device prefs; server merge per `docs/storage.md` (LWW on natural keys scoped by `user_id`, `(user_id, subject_key)` indexes, never plain unique constraints on natural keys); account entitlements (later) compose with store entitlements in one `IEntitlementService` raising `Changed` once; catalog workout ids are append-only (`catalog/workout-ids.lock`) — the publish job must refuse removals.
+- **Carried from Plan 3 review (do in Task 3/4):** `SetUserAsync` runs inside the entitlement refresh single-flight and is atomic (seed the new account's Pro cache from the anonymous one until the store confirms); `LapseCoordinator` prompts only on a store-confirmed lapse (`IsConfirmed`); `SyncedPersonalization` reload falls back to the current in-memory value and re-applies the marker brush; `LiveRefresher` DataChanged handling must not depend on messenger handler order (await the services' invalidation explicitly); the sync engine sends ONE coalesced `DataChangedMessage` per pull.
+- **Local Supabase stack (ruling):** Docker Desktop is not started on Martin's machine. Migrations/RLS/pgTAP/advisors run against the local stack in CI (`supabase start` on GitHub runners); locally, write SQL + C# with fakes, and use `npx supabase@3` (CLI v3 is local-by-default) only for commands that don't need Docker.
 
 ## Review Focus
 
