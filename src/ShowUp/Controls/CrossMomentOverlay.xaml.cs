@@ -24,6 +24,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
     private TaskCompletionSource? _shown;
     private CrossMomentInfo? _info;
     private CrossMomentCaption? _caption;
+    private readonly List<Storyboard> _fades = [];
     private bool _awaitingStrokes;
     private UIElement? _previousFocus;
 
@@ -113,6 +114,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
         _shown = null;
         Visibility = Visibility.Collapsed;
+        StopFades();
         HideCaptionFromAutomation();
 
         // The cell keeps the final X only while open; the next show starts from its own StrokesBefore.
@@ -197,7 +199,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         AutomationProperties.SetAccessibilityView(CaptionPanel, AccessibilityView.Raw);
     }
 
-    private static void Fade(UIElement target, double from, double to, TimeSpan duration)
+    private void Fade(UIElement target, double from, double to, TimeSpan duration)
     {
         target.Opacity = to;
         DoubleAnimation animation = new()
@@ -211,7 +213,19 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         Storyboard.SetTargetProperty(animation, nameof(Opacity));
         Storyboard storyboard = new();
         storyboard.Children.Add(animation);
+        _fades.Add(storyboard);
         storyboard.Begin();
+    }
+
+    // A finished fade holds its end value over the local one, so the next show's caption would start visible.
+    private void StopFades()
+    {
+        foreach (var fade in _fades)
+        {
+            fade.Stop();
+        }
+
+        _fades.Clear();
     }
 
     private void Root_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateCellSize();
