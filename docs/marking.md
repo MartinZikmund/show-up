@@ -53,8 +53,10 @@ prototype exactly. `SeedFrom(Guid)` is FNV-1a over the GUID bytes, never `GetHas
 ## Draw it yourself
 
 `IAppPreferences.CrossOffStyle` (Settings → Crossing off → Cross-off style) picks `DrawYourself`
-(default) or `AutoMarker` (tap = generated X, cross moment per `CrossMomentMode`). In draw mode
-callers open the square with `ICrossMoment.DrawAsync`:
+(default) or `AutoMarker` (tap = generated X, cross moment per `CrossMomentMode`). Draw-it-yourself
+always opens the drawing surface: `CrossMomentMode` only governs the auto style. Callers don't
+call the moment themselves; `ICrossingCoordinator.CrossAsync` does the following, and all
+crossing goes through `IActiveEnrollmentService`, which takes the day's date from its calendar:
 
 ```csharp
 using ShowUp.Core.Marking;
@@ -65,7 +67,7 @@ var result = await crossMoment.DrawAsync(new CrossMomentDrawRequest(info, priorI
 if (result.Crossed)
 {
     // InkJson is null for "Do it for me" (the generated X).
-    await repository.CrossSessionAsync(enrollmentId, dayIndex, sessionIndex, dayDate, result.InkJson);
+    await enrollments.CrossAsync(dayIndex, sessionIndex, result.InkJson, completionId);
 }
 ```
 
@@ -162,9 +164,3 @@ padded content, so it covers the tab bar and safe areas.
 Callers decide whether to show it with `CrossMomentPolicy.ShouldShow(mode, isToday)` and the
 user's `IAppPreferences.CrossMomentMode` (`OnlyToday` by default, or `Always` / `Never`). After the
 moment, set the in-cell X without animation.
-
-## Debug tools
-
-Debug builds add a sample cell, a "Preview cross moment" button, a "Preview draw it yourself"
-button (a two-session day: the drawn ink lands in the sample cell, and the next draw shows it at
-50%) and a 25× slow-motion toggle to the Today page, until the calendar and Today card land.

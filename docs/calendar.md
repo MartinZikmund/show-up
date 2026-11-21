@@ -60,7 +60,7 @@ so it's unit-tested with `FakeTimeProvider`) and when the window is activated on
 
 `ProgramCalendarControl` (`src/ShowUp/Controls`) holds the header (program name, streak with the
 vector flame, Shift schedule), the grid and the empty state, and takes the view model as
-`ViewModel`. `ProgramCalendarView` hosts it; Today embeds it side by side from 1008 px.
+`ViewModel`. `ProgramCalendarView` hosts it; Today embeds it side by side once its page is 1120 px wide (intentional: below that the cells cramp).
 
 - `CalendarWeekCells` is a panel of seven equal square columns, capped at 136 px per cell.
 - `CalendarDayCell` is a `Button` filled from code (not x:Bind), so a recycled row lands its
