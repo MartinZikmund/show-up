@@ -40,6 +40,68 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task CrossSession_EndedEnrollment_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Abandoned);
+
+        Func<Task> act = () => repo.CrossSessionAsync(e.Id, 0, 0, _today);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task CrossSession_OtherUsersEnrollment_Throws()
+    {
+        User.CurrentUserId = "a";
+        var (repo, e) = await EnrolledAsync();
+        User.CurrentUserId = "b";
+
+        Func<Task> act = () => repo.CrossSessionAsync(e.Id, 0, 0, _today);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task CrossSession_NegativeIndex_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+
+        Func<Task> negativeDay = () => repo.CrossSessionAsync(e.Id, -1, 0, _today);
+        Func<Task> negativeSession = () => repo.CrossSessionAsync(e.Id, 0, -1, _today);
+
+        await negativeDay.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await negativeSession.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    [TestMethod]
+    public async Task UncrossSession_EndedEnrollment_Throws()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Finished);
+
+        Func<Task> act = () => repo.UncrossSessionAsync(e.Id, 0, 0);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public async Task Recross_AfterUncross_AddsNewRowAndKeepsTombstone()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 0, 0, _today);
+        await repo.UncrossSessionAsync(e.Id, 0, 0);
+
+        await repo.CrossSessionAsync(e.Id, 0, 0, _today);
+
+        var connection = await Db.GetConnectionAsync();
+        var rows = await connection.Table<CompletionEntity>().ToListAsync();
+        rows.Should().HaveCount(2);
+        rows.Count(r => r.DeletedAt != null).Should().Be(1);
+        (await repo.GetCompletedSessionsAsync(e.Id)).Should().BeEquivalentTo([(0, 0)]);
+    }
+
+    [TestMethod]
     public async Task CrossSession_Twice_StoresOneRow()
     {
         var (repo, e) = await EnrolledAsync();
