@@ -30,6 +30,26 @@ How the app decides who is Pro, what each head does about it, and what to config
 A store head with no key or Store IDs is Free and the paywall says "Purchases aren't available in this build".
 If the store should answer but does not (offline), it says "Couldn't load the offers" with a retry button.
 
+## Lapse matrix
+
+What happens when Pro ends. Nothing is ever deleted.
+
+| Thing | After a lapse | Comes back with Pro |
+| --- | --- | --- |
+| Programs beyond the primary one | stay visible, read-only (no crossing, shifting, journal edits); the lapse prompt asks which one is primary | writable again |
+| Custom programs | visible, read-only, can't be started again | editable and startable |
+| Reminders beyond the first | disabled but kept, and only once the store itself has confirmed the lapse (`IEntitlementService.IsConfirmed`): offline or a timed-out check changes nothing | stay off; the user switches them on |
+| Reminders for read-only programs | no longer ask for their workouts | asked for again |
+| Marker color | shows Auto; the stored choice is kept | the stored color |
+| History | current program only | all programs and stats |
+| Cloud sync | stops (not shipped yet; the paywall says "Coming soon") | resumes |
+
+## Trying it out
+
+Debug builds add a "Pro override" box under Settings > Debugging: **Real** (whatever the store says), **Force Pro** or
+**Force Free** (simulates a confirmed lapse, even on Desktop and WebAssembly where Pro is unlocked). It wraps the real
+service (`DebugEntitlementOverride`, DEBUG only) and raises `Changed` like a purchase would.
+
 ## Configuration
 
 Set in `appsettings.json` (CI secrets later); all are empty or defaulted in the repo.
@@ -50,7 +70,9 @@ RevenueCat packages are read from the current offering: `$rc_monthly`, `$rc_annu
 - `StoreContext` needs the window handle (`InitializeWithWindow`) before any purchase UI.
 - `OfflineLicensesChanged` fires on a pool thread; the service hops to the UI thread before raising `Changed`.
 
-## Later
+## Accounts
 
-Entitlements are per store until Plan 4 (Supabase accounts). Then RevenueCat should `LoginAsync` with the account id
-so a purchase follows the user across devices; today it uses an anonymous RevenueCat user.
+`IEntitlementService.SetUserAsync(userId)` is what Plan 4's sign-in calls (nothing does yet). RevenueCat logs in or out so a
+purchase follows the user across devices; the Microsoft Store and the unlocked heads ignore it. The cached Pro state is kept
+per account (`AccountProCache`: preference keys carry a hash of the user id, anonymous keeps the original keys), so signing
+in as someone else never inherits the previous account's Pro.

@@ -7,7 +7,7 @@ Workout reminders: a time and weekdays, delivered as a notification that names t
 - `ReminderPlanner.Plan(...)` turns enabled reminders into `PlannedReminder`s for the next 14 calendar days (today included while its time is ahead). Wall-clock time is kept across DST: a time skipped by spring-forward moves to the next valid minute, a repeated fall-back time uses its first occurrence.
 - Days with nothing left to do (everything crossed, or nothing due in any active program) get no notification. A rest day says "Rest day. You earned it."; a workout day says "<workout> is waiting. Show up." With several open sessions the text reads "<first> + N more".
 - `ReminderDayProvider` reads each date from `IScheduleQuery`, so it covers all active programs.
-- `ReminderCoordinator` re-plans on app start, window activation, `TrackingChangedMessage`, `RemindersChangedMessage` and entitlement changes, then calls `IReminderScheduler.ReplaceAllAsync`. It skips scheduling when `IsSupported` is false.
+- `ReminderCoordinator` re-plans on app start, main window activation, `TrackingChangedMessage`, `RemindersChangedMessage` and entitlement changes, then calls `IReminderScheduler.ReplaceAllAsync`. It skips scheduling when `IsSupported` is false.
 - `IReminderScheduler.IsDeniedAsync()` reports notifications switched off without prompting; the Reminders page re-checks it on load while a reminder is on.
 - `IReminderScheduler.Limit` says where delivery stops short of the OS (`WhileAppRunning`, `WhileTabOpen`); the Reminders page shows a note for it.
 - Tapping a notification sends `ReminderOpenedMessage`; `WindowShell` switches to Today and brings the window forward. A cold start lands on Today anyway.

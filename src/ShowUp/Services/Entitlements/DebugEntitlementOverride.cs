@@ -3,11 +3,18 @@ using ShowUp.Core.Entitlements;
 
 namespace ShowUp.Services.Entitlements;
 
-/// <summary>Debug builds only: wraps the real service so Settings can simulate a lapse to Free.</summary>
+public enum ProOverride
+{
+    Real,
+    ForcePro,
+    ForceFree,
+}
+
+/// <summary>Debug builds only: wraps the real service so Settings can force Pro or Free whatever the store says.</summary>
 public sealed class DebugEntitlementOverride : IEntitlementService
 {
     private readonly IEntitlementService _inner;
-    private bool _simulateFree;
+    private ProOverride _override;
 
     public DebugEntitlementOverride(IEntitlementService inner)
     {
@@ -15,22 +22,27 @@ public sealed class DebugEntitlementOverride : IEntitlementService
         _inner.Changed += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    public bool SimulateFree
+    public ProOverride Override
     {
-        get => _simulateFree;
+        get => _override;
         set
         {
-            if (_simulateFree != value)
+            if (_override != value)
             {
-                _simulateFree = value;
+                _override = value;
                 Changed?.Invoke(this, EventArgs.Empty);
             }
         }
     }
 
-    public bool IsPro => !_simulateFree && _inner.IsPro;
+    public bool IsPro => _override switch
+    {
+        ProOverride.ForcePro => true,
+        ProOverride.ForceFree => false,
+        _ => _inner.IsPro,
+    };
 
-    public bool IsConfirmed => _simulateFree || _inner.IsConfirmed;
+    public bool IsConfirmed => _override != ProOverride.Real || _inner.IsConfirmed;
 
     public bool PurchasesAvailable => _inner.PurchasesAvailable;
 

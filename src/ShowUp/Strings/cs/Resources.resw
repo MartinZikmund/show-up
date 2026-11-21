@@ -961,8 +961,17 @@
   <data name="PrimaryProgramConfirm" xml:space="preserve">
     <value>Nechat tento</value>
   </data>
-  <data name="DebugSimulateFree" xml:space="preserve">
-    <value>Simulovat Free (jen ladicí sestavení)</value>
+  <data name="DebugProOverride" xml:space="preserve">
+    <value>Přepsání Pro (jen ladicí sestavení)</value>
+  </data>
+  <data name="DebugProOverrideReal" xml:space="preserve">
+    <value>Skutečný stav</value>
+  </data>
+  <data name="DebugProOverrideForcePro" xml:space="preserve">
+    <value>Vynutit Pro</value>
+  </data>
+  <data name="DebugProOverrideForceFree" xml:space="preserve">
+    <value>Vynutit Free</value>
   </data>
   <data name="ProCouldNotConfirm" xml:space="preserve">
     <value>Nákup se nepodařilo ověřit. Pokud vám byla stržena platba, Pro se brzy odemkne; ověřit to můžete klepnutím na Obnovit nákupy.</value>
