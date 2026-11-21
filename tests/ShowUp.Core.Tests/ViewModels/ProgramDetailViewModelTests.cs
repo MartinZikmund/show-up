@@ -392,6 +392,19 @@ public sealed class ProgramDetailViewModelTests
     }
 
     [TestMethod]
+    public async Task Delete_Lapsed_StillAllowed()
+    {
+        _customPrograms.CanEdit = false;
+        var viewModel = await LoadAsync(Custom());
+
+        viewModel.DeleteCommand.CanExecute(null).Should().BeTrue();
+        await viewModel.DeleteAsync();
+
+        _customPrograms.Deleted.Should().Equal("custom-a");
+        _navigation.BackCount.Should().Be(1);
+    }
+
+    [TestMethod]
     public async Task Custom_ProComesBack_UnlocksEditing()
     {
         _customPrograms.CanEdit = false;

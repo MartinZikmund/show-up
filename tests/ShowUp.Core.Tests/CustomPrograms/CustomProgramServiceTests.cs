@@ -101,6 +101,17 @@ public sealed class CustomProgramServiceTests
     }
 
     [TestMethod]
+    public async Task Delete_WithoutPro_StillHidesIt()
+    {
+        await _service.SaveAsync(Draft("Mine", "run"));
+        _entitlements.IsPro = false;
+
+        await _service.DeleteAsync(Id);
+
+        (await _catalog.GetCatalogAsync()).Programs.Should().NotContain(p => p.Id == Id);
+    }
+
+    [TestMethod]
     public async Task GetVersionNumber_CountsRevisionsFromOne()
     {
         var (_, first) = await _service.SaveAsync(Draft("A", "run"));
