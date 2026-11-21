@@ -11,9 +11,6 @@ public sealed record ActiveEnrollment(EnrollmentEntity Enrollment, WorkoutProgra
 /// </summary>
 public interface IActiveEnrollmentService
 {
-    /// <summary>Raised after every write; <see cref="Messages.TrackingChangedMessage"/> goes out at the same time.</summary>
-    event EventHandler? Changed;
-
     Task<ActiveEnrollment?> GetAsync();
 
     Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync();

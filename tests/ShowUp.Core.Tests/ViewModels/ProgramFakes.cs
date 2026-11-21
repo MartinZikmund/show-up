@@ -66,8 +66,6 @@ internal sealed class StubConfirmationDialogService : IConfirmationDialogService
 /// <summary>Records the write calls; <see cref="Active"/> is what GetAsync returns.</summary>
 internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 {
-    public event EventHandler? Changed { add { } remove { } }
-
     public ActiveEnrollment? Active { get; set; }
 
     public List<string> Calls { get; } = [];

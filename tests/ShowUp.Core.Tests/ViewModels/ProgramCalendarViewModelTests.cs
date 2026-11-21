@@ -454,12 +454,6 @@ public sealed class ProgramCalendarViewModelTests
 
         public bool FailWrites { get; set; }
 
-        public event EventHandler? Changed
-        {
-            add => inner.Changed += value;
-            remove => inner.Changed -= value;
-        }
-
         public Task<ActiveEnrollment?> GetAsync()
         {
             Gets++;

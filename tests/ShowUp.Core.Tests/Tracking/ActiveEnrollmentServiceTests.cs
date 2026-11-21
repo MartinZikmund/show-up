@@ -92,17 +92,14 @@ public sealed class ActiveEnrollmentServiceTests
     }
 
     [TestMethod]
-    public async Task CrossAsync_Crossed_RaisesChangedAndSendsMessage()
+    public async Task CrossAsync_Crossed_SendsMessage()
     {
         await _repository.EnrollAsync("p", 1, "t", _today);
-        var changed = 0;
         var messages = 0;
-        _service.Changed += (_, _) => changed++;
         _messenger.Register<TrackingChangedMessage>(this, (_, _) => messages++);
 
         await _service.CrossAsync(0, 0);
 
-        changed.Should().Be(1);
         messages.Should().Be(1);
     }
 

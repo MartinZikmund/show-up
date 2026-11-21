@@ -17,8 +17,6 @@ public sealed class ActiveEnrollmentService(
     private int _version;
     private int _loadedVersion = -1;
 
-    public event EventHandler? Changed;
-
     public async Task<ActiveEnrollment?> GetAsync()
     {
         await _gate.WaitAsync();
@@ -145,7 +143,6 @@ public sealed class ActiveEnrollmentService(
     private void NotifyChanged()
     {
         Interlocked.Increment(ref _version);
-        Changed?.Invoke(this, EventArgs.Empty);
         messenger.Send(new TrackingChangedMessage());
     }
 }
