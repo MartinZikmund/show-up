@@ -7,9 +7,13 @@ using ShowUp.Core.Marking;
 using ShowUp.Core.Reminders;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
+using ShowUp.Core.Supabase;
 using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
+#if !HAS_UNO || __DESKTOP__
+using ShowUp.Services.Auth;
+#endif
 using ShowUp.Services.Dialogs;
 using ShowUp.Services.Entitlements;
 using ShowUp.Services.Marking;
@@ -107,6 +111,15 @@ public partial class App : Application, IApplication
             // The old per-device values stay in effect.
             Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Loading the synced settings failed.");
         }
+        try
+        {
+            await Host.Services.GetRequiredService<ISupabaseAuth>().RestoreAsync();
+        }
+        catch (Exception ex)
+        {
+            // Signed out until the user signs in again.
+            Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Restoring the Supabase session failed.");
+        }
         appPreferences.LaunchCount++;
         Host.Services.GetRequiredService<MarkerBrushUpdater>().Apply();
 
@@ -176,6 +189,7 @@ public partial class App : Application, IApplication
         services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
         RegisterEntitlements(context, services);
+        RegisterSupabase(context, services);
 #if DEBUG
         DecorateEntitlementsForDebug(services);
 #endif
@@ -280,6 +294,54 @@ public partial class App : Application, IApplication
         services.AddSingleton<IReminderScheduler, NullReminderScheduler>();
 #endif
     }
+
+    private static void RegisterSupabase(HostBuilderContext context, IServiceCollection services)
+    {
+        SupabaseOptions options = new()
+        {
+            Url = context.Configuration["Supabase:Url"] ?? "",
+            PublishableKey = context.Configuration["Supabase:PublishableKey"] ?? "",
+        };
+        services.AddSingleton(options);
+        services.AddSingleton<ITokenStore>(_ => CreateTokenStore());
+        services.AddSingleton<ISupabaseAuth>(sp => new SupabaseAuth(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
+            options,
+            sp.GetRequiredService<ITokenStore>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<SupabaseAuth>>()));
+        services.AddSingleton<IAccessTokenProvider>(sp => sp.GetRequiredService<ISupabaseAuth>());
+        services.AddSingleton<ISupabaseRest>(sp => new SupabaseRest(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(60) },
+            options,
+            sp.GetRequiredService<IAccessTokenProvider>()));
+    }
+
+    // Where the session lives per head: see docs/supabase.md.
+    private static ITokenStore CreateTokenStore()
+    {
+#if __ANDROID__
+        return new FileTokenStore(SessionFilePath(), new ShowUp.Droid.Auth.AndroidKeystoreProtector());
+#elif __IOS__
+        return new ShowUp.iOS.Auth.KeychainTokenStore();
+#elif !HAS_UNO
+        return ShowUp.Platforms.Windows.Reminders.WindowsReminderScheduler.IsPackaged
+            ? new ShowUp.Platforms.Windows.Auth.PasswordVaultTokenStore()
+            : new FileTokenStore(SessionFilePath(), new DpapiTokenProtector());
+#elif __WASM__
+        return OperatingSystem.IsBrowser()
+            ? new ShowUp.Platforms.WebAssembly.Auth.LocalStorageTokenStore()
+            : throw new PlatformNotSupportedException();
+#elif __DESKTOP__
+        return new FileTokenStore(SessionFilePath(), OperatingSystem.IsWindows() ? new DpapiTokenProtector() : null);
+#else
+        return new FileTokenStore(SessionFilePath());
+#endif
+    }
+
+#if !__WASM__ && !__IOS__
+    private static string SessionFilePath() => Path.Combine(ApplicationData.Current.LocalFolder.Path, "supabase.session");
+#endif
 
     private static void RegisterEntitlements(HostBuilderContext context, IServiceCollection services)
     {
