@@ -1,0 +1,505 @@
+﻿<local:ScheduleBuilderViewBase
+    x:Class="ShowUp.Views.ScheduleBuilderView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls"
+    xmlns:local="using:ShowUp.Views"
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:vm="using:ShowUp.Core.ViewModels">
+
+    <local:ScheduleBuilderViewBase.Resources>
+        <DataTemplate x:Key="SessionChipTemplate" x:DataType="vm:BuilderSessionViewModel">
+            <Border
+                Padding="12,4,4,4"
+                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{ThemeResource ControlCornerRadius}">
+                <Grid ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Spacing="0">
+                        <TextBlock
+                            AutomationProperties.AutomationId="{x:Bind AutomationId, Mode=OneWay}"
+                            AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}"
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Text="{x:Bind Title, Mode=OneTime}"
+                            TextTrimming="CharacterEllipsis" />
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            Visibility="{x:Bind IsWorkout, Mode=OneWay}">
+                            <TextBlock
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Detail, Mode=OneTime}" />
+                            <TextBlock
+                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{markup:Localize Key=BuilderOptionalTag}"
+                                Visibility="{x:Bind IsOptional, Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="{x:Bind UpAutomationId, Mode=OneWay}"
+                        AutomationProperties.Name="{x:Bind MoveUpName, Mode=OneTime}"
+                        Command="{x:Bind MoveUpCommand, Mode=OneTime}"
+                        IsEnabled="{x:Bind CanMoveUp, Mode=OneWay}"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        ToolTipService.ToolTip="{x:Bind MoveUpName, Mode=OneTime}"
+                        Visibility="{x:Bind IsWorkout, Mode=OneWay}">
+                        <FontIcon FontSize="12" Glyph="&#xE70E;" />
+                    </Button>
+                    <Button
+                        Grid.Column="2"
+                        AutomationProperties.AutomationId="{x:Bind DownAutomationId, Mode=OneWay}"
+                        AutomationProperties.Name="{x:Bind MoveDownName, Mode=OneTime}"
+                        Command="{x:Bind MoveDownCommand, Mode=OneTime}"
+                        IsEnabled="{x:Bind CanMoveDown, Mode=OneWay}"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        ToolTipService.ToolTip="{x:Bind MoveDownName, Mode=OneTime}"
+                        Visibility="{x:Bind IsWorkout, Mode=OneWay}">
+                        <FontIcon FontSize="12" Glyph="&#xE70D;" />
+                    </Button>
+                    <Button
+                        Grid.Column="3"
+                        AutomationProperties.AutomationId="{x:Bind MoreAutomationId, Mode=OneWay}"
+                        AutomationProperties.Name="{x:Bind MoreName, Mode=OneTime}"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        ToolTipService.ToolTip="{x:Bind MoreName, Mode=OneTime}">
+                        <FontIcon FontSize="12" Glyph="&#xE712;" />
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                <MenuFlyoutItem
+                                    AutomationProperties.AutomationId="BuilderSessionOptionalItem"
+                                    Command="{x:Bind ToggleOptionalCommand, Mode=OneTime}"
+                                    Text="{x:Bind OptionalToggleText, Mode=OneWay}"
+                                    Visibility="{x:Bind IsWorkout, Mode=OneWay}">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE73E;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem
+                                    AutomationProperties.AutomationId="BuilderSessionRemoveItem"
+                                    Command="{x:Bind RemoveCommand, Mode=OneTime}"
+                                    Text="{markup:Localize Key=BuilderRemove}">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE74D;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DayEditorTemplate" x:DataType="vm:BuilderDayViewModel">
+            <Border
+                Padding="12,8,8,12"
+                Background="{ThemeResource CalendarCellBackgroundBrush}"
+                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{ThemeResource ControlCornerRadius}">
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                            Text="{x:Bind Label, Mode=OneTime}" />
+                        <DropDownButton
+                            Grid.Column="1"
+                            AutomationProperties.AutomationId="{x:Bind AddAutomationId, Mode=OneTime}"
+                            AutomationProperties.Name="{x:Bind AddAutomationName, Mode=OneTime}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="12" Glyph="&#xE710;" />
+                                <TextBlock Text="{markup:Localize Key=SessionPickerConfirm}" />
+                            </StackPanel>
+                            <DropDownButton.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                    <MenuFlyoutItem
+                                        AutomationProperties.AutomationId="BuilderAddWorkoutItem"
+                                        Command="{x:Bind AddWorkoutCommand, Mode=OneTime}"
+                                        Text="{markup:Localize Key=BuilderAddWorkout}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon Glyph="&#xE721;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem
+                                        AutomationProperties.AutomationId="BuilderRestDayItem"
+                                        Command="{x:Bind MakeRestCommand, Mode=OneTime}"
+                                        Text="{markup:Localize Key=BuilderRestDay}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon Glyph="&#xE708;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem
+                                        AutomationProperties.AutomationId="BuilderClearDayItem"
+                                        Command="{x:Bind ClearCommand, Mode=OneTime}"
+                                        Text="{markup:Localize Key=BuilderClearDay}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon Glyph="&#xE894;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                    </Grid>
+                    <ItemsRepeater ItemTemplate="{StaticResource SessionChipTemplate}" ItemsSource="{x:Bind Sessions, Mode=OneTime}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="4" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                    <Grid ColumnSpacing="8" Visibility="{x:Bind IsEmpty, Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon
+                            Margin="0,2,0,0"
+                            VerticalAlignment="Top"
+                            FontSize="12"
+                            Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                            Glyph="&#xE7BA;" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{markup:Localize Key=BuilderDayEmpty}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </local:ScheduleBuilderViewBase.Resources>
+
+    <ScrollViewer>
+        <Grid
+            x:Name="ContentGrid"
+            Padding="{StaticResource PagePadding}"
+            ColumnSpacing="24"
+            RowSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftColumn" Width="*" />
+                <!--  Capped so day rows stay readable on very wide windows  -->
+                <ColumnDefinition
+                    x:Name="EditorColumn"
+                    Width="0"
+                    MaxWidth="960" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.ColumnSpan="2" Spacing="8">
+                <Button
+                    Margin="-8,0,0,0"
+                    HorizontalAlignment="Left"
+                    AutomationProperties.AutomationId="BuilderBackButton"
+                    Command="{x:Bind ViewModel.CancelCommand, Mode=OneTime}"
+                    Style="{StaticResource SubtleButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="12" Glyph="&#xE72B;" />
+                        <TextBlock Text="{markup:Localize Key=Back}" />
+                    </StackPanel>
+                </Button>
+                <TextBlock
+                    AutomationProperties.AutomationId="BuilderHeader"
+                    AutomationProperties.HeadingLevel="Level1"
+                    Style="{StaticResource SectionHeaderTextBlockStyle}"
+                    Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
+                <controls:ProGateHint
+                    Command="{x:Bind ViewModel.OpenProCommand, Mode=OneTime}"
+                    Text="{markup:Localize Key=BuilderLockedLink}"
+                    Visibility="{x:Bind ViewModel.IsLocked, Mode=OneWay}" />
+            </StackPanel>
+
+            <!--  Name, color and weeks, then (narrow) every week inline or (wide) a week list  -->
+            <ContentControl
+                Grid.Row="1"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Top"
+                IsEnabled="{x:Bind ViewModel.IsEditable, Mode=OneWay}"
+                IsTabStop="False">
+                <StackPanel Spacing="16">
+                    <controls:ProgramHero
+                        Height="120"
+                        AccentColor="{x:Bind ViewModel.SelectedAccent.Hex, Mode=OneWay, FallbackValue='#D9372B'}"
+                        AutomationProperties.AccessibilityView="Raw"
+                        Family="{markup:Localize Key=CustomProgramFamily}"
+                        ProgramName="{x:Bind ViewModel.PreviewName, Mode=OneWay}"
+                        TitleFontSize="28" />
+
+                    <StackPanel Spacing="4">
+                        <TextBox
+                            AutomationProperties.AutomationId="BuilderNameBox"
+                            Header="{markup:Localize Key=BuilderNameHeader}"
+                            MaxLength="60"
+                            PlaceholderText="{markup:Localize Key=BuilderNamePlaceholder}"
+                            Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            AutomationProperties.AutomationId="BuilderNameError"
+                            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind ViewModel.NameError, Mode=OneWay}"
+                            Visibility="{x:Bind local:ScheduleBuilderView.Shows(ViewModel.NameError), Mode=OneWay}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Style="{StaticResource BodyTextBlockStyle}" Text="{markup:Localize Key=BuilderAccentHeader}" />
+                        <controls:MarkerSwatchPicker
+                            AutomationProperties.AutomationId="BuilderAccentPicker"
+                            AutomationProperties.Name="{markup:Localize Key=BuilderAccentHeader}"
+                            IsItemClickEnabled="False"
+                            ItemContainerStyle="{StaticResource MarkerSwatchItemStyle}"
+                            ItemsSource="{x:Bind ViewModel.AccentSwatches, Mode=OneTime}"
+                            SelectedItem="{x:Bind ViewModel.SelectedAccent, Mode=TwoWay}"
+                            SelectionMode="Single">
+                            <controls:MarkerSwatchPicker.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </controls:MarkerSwatchPicker.ItemsPanel>
+                            <controls:MarkerSwatchPicker.ItemTemplate>
+                                <DataTemplate x:DataType="vm:AccentSwatch">
+                                    <Grid
+                                        Width="38"
+                                        Height="38"
+                                        ToolTipService.ToolTip="{x:Bind Name, Mode=OneTime}">
+                                        <Ellipse
+                                            Margin="1"
+                                            Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                                            StrokeThickness="2"
+                                            Visibility="{x:Bind IsSelected, Mode=OneWay}" />
+                                        <Ellipse Margin="6" Fill="{x:Bind local:ScheduleBuilderView.BrushOf(Hex), Mode=OneTime}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </controls:MarkerSwatchPicker.ItemTemplate>
+                        </controls:MarkerSwatchPicker>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <NumberBox
+                            MinWidth="160"
+                            HorizontalAlignment="Left"
+                            AutomationProperties.AutomationId="BuilderWeeksBox"
+                            Header="{markup:Localize Key=BuilderWeeksHeader}"
+                            LargeChange="4"
+                            Maximum="26"
+                            Minimum="0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Inline"
+                            ValidationMode="InvalidInputOverwritten"
+                            Value="{x:Bind ViewModel.WeekCountValue, Mode=TwoWay}" />
+                        <TextBlock
+                            AutomationProperties.AutomationId="BuilderWeeksError"
+                            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind ViewModel.WeeksError, Mode=OneWay}"
+                            Visibility="{x:Bind local:ScheduleBuilderView.Shows(ViewModel.WeeksError), Mode=OneWay}" />
+                        <TextBlock
+                            Foreground="{ThemeResource MutedTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{markup:Localize Key=BuilderWeeksHint}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <!--  Narrow: weeks as collapsible sections with their days inline  -->
+                    <ItemsRepeater x:Name="NarrowWeeks" ItemsSource="{x:Bind ViewModel.Weeks, Mode=OneTime}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="8" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BuilderWeekViewModel">
+                                <Expander
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    AutomationProperties.AutomationId="{x:Bind AutomationId, Mode=OneTime}"
+                                    IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                                    <Expander.Header>
+                                        <StackPanel Padding="0,8" Spacing="0">
+                                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Label, Mode=OneTime}" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource MutedTextBrush}"
+                                                Style="{StaticResource CaptionTextBlockStyle}"
+                                                Text="{x:Bind Summary, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Button
+                                                AutomationProperties.AutomationId="{x:Bind CopyNextAutomationId, Mode=OneTime}"
+                                                Command="{x:Bind CopyToNextCommand, Mode=OneTime}"
+                                                Content="{markup:Localize Key=BuilderCopyToNext}"
+                                                IsEnabled="{x:Bind CanCopyToNext, Mode=OneWay}" />
+                                            <Button
+                                                AutomationProperties.AutomationId="{x:Bind CopyAllAutomationId, Mode=OneTime}"
+                                                Command="{x:Bind CopyToAllCommand, Mode=OneTime}"
+                                                Content="{markup:Localize Key=BuilderCopyToAll}"
+                                                IsEnabled="{x:Bind CanCopyToAll, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <ItemsRepeater ItemTemplate="{StaticResource DayEditorTemplate}" ItemsSource="{x:Bind Days, Mode=OneTime}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Spacing="8" />
+                                            </ItemsRepeater.Layout>
+                                        </ItemsRepeater>
+                                    </StackPanel>
+                                </Expander>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+
+                    <!--  Wide: pick a week here, edit its days on the right  -->
+                    <ListView
+                        x:Name="WideWeeks"
+                        AutomationProperties.AutomationId="BuilderWeekList"
+                        AutomationProperties.Name="{markup:Localize Key=BuilderWeeksHeader}"
+                        ItemsSource="{x:Bind ViewModel.Weeks, Mode=OneTime}"
+                        SelectedItem="{x:Bind ViewModel.SelectedWeek, Mode=OneWay}"
+                        SelectionChanged="WideWeeks_SelectionChanged"
+                        SelectionMode="Single"
+                        Visibility="Collapsed">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BuilderWeekViewModel">
+                                <StackPanel Padding="0,8" Spacing="0">
+                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Label, Mode=OneTime}" />
+                                    <TextBlock
+                                        Foreground="{ThemeResource MutedTextBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind Summary, Mode=OneWay}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </ContentControl>
+
+            <ContentControl
+                x:Name="WideEditor"
+                Grid.Row="1"
+                Grid.Column="1"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Top"
+                IsEnabled="{x:Bind ViewModel.IsEditable, Mode=OneWay}"
+                IsTabStop="False"
+                Visibility="Collapsed">
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            AutomationProperties.HeadingLevel="Level2"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Text="{x:Bind ViewModel.SelectedWeek.Label, Mode=OneWay, FallbackValue=''}" />
+                        <Button
+                            Grid.Column="1"
+                            AutomationProperties.AutomationId="BuilderSelectedWeekCopyNext"
+                            Command="{x:Bind ViewModel.SelectedWeek.CopyToNextCommand, Mode=OneWay}"
+                            Content="{markup:Localize Key=BuilderCopyToNext}"
+                            IsEnabled="{x:Bind ViewModel.SelectedWeek.CanCopyToNext, Mode=OneWay, FallbackValue=False}" />
+                        <Button
+                            Grid.Column="2"
+                            AutomationProperties.AutomationId="BuilderSelectedWeekCopyAll"
+                            Command="{x:Bind ViewModel.SelectedWeek.CopyToAllCommand, Mode=OneWay}"
+                            Content="{markup:Localize Key=BuilderCopyToAll}"
+                            IsEnabled="{x:Bind ViewModel.SelectedWeek.CanCopyToAll, Mode=OneWay, FallbackValue=False}" />
+                    </Grid>
+                    <ItemsRepeater ItemTemplate="{StaticResource DayEditorTemplate}" ItemsSource="{x:Bind ViewModel.SelectedWeek.Days, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="8" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+            </ContentControl>
+
+            <StackPanel
+                Grid.Row="2"
+                Grid.ColumnSpan="2"
+                Spacing="12">
+                <ItemsRepeater AutomationProperties.AutomationId="BuilderValidationMessages" ItemsSource="{x:Bind ViewModel.ValidationMessages, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="4" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon
+                                    Margin="0,2,0,0"
+                                    VerticalAlignment="Top"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                    Glyph="&#xE7BA;" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{x:Bind Mode=OneTime}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        AutomationProperties.AutomationId="BuilderSaveButton"
+                        Command="{x:Bind ViewModel.SaveCommand, Mode=OneTime}"
+                        Content="{markup:Localize Key=BuilderSave}"
+                        Style="{StaticResource AccentButtonStyle}" />
+                    <Button
+                        AutomationProperties.AutomationId="BuilderCancelButton"
+                        Command="{x:Bind ViewModel.CancelCommand, Mode=OneTime}"
+                        Content="{markup:Localize Key=Cancel}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WidthStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentGrid.Padding" Value="16,12,16,24" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="640" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1008" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="LeftColumn.Width" Value="320" />
+                        <Setter Target="EditorColumn.Width" Value="*" />
+                        <Setter Target="NarrowWeeks.Visibility" Value="Collapsed" />
+                        <Setter Target="WideWeeks.Visibility" Value="Visible" />
+                        <Setter Target="WideEditor.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </ScrollViewer>
+</local:ScheduleBuilderViewBase>

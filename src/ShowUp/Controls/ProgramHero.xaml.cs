@@ -145,7 +145,7 @@ public sealed partial class ProgramHero : UserControl
         (byte)(from.G + ((to.G - from.G) * amount)),
         (byte)(from.B + ((to.B - from.B) * amount)));
 
-    private static Color ParseColor(string hex)
+    internal static Color ParseColor(string hex)
     {
         string digits = hex.TrimStart('#');
         if (digits.Length == 6 && uint.TryParse(digits, System.Globalization.NumberStyles.HexNumber, null, out uint rgb))

@@ -63,11 +63,18 @@ public static partial class CatalogValidator
         }
 
         var sources = program.Sources ?? [];
-        var minSources = program.Verification == VerificationLevel.Official ? 1 : 2;
+        var minSources = program.Verification switch
+        {
+            VerificationLevel.Official => 1,
+            VerificationLevel.Custom => 0,
+            _ => 2,
+        };
         if (sources.Count < minSources)
         {
             errors.Add($"{p}: {program.Verification} programs need at least {minSources} source(s), found {sources.Count}.");
         }
+
+        workouts = WithOwnWorkouts(program, workouts, p, errors);
 
         var tracks = (program.Tracks ?? []).Where(t => t is not null).ToList();
         if (tracks.Count == 0)
@@ -98,6 +105,40 @@ public static partial class CatalogValidator
                 }
             }
         }
+    }
+
+    // Custom programs carry their own workouts, namespaced by the program id so they can't shadow catalog ones.
+    private static IReadOnlyDictionary<string, Workout> WithOwnWorkouts(WorkoutProgram program, IReadOnlyDictionary<string, Workout> workouts, string p, List<string> errors)
+    {
+        var own = (program.Workouts ?? []).Where(w => w is not null).ToList();
+        if (own.Count == 0)
+        {
+            return workouts;
+        }
+
+        if (program.Verification != VerificationLevel.Custom)
+        {
+            errors.Add($"{p}: only custom programs carry workouts.");
+            return workouts;
+        }
+
+        string prefix = $"{program.Id}-";
+        Dictionary<string, Workout> merged = new(workouts);
+        foreach (var workout in own)
+        {
+            if (workout.Id is null || !workout.Id.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                errors.Add($"{p}: workout '{workout.Id}' must start with '{prefix}'.");
+            }
+            else if (!merged.TryAdd(workout.Id, workout))
+            {
+                errors.Add($"{p}: duplicate workout id '{workout.Id}'.");
+            }
+
+            ValidateMetrics(workout, errors);
+        }
+
+        return merged;
     }
 
     private static void ValidateSessions(ScheduleWeek week, string where, IReadOnlyDictionary<string, Workout> workouts, List<string> errors)

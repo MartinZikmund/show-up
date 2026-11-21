@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.CustomPrograms;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
@@ -169,6 +170,7 @@ public partial class App : Application, IApplication
         services.AddSingleton(new ProLinks(
             new Uri(context.Configuration["Legal:TermsUrl"] is { Length: > 0 } terms ? terms : "https://github.com/MartinZikmund/show-up/blob/main/docs/terms.md"),
             new Uri(context.Configuration["Legal:PrivacyUrl"] is { Length: > 0 } privacy ? privacy : "https://github.com/MartinZikmund/show-up/blob/main/docs/privacy.md")));
+        services.AddSingleton<ICustomProgramService, CustomProgramService>();
         services.AddSingleton<IJournalService, JournalService>();
         services.AddSingleton<IScheduleQuery, ScheduleQuery>();
         services.AddSingleton<LapseCoordinator>();
@@ -192,6 +194,7 @@ public partial class App : Application, IApplication
         services.AddScoped<ICrossMoment, CrossMomentService>();
         services.AddScoped<ICalendarPrompts, CalendarPrompts>();
         services.AddScoped<IBonusWorkoutDialog, BonusWorkoutDialogService>();
+        services.AddScoped<ISessionPickerDialog, SessionPickerDialogService>();
         services.AddScoped<JournalSaveGuard>();
         services.AddScoped<IJournalDialogs, JournalDialogService>();
         services.AddScoped<ICrossingCoordinator, CrossingCoordinator>();
@@ -209,6 +212,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             service.RegisterView(typeof(Views.ProView), typeof(ProViewModel));
             service.RegisterView(typeof(Views.RemindersView), typeof(RemindersViewModel));
+            service.RegisterView(typeof(Views.ScheduleBuilderView), typeof(ScheduleBuilderViewModel));
             return service;
         });
 
@@ -227,6 +231,7 @@ public partial class App : Application, IApplication
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ProViewModel>();
         services.AddTransient<RemindersViewModel>();
+        services.AddTransient<ScheduleBuilderViewModel>();
     }
 
 #if DEBUG

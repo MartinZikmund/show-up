@@ -22,5 +22,12 @@ public sealed partial record ProgramCardViewModel(
 
     public string AutomationName => $"{Name}, {SummaryText}, {VerificationText}";
 
-    public string VerificationGlyph => IsCommunityVerified ? "\uE716" : "\uE930";
+    public bool IsCustom => Verification == VerificationLevel.Custom;
+
+    public string VerificationGlyph => Verification switch
+    {
+        VerificationLevel.Community => "\uE716",
+        VerificationLevel.Custom => "\uE70F",
+        _ => "\uE930",
+    };
 }

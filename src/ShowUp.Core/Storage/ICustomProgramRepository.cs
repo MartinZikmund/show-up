@@ -11,6 +11,9 @@ public interface ICustomProgramRepository
     /// </summary>
     Task<CustomProgramEntity?> GetAsync(string programId, int? revision = null);
 
+    /// <summary>Every saved revision number of the program, oldest first (deleted programs included).</summary>
+    Task<IReadOnlyList<int>> GetRevisionsAsync(string programId);
+
     /// <summary>
     /// Saves a new revision (number = max(latest + 1, seconds since 2026-01-01), so offline devices don't collide);
     /// a null <paramref name="programId"/> creates the program (<c>custom-{guid}</c>). Throws for a deleted id.

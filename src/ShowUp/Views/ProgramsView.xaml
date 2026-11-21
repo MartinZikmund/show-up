@@ -7,6 +7,65 @@
     xmlns:markup="using:ShowUp.Markup"
     xmlns:vm="using:ShowUp.Core.ViewModels">
 
+    <local:ProgramsViewBase.Resources>
+        <DataTemplate x:Key="ProgramCardTemplate" x:DataType="vm:ProgramCardViewModel">
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                AutomationProperties.Name="{x:Bind AutomationName}"
+                Click="Card_Click"
+                CornerRadius="{ThemeResource OverlayCornerRadius}"
+                Style="{StaticResource CardButtonStyle}"
+                Tag="{x:Bind}">
+                <Border
+                    Background="{ThemeResource CalendarCellBackgroundBrush}"
+                    BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{ThemeResource OverlayCornerRadius}">
+                    <StackPanel Padding="8" Spacing="8">
+                        <controls:ProgramHero
+                            Height="160"
+                            AccentColor="{x:Bind AccentColor}"
+                            Family="{x:Bind Family}"
+                            HeroImage="{x:Bind HeroImage}"
+                            ProgramName="{x:Bind Name}"
+                            TitleFontSize="30" />
+                        <Grid Padding="4,0,4,4" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind SummaryText}"
+                                TextTrimming="CharacterEllipsis" />
+                            <Border
+                                Grid.Column="1"
+                                Padding="8,4"
+                                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                CornerRadius="{ThemeResource ControlCornerRadius}"
+                                ToolTipService.ToolTip="{x:Bind VerificationTooltip}">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <FontIcon
+                                        FontSize="12"
+                                        Foreground="{ThemeResource MutedTextBrush}"
+                                        Glyph="{x:Bind VerificationGlyph}" />
+                                    <TextBlock
+                                        Foreground="{ThemeResource MutedTextBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Text="{x:Bind VerificationText}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Button>
+        </DataTemplate>
+    </local:ProgramsViewBase.Resources>
+
     <ScrollViewer>
         <StackPanel
             x:Name="ContentPanel"
@@ -17,6 +76,57 @@
                 AutomationProperties.HeadingLevel="Level1"
                 Style="{StaticResource SectionHeaderTextBlockStyle}"
                 Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
+
+            <!--  The user's own programs (Pro to build; still listed after a lapse)  -->
+            <StackPanel Spacing="12">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="MySchedulesHeader"
+                        AutomationProperties.HeadingLevel="Level2"
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        Text="{markup:Localize Key=MySchedulesHeader}" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="NewScheduleButton"
+                        Command="{x:Bind ViewModel.NewScheduleCommand, Mode=OneTime}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="16" Glyph="&#xE710;" />
+                            <TextBlock Text="{markup:Localize Key=NewSchedule}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <controls:ProGateHint
+                    Command="{x:Bind ViewModel.OpenProCommand, Mode=OneTime}"
+                    Text="{markup:Localize Key=ProCustomSchedulesLink}"
+                    Visibility="{x:Bind ViewModel.ShowScheduleGate, Mode=OneWay}" />
+                <TextBlock
+                    AutomationProperties.AutomationId="MySchedulesEmpty"
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Text="{markup:Localize Key=MySchedulesEmpty}"
+                    TextWrapping="Wrap"
+                    Visibility="{x:Bind local:ProgramsView.Not(ViewModel.HasCustomPrograms), Mode=OneWay}" />
+                <ItemsRepeater ItemTemplate="{StaticResource ProgramCardTemplate}" ItemsSource="{x:Bind ViewModel.CustomPrograms, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="16"
+                            MinItemWidth="280"
+                            MinRowSpacing="16" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <TextBlock
+                AutomationProperties.AutomationId="CatalogHeader"
+                AutomationProperties.HeadingLevel="Level2"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Text="{markup:Localize Key=CatalogHeader}" />
 
             <Grid
                 x:Name="FilterGrid"
@@ -48,7 +158,7 @@
                     SelectedItem="{x:Bind ViewModel.SelectedFamilyOption, Mode=TwoWay}" />
             </Grid>
 
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}">
+            <ItemsRepeater ItemTemplate="{StaticResource ProgramCardTemplate}" ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout
                         ItemsStretch="Fill"
@@ -56,64 +166,6 @@
                         MinItemWidth="280"
                         MinRowSpacing="16" />
                 </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ProgramCardViewModel">
-                        <Button
-                            Padding="0"
-                            HorizontalAlignment="Stretch"
-                            AutomationProperties.AutomationId="{x:Bind AutomationId}"
-                            AutomationProperties.Name="{x:Bind AutomationName}"
-                            Click="Card_Click"
-                            CornerRadius="{ThemeResource OverlayCornerRadius}"
-                            Style="{StaticResource CardButtonStyle}"
-                            Tag="{x:Bind}">
-                            <Border
-                                Background="{ThemeResource CalendarCellBackgroundBrush}"
-                                BorderBrush="{ThemeResource CalendarCellBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{ThemeResource OverlayCornerRadius}">
-                                <StackPanel Padding="8" Spacing="8">
-                                    <controls:ProgramHero
-                                        Height="160"
-                                        AccentColor="{x:Bind AccentColor}"
-                                        Family="{x:Bind Family}"
-                                        HeroImage="{x:Bind HeroImage}"
-                                        ProgramName="{x:Bind Name}"
-                                        TitleFontSize="30" />
-                                    <Grid Padding="4,0,4,4" ColumnSpacing="8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            Foreground="{ThemeResource MutedTextBrush}"
-                                            Style="{StaticResource CaptionTextBlockStyle}"
-                                            Text="{x:Bind SummaryText}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <Border
-                                            Grid.Column="1"
-                                            Padding="8,4"
-                                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
-                                            CornerRadius="{ThemeResource ControlCornerRadius}"
-                                            ToolTipService.ToolTip="{x:Bind VerificationTooltip}">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <FontIcon
-                                                    FontSize="12"
-                                                    Foreground="{ThemeResource MutedTextBrush}"
-                                                    Glyph="{x:Bind VerificationGlyph}" />
-                                                <TextBlock
-                                                    Foreground="{ThemeResource MutedTextBrush}"
-                                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                                    Text="{x:Bind VerificationText}" />
-                                            </StackPanel>
-                                        </Border>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-                        </Button>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
 
             <TextBlock

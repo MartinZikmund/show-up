@@ -20,6 +20,7 @@ public sealed class ProgramDetailViewModelTests
     private readonly RecordingEnrollmentService _enrollments = new();
     private readonly CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger _messenger = new();
     private readonly ShowUp.Core.Tests.Entitlements.FakeEntitlementService _entitlements = new();
+    private readonly ShowUp.Core.Tests.CustomPrograms.FakeCustomProgramService _customPrograms = new();
     private readonly StubConfirmationDialogService _confirmation = new();
     private readonly RecordingSectionNavigator _navigator = new();
     private readonly RecordingNavigationService _navigation = new();
@@ -365,6 +366,83 @@ public sealed class ProgramDetailViewModelTests
         return new ActiveEnrollment(new EnrollmentEntity { Id = Guid.NewGuid() }, old, old.Tracks[0], new EnrollmentCalendar(new DateOnly(2026, 11, 1), 1, []));
     }
 
+    [TestMethod]
+    public async Task Custom_Pro_CanEditDeleteAndStart()
+    {
+        var viewModel = await LoadAsync(Custom());
+
+        viewModel.IsCustom.Should().BeTrue();
+        viewModel.VerificationText.Should().Be("CustomProgramBadgeFormat(1)");
+        viewModel.EditCommand.CanExecute(null).Should().BeTrue();
+        viewModel.StartCommand.CanExecute(null).Should().BeTrue();
+        viewModel.EditCommand.Execute(null);
+        _navigation.Navigations.Should().ContainSingle().Which.Should().Be((typeof(ScheduleBuilderViewModel), (object?)"custom-a"));
+    }
+
+    [TestMethod]
+    public async Task Custom_Lapsed_IsReadOnly()
+    {
+        _customPrograms.CanEdit = false;
+
+        var viewModel = await LoadAsync(Custom());
+
+        viewModel.ShowCustomLockedHint.Should().BeTrue();
+        viewModel.EditCommand.CanExecute(null).Should().BeFalse();
+        viewModel.StartCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Delete_Lapsed_StillAllowed()
+    {
+        _customPrograms.CanEdit = false;
+        var viewModel = await LoadAsync(Custom());
+
+        viewModel.DeleteCommand.CanExecute(null).Should().BeTrue();
+        await viewModel.DeleteAsync();
+
+        _customPrograms.Deleted.Should().Equal("custom-a");
+        _navigation.BackCount.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Custom_ProComesBack_UnlocksEditing()
+    {
+        _customPrograms.CanEdit = false;
+        var viewModel = await LoadAsync(Custom());
+        viewModel.OnNavigatedTo(null);
+
+        _customPrograms.CanEdit = true;
+        _entitlements.SetPro(true);
+
+        viewModel.EditCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Delete_Confirmed_DeletesAndGoesBack()
+    {
+        var viewModel = await LoadAsync(Custom());
+
+        await viewModel.DeleteAsync();
+
+        _confirmation.Asked.Should().ContainSingle().Which.Text.Should().StartWith("CustomProgramDeleteMessageFormat");
+        _customPrograms.Deleted.Should().Equal("custom-a");
+        _navigation.BackCount.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Delete_Cancelled_KeepsTheProgram()
+    {
+        var viewModel = await LoadAsync(Custom());
+        _confirmation.Result = ConfirmationResult.Denied;
+
+        await viewModel.DeleteAsync();
+
+        _customPrograms.Deleted.Should().BeEmpty();
+        _navigation.BackCount.Should().Be(0);
+    }
+
+    private static WorkoutProgram Custom() => TestCatalog.Program("custom-a", 7, "run") with { Verification = VerificationLevel.Custom };
+
     private async Task<ProgramDetailViewModel> LoadAsync(WorkoutProgram program)
     {
         ProgramDetailViewModel viewModel = Create(new FakeCatalogService(program));
@@ -384,6 +462,7 @@ public sealed class ProgramDetailViewModelTests
             _time,
             _journalDialogs,
             _entitlements,
+            _customPrograms,
             _messenger,
             NullLogger<ProgramDetailViewModel>.Instance);
 }

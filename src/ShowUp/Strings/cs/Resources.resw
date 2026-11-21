@@ -1009,4 +1009,241 @@
   <data name="ReminderBannerName" xml:space="preserve">
     <value>Připomínka</value>
   </data>
+  <data name="BuilderNewTitle" xml:space="preserve">
+    <value>Nový rozvrh</value>
+  </data>
+  <data name="BuilderEditTitle" xml:space="preserve">
+    <value>Upravit rozvrh</value>
+  </data>
+  <data name="BuilderNamePlaceholder" xml:space="preserve">
+    <value>Můj rozvrh</value>
+  </data>
+  <data name="BuilderNameHeader" xml:space="preserve">
+    <value>Název</value>
+  </data>
+  <data name="BuilderAccentHeader" xml:space="preserve">
+    <value>Barva</value>
+  </data>
+  <data name="BuilderAccentRed" xml:space="preserve">
+    <value>Červená</value>
+  </data>
+  <data name="BuilderAccentOrange" xml:space="preserve">
+    <value>Oranžová</value>
+  </data>
+  <data name="BuilderAccentMustard" xml:space="preserve">
+    <value>Hořčicová</value>
+  </data>
+  <data name="BuilderAccentGreen" xml:space="preserve">
+    <value>Zelená</value>
+  </data>
+  <data name="BuilderAccentTeal" xml:space="preserve">
+    <value>Petrolejová</value>
+  </data>
+  <data name="BuilderAccentBlue" xml:space="preserve">
+    <value>Modrá</value>
+  </data>
+  <data name="BuilderAccentPurple" xml:space="preserve">
+    <value>Fialová</value>
+  </data>
+  <data name="BuilderAccentPink" xml:space="preserve">
+    <value>Růžová</value>
+  </data>
+  <data name="BuilderWeeksHeader" xml:space="preserve">
+    <value>Týdny</value>
+  </data>
+  <data name="BuilderWeeksHint" xml:space="preserve">
+    <value>1 až 26 týdnů po 7 dnech. Ubrané týdny se schovají, dokud je zase nepřidáte.</value>
+  </data>
+  <data name="BuilderMakeOptional" xml:space="preserve">
+    <value>Označit jako volitelné</value>
+  </data>
+  <data name="BuilderMakeRequired" xml:space="preserve">
+    <value>Označit jako povinné</value>
+  </data>
+  <data name="BuilderAddToDayFormat" xml:space="preserve">
+    <value>Přidat do týdne {0}, dne {1}</value>
+  </data>
+  <data name="BuilderAddWorkout" xml:space="preserve">
+    <value>Přidat trénink…</value>
+  </data>
+  <data name="BuilderRestDay" xml:space="preserve">
+    <value>Den volna</value>
+  </data>
+  <data name="BuilderClearDay" xml:space="preserve">
+    <value>Vyprázdnit den</value>
+  </data>
+  <data name="BuilderRest" xml:space="preserve">
+    <value>Volno</value>
+  </data>
+  <data name="BuilderDayEmpty" xml:space="preserve">
+    <value>Zatím nic. Přidejte trénink nebo z něj udělejte den volna.</value>
+  </data>
+  <data name="BuilderWeekEmptyDays_One" xml:space="preserve">
+    <value>Zbývá vyplnit {0} den</value>
+  </data>
+  <data name="BuilderWeekEmptyDays_Few" xml:space="preserve">
+    <value>Zbývá vyplnit {0} dny</value>
+  </data>
+  <data name="BuilderWeekEmptyDays_Other" xml:space="preserve">
+    <value>Zbývá vyplnit {0} dní</value>
+  </data>
+  <data name="BuilderWeekSummaryFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="BuilderWorkouts_One" xml:space="preserve">
+    <value>{0} trénink</value>
+  </data>
+  <data name="BuilderWorkouts_Few" xml:space="preserve">
+    <value>{0} tréninky</value>
+  </data>
+  <data name="BuilderWorkouts_Other" xml:space="preserve">
+    <value>{0} tréninků</value>
+  </data>
+  <data name="BuilderRestDays_One" xml:space="preserve">
+    <value>{0} den volna</value>
+  </data>
+  <data name="BuilderRestDays_Few" xml:space="preserve">
+    <value>{0} dny volna</value>
+  </data>
+  <data name="BuilderRestDays_Other" xml:space="preserve">
+    <value>{0} dní volna</value>
+  </data>
+  <data name="BuilderCopyToNext" xml:space="preserve">
+    <value>Kopírovat do dalšího týdne</value>
+  </data>
+  <data name="BuilderCopyToAll" xml:space="preserve">
+    <value>Kopírovat do všech týdnů</value>
+  </data>
+  <data name="BuilderWeekActions" xml:space="preserve">
+    <value>Akce týdne</value>
+  </data>
+  <data name="BuilderSessionDetailFormat" xml:space="preserve">
+    <value>{0} min · {1}</value>
+  </data>
+  <data name="BuilderErrorName" xml:space="preserve">
+    <value>Pojmenujte rozvrh.</value>
+  </data>
+  <data name="BuilderErrorNoWeeks" xml:space="preserve">
+    <value>Rozvrh potřebuje alespoň jeden týden.</value>
+  </data>
+  <data name="BuilderErrorTooManyWeeks" xml:space="preserve">
+    <value>Rozvrh může mít nejvýš {0} týdnů.</value>
+  </data>
+  <data name="BuilderErrorEmptyDays_One" xml:space="preserve">
+    <value>{0} den ještě potřebuje trénink nebo volno.</value>
+  </data>
+  <data name="BuilderErrorEmptyDays_Few" xml:space="preserve">
+    <value>{0} dny ještě potřebují trénink nebo volno.</value>
+  </data>
+  <data name="BuilderErrorEmptyDays_Other" xml:space="preserve">
+    <value>{0} dní ještě potřebuje trénink nebo volno.</value>
+  </data>
+  <data name="BuilderSave" xml:space="preserve">
+    <value>Uložit</value>
+  </data>
+  <data name="BuilderSaveFailedTitle" xml:space="preserve">
+    <value>Rozvrh se nepodařilo uložit</value>
+  </data>
+  <data name="BuilderSaveFailedMessage" xml:space="preserve">
+    <value>Při ukládání se něco pokazilo. Změny tu zůstaly, zkuste to znovu.</value>
+  </data>
+  <data name="BuilderLockedLink" xml:space="preserve">
+    <value>Odemkněte Pro a sestavujte a upravujte rozvrhy</value>
+  </data>
+  <data name="BuilderRemove" xml:space="preserve">
+    <value>Odebrat</value>
+  </data>
+  <data name="BuilderOptionalTag" xml:space="preserve">
+    <value>volitelné</value>
+  </data>
+  <data name="BuilderDaysHeader" xml:space="preserve">
+    <value>Dny</value>
+  </data>
+  <data name="SessionPickerTitle" xml:space="preserve">
+    <value>Přidat trénink</value>
+  </data>
+  <data name="SessionPickerHeader" xml:space="preserve">
+    <value>Trénink</value>
+  </data>
+  <data name="SessionPickerPlaceholder" xml:space="preserve">
+    <value>Hledejte v katalogu nebo napište vlastní</value>
+  </data>
+  <data name="SessionPickerCustomHint" xml:space="preserve">
+    <value>Není v seznamu? Stane se vaším vlastním tréninkem.</value>
+  </data>
+  <data name="SessionPickerKind" xml:space="preserve">
+    <value>Druh</value>
+  </data>
+  <data name="SessionPickerMinutes" xml:space="preserve">
+    <value>Minuty</value>
+  </data>
+  <data name="SessionPickerOptional" xml:space="preserve">
+    <value>Volitelné (nepočítá se do splnění dne)</value>
+  </data>
+  <data name="SessionPickerConfirm" xml:space="preserve">
+    <value>Přidat</value>
+  </data>
+  <data name="MySchedulesHeader" xml:space="preserve">
+    <value>Moje rozvrhy</value>
+  </data>
+  <data name="NewSchedule" xml:space="preserve">
+    <value>Nový rozvrh</value>
+  </data>
+  <data name="MySchedulesEmpty" xml:space="preserve">
+    <value>Sestavte si vlastní program z tréninků z katalogu i vlastních a sledujte ho jako každý jiný.</value>
+  </data>
+  <data name="ProCustomSchedulesLink" xml:space="preserve">
+    <value>Odemkněte Pro a sestavujte vlastní rozvrhy</value>
+  </data>
+  <data name="CatalogHeader" xml:space="preserve">
+    <value>Katalog</value>
+  </data>
+  <data name="CustomProgramFamily" xml:space="preserve">
+    <value>Můj rozvrh</value>
+  </data>
+  <data name="CustomProgramBadgeFormat" xml:space="preserve">
+    <value>Vlastní · v{0}</value>
+  </data>
+  <data name="CustomProgramBadgeTooltip" xml:space="preserve">
+    <value>Rozvrh, který jste sestavili. Každé uložení je nová verze; rozběhnuté programy si ponechají tu svou.</value>
+  </data>
+  <data name="ProgramEditSchedule" xml:space="preserve">
+    <value>Upravit</value>
+  </data>
+  <data name="ProgramDeleteSchedule" xml:space="preserve">
+    <value>Smazat</value>
+  </data>
+  <data name="CustomProgramDeleteTitle" xml:space="preserve">
+    <value>Smazat tento rozvrh?</value>
+  </data>
+  <data name="CustomProgramDeleteMessageFormat" xml:space="preserve">
+    <value>„{0}“ zmizí z vašich rozvrhů.</value>
+  </data>
+  <data name="CustomProgramDeleteRunningMessageFormat" xml:space="preserve">
+    <value>„{0}“ zmizí z vašich rozvrhů. Právě ho cvičíte: to poběží dál i s dny a historií, dokud ho neukončíte.</value>
+  </data>
+  <data name="CustomProgramDeleteFailedTitle" xml:space="preserve">
+    <value>Rozvrh se nepodařilo smazat</value>
+  </data>
+  <data name="CustomProgramDeleteFailedMessage" xml:space="preserve">
+    <value>Zkuste to za chvíli znovu.</value>
+  </data>
+  <data name="CustomProgramLockedLink" xml:space="preserve">
+    <value>Bez Pro jsou vlastní rozvrhy jen ke čtení</value>
+  </data>
+  <data name="BuilderMoveUpFormat" xml:space="preserve">
+    <value>Posunout {0} dřív</value>
+  </data>
+  <data name="BuilderMoveDownFormat" xml:space="preserve">
+    <value>Posunout {0} později</value>
+  </data>
+  <data name="BuilderSessionMoreFormat" xml:space="preserve">
+    <value>Další možnosti pro {0}</value>
+  </data>
+  <data name="BuilderCopyAllTitle" xml:space="preserve">
+    <value>Kopírovat týden {0} do všech týdnů?</value>
+  </data>
+  <data name="BuilderCopyAllMessage" xml:space="preserve">
+    <value>Dny všech ostatních týdnů se nahradí dny tohoto týdne.</value>
+  </data>
 </root>

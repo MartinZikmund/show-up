@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
+using ShowUp.Core.CustomPrograms;
 
 namespace ShowUp.Core.Storage;
 
@@ -12,7 +13,7 @@ public sealed class SqliteCustomProgramRepository(
     ILogger<SqliteCustomProgramRepository> logger)
     : SqliteRepositoryBase(db, time, user, device), ICustomProgramRepository
 {
-    public const string IdPrefix = "custom-";
+    public const string IdPrefix = CustomProgramFactory.IdPrefix;
 
     private const string DeletedPrefix = "custom-deleted:";
 
@@ -62,6 +63,14 @@ public sealed class SqliteCustomProgramRepository(
         }
 
         return await IsDeletedAsync(programId, rows) ? null : revisions.OrderByDescending(p => p.Revision).FirstOrDefault();
+    }
+
+    public async Task<IReadOnlyList<int>> GetRevisionsAsync(string programId)
+    {
+        string key = KeyOf(programId);
+        var connection = await ConnectAsync();
+        var rows = await QueryAsync<CustomProgramEntity>(connection, p => p.SubjectKey == key);
+        return [.. rows.Select(p => p.Revision).Distinct().Order()];
     }
 
     public async Task<(string ProgramId, int Revision)> SaveNewRevisionAsync(string programJson, string? programId = null)

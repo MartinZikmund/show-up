@@ -48,7 +48,13 @@ public sealed partial record WorkoutProgram(
     VerificationLevel Verification,
     IReadOnlyList<CatalogSource> Sources,
     DateOnly VerifiedOn,
-    IReadOnlyList<ProgramTrack> Tracks);
+    IReadOnlyList<ProgramTrack> Tracks,
+    IReadOnlyList<Workout>? Workouts = null)
+{
+    /// <summary>The user's own workouts, carried inline; only custom programs have them.</summary>
+    [JsonIgnore]
+    public bool IsCustom => Verification == VerificationLevel.Custom;
+}
 
 public sealed record WorkoutCatalog(int Version, IReadOnlyList<Workout> Workouts, IReadOnlyList<WorkoutProgram> Programs)
 {

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.CustomPrograms;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
@@ -137,6 +138,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
     {
         ArgumentNullException.ThrowIfNull(program);
         ArgumentNullException.ThrowIfNull(track);
+        EnsureStartable(program);
 
         if ((await GetAllAsync()).Count >= FeatureGate.MaxActivePrograms(_entitlements.IsPro))
         {
@@ -153,6 +155,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
     {
         ArgumentNullException.ThrowIfNull(program);
         ArgumentNullException.ThrowIfNull(track);
+        EnsureStartable(program);
 
         // A read-only program stays as it was until Pro is back; restarting it would edit it.
         var old = await RequireWritableAsync(enrollmentId);
@@ -230,6 +233,15 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
     {
         var active = await RequireAsync(enrollmentId);
         return IsReadOnly(active) ? throw new EnrollmentReadOnlyException(enrollmentId) : active;
+    }
+
+    // A lapse leaves custom programs visible but read-only, so they can't be started again.
+    private void EnsureStartable(WorkoutProgram program)
+    {
+        if (program.IsCustom && !FeatureGate.CanUse(ProFeature.CustomSchedules, _entitlements.IsPro))
+        {
+            throw new CustomProgramLockedException();
+        }
     }
 
     private static Guid? ParseId(string? value) => Guid.TryParse(value, out var id) ? id : null;
