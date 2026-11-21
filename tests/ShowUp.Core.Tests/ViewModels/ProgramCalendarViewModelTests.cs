@@ -443,6 +443,7 @@ public sealed class ProgramCalendarViewModelTests
     {
         var (viewModel, p, q) = await LoadTwoAsync();
         viewModel.ShowProgramSwitcher.Should().BeTrue();
+        viewModel.ShowProgramTitle.Should().BeFalse("the switcher is the title");
         viewModel.ProgramName.Should().Be("Program q r1", "the newest one shows first");
 
         await viewModel.SelectProgramAsync(viewModel.Programs.Single(o => o.Id == p));

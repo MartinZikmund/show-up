@@ -117,6 +117,21 @@ public sealed class ProgramResultsViewModelTests
         viewModel.ProgramName.Should().Be(other.Program.Name);
     }
 
+    [TestMethod]
+    public async Task NavigatedWithEnrollment_ShowsItWithoutSelecting()
+    {
+        var other = Enrollment(Guid.NewGuid(), "q");
+        _enrollments.All.Add(other);
+        var viewModel = Create(_start);
+
+        viewModel.OnNavigatedTo(other.Id);
+        await viewModel.LoadAsync();
+
+        viewModel.ProgramName.Should().Be(other.Program.Name);
+        viewModel.SelectedProgram!.Id.Should().Be(other.Id);
+        _enrollments.SelectedEnrollmentId.Should().BeNull();
+    }
+
     private ProgramResultsViewModel Create(DateOnly today)
     {
         FakeTimeProvider time = new(new DateTimeOffset(today.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero));

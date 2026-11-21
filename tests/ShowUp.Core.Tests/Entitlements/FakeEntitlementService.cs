@@ -34,7 +34,16 @@ internal sealed class FakeEntitlementService : IEntitlementService
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    public Task RefreshAsync() => Task.CompletedTask;
+    /// <summary>Runs on refresh, e.g. a renewal the store reports.</summary>
+    public Func<Task>? OnRefresh { get; set; }
+
+    public int RefreshCalls { get; private set; }
+
+    public Task RefreshAsync()
+    {
+        RefreshCalls++;
+        return OnRefresh?.Invoke() ?? Task.CompletedTask;
+    }
 
     public Task<IReadOnlyList<ProOffer>> GetOffersAsync() => Task.FromResult<IReadOnlyList<ProOffer>>(Offers);
 

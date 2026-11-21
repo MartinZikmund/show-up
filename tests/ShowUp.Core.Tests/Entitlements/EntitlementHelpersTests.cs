@@ -110,6 +110,34 @@ public sealed class EntitlementHelpersTests
     }
 
     [TestMethod]
+    public void ExpiryWatch_RenewedAtExpiry_StaysPro()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+        var renewed = false;
+        var lapsed = 0;
+
+        watch.Schedule(Now.AddHours(1), () => { renewed = true; return Task.CompletedTask; }, () => renewed, () => lapsed++);
+        time.Advance(TimeSpan.FromHours(2));
+
+        renewed.Should().BeTrue("the store is asked at the cached expiry");
+        lapsed.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void ExpiryWatch_StoreUnreachableAtExpiry_Lapses()
+    {
+        Microsoft.Extensions.Time.Testing.FakeTimeProvider time = new(Now);
+        using ExpiryWatch watch = new(time);
+        var lapsed = 0;
+
+        watch.Schedule(Now.AddHours(1), () => Task.FromException(new HttpRequestException("offline")), () => false, () => lapsed++);
+        time.Advance(TimeSpan.FromHours(2));
+
+        lapsed.Should().Be(1);
+    }
+
+    [TestMethod]
     public void ProCache_ExpiredSubscription_IsFree() => ProCache.IsPro(true, Now.AddDays(-1), Now).Should().BeFalse();
 
     [TestMethod]

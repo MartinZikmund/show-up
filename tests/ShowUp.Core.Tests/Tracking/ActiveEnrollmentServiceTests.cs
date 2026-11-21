@@ -285,6 +285,21 @@ public sealed class ActiveEnrollmentServiceTests
         messages.Should().Be(1);
     }
 
+    [TestMethod]
+    public async Task Replace_ReadOnlyEnrollment_Throws()
+    {
+        var a = await EnrollAsync("p");
+        var b = await EnrollAsync("q");
+        await _service.SetPrimaryAsync(a.Id);
+        _entitlements.SetPro(false);
+        var program = (await _catalog.GetProgramAsync("q"))!;
+
+        Func<Task> act = () => _service.ReplaceAsync(b.Id, EnrollmentEndReason.Abandoned, program, program.Tracks[0], _today);
+
+        await act.Should().ThrowAsync<EnrollmentReadOnlyException>();
+        (await _service.GetAllAsync()).Select(e => e.Id).Should().Contain(b.Id);
+    }
+
     private async Task<ActiveEnrollment> EnrollAsync(string programId)
     {
         var program = (await _catalog.GetProgramAsync(programId))!;

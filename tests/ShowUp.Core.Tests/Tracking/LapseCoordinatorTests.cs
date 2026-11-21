@@ -114,4 +114,76 @@ public sealed class LapseCoordinatorTests
             return Task.FromResult(Answer);
         }
     }
+
+    [TestMethod]
+    public async Task Attach_RenewedOnFirstRefresh_NeverPrompts()
+    {
+        await EnrollTwoAsync();
+        FakeEntitlementService entitlements = new() { IsPro = false };
+        entitlements.OnRefresh = () =>
+        {
+            entitlements.IsPro = true;
+            return Task.CompletedTask;
+        };
+        FakePrompt prompt = new();
+        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+
+        coordinator.Attach(prompt);
+        var shown = await coordinator.CheckAsync();
+
+        shown.Should().BeFalse();
+        prompt.Asked.Should().BeEmpty();
+        entitlements.RefreshCalls.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Attach_StillFreeAfterFirstRefresh_Prompts()
+    {
+        await EnrollTwoAsync();
+        FakeEntitlementService entitlements = new() { IsPro = false };
+        FakePrompt prompt = new();
+        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+
+        coordinator.Attach(prompt);
+        await prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        prompt.Asked.Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task Changed_BeforeFirstRefreshSettles_WaitsForIt()
+    {
+        await EnrollTwoAsync();
+        TaskCompletionSource refresh = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeEntitlementService entitlements = new() { IsPro = true, OnRefresh = () => refresh.Task };
+        FakePrompt prompt = new();
+        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+        coordinator.Attach(prompt);
+
+        entitlements.SetPro(false);
+        await Task.Delay(50);
+        prompt.Asked.Should().BeEmpty("the launch refresh hasn't answered yet");
+
+        entitlements.OnRefresh = null;
+        refresh.SetResult();
+        await prompt.Shown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        prompt.Asked.Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task Attach_TwoWindows_PromptsOnceInTheLatest()
+    {
+        await EnrollTwoAsync();
+        FakeEntitlementService entitlements = new() { IsPro = false };
+        FakePrompt first = new();
+        FakePrompt second = new();
+        LapseCoordinator coordinator = new(_service, entitlements, NullLogger<LapseCoordinator>.Instance);
+
+        coordinator.Attach(first);
+        coordinator.Attach(second);
+        await Task.WhenAny(first.Shown.Task, second.Shown.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(50);
+
+        (first.Asked.Count + second.Asked.Count).Should().Be(1);
+    }
 }

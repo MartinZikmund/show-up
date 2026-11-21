@@ -63,4 +63,30 @@ public sealed class ScheduleQueryTests
 
         due[0].Active.Id.Should().Be(p);
     }
+
+    [TestMethod]
+    public async Task GetDue_OptionalOnlyDay_HasNothingOpen()
+    {
+        FakeCatalogService catalog = new(TestCatalog.Program("o", 1, "run?+abs?"));
+        var service = TestEnrollments.Create(_repository, catalog, new WeakReferenceMessenger());
+        await _repository.EnrollAsync("o", 1, "t", _today);
+
+        var due = await new ScheduleQuery(service, catalog).GetDueAsync(_today);
+
+        var day = due.Single();
+        day.Day!.CountsAsRest.Should().BeTrue();
+        day.HasOpenSessions.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task GetDue_GapDayFromAShift_HasNoDay()
+    {
+        var p = (await _repository.EnrollAsync("p", 1, "t", _today.AddDays(-1))).Id;
+        await _service.ShiftAsync(p, _today, 2);
+
+        var due = await _query.GetDueAsync(_today);
+
+        due.Single().DayIndex.Should().BeNull("today is a gap left by the shift");
+        (await _query.GetDueAsync(_today.AddDays(2))).Single().DayIndex.Should().Be(1);
+    }
 }
