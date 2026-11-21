@@ -343,6 +343,18 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
+    public async Task LogBonus_OneBonus_IsAnnouncedWithThePluralForm()
+    {
+        _bonusDialog.Title = "Evening run";
+        var viewModel = await LoadAsync(_today, "run");
+        var day = Day(viewModel, 0);
+
+        await viewModel.LogBonusCommand.ExecuteAsync(day);
+
+        day.AutomationName.Should().Contain("CalendarDayBonus_One(1)");
+    }
+
+    [TestMethod]
     public async Task LogBonus_WorkoutWithMetrics_OffersItsResults()
     {
         _bonusDialog.Title = "Fit Test";
