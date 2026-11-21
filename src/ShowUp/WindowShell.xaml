@@ -8,92 +8,158 @@
     xmlns:not_win="http://uno.ui/not_win"
     xmlns:toolkit="using:Uno.UI.Behaviors"
     xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="not_win">
 
-    <Grid toolkit:VisibleBoundsPadding.PaddingMask="All">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <Grid>
+        <!--  Paper (or chalkboard) fills the whole window, safe-area insets included  -->
+        <controls:PaperGrid />
 
-        <!--  WinUI title bar (Windows head only; stripped on Uno heads, collapsing this row).  -->
-        <win:TitleBar
-            x:Name="AppTitleBar"
-            Title="{markup:Localize Key=ApplicationName}"
-            BackRequested="AppTitleBar_BackRequested"
-            IsBackButtonVisible="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
-            IsPaneToggleButtonVisible="True"
-            PaneToggleRequested="AppTitleBar_PaneToggleRequested"
-            Subtitle="{x:Bind ViewModel.Title, Mode=OneWay}">
-            <win:TitleBar.Resources>
-                <!--  Content defaults to Center; Stretch lets the search box fill to MaxWidth.  -->
-                <HorizontalAlignment x:Key="TitleBarContentHorizontalAlignment">Stretch</HorizontalAlignment>
-            </win:TitleBar.Resources>
-            <win:TitleBar.IconSource>
-                <ImageIconSource ImageSource="ms-appx:///Assets/Icons/icon_foreground.png" />
-            </win:TitleBar.IconSource>
+        <Grid toolkit:VisibleBoundsPadding.PaddingMask="Top,Left,Right">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  WinUI title bar (Windows head only; stripped on Uno heads, collapsing this row).  -->
+            <win:TitleBar
+                x:Name="AppTitleBar"
+                Title="{markup:Localize Key=ApplicationName}"
+                BackRequested="AppTitleBar_BackRequested"
+                IsBackButtonVisible="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
+                IsPaneToggleButtonVisible="True"
+                PaneToggleRequested="AppTitleBar_PaneToggleRequested"
+                Subtitle="{x:Bind ViewModel.Title, Mode=OneWay}">
+                <win:TitleBar.IconSource>
+                    <ImageIconSource ImageSource="ms-appx:///Assets/Icons/icon_foreground.png" />
+                </win:TitleBar.IconSource>
+                <!--
+                    RightHeader sits before the system caption buttons and the min drag region, so the
+                    badge can never overlap the close button the way a corner overlay does.
+                -->
+                <win:TitleBar.RightHeader>
+                    <controls:DevChannelBadge Margin="0,0,8,0" VerticalAlignment="Center" />
+                </win:TitleBar.RightHeader>
+            </win:TitleBar>
+
+            <NavigationView
+                x:Name="NavView"
+                Grid.Row="1"
+                not_win:IsBackButtonVisible="Auto"
+                not_win:IsPaneToggleButtonVisible="True"
+                win:IsBackButtonVisible="Collapsed"
+                win:IsPaneToggleButtonVisible="False"
+                AutomationProperties.AutomationId="NavView"
+                BackRequested="NavView_BackRequested"
+                CompactPaneLength="48"
+                IsBackEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
+                Loaded="NavView_Loaded"
+                OpenPaneLength="280"
+                PaneDisplayMode="Left"
+                SelectionChanged="NavView_SelectionChanged">
+                <NavigationView.Resources>
+                    <!--  Let the paper show through instead of the Fluent content layer  -->
+                    <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="SubtleFillColorTransparentBrush" />
+                    <StaticResource x:Key="NavigationViewContentGridBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
+                </NavigationView.Resources>
+
+                <NavigationView.MenuItems>
+                    <NavigationViewItem
+                        x:Name="TodayNavItem"
+                        AutomationProperties.AutomationId="Nav_Today"
+                        Content="{markup:Localize Key=Today}"
+                        Tag="Today">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE706;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem
+                        x:Name="CalendarNavItem"
+                        AutomationProperties.AutomationId="Nav_Calendar"
+                        Content="{markup:Localize Key=Calendar}"
+                        Tag="Calendar">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE787;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem
+                        x:Name="ProgramsNavItem"
+                        AutomationProperties.AutomationId="Nav_Programs"
+                        Content="{markup:Localize Key=Programs}"
+                        Tag="Programs">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE8F1;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem
+                        x:Name="HistoryNavItem"
+                        AutomationProperties.AutomationId="Nav_History"
+                        Content="{markup:Localize Key=History}"
+                        Tag="History">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE81C;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </NavigationView.MenuItems>
+
+                <Frame x:Name="InnerFrame" />
+            </NavigationView>
+
+            <controls:BottomTabBar
+                x:Name="TabBar"
+                Grid.Row="2"
+                NavigateCommand="{x:Bind ViewModel.NavigateToSectionCommand}"
+                SelectedSection="{x:Bind ViewModel.SelectedSection, Mode=OneWay}"
+                Visibility="Collapsed" />
+
+            <!--  Keeps content out of the bottom safe area when the tab bar (which pads itself) is hidden  -->
+            <Border
+                x:Name="BottomInset"
+                Grid.Row="2"
+                toolkit:VisibleBoundsPadding.PaddingMask="Bottom" />
+
             <!--
-                RightHeader sits before the system caption buttons and the min drag region, so the
-                badge can never overlap the close button the way a corner overlay does.
+                Dev-channel indicator for heads with no WinUI TitleBar (the Windows head hosts the
+                same control in TitleBar.RightHeader above). The not_win wrapper is mc:Ignorable, so
+                this whole subtree is dropped on Windows.
             -->
-            <win:TitleBar.RightHeader>
-                <controls:DevChannelBadge Margin="0,0,8,0" VerticalAlignment="Center" />
-            </win:TitleBar.RightHeader>
-            <win:TitleBar.Content>
-                <!--  Plain, non-interactive placeholder. Apps wire up search here.  -->
-                <AutoSuggestBox
-                    MaxWidth="580"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center"
-                    IsEnabled="False"
-                    QueryIcon="Find" />
-            </win:TitleBar.Content>
-        </win:TitleBar>
+            <not_win:Border
+                Grid.RowSpan="3"
+                Margin="0,8,8,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top">
+                <controls:DevChannelBadge />
+            </not_win:Border>
+        </Grid>
 
-        <!--  NavigationView  -->
-        <NavigationView
-            x:Name="NavView"
-            Grid.Row="1"
-            not_win:IsBackButtonVisible="Auto"
-            not_win:IsPaneToggleButtonVisible="True"
-            win:IsBackButtonVisible="Collapsed"
-            win:IsPaneToggleButtonVisible="False"
-            BackRequested="NavView_BackRequested"
-            CompactModeThresholdWidth="640"
-            CompactPaneLength="48"
-            ExpandedModeThresholdWidth="1008"
-            IsBackEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
-            Loaded="NavView_Loaded"
-            OpenPaneLength="280"
-            PaneDisplayMode="Auto"
-            SelectionChanged="NavView_SelectionChanged">
-
-            <NavigationView.MenuItems>
-                <NavigationViewItem
-                    x:Name="MainNavItem"
-                    Content="{markup:Localize Key=Home}"
-                    Tag="Main">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE80F;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
-
-            <Frame x:Name="InnerFrame" />
-        </NavigationView>
-
-        <!--
-            Dev-channel indicator for heads with no WinUI TitleBar (the Windows head hosts the
-            same control in TitleBar.RightHeader above). The not_win wrapper is mc:Ignorable, so
-            this whole subtree is dropped on Windows.
-        -->
-        <not_win:Border
-            Grid.RowSpan="2"
-            Margin="0,8,8,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top">
-            <controls:DevChannelBadge />
-        </not_win:Border>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WidthStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="NavView.PaneDisplayMode" Value="LeftMinimal" />
+                        <Setter Target="NavView.IsPaneToggleButtonVisible" Value="False" />
+                        <win:Setter Target="AppTitleBar.IsPaneToggleButtonVisible" Value="False" />
+                        <Setter Target="TabBar.Visibility" Value="Visible" />
+                        <Setter Target="BottomInset.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="640" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="NavView.PaneDisplayMode" Value="LeftCompact" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1008" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </Page>
