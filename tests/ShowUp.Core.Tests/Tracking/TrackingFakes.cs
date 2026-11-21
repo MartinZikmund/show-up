@@ -68,6 +68,9 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
 
     public List<(DateOnly From, int Days, int DayCount)> ShiftCalls { get; } = [];
 
+    /// <summary>Shifts throw like the real repository does when every remaining day is crossed.</summary>
+    public bool FailShifts { get; set; }
+
     /// <summary>When set, crosses wait for it, so a test can tap again while a write is in flight.</summary>
     public TaskCompletionSource? CrossGate { get; set; }
 
@@ -138,6 +141,11 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
 
     public Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days, int dayCount)
     {
+        if (FailShifts)
+        {
+            throw new InvalidOperationException("Nothing left to shift.");
+        }
+
         ShiftCalls.Add((fromDate, days, dayCount));
         _shifts.Add(new(fromDate, days));
         return Task.CompletedTask;

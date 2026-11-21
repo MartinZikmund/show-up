@@ -243,6 +243,19 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
+    public async Task ShiftSchedule_NothingLeftToShift_ShowsMessage()
+    {
+        _prompts.ShiftDays = 2;
+        var viewModel = await LoadAsync(_today, "run");
+        await viewModel.CrossNextCommand.ExecuteAsync(Day(viewModel, 0));
+        _repository.FailShifts = true;
+
+        await viewModel.ShiftScheduleCommand.ExecuteAsync(null);
+
+        _dialogs.Shown.Should().Equal("ShiftFailedTitle");
+    }
+
+    [TestMethod]
     public void BrowsePrograms_EmptyState_NavigatesToPrograms()
     {
         var viewModel = CreateViewModel(new FakeCatalogService());
