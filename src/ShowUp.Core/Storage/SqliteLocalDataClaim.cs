@@ -2,33 +2,37 @@ namespace ShowUp.Core.Storage;
 
 public sealed class SqliteLocalDataClaim(ShowUpDatabase db, TimeProvider time, IDeviceIdProvider device) : ILocalDataClaim
 {
-    // Every synced table (docs/sync-classification.md); settings alone don't count as progress.
-    private static readonly string[] _progressTables =
+    private const string Settings = nameof(SyncedSettingEntity);
+
+    /// <summary>Every synced table (docs/sync-classification.md); a test ties it to the <see cref="SyncableEntity"/> types.</summary>
+    public static IReadOnlyList<string> SyncedTables { get; } =
     [
-        "EnrollmentEntity",
-        "CompletionEntity",
-        "ScheduleShiftEntity",
-        "BonusWorkoutEntity",
-        "NoteEntity",
-        "MetricEntryEntity",
-        "ReminderEntity",
-        "CustomProgramEntity",
+        nameof(EnrollmentEntity),
+        nameof(CompletionEntity),
+        nameof(ScheduleShiftEntity),
+        nameof(BonusWorkoutEntity),
+        nameof(NoteEntity),
+        nameof(MetricEntryEntity),
+        nameof(ReminderEntity),
+        nameof(CustomProgramEntity),
+        Settings,
     ];
 
-    private static readonly string[] _syncedTables = [.. _progressTables, "SyncedSettingEntity"];
+    private const string Live = """ WHERE "UserId" IS NULL AND "DeletedAt" IS NULL""";
 
-    public async Task<bool> HasAnonymousProgressAsync()
+    public async Task<AnonymousProgress> GetAnonymousProgressAsync()
     {
         var connection = await db.GetConnectionAsync();
-        foreach (var table in _progressTables)
+        var programs = await connection.ExecuteScalarAsync<int>($"""SELECT COUNT(*) FROM "{nameof(EnrollmentEntity)}"{Live}""");
+        var crossed = await connection.ExecuteScalarAsync<int>($"""SELECT COUNT(*) FROM "{nameof(CompletionEntity)}"{Live}""");
+        // One custom program has a row per revision.
+        var other = await connection.ExecuteScalarAsync<int>($"""SELECT COUNT(DISTINCT "SubjectKey") FROM "{nameof(CustomProgramEntity)}"{Live}""");
+        foreach (var table in SyncedTables.Except([nameof(EnrollmentEntity), nameof(CompletionEntity), nameof(CustomProgramEntity), Settings]))
         {
-            if (await connection.ExecuteScalarAsync<int>($"""SELECT EXISTS (SELECT 1 FROM "{table}" WHERE "UserId" IS NULL AND "DeletedAt" IS NULL)""") == 1)
-            {
-                return true;
-            }
+            other += await connection.ExecuteScalarAsync<int>($"""SELECT COUNT(*) FROM "{table}"{Live}""");
         }
 
-        return false;
+        return new(programs, crossed, other);
     }
 
     public async Task<int> ClaimAsync(string userId)
@@ -42,13 +46,12 @@ public sealed class SqliteLocalDataClaim(ShowUpDatabase db, TimeProvider time, I
         int claimed = 0;
         await connection.RunInTransactionAsync(c =>
         {
-            foreach (var table in _syncedTables)
+            foreach (var table in SyncedTables)
             {
-                claimed += c.Execute(
-                    $"""UPDATE "{table}" SET "UserId" = ?, "DeviceId" = ?, "UpdatedAt" = MAX(?, ("UpdatedAt" / 10 + 1) * 10) WHERE "UserId" IS NULL AND "DeletedAt" IS NULL""",
-                    userId,
-                    device.DeviceId,
-                    now);
+                // Settings keep their own time: the account's settings from other devices are newer and must win.
+                var stamp = table == Settings ? "" : """, "UpdatedAt" = MAX(?, ("UpdatedAt" / 10 + 1) * 10)""";
+                object[] args = table == Settings ? [userId, device.DeviceId] : [userId, device.DeviceId, now];
+                claimed += c.Execute($"""UPDATE "{table}" SET "UserId" = ?, "DeviceId" = ?{stamp}{Live}""", args);
             }
         });
         return claimed;

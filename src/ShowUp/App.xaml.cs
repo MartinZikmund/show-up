@@ -332,8 +332,9 @@ public partial class App : Application, IApplication
             sp.GetRequiredService<UserScope>(),
             sp.GetRequiredService<IEntitlementService>(),
             sp.GetRequiredService<ILocalDataClaim>(),
-            sp.GetRequiredService<MZikmund.Toolkit.WinUI.Services.IPreferences>(),
+            sp.GetRequiredService<SyncedPersonalization>(),
             sp.GetRequiredService<DataChangeAnnouncer>(),
+            sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<ILogger<AccountService>>(),
 #if DEBUG
             () => options.IsConfigured || sp.GetRequiredService<Services.Auth.DebugSupabaseAuth>().Simulate));

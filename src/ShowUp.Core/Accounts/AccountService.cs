@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using MZikmund.Toolkit.WinUI.Services;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
@@ -9,18 +8,20 @@ namespace ShowUp.Core.Accounts;
 
 /// <summary>
 /// Signing in and out, and what follows: the repositories' user scope, the store's user and one <see cref="DataChangedMessage"/>.
-/// The first sign-in of an account on this device may claim the rows made while signed out; accounts never see each other's rows.
+/// A sign-in on a device with signed-out progress offers to bring it into the account; accounts never see each other's rows.
 /// </summary>
 public sealed class AccountService
 {
-    private const string ClaimAskedKey = "AccountClaimAsked";
+    /// <summary>A store that doesn't answer must not hold the switch (and the UI) hostage.</summary>
+    public static readonly TimeSpan StoreUserTimeout = TimeSpan.FromSeconds(10);
 
     private readonly ISupabaseAuth _auth;
     private readonly UserScope _scope;
     private readonly IEntitlementService _entitlements;
     private readonly ILocalDataClaim _claim;
-    private readonly IPreferences _preferences;
+    private readonly SyncedPersonalization _personalization;
     private readonly DataChangeAnnouncer _announcer;
+    private readonly TimeProvider _time;
     private readonly ILogger<AccountService> _logger;
     private readonly Func<bool> _isAvailable;
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
@@ -32,8 +33,9 @@ public sealed class AccountService
         UserScope scope,
         IEntitlementService entitlements,
         ILocalDataClaim claim,
-        IPreferences preferences,
+        SyncedPersonalization personalization,
         DataChangeAnnouncer announcer,
+        TimeProvider time,
         ILogger<AccountService> logger,
         Func<bool> isAvailable)
     {
@@ -41,8 +43,9 @@ public sealed class AccountService
         _scope = scope;
         _entitlements = entitlements;
         _claim = claim;
-        _preferences = preferences;
+        _personalization = personalization;
         _announcer = announcer;
+        _time = time;
         _logger = logger;
         _isAvailable = isAvailable;
         _auth.SessionChanged += OnSessionChanged;
@@ -62,14 +65,14 @@ public sealed class AccountService
         await _auth.RestoreAsync();
         if (_auth.Current is { } session && _scope.Set(session.UserId))
         {
-            await _entitlements.SetUserAsync(session.UserId);
+            await SetStoreUserAsync(session.UserId);
         }
     }
 
     public Task SendCodeAsync(string email) => _auth.SendCodeAsync(email.Trim());
 
-    /// <param name="confirmClaim">Asked on the account's first sign-in here when signed-out progress exists: true brings it into the account.</param>
-    public async Task SignInAsync(string email, string code, Func<Task<bool>> confirmClaim)
+    /// <param name="confirmClaim">Asked when this device has signed-out progress: true brings it into the account.</param>
+    public async Task SignInAsync(string email, string code, Func<AnonymousProgress, Task<bool>> confirmClaim)
     {
         Interlocked.Increment(ref _interactive);
         try
@@ -79,18 +82,27 @@ public sealed class AccountService
             {
                 await OfferClaimAsync(session.UserId, confirmClaim);
             }
-            catch
+            catch (Exception ex)
             {
-                // All or nothing: signed out again, so the next attempt asks again.
-                await _auth.SignOutAsync();
-                throw;
+                // All or nothing: signed out again, so the next attempt asks again. The claim's failure is the one to report.
+                try
+                {
+                    await _auth.SignOutAsync();
+                }
+                catch (Exception signOut)
+                {
+                    _logger.LogWarning(signOut, "Undoing the sign-in after a failed claim failed too.");
+                }
+
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw(ex);
             }
 
-            await SwitchToAsync(session.UserId);
+            // The session, not the one verified: a revocation meanwhile already ended it.
+            await SwitchToAsync(_auth.Current?.UserId);
         }
         finally
         {
-            Interlocked.Decrement(ref _interactive);
+            await EndInteractiveAsync();
         }
     }
 
@@ -105,26 +117,20 @@ public sealed class AccountService
         }
         finally
         {
-            Interlocked.Decrement(ref _interactive);
+            await EndInteractiveAsync();
         }
     }
 
-    private async Task OfferClaimAsync(string userId, Func<Task<bool>> confirmClaim)
+    private async Task OfferClaimAsync(string userId, Func<AnonymousProgress, Task<bool>> confirmClaim)
     {
-        var key = ClaimAskedKey + AccountProCache.KeySuffix(userId);
-        if (_preferences.ContainsKey(key) || !await _claim.HasAnonymousProgressAsync())
+        var progress = await _claim.GetAnonymousProgressAsync();
+        if (progress.IsEmpty || !await confirmClaim(progress))
         {
             return;
         }
 
-        if (await confirmClaim())
-        {
-            var claimed = await _claim.ClaimAsync(userId);
-            _logger.LogInformation("Claimed {Count} signed-out rows for the account.", claimed);
-        }
-
-        // Asked once per account per device; a later "no" stays a "no".
-        _preferences.Set(key, true);
+        var claimed = await _claim.ClaimAsync(userId);
+        _logger.LogInformation("Claimed {Count} signed-out rows for the account.", claimed);
     }
 
     private async Task SwitchToAsync(string? userId)
@@ -132,9 +138,14 @@ public sealed class AccountService
         await _switchGate.WaitAsync();
         try
         {
-            if (_scope.Set(userId))
+            if (_scope.CurrentUserId != userId)
             {
-                await _entitlements.SetUserAsync(userId);
+                // Pending writes belong to the account that made them.
+                await _personalization.FlushAsync();
+                _scope.Set(userId);
+                // Together with the scope: a read or write meanwhile must not use the previous account's cached rows.
+                _announcer.InvalidateCaches();
+                await SetStoreUserAsync(userId);
                 _announcer.Announce();
             }
         }
@@ -144,6 +155,27 @@ public sealed class AccountService
         }
 
         Raise(() => Changed?.Invoke(this, EventArgs.Empty));
+    }
+
+    private async Task SetStoreUserAsync(string? userId)
+    {
+        try
+        {
+            await _entitlements.SetUserAsync(userId).WaitAsync(StoreUserTimeout, _time);
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogWarning("The store didn't take the new user within {Timeout}; carrying on.", StoreUserTimeout);
+        }
+    }
+
+    // A session change that arrived during our own sign-in or sign-out (e.g. a revocation) is applied once it's done.
+    private async Task EndInteractiveAsync()
+    {
+        if (Interlocked.Decrement(ref _interactive) == 0 && _auth.Current?.UserId != _scope.CurrentUserId)
+        {
+            await SwitchToAsync(_auth.Current?.UserId);
+        }
     }
 
     // Our own sign-in and sign-out switch themselves; this catches the rest, e.g. a refresh token the server revoked.
@@ -158,7 +190,7 @@ public sealed class AccountService
         {
             try
             {
-                await SwitchToAsync(session?.UserId);
+                await SwitchToAsync(_auth.Current?.UserId);
             }
             catch (Exception ex)
             {

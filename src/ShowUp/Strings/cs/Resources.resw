@@ -1366,11 +1366,8 @@
   <data name="AccountErrorGeneric" xml:space="preserve">
     <value>Něco se pokazilo. Zkuste to znovu.</value>
   </data>
-  <data name="AccountClaimTitle" xml:space="preserve">
-    <value>Přenést místní pokrok do tohoto účtu?</value>
-  </data>
   <data name="AccountClaimMessage" xml:space="preserve">
-    <value>Programy, odškrtnuté dny, poznámky a připomínky na tomto zařízení vznikly bez přihlášení. Ano je přidá k tomuto účtu. Ne je nechá jen na tomto zařízení: během přihlášení zůstanou skryté a po odhlášení se vrátí.</value>
+    <value>Programy, odškrtnuté dny, poznámky a připomínky na tomto zařízení vznikly bez přihlášení. Ano je přidá k tomuto účtu. Ne je nechá jen na tomto zařízení: během přihlášení zůstanou skryté, po odhlášení se vrátí a při příštím přihlášení se zeptáme znovu.</value>
   </data>
   <data name="AccountSignOutUnsyncedTitle" xml:space="preserve">
     <value>Odhlásit se se změnami, které se ještě nesynchronizovaly?</value>
@@ -1386,5 +1383,53 @@
   </data>
   <data name="AccountSignInHeader" xml:space="preserve">
     <value>Přihlášení</value>
+  </data>
+  <data name="AccountClaimTitleFormat" xml:space="preserve">
+    <value>Přenést {0} do tohoto účtu?</value>
+  </data>
+  <data name="AccountClaimPrograms_One" xml:space="preserve">
+    <value>{0} program</value>
+  </data>
+  <data name="AccountClaimPrograms_Few" xml:space="preserve">
+    <value>{0} programy</value>
+  </data>
+  <data name="AccountClaimPrograms_Other" xml:space="preserve">
+    <value>{0} programů</value>
+  </data>
+  <data name="AccountClaimCrossed_One" xml:space="preserve">
+    <value>{0} odškrtnutý trénink</value>
+  </data>
+  <data name="AccountClaimCrossed_Few" xml:space="preserve">
+    <value>{0} odškrtnuté tréninky</value>
+  </data>
+  <data name="AccountClaimCrossed_Other" xml:space="preserve">
+    <value>{0} odškrtnutých tréninků</value>
+  </data>
+  <data name="AccountClaimEntries_One" xml:space="preserve">
+    <value>{0} záznam</value>
+  </data>
+  <data name="AccountClaimEntries_Few" xml:space="preserve">
+    <value>{0} záznamy</value>
+  </data>
+  <data name="AccountClaimEntries_Other" xml:space="preserve">
+    <value>{0} záznamů</value>
+  </data>
+  <data name="AccountClaimOtherEntries_One" xml:space="preserve">
+    <value>{0} další záznam</value>
+  </data>
+  <data name="AccountClaimOtherEntries_Few" xml:space="preserve">
+    <value>{0} další záznamy</value>
+  </data>
+  <data name="AccountClaimOtherEntries_Other" xml:space="preserve">
+    <value>{0} dalších záznamů</value>
+  </data>
+  <data name="AccountClaimJoinTwo" xml:space="preserve">
+    <value>{0} a {1}</value>
+  </data>
+  <data name="AccountClaimJoinThree" xml:space="preserve">
+    <value>{0}, {1} a {2}</value>
+  </data>
+  <data name="AccountBusy" xml:space="preserve">
+    <value>Pracuji…</value>
   </data>
 </root>

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Accounts;
+using ShowUp.Core.Localization;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Supabase;
 using ShowUp.Core.Sync;
 using ShowUp.Services.Dialogs;
@@ -11,24 +13,33 @@ public partial class AccountViewModel : ObservableObject
 {
     public const int CodeLength = 6;
 
+    /// <summary>Between two codes to the same inbox; Supabase rate-limits faster resends anyway.</summary>
+    public static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(30);
+
     private readonly AccountService _account;
     private readonly ISyncStatus _sync;
     private readonly IConfirmationDialogService _confirmation;
     private readonly IStringLocalizer _localizer;
+    private readonly TimeProvider _time;
     private readonly ILogger<AccountViewModel> _logger;
+    private readonly SynchronizationContext? _context = SynchronizationContext.Current;
     private bool _isActive;
+    private DateTimeOffset _resendAt;
+    private ITimer? _resendTimer;
 
     public AccountViewModel(
         AccountService account,
         ISyncStatus sync,
         IConfirmationDialogService confirmation,
         IStringLocalizer localizer,
+        TimeProvider time,
         ILogger<AccountViewModel> logger)
     {
         _account = account;
         _sync = sync;
         _confirmation = confirmation;
         _localizer = localizer;
+        _time = time;
         _logger = logger;
         Update();
     }
@@ -65,7 +76,7 @@ public partial class AccountViewModel : ObservableObject
     public string CodeSentText => IsCodeSent ? _localizer["AccountCodeSentFormat", Email.Trim()] : "";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SendCodeCommand), nameof(VerifyCommand), nameof(SignOutCommand), nameof(ChangeEmailCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SendCodeCommand), nameof(ResendCodeCommand), nameof(VerifyCommand), nameof(SignOutCommand), nameof(ChangeEmailCommand))]
     public partial bool IsBusy { get; private set; }
 
     [ObservableProperty]
@@ -137,7 +148,33 @@ public partial class AccountViewModel : ObservableObject
             await _account.SendCodeAsync(Email);
             Code = "";
             IsCodeSent = true;
+            StartResendCooldown();
         });
+    }
+
+    private bool CanResendCode() => !IsBusy && _time.GetUtcNow() >= _resendAt;
+
+    [RelayCommand(CanExecute = nameof(CanResendCode))]
+    private Task ResendCodeAsync() => SendCodeAsync();
+
+    private void StartResendCooldown()
+    {
+        _resendAt = _time.GetUtcNow() + ResendCooldown;
+        _resendTimer?.Dispose();
+        _resendTimer = _time.CreateTimer(_ => Post(ResendCodeCommand.NotifyCanExecuteChanged), null, ResendCooldown, Timeout.InfiniteTimeSpan);
+        ResendCodeCommand.NotifyCanExecuteChanged();
+    }
+
+    private void Post(Action action)
+    {
+        if (_context is null || _context == SynchronizationContext.Current)
+        {
+            action();
+        }
+        else
+        {
+            _context.Post(_ => action(), null);
+        }
     }
 
     private bool CanVerify() => !IsBusy && !string.IsNullOrWhiteSpace(Code);
@@ -185,8 +222,35 @@ public partial class AccountViewModel : ObservableObject
         Update();
     }
 
-    private async Task<bool> ConfirmClaimAsync() =>
-        await _confirmation.ShowAsync(_localizer["AccountClaimTitle"], _localizer["AccountClaimMessage"]) == ConfirmationResult.Confirmed;
+    private async Task<bool> ConfirmClaimAsync(AnonymousProgress progress) =>
+        await _confirmation.ShowAsync(_localizer["AccountClaimTitleFormat", DescribeProgress(progress)], _localizer["AccountClaimMessage"]) == ConfirmationResult.Confirmed;
+
+    /// <summary>"2 programs, 23 crossed workouts and 4 other entries", leaving out what there's none of.</summary>
+    public string DescribeProgress(AnonymousProgress progress)
+    {
+        List<string> parts = [];
+        if (progress.Programs > 0)
+        {
+            parts.Add(_localizer.Format("AccountClaimPrograms", progress.Programs));
+        }
+
+        if (progress.CrossedWorkouts > 0)
+        {
+            parts.Add(_localizer.Format("AccountClaimCrossed", progress.CrossedWorkouts));
+        }
+
+        if (progress.OtherEntries > 0)
+        {
+            parts.Add(_localizer.Format(parts.Count == 0 ? "AccountClaimEntries" : "AccountClaimOtherEntries", progress.OtherEntries));
+        }
+
+        return parts.Count switch
+        {
+            1 => parts[0],
+            2 => _localizer["AccountClaimJoinTwo", parts[0], parts[1]],
+            _ => _localizer["AccountClaimJoinThree", parts[0], parts[1], parts[2]],
+        };
+    }
 
     private async Task RunAsync(Func<Task> work)
     {

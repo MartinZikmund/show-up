@@ -25,10 +25,17 @@ public sealed class SyncedPersonalization
     private readonly ILogger<SyncedPersonalization> _logger;
     private readonly object _gate = new();
     private int _writes;
+    private bool _accountSwitched;
     private Task _pending = Task.CompletedTask;
 
-    public SyncedPersonalization(ISyncedSettings settings, IPreferences legacy, IMessenger messenger, ILogger<SyncedPersonalization> logger)
+    /// <param name="scope">After it switches accounts, a key the new account has no value for falls back to the defaults, not the previous account's.</param>
+    public SyncedPersonalization(ISyncedSettings settings, IPreferences legacy, IMessenger messenger, ILogger<SyncedPersonalization> logger, IUserScope? scope = null)
     {
+        if (scope is not null)
+        {
+            scope.Changed += (_, _) => Volatile.Write(ref _accountSwitched, true);
+        }
+
         _settings = settings;
         _legacy = legacy;
         _messenger = messenger;
@@ -149,8 +156,9 @@ public sealed class SyncedPersonalization
     }
 
     /// <summary>
-    /// After a sign-in, claim or sync pull. A key the store has no value for keeps what is in memory (and is not written:
-    /// a fresh row here would beat the account's own value on the next sync). A new marker color repaints the brushes.
+    /// After a sign-in, claim or sync pull. A key the store has no value for is not written (a fresh row here would beat
+    /// the account's own value on the next sync): after a sync pull it keeps what is in memory, after an account switch it
+    /// takes the default (or the old per-device value), never the previous account's. A new marker color repaints the brushes.
     /// </summary>
     private async Task ReloadAsync()
     {
@@ -158,14 +166,20 @@ public sealed class SyncedPersonalization
         {
             var writes = Volatile.Read(ref _writes);
             await FlushAsync();
-            var markerColor = ParseEnum(await _settings.GetAsync(MarkerColorKey), _markerColor);
-            var crossOffStyle = ParseEnum(await _settings.GetAsync(CrossOffStyleKey), _crossOffStyle);
-            var unitSystem = ParseEnum(await _settings.GetAsync(UnitSystemKey), _unitSystem);
+            var switched = Volatile.Read(ref _accountSwitched);
+            var markerColor = ParseEnum(await _settings.GetAsync(MarkerColorKey), switched ? Fallback(MarkerColorKey, MarkerColor.Auto) : _markerColor);
+            var crossOffStyle = ParseEnum(await _settings.GetAsync(CrossOffStyleKey), switched ? Fallback(CrossOffStyleKey, CrossOffStyle.DrawYourself) : _crossOffStyle);
+            var unitSystem = ParseEnum(await _settings.GetAsync(UnitSystemKey), switched ? Fallback(UnitSystemKey, MetricUnits.FromRegion()) : _unitSystem);
 
             // A pick made while this read would otherwise be undone by the older stored value.
             if (writes != Volatile.Read(ref _writes))
             {
                 continue;
+            }
+
+            if (switched)
+            {
+                Volatile.Write(ref _accountSwitched, false);
             }
 
             var colorChanged = markerColor != _markerColor;
@@ -181,6 +195,9 @@ public sealed class SyncedPersonalization
             return;
         }
     }
+
+    private T Fallback<T>(string key, T defaultValue)
+        where T : struct, Enum => ParseEnum(LegacyRaw(key), defaultValue);
 
     private async void ReloadInBackground()
     {

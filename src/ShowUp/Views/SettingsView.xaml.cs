@@ -17,6 +17,8 @@ public sealed partial class SettingsView : SettingsViewBase
     {
         this.InitializeComponent();
         AccountErrorText.RegisterPropertyChangedCallback(VisibilityProperty, (d, _) => AnnounceIfShown(d));
+        // A different error while one is already showing is news too.
+        AccountErrorText.RegisterPropertyChangedCallback(TextBlock.TextProperty, (d, _) => AnnounceIfShown(d));
         Loaded += (_, _) =>
         {
             LockMarkerColorInHighContrast();
@@ -84,12 +86,21 @@ public sealed partial class SettingsView : SettingsViewBase
                 return;
             }
 
-            if (account.Current is not null)
+            try
             {
-                await account.SignOutAsync();
+                if (account.Current is not null)
+                {
+                    await account.SignOutAsync();
+                }
+
+                auth.Simulate = _simulateSignIn.IsOn;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Switching the simulated sign-in failed: {ex}");
+                _simulateSignIn.IsOn = auth.Simulate;
             }
 
-            auth.Simulate = _simulateSignIn.IsOn;
             ViewModel.Account.Update();
         };
         DebugPanel.Children.Add(_simulateSignIn);

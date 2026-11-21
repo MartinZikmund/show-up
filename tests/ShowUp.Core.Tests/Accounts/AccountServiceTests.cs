@@ -2,13 +2,13 @@ using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Accounts;
+using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Tests.Storage;
 using ShowUp.Core.Tests.Tracking;
 using ShowUp.Core.Tracking;
-using SQLite;
 
 namespace ShowUp.Core.Tests.Accounts;
 
@@ -21,57 +21,74 @@ public sealed class AccountServiceTests : StorageTestBase
     private readonly FakeSupabaseAuth _auth = new();
     private readonly UserScope _scope = new();
     private readonly FakeEntitlementService _entitlements = new() { IsPro = true };
-    private readonly MemoryPreferences _preferences = new();
     private readonly WeakReferenceMessenger _messenger = new();
     private readonly FakeCatalogService _catalog = new(TestCatalog.Program("p", 1, "run"));
+    private readonly List<AnonymousProgress> _offers = [];
+    private readonly object _settle = new();
+    private int _announced;
+    private int _reloaded;
     private SqliteTrackingRepository _tracking = null!;
     private ActiveEnrollmentService _enrollments = null!;
+    private SyncedPersonalization _personalization = null!;
     private AccountService _account = null!;
-    private int _claimQuestions;
 
     [TestInitialize]
     public void Init()
     {
         _tracking = new(Db, Time, _scope, Device);
         _enrollments = TestEnrollments.Create(_tracking, _catalog, _messenger, entitlements: _entitlements);
+        _personalization = new(Settings(), new MemoryPreferences(), _messenger, NullLogger<SyncedPersonalization>.Instance, _scope);
         _account = Create();
+        _messenger.Register<DataChangedMessage>(_settle, (_, _) => Interlocked.Increment(ref _announced));
+        _messenger.Register<PersonalizationReloadedMessage>(_settle, (_, _) => Interlocked.Increment(ref _reloaded));
     }
+
+    // Each announcement reloads the personalization in the background; let it finish before the database file goes.
+    [TestCleanup]
+    public async Task SettleAsync() =>
+        await WaitUntilAsync(() => Volatile.Read(ref _reloaded) >= Volatile.Read(ref _announced));
+
+    private SqliteSyncedSettings Settings() => new(Db, Time, _scope, Device);
 
     private AccountService Create(ILocalDataClaim? claim = null) => new(
         _auth,
         _scope,
         _entitlements,
         claim ?? new SqliteLocalDataClaim(Db, Time, Device),
-        _preferences,
+        _personalization,
         new DataChangeAnnouncer(_enrollments, _catalog, _messenger),
+        Time,
         NullLogger<AccountService>.Instance,
         () => true);
 
-    private Func<Task<bool>> Answer(bool yes) => () =>
+    private Func<AnonymousProgress, Task<bool>> Answer(bool yes, Action? meanwhile = null) => progress =>
     {
-        _claimQuestions++;
+        _offers.Add(progress);
+        meanwhile?.Invoke();
         return Task.FromResult(yes);
     };
 
     [TestMethod]
     public async Task SignIn_FirstTime_AsksToClaim()
     {
-        await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+        var enrollment = await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
+        await _tracking.CrossSessionAsync(enrollment.Id, 0, 0, new DateOnly(2026, 12, 1));
+        await _tracking.LogBonusAsync(null, "Walk", new DateOnly(2026, 12, 2), 20);
 
         await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
 
-        _claimQuestions.Should().Be(1);
+        _offers.Should().Equal(new AnonymousProgress(Programs: 1, CrossedWorkouts: 1, OtherEntries: 1));
     }
 
     [TestMethod]
     public async Task SignIn_NoSignedOutProgress_DoesNotAsk()
     {
         // Every install has settings rows (units are seeded on first start); they alone aren't worth asking about.
-        await new SqliteSyncedSettings(Db, Time, _scope, Device).SetAsync("UnitSystem", "0");
+        await Settings().SetAsync("UnitSystem", "0");
 
         await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
 
-        _claimQuestions.Should().Be(0);
+        _offers.Should().BeEmpty();
         _scope.CurrentUserId.Should().Be(FakeSupabaseAuth.UserIdOf(Alice));
     }
 
@@ -81,7 +98,7 @@ public sealed class AccountServiceTests : StorageTestBase
         var enrollment = await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
         await _tracking.CrossSessionAsync(enrollment.Id, 0, 0, new DateOnly(2026, 12, 1));
         await new SqliteReminderRepository(Db, Time, _scope, Device).AddAsync(420, 127);
-        await new SqliteSyncedSettings(Db, Time, _scope, Device).SetAsync("MarkerColor", "2");
+        await Settings().SetAsync("MarkerColor", "2");
         var stampedAt = Time.GetUtcNow();
         Time.Advance(TimeSpan.FromMinutes(5));
         Device.DeviceId = "device-2";
@@ -92,7 +109,7 @@ public sealed class AccountServiceTests : StorageTestBase
         (await _tracking.GetActiveEnrollmentsAsync()).Should().ContainSingle().Which.Id.Should().Be(enrollment.Id);
         (await _tracking.GetCompletedSessionsAsync(enrollment.Id)).Should().ContainSingle();
         (await new SqliteReminderRepository(Db, Time, _scope, Device).ListAsync()).Should().ContainSingle();
-        (await new SqliteSyncedSettings(Db, Time, _scope, Device).GetAsync("MarkerColor")).Should().Be("2");
+        (await Settings().GetAsync("MarkerColor")).Should().Be("2");
         var rows = await AllRowsAsync<EnrollmentEntity>();
         rows.Should().ContainSingle().Which.UserId.Should().Be(userId);
         rows[0].UpdatedAt.Should().BeAfter(stampedAt, "claimed rows are stamped so the next push sends them");
@@ -115,19 +132,6 @@ public sealed class AccountServiceTests : StorageTestBase
     }
 
     [TestMethod]
-    public async Task SignIn_SameAccountAgain_DoesNotAskTwice()
-    {
-        await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
-        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: false));
-        await _account.SignOutAsync();
-
-        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
-
-        _claimQuestions.Should().Be(1);
-        (await AllRowsAsync<EnrollmentEntity>()).Should().ContainSingle().Which.UserId.Should().BeNull();
-    }
-
-    [TestMethod]
     public async Task SignIn_DifferentAccount_DoesNotUploadOthersRows()
     {
         var alices = await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
@@ -136,7 +140,7 @@ public sealed class AccountServiceTests : StorageTestBase
 
         await _account.SignInAsync(Bob, FakeSupabaseAuth.GoodCode, Answer(yes: true));
 
-        _claimQuestions.Should().Be(1, "Alice's rows are hers, not signed-out progress Bob could claim");
+        _offers.Should().ContainSingle("Alice's rows are hers, not signed-out progress Bob could claim");
         (await _tracking.GetActiveEnrollmentsAsync()).Should().BeEmpty();
         (await AllRowsAsync<EnrollmentEntity>()).Should().ContainSingle().Which.UserId.Should().Be(FakeSupabaseAuth.UserIdOf(Alice));
         await _account.SignOutAsync();
@@ -217,7 +221,16 @@ public sealed class AccountServiceTests : StorageTestBase
         _auth.Current.Should().BeNull();
         _scope.CurrentUserId.Should().BeNull();
         await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
-        _claimQuestions.Should().Be(2);
+        _offers.Should().HaveCount(2);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(5));
+        while (!condition())
+        {
+            await Task.Delay(5, timeout.Token);
+        }
     }
 
     private async Task<List<T>> AllRowsAsync<T>()
@@ -225,7 +238,7 @@ public sealed class AccountServiceTests : StorageTestBase
 
     private sealed class ThrowingClaim : ILocalDataClaim
     {
-        public Task<bool> HasAnonymousProgressAsync() => Task.FromResult(true);
+        public Task<AnonymousProgress> GetAnonymousProgressAsync() => Task.FromResult(new AnonymousProgress(1, 0, 0));
 
         public Task<int> ClaimAsync(string userId) => throw new InvalidOperationException("database is locked");
     }

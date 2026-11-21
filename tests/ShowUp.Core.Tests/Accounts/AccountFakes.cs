@@ -65,8 +65,15 @@ internal sealed class FakeSupabaseAuth : ISupabaseAuth
 
     public Task<Session?> RefreshAsync(CancellationToken ct = default) => Task.FromResult(Current);
 
+    public Exception? SignOutError { get; set; }
+
     public Task SignOutAsync(CancellationToken ct = default)
     {
+        if (SignOutError is not null)
+        {
+            throw SignOutError;
+        }
+
         Current = null;
         SessionChanged?.Invoke(this, null);
         return Task.CompletedTask;
@@ -100,8 +107,9 @@ internal static class AccountTestFactory
             scope ?? new UserScope(),
             entitlements ?? new FakeEntitlementService(),
             claim ?? new NoProgressClaim(),
-            new MemoryPreferences(),
+            new SyncedPersonalization(new FakeSyncedSettings(), new MemoryPreferences(), messenger, NullLogger<SyncedPersonalization>.Instance),
             new DataChangeAnnouncer(enrollments, catalog, messenger),
+            TimeProvider.System,
             NullLogger<AccountService>.Instance,
             () => true);
     }
@@ -109,12 +117,13 @@ internal static class AccountTestFactory
     public static AccountViewModel CreateViewModel(
         AccountService? account = null,
         ISyncStatus? sync = null,
-        IConfirmationDialogService? confirmation = null) =>
-        new(account ?? CreateService(), sync ?? new FakeSyncStatus(), confirmation ?? new FakeConfirmationDialogService(), new FakeStringLocalizer(), NullLogger<AccountViewModel>.Instance);
+        IConfirmationDialogService? confirmation = null,
+        TimeProvider? time = null) =>
+        new(account ?? CreateService(), sync ?? new FakeSyncStatus(), confirmation ?? new FakeConfirmationDialogService(), new FakeStringLocalizer(), time ?? TimeProvider.System, NullLogger<AccountViewModel>.Instance);
 
     private sealed class NoProgressClaim : ILocalDataClaim
     {
-        public Task<bool> HasAnonymousProgressAsync() => Task.FromResult(false);
+        public Task<AnonymousProgress> GetAnonymousProgressAsync() => Task.FromResult(new AnonymousProgress(0, 0, 0));
 
         public Task<int> ClaimAsync(string userId) => Task.FromResult(0);
     }

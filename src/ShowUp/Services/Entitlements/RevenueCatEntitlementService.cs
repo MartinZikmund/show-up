@@ -14,6 +14,7 @@ namespace ShowUp.Services.Entitlements;
 public sealed class RevenueCatEntitlementService : IEntitlementService
 {
     private const string EntitlementId = "pro";
+    private static readonly TimeSpan _userSwitchTimeout = TimeSpan.FromSeconds(10);
 
     private readonly IRevenueCatBilling _billing;
     private readonly IAppPreferences _preferences;
@@ -103,7 +104,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         {
             try
             {
-                var result = userId is null ? await _billing.LogoutAsync() : await _billing.LoginAsync(userId);
+                // Bounded: a store that never answers must not keep refreshes (which wait on this switch) blocked.
+                var result = await (userId is null ? _billing.LogoutAsync() : _billing.LoginAsync(userId)).WaitAsync(_userSwitchTimeout, _time);
                 if (result.IsSuccess)
                 {
                     Apply(result.Value);

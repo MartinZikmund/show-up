@@ -63,7 +63,7 @@
                                 AutomationProperties.AutomationId="AccountEmailBox"
                                 Header="{markup:Localize Key=AccountEmailLabel}"
                                 InputScope="EmailSmtpAddress"
-                                IsEnabled="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                                IsReadOnly="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay}"
                                 KeyDown="EmailBox_KeyDown"
                                 PlaceholderText="{markup:Localize Key=AccountEmailPlaceholder}"
                                 Text="{x:Bind ViewModel.Account.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -85,7 +85,7 @@
                                 AutomationProperties.AutomationId="AccountCodeBox"
                                 Header="{markup:Localize Key=AccountCodeLabel}"
                                 InputScope="Number"
-                                IsEnabled="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                                IsReadOnly="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay}"
                                 KeyDown="CodeBox_KeyDown"
                                 PlaceholderText="{markup:Localize Key=AccountCodePlaceholder}"
                                 Text="{x:Bind ViewModel.Account.Code, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -97,7 +97,7 @@
                                     Style="{StaticResource AccentButtonStyle}" />
                                 <HyperlinkButton
                                     AutomationProperties.AutomationId="AccountResendCodeButton"
-                                    Command="{x:Bind ViewModel.Account.SendCodeCommand}"
+                                    Command="{x:Bind ViewModel.Account.ResendCodeCommand}"
                                     Content="{markup:Localize Key=AccountResendCode}" />
                             </StackPanel>
                             <HyperlinkButton
@@ -109,6 +109,7 @@
 
                         <ProgressBar
                             AutomationProperties.AutomationId="AccountBusyIndicator"
+                            AutomationProperties.Name="{markup:Localize Key=AccountBusy}"
                             IsIndeterminate="True"
                             Visibility="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay}" />
                         <TextBlock

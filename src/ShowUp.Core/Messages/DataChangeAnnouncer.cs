@@ -10,10 +10,16 @@ namespace ShowUp.Core.Messages;
 /// </summary>
 public sealed class DataChangeAnnouncer(IActiveEnrollmentService enrollments, ICatalogService catalog, IMessenger messenger)
 {
-    public void Announce()
+    /// <summary>Drops the caches only; for the moment the stored data changes, when the message has to wait.</summary>
+    public void InvalidateCaches()
     {
         catalog.Invalidate();
         enrollments.Invalidate();
+    }
+
+    public void Announce()
+    {
+        InvalidateCaches();
         messenger.Send(new DataChangedMessage());
     }
 }

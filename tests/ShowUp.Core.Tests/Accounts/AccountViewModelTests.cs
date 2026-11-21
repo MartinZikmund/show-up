@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Supabase;
 using ShowUp.Core.ViewModels;
@@ -105,13 +106,13 @@ public sealed class AccountViewModelTests
     [TestMethod]
     public async Task SignIn_FirstTime_AsksToClaimInADialog()
     {
-        _claim.HasProgress = true;
+        _claim.Progress = new(Programs: 1, CrossedWorkouts: 23, OtherEntries: 0);
         await CodeSentAsync();
         _viewModel.Code = FakeSupabaseAuth.GoodCode;
 
         await _viewModel.VerifyCommand.ExecuteAsync(null);
 
-        _confirmation.Asked.Should().Equal("AccountClaimTitle");
+        _confirmation.Asked.Should().Equal("AccountClaimTitleFormat(AccountClaimJoinTwo(AccountClaimPrograms_One(1),AccountClaimCrossed_Other(23)))");
         _claim.ClaimedFor.Should().Equal(FakeSupabaseAuth.UserIdOf("alice@example.com"));
     }
 
@@ -202,11 +203,11 @@ public sealed class AccountViewModelTests
 
     private sealed class FakeClaim : ILocalDataClaim
     {
-        public bool HasProgress { get; set; }
+        public AnonymousProgress Progress { get; set; } = new(0, 0, 0);
 
         public List<string> ClaimedFor { get; } = [];
 
-        public Task<bool> HasAnonymousProgressAsync() => Task.FromResult(HasProgress);
+        public Task<AnonymousProgress> GetAnonymousProgressAsync() => Task.FromResult(Progress);
 
         public Task<int> ClaimAsync(string userId)
         {

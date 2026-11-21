@@ -1366,11 +1366,8 @@
   <data name="AccountErrorGeneric" xml:space="preserve">
     <value>Something went wrong. Try again.</value>
   </data>
-  <data name="AccountClaimTitle" xml:space="preserve">
-    <value>Bring your local progress into this account?</value>
-  </data>
   <data name="AccountClaimMessage" xml:space="preserve">
-    <value>Programs, crosses, notes and reminders on this device were made while signed out. Yes adds them to this account. No keeps them on this device only: they stay hidden while you're signed in and come back when you sign out.</value>
+    <value>Programs, crosses, notes and reminders on this device were made while signed out. Yes adds them to this account. No keeps them on this device only: they stay hidden while you're signed in, come back when you sign out, and you'll be asked again at your next sign-in.</value>
   </data>
   <data name="AccountSignOutUnsyncedTitle" xml:space="preserve">
     <value>Sign out with changes that haven't synced?</value>
@@ -1386,5 +1383,53 @@
   </data>
   <data name="AccountSignInHeader" xml:space="preserve">
     <value>Sign in</value>
+  </data>
+  <data name="AccountClaimTitleFormat" xml:space="preserve">
+    <value>Bring {0} into this account?</value>
+  </data>
+  <data name="AccountClaimPrograms_One" xml:space="preserve">
+    <value>{0} program</value>
+  </data>
+  <data name="AccountClaimPrograms_Few" xml:space="preserve">
+    <value>{0} programs</value>
+  </data>
+  <data name="AccountClaimPrograms_Other" xml:space="preserve">
+    <value>{0} programs</value>
+  </data>
+  <data name="AccountClaimCrossed_One" xml:space="preserve">
+    <value>{0} crossed workout</value>
+  </data>
+  <data name="AccountClaimCrossed_Few" xml:space="preserve">
+    <value>{0} crossed workouts</value>
+  </data>
+  <data name="AccountClaimCrossed_Other" xml:space="preserve">
+    <value>{0} crossed workouts</value>
+  </data>
+  <data name="AccountClaimEntries_One" xml:space="preserve">
+    <value>{0} entry</value>
+  </data>
+  <data name="AccountClaimEntries_Few" xml:space="preserve">
+    <value>{0} entries</value>
+  </data>
+  <data name="AccountClaimEntries_Other" xml:space="preserve">
+    <value>{0} entries</value>
+  </data>
+  <data name="AccountClaimOtherEntries_One" xml:space="preserve">
+    <value>{0} other entry</value>
+  </data>
+  <data name="AccountClaimOtherEntries_Few" xml:space="preserve">
+    <value>{0} other entries</value>
+  </data>
+  <data name="AccountClaimOtherEntries_Other" xml:space="preserve">
+    <value>{0} other entries</value>
+  </data>
+  <data name="AccountClaimJoinTwo" xml:space="preserve">
+    <value>{0} and {1}</value>
+  </data>
+  <data name="AccountClaimJoinThree" xml:space="preserve">
+    <value>{0}, {1} and {2}</value>
+  </data>
+  <data name="AccountBusy" xml:space="preserve">
+    <value>Working…</value>
   </data>
 </root>
