@@ -116,6 +116,9 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
     public Task<IReadOnlyList<EnrollmentEntity>> GetActiveEnrollmentsAsync() =>
         Task.FromResult<IReadOnlyList<EnrollmentEntity>>([.. _enrollments.Where(e => e.EndedAt is null)]);
 
+    public Task<IReadOnlyList<EnrollmentEntity>> GetAllEnrollmentsAsync() =>
+        Task.FromResult<IReadOnlyList<EnrollmentEntity>>([.. _enrollments]);
+
     public Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason)
     {
         foreach (var e in _enrollments.Where(e => e.Id == enrollmentId))

@@ -25,6 +25,12 @@ public interface IActiveEnrollmentService
     /// <summary>Every active enrollment, newest first.</summary>
     Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync();
 
+    /// <summary>Every enrollment ever started (<c>Enrollment.EndedAt</c> tells ended ones apart): active first (newest first), then ended ones by when they ended (newest first).</summary>
+    Task<IReadOnlyList<ActiveEnrollment>> GetHistoryAsync();
+
+    /// <summary>What was crossed in an enrollment, active or ended.</summary>
+    Task<IReadOnlyList<CompletedSession>> GetHistoryCompletionsAsync(Guid enrollmentId);
+
     /// <summary>The one Calendar and Results show: the stored selection while it's active, else the newest.</summary>
     Task<ActiveEnrollment?> GetSelectedAsync();
 

@@ -186,6 +186,17 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task GetAllEnrollments_IncludesEndedOnes()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Abandoned);
+
+        var all = await repo.GetAllEnrollmentsAsync();
+
+        all.Should().ContainSingle().Which.EndReason.Should().Be(EnrollmentEndReason.Abandoned);
+    }
+
+    [TestMethod]
     public async Task LogBonus_FutureDate_Throws()
     {
         var repo = CreateRepository();

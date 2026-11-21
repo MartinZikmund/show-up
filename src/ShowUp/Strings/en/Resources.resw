@@ -184,8 +184,53 @@
   <data name="History" xml:space="preserve">
     <value>History</value>
   </data>
-  <data name="HistoryComingSoon" xml:space="preserve">
-    <value>Finished programs and bonus workouts will show up here. Coming soon.</value>
+  <data name="HistoryProgramsHeader" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="HistoryBonusHeader" xml:space="preserve">
+    <value>Bonus workouts</value>
+  </data>
+  <data name="HistoryNotStarted" xml:space="preserve">
+    <value>Not started yet</value>
+  </data>
+  <data name="HistoryCrossedFormat" xml:space="preserve">
+    <value>{0} crossed</value>
+  </data>
+  <data name="HistoryStartedFormat" xml:space="preserve">
+    <value>Started {0}</value>
+  </data>
+  <data name="HistoryRangeFormat" xml:space="preserve">
+    <value>{0} – {1}</value>
+  </data>
+  <data name="HistoryStatusActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="HistoryStatusFinished" xml:space="preserve">
+    <value>Finished</value>
+  </data>
+  <data name="HistoryStatusStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="HistoryCalendarNameFormat" xml:space="preserve">
+    <value>Calendar, {0}</value>
+  </data>
+  <data name="HistoryResultsNameFormat" xml:space="preserve">
+    <value>Results, {0}</value>
+  </data>
+  <data name="HistoryResultsLink" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="HistoryCalendarLink" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="HistoryGateLink" xml:space="preserve">
+    <value>Unlock Pro for your full history</value>
+  </data>
+  <data name="HistoryEmptyTitle" xml:space="preserve">
+    <value>Nothing here yet</value>
+  </data>
+  <data name="HistoryEmpty" xml:space="preserve">
+    <value>Start a program or log a bonus workout and your history will build up here.</value>
   </data>
   <data name="AboutDisclaimer" xml:space="preserve">
     <value>Show Up is an independent app. It is not affiliated with, endorsed by, or sponsored by Bodi (formerly Beachbody) or any program creator. Program names are trademarks of their respective owners and are used only to identify the workout schedules they describe.</value>

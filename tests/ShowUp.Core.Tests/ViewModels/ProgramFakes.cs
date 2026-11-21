@@ -93,6 +93,12 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public Guid? SelectedEnrollmentId { get; private set; }
 
+    public List<ActiveEnrollment> History { get; set; } = [];
+
+    public Task<IReadOnlyList<ActiveEnrollment>> GetHistoryAsync() => Task.FromResult<IReadOnlyList<ActiveEnrollment>>([.. History]);
+
+    public Task<IReadOnlyList<CompletedSession>> GetHistoryCompletionsAsync(Guid enrollmentId) => Task.FromResult<IReadOnlyList<CompletedSession>>([]);
+
     public Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync() => Task.FromResult<IReadOnlyList<ActiveEnrollment>>([.. All]);
 
     public Task<ActiveEnrollment?> GetSelectedAsync() =>

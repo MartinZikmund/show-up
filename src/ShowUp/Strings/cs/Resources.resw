@@ -184,8 +184,53 @@
   <data name="History" xml:space="preserve">
     <value>Historie</value>
   </data>
-  <data name="HistoryComingSoon" xml:space="preserve">
-    <value>Tady se objev&#237; dokon&#269;en&#233; programy a bonusov&#233; tr&#233;ninky. U&#382; brzy.</value>
+  <data name="HistoryProgramsHeader" xml:space="preserve">
+    <value>Programy</value>
+  </data>
+  <data name="HistoryBonusHeader" xml:space="preserve">
+    <value>Bonusové tréninky</value>
+  </data>
+  <data name="HistoryNotStarted" xml:space="preserve">
+    <value>Ještě nezačal</value>
+  </data>
+  <data name="HistoryCrossedFormat" xml:space="preserve">
+    <value>{0} odškrtnuto</value>
+  </data>
+  <data name="HistoryStartedFormat" xml:space="preserve">
+    <value>Začátek {0}</value>
+  </data>
+  <data name="HistoryRangeFormat" xml:space="preserve">
+    <value>{0} – {1}</value>
+  </data>
+  <data name="HistoryStatusActive" xml:space="preserve">
+    <value>Aktivní</value>
+  </data>
+  <data name="HistoryStatusFinished" xml:space="preserve">
+    <value>Dokončen</value>
+  </data>
+  <data name="HistoryStatusStopped" xml:space="preserve">
+    <value>Zastaven</value>
+  </data>
+  <data name="HistoryCalendarNameFormat" xml:space="preserve">
+    <value>Kalendář, {0}</value>
+  </data>
+  <data name="HistoryResultsNameFormat" xml:space="preserve">
+    <value>Výsledky, {0}</value>
+  </data>
+  <data name="HistoryResultsLink" xml:space="preserve">
+    <value>Výsledky</value>
+  </data>
+  <data name="HistoryCalendarLink" xml:space="preserve">
+    <value>Kalendář</value>
+  </data>
+  <data name="HistoryGateLink" xml:space="preserve">
+    <value>Odemkněte Pro pro celou historii</value>
+  </data>
+  <data name="HistoryEmptyTitle" xml:space="preserve">
+    <value>Zatím tu nic není</value>
+  </data>
+  <data name="HistoryEmpty" xml:space="preserve">
+    <value>Začněte program nebo zapište bonusový trénink a historie se začne plnit tady.</value>
   </data>
   <data name="AboutDisclaimer" xml:space="preserve">
     <value>Show Up je nez&#225;visl&#225; aplikace. Nen&#237; spojena se spole&#269;nost&#237; Bodi (d&#345;&#237;ve Beachbody) ani s &#382;&#225;dn&#253;m tv&#367;rcem program&#367; a nen&#237; jimi schv&#225;lena ani sponzorov&#225;na. N&#225;zvy program&#367; jsou ochrann&#233; zn&#225;mky p&#345;&#237;slu&#353;n&#253;ch vlastn&#237;k&#367; a slou&#382;&#237; pouze k ozna&#269;en&#237; tr&#233;ninkov&#253;ch pl&#225;n&#367;, kter&#233; popisuj&#237;.</value>
