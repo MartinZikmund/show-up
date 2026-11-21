@@ -36,6 +36,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     private readonly IEntitlementService _entitlements;
     private readonly ICustomProgramService _customPrograms;
     private readonly IMessenger _messenger;
+    private string? _programId;
     private SynchronizationContext? _context;
     private readonly ILogger<ProgramDetailViewModel> _logger;
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
@@ -152,13 +153,18 @@ public partial class ProgramDetailViewModel : ViewModelBase
 
             // A primary chosen after a lapse (or a program started elsewhere) changes the hint.
             _messenger.Register<ProgramDetailViewModel, TrackingChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.ReloadEnrollmentsAsync)));
+            // Another account (or a sync) may not have this custom program, or runs it differently.
+            _messenger.Register<ProgramDetailViewModel, DataChangedMessage>(this, static (r, _) => r.Post(() => r.RunInBackground(r.ReloadAsync)));
         }
 
         if (parameter is string programId)
         {
+            _programId = programId;
             RunInBackground(() => LoadAsync(programId));
         }
     }
+
+    private Task ReloadAsync() => _programId is { } programId ? LoadAsync(programId) : Task.CompletedTask;
 
     public async Task LoadAsync(string programId)
     {

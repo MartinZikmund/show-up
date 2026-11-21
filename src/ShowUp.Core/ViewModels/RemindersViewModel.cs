@@ -194,6 +194,7 @@ public partial class RemindersViewModel : ViewModelBase
             _context = SynchronizationContext.Current;
             _entitlements.Changed += OnEntitlementsChanged;
             _messenger.Register<RemindersViewModel, RemindersChangedMessage>(this, static (r, m) => r.OnRemindersChanged());
+            _messenger.Register<RemindersViewModel, DataChangedMessage>(this, static (r, m) => r.OnDataChanged());
         }
 
         if (IsEditing)
@@ -213,6 +214,7 @@ public partial class RemindersViewModel : ViewModelBase
             _listening = false;
             _entitlements.Changed -= OnEntitlementsChanged;
             _messenger.Unregister<RemindersChangedMessage>(this);
+            _messenger.Unregister<DataChangedMessage>(this);
         }
     }
 
@@ -397,6 +399,13 @@ public partial class RemindersViewModel : ViewModelBase
             Interlocked.Decrement(ref _sending);
         }
     }
+
+    // Another account's (or a synced) list: an edit in progress may name a reminder that isn't there any more.
+    private void OnDataChanged() => Post(() =>
+    {
+        IsEditing = false;
+        RunInBackground(LoadAsync);
+    });
 
     private void OnRemindersChanged()
     {

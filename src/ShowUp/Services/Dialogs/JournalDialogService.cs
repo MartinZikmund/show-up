@@ -12,7 +12,8 @@ public sealed class JournalDialogService(
     IServiceProvider services,
     IJournalService journal,
     IActiveEnrollmentService enrollments,
-    JournalSaveGuard saveGuard) : IJournalDialogs
+    JournalSaveGuard saveGuard,
+    IUserScope scope) : IJournalDialogs
 {
     public async Task ShowDayAsync(Guid enrollmentId, int dayIndex)
     {
@@ -23,7 +24,7 @@ public sealed class JournalDialogService(
         }
 
         DayDetailDialog dialog = new(viewModel) { XamlRoot = xamlRootProvider.XamlRoot };
-        if (await dialogCoordinator.ShowAsync(dialog) == ContentDialogResult.Primary)
+        if (await ShowForThisAccountAsync(dialog) == ContentDialogResult.Primary)
         {
             await SaveAsync(viewModel.SaveAsync);
         }
@@ -58,7 +59,7 @@ public sealed class JournalDialogService(
         {
             XamlRoot = xamlRootProvider.XamlRoot,
         };
-        if (await dialogCoordinator.ShowAsync(dialog) == ContentDialogResult.Primary)
+        if (await ShowForThisAccountAsync(dialog) == ContentDialogResult.Primary)
         {
             await SaveAsync(() => journal.SaveProgramNoteAsync(enrollmentId, dialog.Note));
         }
@@ -67,11 +68,34 @@ public sealed class JournalDialogService(
     private async Task ShowResultsAsync(LogResultsViewModel viewModel)
     {
         LogResultsDialog dialog = new(viewModel) { XamlRoot = xamlRootProvider.XamlRoot };
-        if (await dialogCoordinator.ShowAsync(dialog) == ContentDialogResult.Primary)
+        if (await ShowForThisAccountAsync(dialog) == ContentDialogResult.Primary)
         {
             await SaveAsync(viewModel.SaveAsync);
         }
     }
 
     private Task SaveAsync(Func<Task> save) => saveGuard.RunAsync(save);
+
+    // An account switch while the dialog is open (e.g. the session was revoked) closes it unsaved: its rows aren't the new account's.
+    private async Task<ContentDialogResult> ShowForThisAccountAsync(ContentDialog dialog)
+    {
+        var switched = false;
+        var queue = dialog.DispatcherQueue;
+        void OnChanged(object? sender, EventArgs e)
+        {
+            switched = true;
+            queue.TryEnqueue(dialog.Hide);
+        }
+
+        scope.Changed += OnChanged;
+        try
+        {
+            var result = await dialogCoordinator.ShowAsync(dialog);
+            return switched ? ContentDialogResult.None : result;
+        }
+        finally
+        {
+            scope.Changed -= OnChanged;
+        }
+    }
 }

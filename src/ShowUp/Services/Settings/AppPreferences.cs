@@ -11,9 +11,11 @@ public sealed class AppPreferences : IAppPreferences
     private readonly IPreferences _preferences;
     private readonly AccountProCache _proCache;
     private readonly SyncedPersonalization _synced;
+    private readonly IUserScope _scope;
 
-    public AppPreferences(IPreferences preferences, SyncedPersonalization synced)
+    public AppPreferences(IPreferences preferences, SyncedPersonalization synced, IUserScope scope)
     {
+        _scope = scope;
         _preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         _synced = synced;
         _proCache = new(preferences);
@@ -111,10 +113,13 @@ public sealed class AppPreferences : IAppPreferences
         set => _proCache.LastKnownProExpires = value;
     }
 
+    // Per account too: each account's programs are its own. Signed out keeps the original key.
     private const string SelectedEnrollmentIdKey = "SelectedEnrollmentId";
     public Guid? SelectedEnrollmentId
     {
-        get => Guid.TryParse(_preferences.Get(SelectedEnrollmentIdKey, ""), out var id) ? id : null;
-        set => _preferences.Set(SelectedEnrollmentIdKey, value?.ToString("D") ?? "");
+        get => Guid.TryParse(_preferences.Get(SelectedEnrollmentKey, ""), out var id) ? id : null;
+        set => _preferences.Set(SelectedEnrollmentKey, value?.ToString("D") ?? "");
     }
+
+    private string SelectedEnrollmentKey => SelectedEnrollmentIdKey + AccountProCache.KeySuffix(_scope.CurrentUserId);
 }
