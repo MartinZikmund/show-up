@@ -15,7 +15,9 @@ of eight accent colors, 1–26 weeks of seven days, and per day a list of sessio
 - **rest** (a day with the `rest` workout and nothing else).
 
 Sessions can be reordered with the up/down buttons and marked optional (optional sessions never
-count toward finishing a day). A week can be copied to the next week or to all weeks. Lowering the
+count toward finishing a day). A day holding only optional sessions is allowed and behaves like a
+rest day: nothing has to be crossed for it to count, and the optional workouts are still there to
+do and cross. A week can be copied to the next week or to all weeks. Lowering the
 week count hides the extra weeks without losing them, until the page is left.
 
 Save stays disabled until the schedule is valid: a name, 1–26 weeks, and no empty day. Problems
@@ -53,7 +55,7 @@ marked `custom` is rejected.
 
 ## Without Pro
 
-Custom programs stay listed, but are read-only: no new schedules, no edits, no deletes and no
-starting them (`CustomProgramLockedException`, enforced in `CustomProgramService` and
-`ActiveEnrollmentService`). A program that is already running follows the usual lapse rules in
+Custom programs stay listed, but are read-only: no new schedules, no edits and no starting them
+(`CustomProgramLockedException`, enforced in `CustomProgramService` and `ActiveEnrollmentService`).
+Deleting one stays allowed: it's the user's own data. A program that is already running follows the usual lapse rules in
 [multiple-programs.md](./multiple-programs.md).
