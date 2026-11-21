@@ -214,6 +214,13 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
+    public void IsMarkerColorLocked_FreeAndPro_FollowsEntitlement()
+    {
+        CreateViewModel(new FakeAppPreferences()).IsMarkerColorLocked.Should().BeTrue();
+        CreateViewModel(new FakeAppPreferences(), entitlements: new FakeEntitlementService { IsPro = true }).IsMarkerColorLocked.Should().BeFalse();
+    }
+
+    [TestMethod]
     public void SelectedMarkerSwatch_FreeUser_DoesNotChangeColor()
     {
         FakeAppPreferences preferences = new();
