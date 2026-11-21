@@ -128,5 +128,39 @@ public sealed class BonusWorkoutDialogViewModelTests
         viewModel.CanSave.Should().BeFalse();
     }
 
+    [TestMethod]
+    public void SetDate_Cleared_FallsBackToToday()
+    {
+        var viewModel = Create();
+        viewModel.Query = "Run";
+        viewModel.Date = _today.AddDays(-3);
+
+        viewModel.SetDate(null);
+
+        viewModel.Date.Should().Be(_today);
+        viewModel.CanSave.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void CanSave_DurationOverTenHours_IsFalse()
+    {
+        var viewModel = Create();
+        viewModel.Query = "Run";
+
+        viewModel.DurationMinutes = 601;
+
+        viewModel.CanSave.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void Query_LongerThanLimit_IsCut()
+    {
+        var viewModel = Create();
+
+        viewModel.Query = new string('x', 120);
+
+        viewModel.Query.Should().HaveLength(BonusWorkoutDialogViewModel.MaxTitleLength);
+    }
+
     private static BonusWorkoutDialogViewModel Create() => new(_workouts, _today, _today);
 }

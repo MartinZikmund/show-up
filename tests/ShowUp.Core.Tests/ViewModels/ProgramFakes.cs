@@ -111,7 +111,13 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync() => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
 
-    public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null) => Task.CompletedTask;
+    public List<(int Day, int Session, string? Ink, Guid? CompletionId)> Crosses { get; } = [];
+
+    public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null)
+    {
+        Crosses.Add((dayIndex, sessionIndex, inkJson, completionId));
+        return Task.CompletedTask;
+    }
 
     public Task UncrossAsync(int dayIndex, int sessionIndex) => Task.CompletedTask;
 

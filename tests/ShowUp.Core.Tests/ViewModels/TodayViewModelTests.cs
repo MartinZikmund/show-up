@@ -198,6 +198,88 @@ public sealed class TodayViewModelTests
         viewModel.Bonuses.Should().ContainSingle();
     }
 
+    [TestMethod]
+    public async Task Load_TwoSessions_EachCrossButtonHasItsOwnName()
+    {
+        var viewModel = await LoadAsync(_today, "run+abs");
+
+        viewModel.Sessions.Select(s => s.CrossAutomationName).Should().Equal("TodayCrossOffFormat(Run)", "TodayCrossOffFormat(Abs)");
+    }
+
+    [TestMethod]
+    public async Task Cross_TwoSessions_MarksSitOnTheLatestCrossedCard()
+    {
+        var viewModel = await LoadAsync(_today, "run+abs");
+
+        await viewModel.Sessions[0].CrossCommand.ExecuteAsync(null);
+        viewModel.Sessions.Select(s => s.ShowsMarks).Should().Equal(true, false);
+
+        await viewModel.Sessions[1].CrossCommand.ExecuteAsync(null);
+        viewModel.Sessions.Select(s => s.ShowsMarks).Should().Equal(false, true);
+    }
+
+    [TestMethod]
+    public async Task Bonus_Logged_ListsDetailLine()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        _bonusDialog.Title = "Yoga";
+
+        await viewModel.LogBonusCommand.ExecuteAsync(null);
+
+        viewModel.BonusItems.Should().ContainSingle().Which.Detail.Should().Be("TodayBonusToday");
+    }
+
+    [TestMethod]
+    public async Task Load_PastMidnight_TimerMovesToTomorrowsSessions()
+    {
+        _time.SetUtcNow(new DateTimeOffset(2026, 11, 21, 23, 59, 0, TimeSpan.Zero));
+        var viewModel = await LoadAsync(_today, "run", "rest");
+        viewModel.DayNumber.Should().Be(1);
+
+        _time.Advance(TimeSpan.FromMinutes(2));
+
+        viewModel.DayNumber.Should().Be(2);
+        viewModel.IsRestDay.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task Load_AcrossNoon_TimerSwitchesGreeting()
+    {
+        _time.SetUtcNow(new DateTimeOffset(2026, 11, 21, 11, 59, 0, TimeSpan.Zero));
+        var viewModel = await LoadAsync(_today, "run");
+        viewModel.Greeting.Should().Be("GreetingMorning");
+
+        _time.Advance(TimeSpan.FromMinutes(2));
+
+        viewModel.Greeting.Should().Be("GreetingAfternoon");
+    }
+
+    [TestMethod]
+    public async Task RefreshIfDateChanged_SleptThroughMidnight_Reloads()
+    {
+        _time.SetUtcNow(new DateTimeOffset(2026, 11, 21, 23, 0, 0, TimeSpan.Zero));
+        var viewModel = await LoadAsync(_today, "run", "rest");
+        viewModel.Unload();
+        _time.Advance(TimeSpan.FromHours(2));
+        viewModel.DayNumber.Should().Be(1);
+
+        await viewModel.RefreshIfDateChangedAsync();
+
+        viewModel.DayNumber.Should().Be(2);
+    }
+
+    [TestMethod]
+    public async Task RefreshIfDateChanged_SameDayAndGreeting_DoesNotReload()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        await viewModel.Sessions[0].CrossCommand.ExecuteAsync(null);
+        var sessions = viewModel.Sessions;
+
+        await viewModel.RefreshIfDateChangedAsync();
+
+        viewModel.Sessions.Should().BeSameAs(sessions);
+    }
+
     private async Task<TodayViewModel> LoadAsync(DateOnly start, params string[] days)
     {
         var program = TestCatalog.Program("p", 1, days);
