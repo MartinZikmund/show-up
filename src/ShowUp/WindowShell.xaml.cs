@@ -1,4 +1,5 @@
-﻿using ShowUp.Core.Navigation;
+﻿using ShowUp.Core.Marking;
+using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
@@ -55,6 +56,8 @@ public sealed partial class WindowShell : Page, IWindowShell
     public WindowShellViewModel ViewModel { get; }
 
     public Frame RootFrame => InnerFrame;
+
+    public ICrossMoment CrossMoment => CrossMomentOverlay;
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {

@@ -135,6 +135,7 @@ public partial class App : Application, IApplication
         services.AddScoped<IConfirmationDialogService, ConfirmationDialogService>();
         services.AddScoped<ILauncherService, LauncherService>();
         services.AddScoped<IShareService, ShareService>();
+        services.AddScoped<ICrossMoment, CrossMomentService>();
         services.AddScoped<INavigationService>(sp =>
         {
             var service = new NavigationService(sp.GetRequiredService<IFrameProvider>());

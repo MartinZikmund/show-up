@@ -1,0 +1,118 @@
+﻿<UserControl
+    x:Class="ShowUp.Controls.CrossMomentOverlay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls"
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:toolkit="using:Uno.UI.Behaviors"
+    AutomationProperties.AutomationId="CrossMomentOverlay"
+    AutomationProperties.Name="{markup:Localize Key=CrossMomentName}"
+    IsTabStop="True"
+    KeyDown="Overlay_KeyDown"
+    UseSystemFocusVisuals="False"
+    Visibility="Collapsed">
+
+    <Grid
+        x:Name="Root"
+        Background="Transparent"
+        SizeChanged="Root_SizeChanged"
+        Tapped="Root_Tapped">
+        <Rectangle
+            x:Name="Backdrop"
+            Fill="{ThemeResource SmokeFillColorDefaultBrush}"
+            Visibility="Collapsed" />
+
+        <!--  Narrow: fills the window. Wide: a centered card over the dimmed backdrop (see WidthStates).  -->
+        <Grid
+            x:Name="Card"
+            Background="{ThemeResource PaperBackgroundBrush}"
+            BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+            BorderThickness="0"
+            Translation="0,0,32">
+            <Grid.Shadow>
+                <ThemeShadow />
+            </Grid.Shadow>
+
+            <controls:PaperGrid x:Name="CardPaper" />
+
+            <StackPanel
+                Padding="32"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                toolkit:VisibleBoundsPadding.PaddingMask="All"
+                Spacing="16">
+                <Grid
+                    x:Name="BigCell"
+                    Width="280"
+                    Height="280"
+                    HorizontalAlignment="Center"
+                    Background="{ThemeResource CalendarCellBackgroundBrush}"
+                    BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                    BorderThickness="2"
+                    CornerRadius="4">
+                    <TextBlock
+                        x:Name="DayNumberText"
+                        Margin="16,12,16,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="44"
+                        Style="{StaticResource DisplayNumberTextBlockStyle}" />
+                    <TextBlock
+                        x:Name="TitleText"
+                        Margin="16,0,16,14"
+                        VerticalAlignment="Bottom"
+                        MaxLines="2"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                    <controls:MarkerCrossControl
+                        x:Name="Cross"
+                        AnimateChanges="False"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </Grid>
+
+                <TextBlock
+                    x:Name="CaptionText"
+                    AutomationProperties.AutomationId="CrossMomentCaption"
+                    AutomationProperties.LiveSetting="Assertive"
+                    CharacterSpacing="30"
+                    FontSize="26"
+                    Opacity="0"
+                    Style="{StaticResource SectionHeaderTextBlockStyle}"
+                    TextAlignment="Center" />
+                <TextBlock
+                    x:Name="ProgressText"
+                    AutomationProperties.AutomationId="CrossMomentProgress"
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Opacity="0"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WidthStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="640" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="Backdrop.Visibility" Value="Visible" />
+                        <Setter Target="CardPaper.Visibility" Value="Collapsed" />
+                        <Setter Target="Card.Width" Value="480" />
+                        <Setter Target="Card.HorizontalAlignment" Value="Center" />
+                        <Setter Target="Card.VerticalAlignment" Value="Center" />
+                        <Setter Target="Card.CornerRadius" Value="{ThemeResource OverlayCornerRadius}" />
+                        <Setter Target="Card.BorderThickness" Value="1" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </Grid>
+</UserControl>

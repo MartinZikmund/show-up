@@ -5,7 +5,10 @@
     xmlns:local="using:ShowUp.Views">
 
     <ScrollViewer>
-        <StackPanel Padding="{StaticResource PagePadding}" Spacing="8">
+        <StackPanel
+            x:Name="ContentPanel"
+            Padding="{StaticResource PagePadding}"
+            Spacing="8">
             <TextBlock
                 AutomationProperties.AutomationId="TodayHeader"
                 AutomationProperties.HeadingLevel="Level1"
