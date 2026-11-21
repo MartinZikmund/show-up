@@ -51,6 +51,9 @@ public sealed class SqliteTrackingRepository(
 
     public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(dayIndex);
+        ArgumentOutOfRangeException.ThrowIfNegative(sessionIndex);
+
         DateOnly today = Today;
         if (!CrossingPolicy.CanCross(dayDate, today))
         {
@@ -58,6 +61,7 @@ public sealed class SqliteTrackingRepository(
         }
 
         var connection = await db.GetConnectionAsync();
+        await RequireActiveEnrollmentAsync(connection, enrollmentId);
         var existing = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
         if (existing.Count > 0)
         {
@@ -78,6 +82,7 @@ public sealed class SqliteTrackingRepository(
     public async Task UncrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
         var connection = await db.GetConnectionAsync();
+        await RequireActiveEnrollmentAsync(connection, enrollmentId);
         var rows = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
         DateTimeOffset now = time.GetUtcNow();
         foreach (CompletionEntity row in rows)
@@ -168,6 +173,17 @@ public sealed class SqliteTrackingRepository(
         row.DeletedAt = now;
         row.UpdatedAt = now;
         await connection.UpdateAsync(row);
+    }
+
+    private async Task<EnrollmentEntity> RequireActiveEnrollmentAsync(SQLiteAsyncConnection connection, Guid enrollmentId)
+    {
+        var row = await connection.FindAsync<EnrollmentEntity>(enrollmentId);
+        if (row is null || !IsVisible(row) || row.EndedAt is not null)
+        {
+            throw new InvalidOperationException($"Enrollment {enrollmentId} does not exist or is not active.");
+        }
+
+        return row;
     }
 
     private T Stamp<T>(T entity)
