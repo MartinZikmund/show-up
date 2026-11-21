@@ -164,6 +164,21 @@ public sealed class ReminderCoordinatorTests
     }
 
     [TestMethod]
+    public async Task Replan_DisablingExtras_DoesNotReplanOnItsOwnMessage()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        await _repository.AddAsync(9 * 60, 127);
+        _entitlements.IsPro = false;
+        var sent = 0;
+        _messenger.Register<RemindersChangedMessage>(this, (_, _) => sent++);
+
+        await _coordinator.StartAsync();
+
+        sent.Should().Be(1, "the disabled reminders are announced to the Reminders page");
+        _days.Loads.Should().Be(1, "but the coordinator doesn't plan again because of its own announcement");
+    }
+
+    [TestMethod]
     public async Task Replan_PaidAgain_DoesNotSwitchDisabledOnesBackOn()
     {
         var first = await _repository.AddAsync(8 * 60, 127);
