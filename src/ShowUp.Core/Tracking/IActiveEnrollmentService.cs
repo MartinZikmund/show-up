@@ -22,6 +22,9 @@ public sealed class EnrollmentReadOnlyException(Guid enrollmentId)
 /// </summary>
 public interface IActiveEnrollmentService
 {
+    /// <summary>Drops cached reads after the stored data changed behind the service's back (a sync pull, a catalog update).</summary>
+    void Invalidate();
+
     /// <summary>Every active enrollment, newest first.</summary>
     Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync();
 

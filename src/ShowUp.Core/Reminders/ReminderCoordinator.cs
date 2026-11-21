@@ -55,6 +55,7 @@ public sealed class ReminderCoordinator : IDisposable
         if (Interlocked.Exchange(ref _started, 1) == 0)
         {
             _messenger.Register<ReminderCoordinator, TrackingChangedMessage>(this, static (r, m) => r.ReplanInBackground());
+            _messenger.Register<ReminderCoordinator, DataChangedMessage>(this, static (r, m) => r.ReplanInBackground());
             _messenger.Register<ReminderCoordinator, RemindersChangedMessage>(this, static (r, m) => r.ReplanInBackground());
             _entitlements.Changed += OnEntitlementsChanged;
         }

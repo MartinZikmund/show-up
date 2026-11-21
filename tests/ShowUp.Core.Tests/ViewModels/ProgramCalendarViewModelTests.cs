@@ -535,6 +535,8 @@ public sealed class ProgramCalendarViewModelTests
 
         public Guid? SelectedEnrollmentId => inner.SelectedEnrollmentId;
 
+        public void Invalidate() => inner.Invalidate();
+
         public Task<IReadOnlyList<ActiveEnrollment>> GetAllAsync() => inner.GetAllAsync();
 
         public Task<IReadOnlyList<ActiveEnrollment>> GetHistoryAsync() => inner.GetHistoryAsync();

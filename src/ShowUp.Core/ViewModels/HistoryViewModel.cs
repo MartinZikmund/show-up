@@ -134,6 +134,7 @@ public partial class HistoryViewModel : ViewModelBase
         if (_live.Activate())
         {
             _messenger.Register<HistoryViewModel, TrackingChangedMessage>(this, static (r, _) => r._live.OnTrackingChanged());
+            _messenger.Register<HistoryViewModel, DataChangedMessage>(this, static (r, _) => r._live.OnDataChanged());
         }
 
         await LoadAsync();

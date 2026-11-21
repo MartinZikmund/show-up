@@ -60,6 +60,8 @@ internal sealed class FakeCatalogService(params WorkoutProgram[] programs) : ICa
     public int Invalidations { get; private set; }
 
     public void InvalidateCustomPrograms() => Invalidations++;
+
+    public void Invalidate() => Invalidations++;
 }
 
 internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepository

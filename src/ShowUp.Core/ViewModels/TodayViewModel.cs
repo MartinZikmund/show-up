@@ -116,6 +116,7 @@ public partial class TodayViewModel : ViewModelBase
         if (_live.Activate())
         {
             _messenger.Register<TodayViewModel, TrackingChangedMessage>(this, static (r, _) => r._live.OnTrackingChanged());
+            _messenger.Register<TodayViewModel, DataChangedMessage>(this, static (r, _) => r._live.OnDataChanged());
         }
 
         await RefreshAsync();

@@ -95,6 +95,10 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public List<ActiveEnrollment> History { get; set; } = [];
 
+    public void Invalidate()
+    {
+    }
+
     public Task<IReadOnlyList<ActiveEnrollment>> GetHistoryAsync() => Task.FromResult<IReadOnlyList<ActiveEnrollment>>([.. History]);
 
     public Task<IReadOnlyList<CompletedSession>> GetHistoryCompletionsAsync(Guid enrollmentId) => Task.FromResult<IReadOnlyList<CompletedSession>>([]);

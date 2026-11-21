@@ -5,6 +5,9 @@ public interface ICatalogService
     /// <summary>The bundled catalog plus the user's custom programs (latest revisions) and their workouts.</summary>
     Task<WorkoutCatalog> GetCatalogAsync();
 
+    /// <summary>Re-reads the bundled catalog and the custom programs on the next call, after the stored data changed behind the service's back.</summary>
+    void Invalidate();
+
     /// <summary>Re-reads custom programs on the next call, after one is saved or deleted.</summary>
     void InvalidateCustomPrograms();
 

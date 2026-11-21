@@ -404,6 +404,8 @@ public sealed class ScheduleBuilderViewModelTests
 
         public void InvalidateCustomPrograms() { }
 
+        public void Invalidate() { }
+
         public Task<WorkoutProgram?> GetProgramAsync(string programId, int? revision = null) =>
             Task.FromResult(programs.FirstOrDefault(p => p.Id == programId && (revision is null || p.Revision == revision)));
 
