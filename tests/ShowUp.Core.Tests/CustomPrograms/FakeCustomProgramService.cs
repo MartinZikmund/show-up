@@ -32,11 +32,6 @@ internal sealed class FakeCustomProgramService : ICustomProgramService
 
     public Task DeleteAsync(string programId)
     {
-        if (!CanEdit)
-        {
-            throw new CustomProgramLockedException();
-        }
-
         Deleted.Add(programId);
         return Task.CompletedTask;
     }

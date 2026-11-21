@@ -112,7 +112,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
     /// <summary>A custom program and Pro: it can be edited, deleted and started.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowCustomLockedHint))]
-    [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(DeleteCommand), nameof(StartCommand))]
+    [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(StartCommand))]
     public partial bool CanEditCustom { get; private set; }
 
     public bool IsCustom => Program?.IsCustom == true;
@@ -183,6 +183,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
             UpdateMultiProgramHint();
             Program = program;
             CanEditCustom = program.IsCustom && _customPrograms.CanEdit;
+            DeleteCommand.NotifyCanExecuteChanged();
             PageTitle = program.Name;
             SelectedTrack = program.Tracks.FirstOrDefault();
             Tracks = program.Tracks;
@@ -238,8 +239,8 @@ public partial class ProgramDetailViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Hides the program after a confirmation; running enrollments keep their pinned revision and history.</summary>
-    [RelayCommand(CanExecute = nameof(CanEditCustom))]
+    /// <summary>Hides the program after a confirmation, even without Pro; running enrollments keep their pinned revision and history.</summary>
+    [RelayCommand(CanExecute = nameof(IsCustom))]
     public async Task DeleteAsync()
     {
         if (Program is not { IsCustom: true } program)

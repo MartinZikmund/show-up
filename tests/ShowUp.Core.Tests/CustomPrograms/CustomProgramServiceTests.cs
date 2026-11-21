@@ -101,17 +101,6 @@ public sealed class CustomProgramServiceTests
     }
 
     [TestMethod]
-    public async Task Delete_WithoutPro_Throws()
-    {
-        await _service.SaveAsync(Draft("Mine", "run"));
-        _entitlements.IsPro = false;
-
-        var act = () => _service.DeleteAsync(Id);
-
-        await act.Should().ThrowAsync<CustomProgramLockedException>();
-    }
-
-    [TestMethod]
     public async Task GetVersionNumber_CountsRevisionsFromOne()
     {
         var (_, first) = await _service.SaveAsync(Draft("A", "run"));

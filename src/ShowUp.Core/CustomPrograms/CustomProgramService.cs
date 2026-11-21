@@ -35,9 +35,9 @@ public sealed class CustomProgramService(
         return saved;
     }
 
+    // No Pro check: it's the user's own data, so a lapse never stops them removing it.
     public async Task DeleteAsync(string programId)
     {
-        EnsureCanEdit();
         await repository.DeleteAsync(programId);
         catalog.InvalidateCustomPrograms();
         messenger.Send(new CustomProgramsChangedMessage(programId));

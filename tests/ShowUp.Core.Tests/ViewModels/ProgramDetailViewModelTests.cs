@@ -388,7 +388,6 @@ public sealed class ProgramDetailViewModelTests
 
         viewModel.ShowCustomLockedHint.Should().BeTrue();
         viewModel.EditCommand.CanExecute(null).Should().BeFalse();
-        viewModel.DeleteCommand.CanExecute(null).Should().BeFalse();
         viewModel.StartCommand.CanExecute(null).Should().BeFalse();
     }
 
