@@ -21,7 +21,7 @@ public sealed class MetricInputViewModelTests
     [DataRow(true, "MetricUnitKg")]
     [DataRow(false, "MetricUnitLb")]
     public void UnitHint_Weight_FollowsTheMeasurementSystem(bool metric, string expected) =>
-        Create(MetricUnit.Weight, metric: metric).UnitHint.Should().Be(expected);
+        Create(MetricUnit.Weight, system: metric ? UnitSystem.Metric : UnitSystem.Imperial).UnitHint.Should().Be(expected);
 
     [TestMethod]
     public void Number_Reps_RoundsToAWholeNumber()
@@ -70,6 +70,6 @@ public sealed class MetricInputViewModelTests
         input.TextAutomationId.Should().Be(text);
     }
 
-    private static MetricInputViewModel Create(MetricUnit unit, MetricValue? initial = null, bool metric = true) =>
-        new(new WorkoutMetric("m", "Metric", unit), initial, new FakeStringLocalizer(), metric);
+    private static MetricInputViewModel Create(MetricUnit unit, MetricValue? initial = null, UnitSystem system = UnitSystem.Metric) =>
+        new(new WorkoutMetric("m", "Metric", unit), initial, new FakeStringLocalizer(), system);
 }

@@ -15,6 +15,7 @@ public sealed class JournalServiceTests : StorageTestBase
     private static readonly DateOnly _start = new(2026, 12, 1);
 
     private readonly WeakReferenceMessenger _messenger = new();
+    private readonly FakeAppPreferences _preferences = new();
     private ActiveEnrollmentService _enrollments = null!;
     private FakeTrackingRepository _repository = null!;
     private JournalService _journal = null!;
@@ -92,7 +93,7 @@ public sealed class JournalServiceTests : StorageTestBase
     [TestMethod]
     public async Task DayDetail_Save_WritesOnlyWhatChanged()
     {
-        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), NullLogger<DayDetailViewModel>.Instance);
+        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), _preferences, NullLogger<DayDetailViewModel>.Instance);
         await viewModel.LoadAsync(1);
         viewModel.Sessions[1].Note = "Felt strong";
         viewModel.Sessions[1].Inputs[0].Number = 52;
@@ -109,7 +110,7 @@ public sealed class JournalServiceTests : StorageTestBase
     [TestMethod]
     public async Task DayDetail_InvalidDuration_CannotSave()
     {
-        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), NullLogger<DayDetailViewModel>.Instance);
+        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), _preferences, NullLogger<DayDetailViewModel>.Instance);
         await viewModel.LoadAsync(0);
 
         viewModel.Sessions[0].Inputs[1].Text = "90";
@@ -122,7 +123,7 @@ public sealed class JournalServiceTests : StorageTestBase
     public async Task DayDetail_Uncross_UncrossesRightAway()
     {
         await _enrollments.CrossAsync(0, 0);
-        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), NullLogger<DayDetailViewModel>.Instance);
+        DayDetailViewModel viewModel = new(_journal, _enrollments, new FakeStringLocalizer(), _preferences, NullLogger<DayDetailViewModel>.Instance);
         await viewModel.LoadAsync(0);
 
         await viewModel.UncrossCommand.ExecuteAsync(viewModel.Sessions[0]);
@@ -136,7 +137,7 @@ public sealed class JournalServiceTests : StorageTestBase
     {
         var sheet = (await _journal.GetResultsSheetAsync(0, 0))!;
         await _journal.SaveResultsAsync(sheet.Target, new Dictionary<string, MetricValue> { ["time"] = new(65) });
-        LogResultsViewModel viewModel = new(_journal, new FakeStringLocalizer());
+        LogResultsViewModel viewModel = new(_journal, new FakeStringLocalizer(), _preferences);
 
         (await viewModel.LoadForSessionAsync(0, 0)).Should().BeTrue();
         viewModel.Inputs[1].Text.Should().Be("1:05");
@@ -149,7 +150,7 @@ public sealed class JournalServiceTests : StorageTestBase
     [TestMethod]
     public async Task LogResults_WorkoutWithoutMetrics_LoadsNothing()
     {
-        LogResultsViewModel viewModel = new(_journal, new FakeStringLocalizer());
+        LogResultsViewModel viewModel = new(_journal, new FakeStringLocalizer(), _preferences);
 
         (await viewModel.LoadForSessionAsync(2, 0)).Should().BeFalse();
         viewModel.HasResults.Should().BeFalse();

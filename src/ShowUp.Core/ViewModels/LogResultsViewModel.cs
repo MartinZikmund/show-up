@@ -2,11 +2,12 @@ using System.ComponentModel;
 using System.Globalization;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
+using ShowUp.Services.Settings;
 
 namespace ShowUp.Core.ViewModels;
 
 /// <summary>"Log your results" for one crossed session or bonus workout; saved only on <see cref="SaveAsync"/>.</summary>
-public sealed partial class LogResultsViewModel(IJournalService journal, IStringLocalizer localizer) : ObservableObject
+public sealed partial class LogResultsViewModel(IJournalService journal, IStringLocalizer localizer, IAppPreferences preferences) : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Inputs), nameof(HasResults))]
@@ -54,7 +55,7 @@ public sealed partial class LogResultsViewModel(IJournalService journal, IString
             }
         }
 
-        Editor = sheet is null ? null : new ResultsEditorViewModel(sheet, localizer, MetricInputViewModel.UsesMetricSystem);
+        Editor = sheet is null ? null : new ResultsEditorViewModel(sheet, localizer, preferences.UnitSystem);
         if (Editor is null || sheet is null)
         {
             CanSave = false;

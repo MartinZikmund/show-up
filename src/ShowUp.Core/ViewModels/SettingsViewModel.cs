@@ -2,6 +2,7 @@ using ShowUp.Core.Infrastructure;
 using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
+using ShowUp.Core.Tracking;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Theming;
 using MZikmund.Toolkit.WinUI.Services;
@@ -48,6 +49,7 @@ public partial class SettingsViewModel : ViewModelBase
             CrossMomentMode = _appPreferences.CrossMomentMode;
             CrossOffStyle = _appPreferences.CrossOffStyle;
             MarkerColor = _appPreferences.MarkerColor;
+            UnitSystem = _appPreferences.UnitSystem;
             SyncSwatches();
         }
         finally
@@ -104,6 +106,19 @@ public partial class SettingsViewModel : ViewModelBase
         if (!_isInitializing)
         {
             _appPreferences.CrossMomentMode = value;
+        }
+    }
+
+    public UnitSystem[] UnitSystemOptions { get; } = [UnitSystem.Metric, UnitSystem.Imperial];
+
+    [ObservableProperty]
+    public partial UnitSystem UnitSystem { get; set; }
+
+    partial void OnUnitSystemChanged(UnitSystem value)
+    {
+        if (!_isInitializing)
+        {
+            _appPreferences.UnitSystem = value;
         }
     }
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
+using ShowUp.Services.Settings;
 
 namespace ShowUp.Core.ViewModels;
 
@@ -59,6 +60,7 @@ public sealed partial class DayDetailViewModel(
     IJournalService journal,
     IActiveEnrollmentService enrollments,
     IStringLocalizer localizer,
+    IAppPreferences preferences,
     ILogger<DayDetailViewModel> logger) : ObservableObject
 {
     private string _initialDayNote = "";
@@ -94,7 +96,7 @@ public sealed partial class DayDetailViewModel(
             return false;
         }
 
-        var metric = MetricInputViewModel.UsesMetricSystem;
+        var metric = preferences.UnitSystem;
         DayIndex = dayIndex;
         Title = localizer["CalendarDayNumberFormat", dayIndex + 1];
         DateLabel = day.Date.ToString("D", CultureInfo.CurrentCulture);

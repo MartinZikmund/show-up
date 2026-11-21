@@ -29,7 +29,7 @@
                     <NumberBox
                         Grid.Column="1"
                         AutomationProperties.AutomationId="{x:Bind NumberAutomationId}"
-                        AutomationProperties.Name="{x:Bind Name}"
+                        AutomationProperties.Name="{x:Bind AccessibleName}"
                         Maximum="100000"
                         Minimum="0"
                         SmallChange="{x:Bind SmallChange}"
@@ -40,7 +40,8 @@
                     <TextBox
                         Grid.Column="1"
                         AutomationProperties.AutomationId="{x:Bind TextAutomationId}"
-                        AutomationProperties.Name="{x:Bind Name}"
+                        AutomationProperties.HelpText="{x:Bind ErrorText, Mode=OneWay}"
+                        AutomationProperties.Name="{x:Bind AccessibleName}"
                         InputScope="Number"
                         PlaceholderText="{x:Bind PlaceholderText}"
                         Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -56,7 +57,9 @@
                         Grid.Row="1"
                         Grid.ColumnSpan="3"
                         HorizontalAlignment="Right"
+                        AutomationProperties.LiveSetting="Polite"
                         Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Loaded="ErrorText_Loaded"
                         Style="{StaticResource CaptionTextBlockStyle}"
                         Text="{markup:Localize Key=MetricDurationError}"
                         TextWrapping="Wrap"

@@ -107,6 +107,8 @@ internal sealed class FakeAppPreferences : IAppPreferences
     public CrossOffStyle CrossOffStyle { get; set; }
 
     public MarkerColor MarkerColor { get; set; }
+
+    public UnitSystem UnitSystem { get; set; }
 }
 
 internal sealed class RecordingJournalDialogs : IJournalDialogs

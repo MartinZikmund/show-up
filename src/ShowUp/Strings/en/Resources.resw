@@ -715,4 +715,16 @@
   <data name="ProgramNotePlaceholder" xml:space="preserve">
     <value>Goals, modifications, how it's going...</value>
   </data>
+  <data name="Units" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="UnitsDescription" xml:space="preserve">
+    <value>Weight and distance in your results</value>
+  </data>
+  <data name="UnitSystem_Metric" xml:space="preserve">
+    <value>Metric (kg, km)</value>
+  </data>
+  <data name="UnitSystem_Imperial" xml:space="preserve">
+    <value>Imperial (lb, mi)</value>
+  </data>
 </root>

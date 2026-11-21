@@ -1,5 +1,6 @@
 using MZikmund.Toolkit.WinUI.Services;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Tracking;
 
 namespace ShowUp.Services.Settings;
 
@@ -87,5 +88,24 @@ public sealed class AppPreferences : IAppPreferences
             ? (MarkerColor)raw
             : MarkerColor.Auto;
         set => _preferences.Set(MarkerColorKey, (int)value);
+    }
+
+    private const string UnitSystemKey = "UnitSystem";
+    public UnitSystem UnitSystem
+    {
+        get
+        {
+            if (_preferences.Get(UnitSystemKey, -1) is var raw && Enum.IsDefined((UnitSystem)raw))
+            {
+                return (UnitSystem)raw;
+            }
+
+            // Seeded once, so a later region change never relabels stored results.
+            var seeded = MetricUnits.FromRegion();
+            _preferences.Set(UnitSystemKey, (int)seeded);
+            return seeded;
+        }
+
+        set => _preferences.Set(UnitSystemKey, (int)value);
     }
 }

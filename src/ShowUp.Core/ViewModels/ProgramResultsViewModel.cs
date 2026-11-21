@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Services;
 using ShowUp.Core.Tracking;
+using ShowUp.Services.Settings;
 
 namespace ShowUp.Core.ViewModels;
 
@@ -43,6 +44,7 @@ public partial class ProgramResultsViewModel : ViewModelBase
     private readonly INavigationService _navigation;
     private readonly IMessenger _messenger;
     private readonly IStringLocalizer _localizer;
+    private readonly IAppPreferences _preferences;
     private readonly ILogger<ProgramResultsViewModel> _logger;
     private SynchronizationContext? _context;
 
@@ -53,6 +55,7 @@ public partial class ProgramResultsViewModel : ViewModelBase
         INavigationService navigation,
         IMessenger messenger,
         IStringLocalizer localizer,
+        IAppPreferences preferences,
         ILogger<ProgramResultsViewModel> logger)
     {
         _journal = journal;
@@ -61,6 +64,7 @@ public partial class ProgramResultsViewModel : ViewModelBase
         _navigation = navigation;
         _messenger = messenger;
         _localizer = localizer;
+        _preferences = preferences;
         _logger = logger;
         PageTitle = localizer["ResultsTitle"];
     }
@@ -123,13 +127,14 @@ public partial class ProgramResultsViewModel : ViewModelBase
         foreach (var row in table.Rows)
         {
             var unit = row.Metric.Unit;
-            var hint = new MetricInputViewModel(row.Metric, null, _localizer, MetricInputViewModel.UsesMetricSystem).UnitHint;
+            var system = _preferences.UnitSystem;
+            var hint = MetricUnits.Label(unit, system, _localizer);
             List<ResultsCellViewModel> cells = [];
             for (var i = 0; i < row.Cells.Count; i++)
             {
                 var cell = row.Cells[i];
-                var value = cell.Value is { } v ? MetricFormat.Value(unit, v) : "";
-                var delta = cell.Delta is { } dd ? MetricFormat.Delta(unit, dd) : "";
+                var value = cell.Value is { } v ? MetricFormat.Value(unit, v, system) : "";
+                var delta = cell.Delta is { } dd ? MetricFormat.Delta(unit, dd, system) : "";
                 var trend = cell.Value is null ? ResultsTrend.None
                     : cell.Improved switch { true => ResultsTrend.Better, false => ResultsTrend.Worse, null => cell.Delta is null ? ResultsTrend.None : ResultsTrend.Same };
                 var name = value.Length == 0

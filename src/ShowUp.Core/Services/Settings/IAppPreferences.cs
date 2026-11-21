@@ -1,4 +1,5 @@
 using ShowUp.Core.Marking;
+using ShowUp.Core.Tracking;
 
 namespace ShowUp.Services.Settings;
 
@@ -23,4 +24,7 @@ public interface IAppPreferences
     CrossOffStyle CrossOffStyle { get; set; }
 
     MarkerColor MarkerColor { get; set; }
+
+    /// <summary>Kg/km or lb/mi for logged results; seeded from the region the first time it's read.</summary>
+    UnitSystem UnitSystem { get; set; }
 }

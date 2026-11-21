@@ -715,4 +715,16 @@
   <data name="ProgramNotePlaceholder" xml:space="preserve">
     <value>Cíle, úpravy, jak to jde...</value>
   </data>
+  <data name="Units" xml:space="preserve">
+    <value>Jednotky</value>
+  </data>
+  <data name="UnitsDescription" xml:space="preserve">
+    <value>Váha a vzdálenost ve výsledcích</value>
+  </data>
+  <data name="UnitSystem_Metric" xml:space="preserve">
+    <value>Metrické (kg, km)</value>
+  </data>
+  <data name="UnitSystem_Imperial" xml:space="preserve">
+    <value>Imperiální (lb, mi)</value>
+  </data>
 </root>

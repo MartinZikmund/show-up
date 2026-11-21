@@ -1,48 +1,50 @@
-using System.Globalization;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Tracking;
 
 namespace ShowUp.Core.ViewModels;
 
 /// <summary>
-/// One metric to fill in. Reps, counts and seconds take whole numbers, weight and distance decimals (NumberBox, NaN = empty);
-/// a duration is typed as mm:ss and a text metric as free text (TextBox).
+/// One metric to fill in. Reps, counts and seconds take whole numbers, weight and distance decimals in the user's units
+/// (NumberBox, NaN = empty); a duration is typed as mm:ss and a text metric as free text (TextBox).
 /// </summary>
 public sealed partial class MetricInputViewModel : ObservableObject
 {
     public const double MaxNumber = 100_000;
 
     private readonly MetricValue _initial;
+    private readonly double _initialNumber = double.NaN;
+    private readonly string _initialText = "";
+    private readonly UnitSystem _system;
 
-    public MetricInputViewModel(WorkoutMetric metric, MetricValue? initial, IStringLocalizer localizer, bool usesMetricSystem)
+    public MetricInputViewModel(WorkoutMetric metric, MetricValue? initial, IStringLocalizer localizer, UnitSystem system)
     {
         ArgumentNullException.ThrowIfNull(metric);
         ArgumentNullException.ThrowIfNull(localizer);
         Metric = metric;
+        _system = system;
         _initial = initial ?? default;
-        UnitHint = metric.Unit switch
-        {
-            MetricUnit.Reps => localizer["MetricUnitReps"],
-            MetricUnit.Count => localizer["MetricUnitCount"],
-            MetricUnit.Seconds => localizer["MetricUnitSeconds"],
-            MetricUnit.Weight => localizer[usesMetricSystem ? "MetricUnitKg" : "MetricUnitLb"],
-            MetricUnit.Distance => localizer[usesMetricSystem ? "MetricUnitKm" : "MetricUnitMi"],
-            _ => "",
-        };
+        UnitHint = MetricUnits.Label(metric.Unit, system, localizer);
+        var hint = metric.Unit == MetricUnit.Duration ? PlaceholderText : UnitHint;
+        AccessibleName = hint.Length == 0 ? metric.Name : $"{metric.Name} ({hint})";
+        DurationError = localizer["MetricDurationError"];
 
         if (IsNumberInput)
         {
-            Number = _initial.Number ?? double.NaN;
+            // Shown rounded; an untouched box gives back the stored value at full precision.
+            Number = _initialNumber = _initial.Number is { } stored ? Math.Round(MetricUnits.ToDisplay(metric.Unit, stored, system), 2) : double.NaN;
         }
         else
         {
-            Text = metric.Unit == MetricUnit.Duration && _initial.Number is { } seconds ? DurationParser.Format(seconds) : _initial.Text ?? "";
+            Text = _initialText = metric.Unit == MetricUnit.Duration && _initial.Number is { } seconds ? DurationParser.Format(seconds) : _initial.Text ?? "";
         }
     }
 
     public WorkoutMetric Metric { get; }
 
     public string Name => Metric.Name;
+
+    /// <summary>The metric's name with its unit, for screen readers.</summary>
+    public string AccessibleName { get; }
 
     public string UnitHint { get; }
 
@@ -64,12 +66,17 @@ public sealed partial class MetricInputViewModel : ObservableObject
 
     public string PlaceholderText => Metric.Unit == MetricUnit.Duration ? "mm:ss" : "";
 
+    public string DurationError { get; }
+
+    /// <summary>The error while there is one, for the box's help text.</summary>
+    public string ErrorText => ShowError ? DurationError : "";
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsValid), nameof(IsChanged))]
     public partial double Number { get; set; } = double.NaN;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsValid), nameof(IsChanged), nameof(ShowError))]
+    [NotifyPropertyChangedFor(nameof(IsValid), nameof(IsChanged), nameof(ShowError), nameof(ErrorText))]
     public partial string Text { get; set; } = "";
 
     public bool IsValid => IsNumberInput
@@ -79,15 +86,23 @@ public sealed partial class MetricInputViewModel : ObservableObject
     /// <summary>A typed duration that isn't mm:ss.</summary>
     public bool ShowError => !IsValid && IsTextInput;
 
-    public bool IsChanged => IsValid && Value != _initial;
+    public bool IsChanged => IsValid && (IsNumberInput
+        ? !(double.IsNaN(Number) && double.IsNaN(_initialNumber)) && Number != _initialNumber
+        : Text.Trim() != _initialText);
 
+    /// <summary>What to store: SI units at full precision for weight and distance.</summary>
     public MetricValue Value
     {
         get
         {
+            if (!IsChanged)
+            {
+                return _initial;
+            }
+
             if (IsNumberInput)
             {
-                return double.IsNaN(Number) ? default : new(IsWholeNumber ? Math.Round(Number) : Math.Round(Number, 2));
+                return double.IsNaN(Number) ? default : new(MetricUnits.FromDisplay(Metric.Unit, Number, _system));
             }
 
             if (Metric.Unit == MetricUnit.Duration)
@@ -106,31 +121,16 @@ public sealed partial class MetricInputViewModel : ObservableObject
             Number = Math.Round(value);
         }
     }
-
-    public static bool UsesMetricSystem
-    {
-        get
-        {
-            try
-            {
-                return RegionInfo.CurrentRegion.IsMetric;
-            }
-            catch (ArgumentException)
-            {
-                return true;
-            }
-        }
-    }
 }
 
 /// <summary>The inputs of one <see cref="ResultsSheet"/>, valid when every input is.</summary>
 public sealed class ResultsEditorViewModel
 {
-    public ResultsEditorViewModel(ResultsSheet sheet, IStringLocalizer localizer, bool usesMetricSystem)
+    public ResultsEditorViewModel(ResultsSheet sheet, IStringLocalizer localizer, UnitSystem system)
     {
         ArgumentNullException.ThrowIfNull(sheet);
         Sheet = sheet;
-        Inputs = [.. (sheet.Workout.Metrics ?? []).Select(m => new MetricInputViewModel(m, sheet.Values.TryGetValue(m.Id, out var v) ? v : null, localizer, usesMetricSystem))];
+        Inputs = [.. (sheet.Workout.Metrics ?? []).Select(m => new MetricInputViewModel(m, sheet.Values.TryGetValue(m.Id, out var v) ? v : null, localizer, system))];
     }
 
     public ResultsSheet Sheet { get; }
