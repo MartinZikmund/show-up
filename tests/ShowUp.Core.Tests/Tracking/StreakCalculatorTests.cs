@@ -60,4 +60,30 @@ public class StreakCalculatorTests
     {
         StreakCalculator.Longest(Days("..."), Day(2)).Should().Be(0);
     }
+
+    [TestMethod]
+    public void Current_OptionalSessionSkipped_StillCounts()
+    {
+        DayStatus[] days =
+        [
+            new(0, _start, 2, new HashSet<int> { 0 }, false, new HashSet<int> { 1 }),
+            new(1, _start.AddDays(1), 2, new HashSet<int> { 0 }, false, new HashSet<int> { 1 }),
+        ];
+
+        StreakCalculator.Current(days, Day(1)).Should().Be(2);
+    }
+
+    [TestMethod]
+    public void Current_AllOptionalDayUndone_ActsLikeRest()
+    {
+        DayStatus[] days =
+        [
+            new(0, _start, 1, new HashSet<int> { 0 }, false),
+            new(1, _start.AddDays(1), 1, new HashSet<int>(), false, new HashSet<int> { 0 }),
+            new(2, _start.AddDays(2), 1, new HashSet<int> { 0 }, false),
+        ];
+
+        StreakCalculator.Current(days, Day(2)).Should().Be(2);
+        StreakCalculator.Longest(days, Day(2)).Should().Be(2);
+    }
 }

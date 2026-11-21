@@ -101,4 +101,12 @@ public class CatalogParserTests
     }
 
     private static string Fixture(string name) => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", "Fixtures", name));
+
+    [TestMethod]
+    public void Parse_SessionWithoutOptionalKey_DefaultsToRequired()
+    {
+        var catalog = CatalogParser.Parse(1, Fixture("sample-workouts.json"), [Fixture("sample-program.json")]);
+
+        catalog.Programs.Single().Tracks.Single().Days.SelectMany(d => d.Sessions).Should().OnlyContain(s => !s.Optional);
+    }
 }
