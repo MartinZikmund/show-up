@@ -93,7 +93,7 @@ public sealed class SqliteCustomProgramRepository(
         {
             var existing = Query<CustomProgramEntity>(c, p => p.SubjectKey == key);
             revision = Math.Max(existing.Count == 0 ? 1 : existing.Max(p => p.Revision) + 1, stamp);
-            c.Insert(Stamp(new CustomProgramEntity { SubjectKey = key, Revision = revision, ProgramJson = programJson }));
+            Insert(c, Stamp(new CustomProgramEntity { SubjectKey = key, Revision = revision, ProgramJson = programJson }));
         });
         return (id, revision);
     }

@@ -21,7 +21,7 @@ public sealed class SqliteTrackingRepository(
             TrackId = trackId,
             StartDate = startDate,
         });
-        await connection.InsertAsync(entity);
+        await InsertAsync(connection, entity);
         return entity;
     }
 
@@ -45,7 +45,7 @@ public sealed class SqliteTrackingRepository(
                 Touch(c, old);
             }
 
-            c.Insert(entity);
+            Insert(c, entity);
         });
         return entity;
     }
@@ -107,7 +107,7 @@ public sealed class SqliteTrackingRepository(
             InkJson = inkJson,
         });
         entity.Id = completionId ?? entity.Id;
-        await connection.InsertAsync(entity);
+        await InsertAsync(connection, entity);
     }
 
     public async Task UncrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
@@ -179,7 +179,7 @@ public sealed class SqliteTrackingRepository(
             FromDate = fromDate,
             Days = days,
         });
-        await connection.InsertAsync(entity);
+        await InsertAsync(connection, entity);
     }
 
     public async Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes)
@@ -198,7 +198,7 @@ public sealed class SqliteTrackingRepository(
             Date = date,
             DurationMinutes = durationMinutes,
         });
-        await connection.InsertAsync(entity);
+        await InsertAsync(connection, entity);
         return entity;
     }
 

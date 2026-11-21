@@ -33,7 +33,7 @@ public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, I
             var existing = NewestFirst(Query<SyncedSettingEntity>(c, s => s.SubjectKey == subject)).ToList();
             if (existing.Count == 0)
             {
-                c.Insert(Stamp(new SyncedSettingEntity { SubjectKey = subject, Key = key, Value = value }));
+                Insert(c, Stamp(new SyncedSettingEntity { SubjectKey = subject, Key = key, Value = value }));
                 return;
             }
 

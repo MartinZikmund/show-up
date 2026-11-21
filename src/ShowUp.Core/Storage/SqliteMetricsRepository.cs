@@ -64,7 +64,7 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
 
         if (existing.Count == 0)
         {
-            c.Insert(Stamp(new MetricEntryEntity
+            Insert(c, Stamp(new MetricEntryEntity
             {
                 EnrollmentId = target.EnrollmentId,
                 DayIndex = target.DayIndex,

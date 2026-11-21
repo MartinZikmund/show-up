@@ -13,6 +13,11 @@ public sealed class ShowUpDatabase(string databasePath, Func<Task>? prepareStora
     private readonly SemaphoreSlim _gate = new(1, 1);
     private SQLiteAsyncConnection? _connection;
 
+    /// <summary>A repository wrote a row (the sync engine's own writes don't count). Raised inside the write: keep handlers short.</summary>
+    public event EventHandler? LocalChanged;
+
+    public void NotifyLocalChange() => LocalChanged?.Invoke(this, EventArgs.Empty);
+
     public async Task<SQLiteAsyncConnection> GetConnectionAsync()
     {
         if (_connection is not null)

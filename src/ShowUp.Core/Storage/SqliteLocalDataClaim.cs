@@ -51,9 +51,14 @@ public sealed class SqliteLocalDataClaim(ShowUpDatabase db, TimeProvider time, I
                 // Settings keep their own time: the account's settings from other devices are newer and must win.
                 var stamp = table == Settings ? "" : """, "UpdatedAt" = MAX(?, ("UpdatedAt" / 10 + 1) * 10)""";
                 object[] args = table == Settings ? [userId, device.DeviceId] : [userId, device.DeviceId, now];
-                claimed += c.Execute($"""UPDATE "{table}" SET "UserId" = ?, "DeviceId" = ?{stamp}{Live}""", args);
+                claimed += c.Execute($"""UPDATE "{table}" SET "UserId" = ?, "DeviceId" = ?, "SyncPending" = 1{stamp}{Live}""", args);
             }
         });
+        if (claimed > 0)
+        {
+            db.NotifyLocalChange();
+        }
+
         return claimed;
     }
 }

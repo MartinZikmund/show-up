@@ -15,7 +15,7 @@ public sealed class SqliteReminderRepository(ShowUpDatabase db, TimeProvider tim
         Validate(minutesOfDay, daysMask);
         var connection = await ConnectAsync();
         var reminder = Stamp(new ReminderEntity { MinutesOfDay = minutesOfDay, DaysMask = daysMask, Enabled = enabled });
-        await connection.InsertAsync(reminder);
+        await InsertAsync(connection, reminder);
         return reminder;
     }
 
