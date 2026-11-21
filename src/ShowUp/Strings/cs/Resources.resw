@@ -320,7 +320,7 @@
     <value>T&#253;den {0}</value>
   </data>
   <data name="CalendarLongestStreakFormat" xml:space="preserve">
-    <value>Nejl&#233;pe {0}</value>
+    <value>Rekord: {0}</value>
   </data>
   <data name="CalendarDateFormat" xml:space="preserve">
     <value>d. M.</value>
