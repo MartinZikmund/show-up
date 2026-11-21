@@ -17,7 +17,8 @@ of eight accent colors, 1–26 weeks of seven days, and per day a list of sessio
 Sessions can be reordered with the up/down buttons and marked optional (optional sessions never
 count toward finishing a day). A day holding only optional sessions is allowed and behaves like a
 rest day: nothing has to be crossed for it to count, and the optional workouts are still there to
-do and cross. A week can be copied to the next week or to all weeks. Lowering the
+do and cross. A week can be copied to the next week or to all weeks (that one asks first, since it overwrites
+every other week). Lowering the
 week count hides the extra weeks without losing them, until the page is left.
 
 Save stays disabled until the schedule is valid: a name, 1–26 weeks, and no empty day. Problems
@@ -45,7 +46,9 @@ its days and history until it is ended.
 ## The catalog merge
 
 `CatalogService` reads the bundled catalog once and merges the latest live revision of each custom
-program on top, re-reading them after `InvalidateCustomPrograms()` (called on save and delete). A
+program on top, re-reading them after `InvalidateCustomPrograms()` (called on save and delete). Each
+invalidation bumps a generation number, and a merge that raced one isn't cached. Each custom
+workout appears once in the merged catalog, taken from the latest revision. A
 pinned revision that isn't the latest (or belongs to a deleted program) is fetched on demand by
 `GetProgramAsync(id, revision)`, and its workouts join `WorkoutsById`.
 
@@ -57,5 +60,7 @@ marked `custom` is rejected.
 
 Custom programs stay listed, but are read-only: no new schedules, no edits and no starting them
 (`CustomProgramLockedException`, enforced in `CustomProgramService` and `ActiveEnrollmentService`).
-Deleting one stays allowed: it's the user's own data. A program that is already running follows the usual lapse rules in
+Deleting one stays allowed: it's the user's own data. A custom program that is already running and is the primary
+one stays crossable after a lapse (showing up isn't paywalled); only editing and starting need
+Pro again. A program that is already running follows the usual lapse rules in
 [multiple-programs.md](./multiple-programs.md).
