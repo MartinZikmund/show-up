@@ -34,6 +34,22 @@ public class CrossMomentCaptionTests
         caption.Streak.Should().BeNull();
     }
 
+    [TestMethod]
+    public void Announcement_WithStreak_IsOnePlainSentence()
+    {
+        var caption = CrossMomentCaption.Create(Info(sessionsDone: 1, streak: 9), new FormattingLocalizer());
+
+        caption.Announcement.Should().Be("Day 10 of 60, 9-day streak. 1 of 2 done");
+    }
+
+    [TestMethod]
+    public void Announcement_NoStreak_SkipsStreak()
+    {
+        var caption = CrossMomentCaption.Create(Info(sessionsDone: 2, streak: 0), new FormattingLocalizer());
+
+        caption.Announcement.Should().Be("Day 10 of 60. Crossed off.");
+    }
+
     private static CrossMomentInfo Info(int sessionsDone, int streak) =>
         new(DayNumber: 10, TotalDays: 60, Title: "Cardio + Core", StrokesBefore: 0, StrokesAfter: 2, Seed: 1,
             SessionsDone: sessionsDone, SessionsRequired: 2, CurrentStreak: streak);
