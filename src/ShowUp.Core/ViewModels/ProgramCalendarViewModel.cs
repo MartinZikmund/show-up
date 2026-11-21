@@ -100,13 +100,6 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     [ObservableProperty]
     public partial string LongestStreakText { get; private set; } = "";
 
-    public bool IsDebug =>
-#if DEBUG
-        true;
-#else
-        false;
-#endif
-
     private DateOnly Today => DateOnly.FromDateTime(_time.GetLocalNow().DateTime);
 
     public override void ViewLoaded()
@@ -361,21 +354,6 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
     [RelayCommand]
     private void BrowsePrograms() => _navigator.NavigateToSection(NavigationSection.Programs);
-
-    /// <summary>Debug builds: Insanity (classic) started 9 days ago, so the grid has past, today and future days.</summary>
-    [RelayCommand]
-    private async Task StartSampleEnrollmentAsync()
-    {
-#if DEBUG
-        if (await _catalog.GetProgramAsync("insanity") is { } program && program.Tracks.FirstOrDefault(t => t.Id == "classic") is { } track)
-        {
-            await WriteAsync(() => _enrollments.EnrollAsync(program, track, Today.AddDays(-9)));
-            await RefreshAsync();
-        }
-#else
-        await Task.CompletedTask;
-#endif
-    }
 
     private void ShowNoEnrollment()
     {

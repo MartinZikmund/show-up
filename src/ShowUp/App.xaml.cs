@@ -147,6 +147,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.TodayView), typeof(TodayViewModel));
             service.RegisterView(typeof(Views.ProgramCalendarView), typeof(ProgramCalendarViewModel));
             service.RegisterView(typeof(Views.ProgramsView), typeof(ProgramsViewModel));
+            service.RegisterView(typeof(Views.ProgramDetailView), typeof(ProgramDetailViewModel));
             service.RegisterView(typeof(Views.HistoryView), typeof(HistoryViewModel));
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             return service;
@@ -159,6 +160,7 @@ public partial class App : Application, IApplication
         services.AddTransient<TodayViewModel>();
         services.AddTransient<ProgramCalendarViewModel>();
         services.AddTransient<ProgramsViewModel>();
+        services.AddTransient<ProgramDetailViewModel>();
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
     }

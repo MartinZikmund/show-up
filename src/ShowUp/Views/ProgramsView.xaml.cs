@@ -9,4 +9,12 @@ public partial class ProgramsViewBase : ViewBase<ProgramsViewModel> { }
 public sealed partial class ProgramsView : ProgramsViewBase
 {
     public ProgramsView() => InitializeComponent();
+
+    private void Card_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: ProgramCardViewModel card })
+        {
+            ViewModel?.OpenCommand.Execute(card);
+        }
+    }
 }
