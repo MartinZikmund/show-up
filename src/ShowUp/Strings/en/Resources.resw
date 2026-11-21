@@ -997,4 +997,16 @@
   <data name="ReminderErrorText" xml:space="preserve">
     <value>Something went wrong saving your reminders. The list shows what is stored.</value>
   </data>
+  <data name="ReminderOnlyWhileRunning" xml:space="preserve">
+    <value>On this device reminders show up only while Show Up is running. Minimized is fine, closed is not.</value>
+  </data>
+  <data name="ReminderOnlyWhileTabOpen" xml:space="preserve">
+    <value>In the browser reminders arrive only while a Show Up tab is open. Keep one open, or install the app.</value>
+  </data>
+  <data name="ReminderBannerOpen" xml:space="preserve">
+    <value>Open Today</value>
+  </data>
+  <data name="ReminderBannerName" xml:space="preserve">
+    <value>Reminder</value>
+  </data>
 </root>

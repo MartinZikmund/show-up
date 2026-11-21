@@ -40,6 +40,13 @@
                 Severity="Informational" />
 
             <InfoBar
+                AutomationProperties.AutomationId="RemindersLimitNotice"
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.HasLimitNote, Mode=OneWay}"
+                Message="{x:Bind ViewModel.LimitNote, Mode=OneWay}"
+                Severity="Informational" />
+
+            <InfoBar
                 AutomationProperties.AutomationId="RemindersPermissionNotice"
                 IsClosable="False"
                 IsOpen="{x:Bind ViewModel.PermissionDenied, Mode=OneWay}"

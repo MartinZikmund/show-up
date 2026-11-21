@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Messages;
+using ShowUp.Core.Reminders;
 using ShowUp.Services.Dialogs;
 using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Tests.Reminders;
@@ -479,5 +480,37 @@ public sealed class RemindersViewModelTests
         viewModel.Weekdays.Should().BeSameAs(weekdays);
         viewModel.Weekdays[0].IsChecked.Should().BeFalse();
         _repository.ListCalls.Should().Be(before);
+    }
+
+    [TestMethod]
+    [DataRow(ReminderDeliveryLimit.WhileAppRunning, "ReminderOnlyWhileRunning")]
+    [DataRow(ReminderDeliveryLimit.WhileTabOpen, "ReminderOnlyWhileTabOpen")]
+    public async Task LimitNote_LimitedDelivery_SaysWhen(ReminderDeliveryLimit limit, string key)
+    {
+        _scheduler.Limit = limit;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.LimitNote.Should().Be(key);
+        viewModel.HasLimitNote.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task LimitNote_OsDelivery_IsHidden()
+    {
+        var viewModel = await OpenAsync();
+
+        viewModel.HasLimitNote.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task LimitNote_Unsupported_IsHiddenBehindTheUnsupportedNotice()
+    {
+        _scheduler.IsSupported = false;
+        _scheduler.Limit = ReminderDeliveryLimit.WhileAppRunning;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.HasLimitNote.Should().BeFalse();
     }
 }

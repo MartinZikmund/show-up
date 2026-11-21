@@ -152,6 +152,16 @@ public partial class RemindersViewModel : ViewModelBase
 
     public bool IsUnsupported => !_scheduler.IsSupported;
 
+    /// <summary>Where delivery stops short of the OS: "only while the app is running" or "only while a tab is open".</summary>
+    public string? LimitNote => !_scheduler.IsSupported ? null : _scheduler.Limit switch
+    {
+        ReminderDeliveryLimit.WhileAppRunning => _localizer["ReminderOnlyWhileRunning"].Value,
+        ReminderDeliveryLimit.WhileTabOpen => _localizer["ReminderOnlyWhileTabOpen"].Value,
+        _ => null,
+    };
+
+    public bool HasLimitNote => LimitNote is not null;
+
     public bool IsEmpty => Items.Count == 0;
 
     /// <summary>Another reminder fits under the tier's limit.</summary>

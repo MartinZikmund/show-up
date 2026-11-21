@@ -86,6 +86,8 @@ internal sealed class FakeReminderScheduler : IReminderScheduler
     /// <summary>Makes every <see cref="ReplaceAllAsync"/> throw.</summary>
     public bool FailReplace { get; set; }
 
+    public ReminderDeliveryLimit Limit { get; set; }
+
     public Task<bool> RequestPermissionAsync()
     {
         PermissionRequests++;
