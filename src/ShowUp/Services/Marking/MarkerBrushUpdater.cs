@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
+using Microsoft.UI.Dispatching;
+using ShowUp.Services.Entitlements;
 using ShowUp.Services.Settings;
 
 namespace ShowUp.Services.Marking;
@@ -15,6 +17,7 @@ public sealed class MarkerBrushUpdater : IRecipient<MarkerColorChangedMessage>
 {
     private readonly IAppPreferences _preferences;
     private readonly IEntitlementService _entitlements;
+    private readonly DispatcherQueue? _dispatcher = DispatcherQueue.GetForCurrentThread();
 
     public MarkerBrushUpdater(IAppPreferences preferences, IMessenger messenger, IEntitlementService entitlements)
     {
@@ -27,7 +30,9 @@ public sealed class MarkerBrushUpdater : IRecipient<MarkerColorChangedMessage>
     // Lapsed users keep their stored choice but get the default ink until they are Pro again.
     public void Apply() => Apply(FeatureGate.EffectiveMarkerColor(_preferences.MarkerColor, _entitlements.IsPro));
 
-    public void Receive(MarkerColorChangedMessage message) => Apply(FeatureGate.EffectiveMarkerColor(message.Color, _entitlements.IsPro));
+    // A reload after a sync or sign-in can send it off the UI thread.
+    public void Receive(MarkerColorChangedMessage message) =>
+        UiDispatch.Run(_dispatcher, () => Apply(FeatureGate.EffectiveMarkerColor(message.Color, _entitlements.IsPro)));
 
     private static void Apply(MarkerColor color)
     {

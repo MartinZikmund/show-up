@@ -44,13 +44,43 @@ public sealed class AccountProCacheTests
     [TestMethod]
     public void SigningOut_ReturnsToTheAnonymousState()
     {
-        _cache.LastKnownPro = true;
         _cache.UseAccount("alice");
-        _cache.LastKnownPro.Should().BeFalse();
+        _cache.LastKnownPro = true;
 
         _cache.UseAccount(null);
 
-        _cache.LastKnownPro.Should().BeTrue();
+        _cache.LastKnownPro.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void UseAccount_NewAccount_ReadsTheAnonymousStateUntilTheStoreWrites()
+    {
+        var expires = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        _cache.LastKnownPro = true;
+        _cache.LastKnownProExpires = expires;
+
+        _cache.UseAccount("alice");
+
+        _cache.LastKnownPro.Should().BeTrue("a Pro buyer signing in must not flash Free while the store answers");
+        _cache.LastKnownProExpires.Should().Be(expires);
+        _cache.LastKnownPro = false;
+        _cache.LastKnownPro.Should().BeFalse();
+        _cache.LastKnownProExpires.Should().Be(expires, "the seed was copied whole before the first write");
+        _cache.UseAccount(null);
+        _cache.LastKnownPro.Should().BeTrue("the anonymous state itself is untouched");
+    }
+
+    [TestMethod]
+    public void UseAccount_KnownAccount_IsNotSeeded()
+    {
+        _cache.UseAccount("alice");
+        _cache.LastKnownPro = false;
+        _cache.UseAccount(null);
+        _cache.LastKnownPro = true;
+
+        _cache.UseAccount("alice");
+
+        _cache.LastKnownPro.Should().BeFalse();
     }
 
     [TestMethod]
@@ -59,7 +89,7 @@ public sealed class AccountProCacheTests
         _cache.UseAccount("alice@example.com");
         _cache.LastKnownPro = true;
 
-        _preferences.Values.Keys.Should().OnlyContain(k => !k.Contains("alice") && k.StartsWith("LastKnownPro."));
+        _preferences.Values.Keys.Should().OnlyContain(k => !k.Contains("alice") && (k.StartsWith("LastKnownPro.") || k.StartsWith("LastKnownProExpires.")));
         AccountProCache.KeySuffix("alice@example.com").Should().NotBe(AccountProCache.KeySuffix("bob@example.com"));
         AccountProCache.KeySuffix("alice@example.com").Should().Be(AccountProCache.KeySuffix("alice@example.com"), "stable across launches");
     }

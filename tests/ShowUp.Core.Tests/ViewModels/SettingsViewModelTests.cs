@@ -246,6 +246,24 @@ public sealed class SettingsViewModelTests
         preferences.MarkerColor.Should().NotBe(MarkerColor.Orange);
     }
 
+    [TestMethod]
+    public void PersonalizationReloaded_ShowsTheNewValuesWithoutWriting()
+    {
+        FakeAppPreferences preferences = new();
+        WeakReferenceMessenger messenger = new();
+        var viewModel = CreateViewModel(preferences, messenger);
+        viewModel.OnNavigatedTo(null);
+        preferences.MarkerColor = MarkerColor.Green;
+        preferences.UnitSystem = UnitSystem.Imperial;
+        preferences.Writes.Clear();
+
+        messenger.Send(new PersonalizationReloadedMessage());
+
+        viewModel.MarkerColor.Should().Be(MarkerColor.Green);
+        viewModel.UnitSystem.Should().Be(UnitSystem.Imperial);
+        preferences.Writes.Should().BeEmpty();
+    }
+
     private static SettingsViewModel Navigated(FakeAppPreferences preferences, FakeEntitlementService? entitlements = null)
     {
         var viewModel = CreateViewModel(preferences, entitlements: entitlements);
@@ -255,7 +273,7 @@ public sealed class SettingsViewModelTests
     }
 
     private static SettingsViewModel CreateViewModel(FakeAppPreferences preferences, IMessenger? messenger = null, FakeEntitlementService? entitlements = null) =>
-        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger(), entitlements ?? new FakeEntitlementService(), new RecordingNavigationService());
+        new(new FakeStringLocalizer(), preferences, new FakeThemeManager(), new FakePreferences(), new FakeApplication(), messenger ?? new WeakReferenceMessenger(), entitlements ?? new FakeEntitlementService(), new RecordingNavigationService(), Accounts.AccountTestFactory.CreateViewModel());
 
     private sealed class FakeAppPreferences : IAppPreferences
     {

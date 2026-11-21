@@ -9,7 +9,8 @@ When you add a setting or a table, add it here first.
 | --- | --- | --- |
 | `DataVersion`, `FirstStart`, `LaunchCount`, `OfferUserRating` | `IAppPreferences` | per device |
 | `LastKnownPro`, `LastKnownProExpires` | `IAppPreferences` via `AccountProCache` | per device, per account (key carries a hash of the user id) |
-| `SelectedEnrollmentId` | `IAppPreferences` | per device: each device's Calendar can show a different program |
+| `DebugSimulateSignIn`, `DebugSimulatedSession` | `IPreferences` | per device, debug builds only |
+| `SelectedEnrollmentId` | `IAppPreferences` | per device, per account (key carries a hash of the user id): each device's Calendar can show a different program |
 | `Theme`, `MarkerSoundEnabled`, `MarkerHapticsEnabled`, `CrossMomentMode` | `IAppPreferences` | per device |
 | Notification permission state | the OS | per device |
 | Android `planned-reminders.json` | app files | per device (what this device scheduled with the OS) |

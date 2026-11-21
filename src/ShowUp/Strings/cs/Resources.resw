@@ -1303,4 +1303,133 @@
   <data name="BuilderCopyAllMessage" xml:space="preserve">
     <value>Dny všech ostatních týdnů se nahradí dny tohoto týdne.</value>
   </data>
+  <data name="AccountHeader" xml:space="preserve">
+    <value>Účet</value>
+  </data>
+  <data name="AccountSignedOutDescription" xml:space="preserve">
+    <value>Nepovinné. Přihlaste se e-mailem a připravte si synchronizaci mezi zařízeními.</value>
+  </data>
+  <data name="AccountEmailLabel" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="AccountEmailPlaceholder" xml:space="preserve">
+    <value>vy@example.com</value>
+  </data>
+  <data name="AccountSendCode" xml:space="preserve">
+    <value>Poslat kód</value>
+  </data>
+  <data name="AccountCodeLabel" xml:space="preserve">
+    <value>Šestimístný kód</value>
+  </data>
+  <data name="AccountCodePlaceholder" xml:space="preserve">
+    <value>000000</value>
+  </data>
+  <data name="AccountCodeSentFormat" xml:space="preserve">
+    <value>Na {0} jsme poslali přihlašovací kód.</value>
+  </data>
+  <data name="AccountVerify" xml:space="preserve">
+    <value>Přihlásit se</value>
+  </data>
+  <data name="AccountChangeEmail" xml:space="preserve">
+    <value>Použít jiný e-mail</value>
+  </data>
+  <data name="AccountResendCode" xml:space="preserve">
+    <value>Poslat nový kód</value>
+  </data>
+  <data name="AccountSignOut" xml:space="preserve">
+    <value>Odhlásit se</value>
+  </data>
+  <data name="AccountSignedInDescription" xml:space="preserve">
+    <value>Přihlášeno. Váš pokrok na tomto zařízení patří k tomuto účtu.</value>
+  </data>
+  <data name="AccountSyncHeader" xml:space="preserve">
+    <value>Synchronizace</value>
+  </data>
+  <data name="AccountSyncComingSoon" xml:space="preserve">
+    <value>Funkce Pro · již brzy</value>
+  </data>
+  <data name="AccountErrorInvalidEmail" xml:space="preserve">
+    <value>Tohle nevypadá jako e-mailová adresa.</value>
+  </data>
+  <data name="AccountErrorCodeFormat" xml:space="preserve">
+    <value>Zadejte šestimístný kód z e-mailu.</value>
+  </data>
+  <data name="AccountErrorInvalidCode" xml:space="preserve">
+    <value>Kód je špatně nebo už vypršel. Zkontrolujte e-mail, nebo si pošlete nový kód.</value>
+  </data>
+  <data name="AccountErrorRateLimited" xml:space="preserve">
+    <value>Příliš mnoho pokusů. Chvíli počkejte a zkuste to znovu.</value>
+  </data>
+  <data name="AccountErrorNetwork" xml:space="preserve">
+    <value>Server není dostupný. Zkontrolujte připojení a zkuste to znovu.</value>
+  </data>
+  <data name="AccountErrorGeneric" xml:space="preserve">
+    <value>Něco se pokazilo. Zkuste to znovu.</value>
+  </data>
+  <data name="AccountClaimMessage" xml:space="preserve">
+    <value>Programy, odškrtnuté dny, poznámky a připomínky na tomto zařízení vznikly bez přihlášení. Ano je přidá k tomuto účtu. Ne je nechá jen na tomto zařízení: během přihlášení zůstanou skryté, po odhlášení se vrátí a při příštím přihlášení se zeptáme znovu.</value>
+  </data>
+  <data name="AccountSignOutUnsyncedTitle" xml:space="preserve">
+    <value>Odhlásit se se změnami, které se ještě nesynchronizovaly?</value>
+  </data>
+  <data name="AccountSignOutUnsyncedMessage" xml:space="preserve">
+    <value>Některé změny z tohoto zařízení se do účtu ještě nedostaly. Nic se nesmaže: zůstanou tady a synchronizují se při příštím přihlášení k tomuto účtu.</value>
+  </data>
+  <data name="DebugSimulateSignIn" xml:space="preserve">
+    <value>Simulovat přihlášení</value>
+  </data>
+  <data name="DebugSimulateSignInDescription" xml:space="preserve">
+    <value>Falešný server účtů pro testování: libovolný e-mail, kód 123456. Jen ladicí sestavení.</value>
+  </data>
+  <data name="AccountSignInHeader" xml:space="preserve">
+    <value>Přihlášení</value>
+  </data>
+  <data name="AccountClaimTitleFormat" xml:space="preserve">
+    <value>Přenést {0} do tohoto účtu?</value>
+  </data>
+  <data name="AccountClaimPrograms_One" xml:space="preserve">
+    <value>{0} program</value>
+  </data>
+  <data name="AccountClaimPrograms_Few" xml:space="preserve">
+    <value>{0} programy</value>
+  </data>
+  <data name="AccountClaimPrograms_Other" xml:space="preserve">
+    <value>{0} programů</value>
+  </data>
+  <data name="AccountClaimCrossed_One" xml:space="preserve">
+    <value>{0} odškrtnutý trénink</value>
+  </data>
+  <data name="AccountClaimCrossed_Few" xml:space="preserve">
+    <value>{0} odškrtnuté tréninky</value>
+  </data>
+  <data name="AccountClaimCrossed_Other" xml:space="preserve">
+    <value>{0} odškrtnutých tréninků</value>
+  </data>
+  <data name="AccountClaimEntries_One" xml:space="preserve">
+    <value>{0} záznam</value>
+  </data>
+  <data name="AccountClaimEntries_Few" xml:space="preserve">
+    <value>{0} záznamy</value>
+  </data>
+  <data name="AccountClaimEntries_Other" xml:space="preserve">
+    <value>{0} záznamů</value>
+  </data>
+  <data name="AccountClaimOtherEntries_One" xml:space="preserve">
+    <value>{0} další záznam</value>
+  </data>
+  <data name="AccountClaimOtherEntries_Few" xml:space="preserve">
+    <value>{0} další záznamy</value>
+  </data>
+  <data name="AccountClaimOtherEntries_Other" xml:space="preserve">
+    <value>{0} dalších záznamů</value>
+  </data>
+  <data name="AccountClaimJoinTwo" xml:space="preserve">
+    <value>{0} a {1}</value>
+  </data>
+  <data name="AccountClaimJoinThree" xml:space="preserve">
+    <value>{0}, {1} a {2}</value>
+  </data>
+  <data name="AccountBusy" xml:space="preserve">
+    <value>Pracuji…</value>
+  </data>
 </root>

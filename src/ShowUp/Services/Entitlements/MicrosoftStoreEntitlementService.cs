@@ -82,8 +82,9 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
             var proAddOns = addOns.Where(a => a.Item2 && _proStoreIds.Contains(a.Item1)).ToList();
             // A durable (no expiry) license outlasts any subscription.
             DateTimeOffset? expires = proAddOns.Any(a => a.Item3 is null) ? null : proAddOns.Max(a => a.Item3);
+            var firstAnswer = !_confirmed;
             _confirmed = true;
-            SetPro(StoreLicenseMapper.IsPro(addOns, _time.GetUtcNow(), _proStoreIds), expires);
+            SetPro(StoreLicenseMapper.IsPro(addOns, _time.GetUtcNow(), _proStoreIds), expires, notify: firstAnswer);
         }
         catch (Exception ex)
         {
@@ -223,14 +224,15 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     private DateTimeOffset? Expiry(StoreLicense license) =>
         license.ExpirationDate > _time.GetUtcNow().AddYears(50) ? null : license.ExpirationDate;
 
-    private void SetPro(bool value, DateTimeOffset? expires)
+    /// <param name="notify">Raise Changed even when Pro stays the same, e.g. the store confirmed the cached state (the lapse check waits for that).</param>
+    private void SetPro(bool value, DateTimeOffset? expires, bool notify = false)
     {
         _preferences.LastKnownPro = value;
         _preferences.LastKnownProExpires = value ? expires : null;
         var changed = _isPro != value;
         _isPro = value;
         WatchExpiry();
-        if (changed)
+        if (changed || notify)
         {
             UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));
         }

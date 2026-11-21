@@ -43,10 +43,13 @@ internal sealed class FakeEntitlementService : IEntitlementService
 
     public List<string?> Users { get; } = [];
 
+    /// <summary>Holds <see cref="SetUserAsync"/> open, like a store that is slow to take the new user.</summary>
+    public Task? SetUserGate { get; set; }
+
     public Task SetUserAsync(string? userId)
     {
         Users.Add(userId);
-        return Task.CompletedTask;
+        return SetUserGate ?? Task.CompletedTask;
     }
 
     public Task RefreshAsync()

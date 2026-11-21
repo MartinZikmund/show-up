@@ -1,13 +1,16 @@
 using CommunityToolkit.Mvvm.Messaging;
+using ShowUp.Core.Accounts;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.CustomPrograms;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Messages;
 using ShowUp.Core.Reminders;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Supabase;
+using ShowUp.Core.Sync;
 using ShowUp.Core.Tracking;
 using ShowUp.Core.ViewModels;
 using ShowUp.Infrastructure;
@@ -102,6 +105,16 @@ public partial class App : Application, IApplication
         var appPreferences = Host.Services.GetRequiredService<IAppPreferences>();
         var appUpdater = Host.Services.GetRequiredService<IAppUpdater>();
         await appUpdater.EnsureAppUpToDateAsync();
+        // The account first: synced settings and every page read the signed-in user's rows.
+        try
+        {
+            await Host.Services.GetRequiredService<AccountService>().RestoreAsync();
+        }
+        catch (Exception ex)
+        {
+            // Signed out until the user signs in again.
+            Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Restoring the Supabase session failed.");
+        }
         try
         {
             await Host.Services.GetRequiredService<SyncedPersonalization>().InitializeAsync();
@@ -110,15 +123,6 @@ public partial class App : Application, IApplication
         {
             // The old per-device values stay in effect.
             Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Loading the synced settings failed.");
-        }
-        try
-        {
-            await Host.Services.GetRequiredService<ISupabaseAuth>().RestoreAsync();
-        }
-        catch (Exception ex)
-        {
-            // Signed out until the user signs in again.
-            Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Restoring the Supabase session failed.");
         }
         appPreferences.LaunchCount++;
         Host.Services.GetRequiredService<MarkerBrushUpdater>().Apply();
@@ -168,7 +172,8 @@ public partial class App : Application, IApplication
         services.AddSingleton<IDisplayRequestManager, DisplayRequestManager>();
         services.AddSingleton<IAppUpdater, Infrastructure.AppUpdater>();
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<IUserScope, AnonymousUserScope>();
+        services.AddSingleton<UserScope>();
+        services.AddSingleton<IUserScope>(sp => sp.GetRequiredService<UserScope>());
         services.AddSingleton<IDeviceIdProvider, PreferencesDeviceIdProvider>();
         services.AddSingleton(_ => new ShowUpDatabase(
             Path.Combine(ApplicationData.Current.LocalFolder.Path, "showup.db"),
@@ -182,6 +187,9 @@ public partial class App : Application, IApplication
         services.AddSingleton<IReminderRepository, SqliteReminderRepository>();
         services.AddSingleton<ICustomProgramRepository, SqliteCustomProgramRepository>();
         services.AddSingleton<ISyncedSettings, SqliteSyncedSettings>();
+        services.AddSingleton<ILocalDataClaim, SqliteLocalDataClaim>();
+        services.AddSingleton<ISyncStatus, NoSyncStatus>();
+        services.AddSingleton<DataChangeAnnouncer>();
         services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
@@ -255,6 +263,7 @@ public partial class App : Application, IApplication
         services.AddTransient<LogResultsViewModel>();
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<AccountViewModel>();
         services.AddTransient<ProViewModel>();
         services.AddTransient<RemindersViewModel>();
         services.AddTransient<ScheduleBuilderViewModel>();
@@ -304,12 +313,34 @@ public partial class App : Application, IApplication
         };
         services.AddSingleton(options);
         services.AddSingleton<ITokenStore>(_ => CreateTokenStore());
-        services.AddSingleton<ISupabaseAuth>(sp => new SupabaseAuth(
+        services.AddSingleton(sp => new SupabaseAuth(
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
             options,
             sp.GetRequiredService<ITokenStore>(),
             sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<ILogger<SupabaseAuth>>()));
+#if DEBUG
+        services.AddSingleton(sp => new Services.Auth.DebugSupabaseAuth(
+            sp.GetRequiredService<SupabaseAuth>(),
+            sp.GetRequiredService<MZikmund.Toolkit.WinUI.Services.IPreferences>()));
+        services.AddSingleton<ISupabaseAuth>(sp => sp.GetRequiredService<Services.Auth.DebugSupabaseAuth>());
+#else
+        services.AddSingleton<ISupabaseAuth>(sp => sp.GetRequiredService<SupabaseAuth>());
+#endif
+        services.AddSingleton(sp => new AccountService(
+            sp.GetRequiredService<ISupabaseAuth>(),
+            sp.GetRequiredService<UserScope>(),
+            sp.GetRequiredService<IEntitlementService>(),
+            sp.GetRequiredService<ILocalDataClaim>(),
+            sp.GetRequiredService<SyncedPersonalization>(),
+            sp.GetRequiredService<DataChangeAnnouncer>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<AccountService>>(),
+#if DEBUG
+            () => options.IsConfigured || sp.GetRequiredService<Services.Auth.DebugSupabaseAuth>().Simulate));
+#else
+            () => options.IsConfigured));
+#endif
         services.AddSingleton<IAccessTokenProvider>(sp => sp.GetRequiredService<ISupabaseAuth>());
         services.AddSingleton<ISupabaseRest>(sp => new SupabaseRest(
             new HttpClient { Timeout = TimeSpan.FromSeconds(60) },

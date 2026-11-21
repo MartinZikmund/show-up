@@ -7,7 +7,7 @@ namespace ShowUp.Core.Tracking;
 /// <summary>
 /// When Pro lapses with more programs running than Free allows, asks once which one stays primary;
 /// the others turn read-only. Dismissing keeps the most recently started one. Nothing is deleted.
-/// App-wide: one prompt however many windows are open, shown in the window attached last.
+/// App-wide: one prompt however many windows are open, shown in the window attached last. Only a store-confirmed lapse asks.
 /// </summary>
 public sealed class LapseCoordinator
 {
@@ -62,7 +62,8 @@ public sealed class LapseCoordinator
             prompt = _prompts.LastOrDefault();
         }
 
-        if (prompt is null || _entitlements.IsPro || Interlocked.Exchange(ref _running, 1) == 1)
+        // Only a lapse the store confirmed: a cached "not Pro" (offline, store timed out) may be a renewal it hasn't heard of.
+        if (prompt is null || _entitlements.IsPro || !_entitlements.IsConfirmed || Interlocked.Exchange(ref _running, 1) == 1)
         {
             return false;
         }
@@ -116,8 +117,8 @@ public sealed class LapseCoordinator
         }
         catch (TimeoutException)
         {
-            // Store unreachable: the cached state decides, as offline.
-            _logger.LogWarning("The store didn't answer within {Timeout} at launch; checking the lapse from the cached state.", ExpiryWatch.RefreshTimeout);
+            // Store unreachable: no prompt until it answers (it raises Changed when it does).
+            _logger.LogWarning("The store didn't answer within {Timeout} at launch; the lapse check waits for it.", ExpiryWatch.RefreshTimeout);
         }
         catch (Exception ex)
         {

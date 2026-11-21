@@ -467,6 +467,20 @@ public sealed class RemindersViewModelTests
     }
 
     [TestMethod]
+    public async Task DataChanged_AnotherAccount_ReloadsAndClosesTheEditor()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        await _repository.AddAsync(8 * 60, 127);
+
+        _messenger.Send(new ShowUp.Core.Messages.DataChangedMessage());
+        await Task.Delay(50);
+
+        viewModel.Items.Should().ContainSingle();
+        viewModel.IsEditing.Should().BeFalse("the edit was for the previous account's list");
+    }
+
+    [TestMethod]
     public async Task OnNavigatedTo_EditorOpen_KeepsTheEditorAsItIs()
     {
         var viewModel = await OpenAsync();

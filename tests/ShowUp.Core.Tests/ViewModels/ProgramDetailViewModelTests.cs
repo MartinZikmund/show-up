@@ -245,6 +245,31 @@ public sealed class ProgramDetailViewModelTests
     }
 
     [TestMethod]
+    public async Task DataChanged_ProgramGoneInThisAccount_ShowsNotFound()
+    {
+        var programs = new[] { TestCatalog.Program("custom-x", 1, "run") };
+        var viewModel = Create(new FakeCatalogService(programs));
+        viewModel.OnNavigatedTo("custom-x");
+        await WaitUntilAsync(() => viewModel.Program is not null);
+
+        // Signed in as someone without that custom program.
+        programs[0] = TestCatalog.Program("custom-y", 1, "run");
+        _messenger.Send(new ShowUp.Core.Messages.DataChangedMessage());
+        await WaitUntilAsync(() => viewModel.IsNotFound);
+
+        viewModel.IsNotFound.Should().BeTrue();
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(5));
+        while (!condition())
+        {
+            await Task.Delay(5, timeout.Token);
+        }
+    }
+
+    [TestMethod]
     public async Task Start_Declined_KeepsPrevious()
     {
         _enrollments.Active = ActiveOne();

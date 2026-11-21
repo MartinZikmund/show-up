@@ -36,6 +36,118 @@
                 </toolkit:SettingsCard.HeaderIcon>
             </toolkit:SettingsCard>
 
+            <!--  Account (hidden when this build has no account server)  -->
+            <StackPanel
+                x:Name="AccountSection"
+                Spacing="8"
+                Visibility="{x:Bind ViewModel.Account.IsAvailable, Mode=OneWay}">
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="{markup:Localize Key=AccountHeader}" />
+
+                <toolkit:SettingsCard
+                    HorizontalContentAlignment="Left"
+                    AutomationProperties.AutomationId="AccountSignedOutCard"
+                    ContentAlignment="Vertical"
+                    Description="{markup:Localize Key=AccountSignedOutDescription}"
+                    Header="{markup:Localize Key=AccountSignInHeader}"
+                    Visibility="{x:Bind ViewModel.Account.IsSignedOut, Mode=OneWay}">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE77B;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <StackPanel
+                        MaxWidth="400"
+                        HorizontalAlignment="Left"
+                        Spacing="12">
+                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.Account.IsEnteringEmail, Mode=OneWay}">
+                            <TextBox
+                                MinWidth="280"
+                                AutomationProperties.AutomationId="AccountEmailBox"
+                                Header="{markup:Localize Key=AccountEmailLabel}"
+                                InputScope="EmailSmtpAddress"
+                                IsReadOnly="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay}"
+                                KeyDown="EmailBox_KeyDown"
+                                PlaceholderText="{markup:Localize Key=AccountEmailPlaceholder}"
+                                Text="{x:Bind ViewModel.Account.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button
+                                AutomationProperties.AutomationId="AccountSendCodeButton"
+                                Command="{x:Bind ViewModel.Account.SendCodeCommand}"
+                                Content="{markup:Localize Key=AccountSendCode}"
+                                Style="{StaticResource AccentButtonStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.Account.IsEnteringCode, Mode=OneWay}">
+                            <TextBlock
+                                AutomationProperties.AutomationId="AccountCodeSentText"
+                                Text="{x:Bind ViewModel.Account.CodeSentText, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <TextBox
+                                Width="200"
+                                HorizontalAlignment="Left"
+                                AutomationProperties.AutomationId="AccountCodeBox"
+                                Header="{markup:Localize Key=AccountCodeLabel}"
+                                InputScope="Number"
+                                IsReadOnly="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay}"
+                                KeyDown="CodeBox_KeyDown"
+                                PlaceholderText="{markup:Localize Key=AccountCodePlaceholder}"
+                                Text="{x:Bind ViewModel.Account.Code, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    AutomationProperties.AutomationId="AccountVerifyButton"
+                                    Command="{x:Bind ViewModel.Account.VerifyCommand}"
+                                    Content="{markup:Localize Key=AccountVerify}"
+                                    Style="{StaticResource AccentButtonStyle}" />
+                                <HyperlinkButton
+                                    AutomationProperties.AutomationId="AccountResendCodeButton"
+                                    Command="{x:Bind ViewModel.Account.ResendCodeCommand}"
+                                    Content="{markup:Localize Key=AccountResendCode}" />
+                            </StackPanel>
+                            <HyperlinkButton
+                                Padding="0"
+                                AutomationProperties.AutomationId="AccountChangeEmailButton"
+                                Command="{x:Bind ViewModel.Account.ChangeEmailCommand}"
+                                Content="{markup:Localize Key=AccountChangeEmail}" />
+                        </StackPanel>
+
+                        <ProgressBar
+                            AutomationProperties.AutomationId="AccountBusyIndicator"
+                            AutomationProperties.Name="{markup:Localize Key=AccountBusy}"
+                            IsIndeterminate="True"
+                            Visibility="{x:Bind ViewModel.Account.IsBusy, Mode=OneWay}" />
+                        <TextBlock
+                            x:Name="AccountErrorText"
+                            AutomationProperties.AutomationId="AccountErrorText"
+                            AutomationProperties.LiveSetting="Assertive"
+                            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                            Text="{x:Bind ViewModel.Account.ErrorText, Mode=OneWay}"
+                            TextWrapping="Wrap"
+                            Visibility="{x:Bind ViewModel.Account.HasError, Mode=OneWay}" />
+                    </StackPanel>
+                </toolkit:SettingsCard>
+
+                <toolkit:SettingsCard
+                    AutomationProperties.AutomationId="AccountSignedInCard"
+                    Description="{markup:Localize Key=AccountSignedInDescription}"
+                    Header="{x:Bind ViewModel.Account.SignedInEmail, Mode=OneWay}"
+                    Visibility="{x:Bind ViewModel.Account.IsSignedIn, Mode=OneWay}">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE77B;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <Button
+                        AutomationProperties.AutomationId="AccountSignOutButton"
+                        Command="{x:Bind ViewModel.Account.SignOutCommand}"
+                        Content="{markup:Localize Key=AccountSignOut}" />
+                </toolkit:SettingsCard>
+
+                <toolkit:SettingsCard
+                    AutomationProperties.AutomationId="AccountSyncCard"
+                    Description="{markup:Localize Key=AccountSyncComingSoon}"
+                    Header="{markup:Localize Key=AccountSyncHeader}"
+                    Visibility="{x:Bind ViewModel.Account.IsSignedIn, Mode=OneWay}">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE895;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                </toolkit:SettingsCard>
+            </StackPanel>
+
             <!--  General section  -->
             <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="{markup:Localize Key=General}" />
 

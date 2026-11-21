@@ -14,6 +14,7 @@ namespace ShowUp.Services.Entitlements;
 public sealed class RevenueCatEntitlementService : IEntitlementService
 {
     private const string EntitlementId = "pro";
+    private static readonly TimeSpan _userSwitchTimeout = TimeSpan.FromSeconds(10);
 
     private readonly IRevenueCatBilling _billing;
     private readonly IAppPreferences _preferences;
@@ -23,6 +24,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     private readonly string _apiKey;
     private readonly DispatcherQueue? _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly SingleFlight _refresh = new();
+    private readonly StoreAccountGate _accounts = new();
     private readonly Dictionary<string, PackageDto> _packages = [];
     private readonly ExpiryWatch _expiry;
     private volatile bool _recheckingExpiry;
@@ -61,7 +63,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
 
     public event EventHandler? Changed;
 
-    public Task RefreshAsync() => _refresh.RunAsync(async () =>
+    // Inside the account gate: a switch waits for it, so its answer always belongs to the account it asked about.
+    public Task RefreshAsync() => _refresh.RunAsync(() => _accounts.RunAsync(async () =>
     {
         if (!EnsureInitialized())
         {
@@ -80,9 +83,12 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         {
             _logger.LogWarning(ex, "Refreshing the Pro entitlement failed.");
         }
-    });
+    }));
 
-    public async Task SetUserAsync(string? userId)
+    /// <summary>Atomic with refreshes; a new account reads the anonymous Pro state until RevenueCat answers for it.</summary>
+    public Task SetUserAsync(string? userId) => _accounts.SwitchAsync(() => SwitchUserAsync(userId));
+
+    private async Task SwitchUserAsync(string? userId)
     {
         if (userId == _userId)
         {
@@ -98,7 +104,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         {
             try
             {
-                var result = userId is null ? await _billing.LogoutAsync() : await _billing.LoginAsync(userId);
+                // Bounded: a store that never answers must not keep refreshes (which wait on this switch) blocked.
+                var result = await (userId is null ? _billing.LogoutAsync() : _billing.LoginAsync(userId)).WaitAsync(_userSwitchTimeout, _time);
                 if (result.IsSuccess)
                 {
                     Apply(result.Value);
@@ -165,10 +172,11 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
 
         try
         {
+            var generation = _accounts.Generation;
             var result = await _billing.PurchaseProductAsync(package);
             if (result.IsSuccess)
             {
-                Apply(result.Value);
+                Apply(result.Value, generation);
                 if (!IsPro)
                 {
                     _logger.LogError("Purchase of {Offer} succeeded but the customer has no active '{Entitlement}' entitlement.", offer.Id, EntitlementId);
@@ -203,10 +211,11 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
 
         try
         {
+            var generation = _accounts.Generation;
             var result = await _billing.RestoreTransactionsAsync();
             if (result.IsSuccess)
             {
-                Apply(result.Value);
+                Apply(result.Value, generation);
             }
         }
         catch (Exception ex)
@@ -289,17 +298,28 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
         _ => null,
     };
 
+    // A purchase or restore that finished after the account switched answered for the previous account.
+    private void Apply(CustomerInfoDto? info, long generation)
+    {
+        if (_accounts.IsCurrent(generation))
+        {
+            Apply(info);
+        }
+    }
+
     private void Apply(CustomerInfoDto? info)
     {
         var entitlement = info?.Entitlements.FirstOrDefault(e => e.Identifier == EntitlementId && e.IsActive);
         var before = IsPro;
+        var firstAnswer = !_confirmed;
         _confirmed = true;
         _preferences.LastKnownPro = entitlement is not null;
         _preferences.LastKnownProExpires = entitlement?.ExpirationDate is { } expiry
             ? new DateTimeOffset(DateTime.SpecifyKind(expiry, DateTimeKind.Utc))
             : null;
         WatchExpiry();
-        if (before != IsPro)
+        // A first answer that keeps the cached state still matters to the lapse check, which waits for a confirmed one.
+        if (before != IsPro || firstAnswer)
         {
             UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));
         }

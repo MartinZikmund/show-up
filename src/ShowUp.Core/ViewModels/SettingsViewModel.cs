@@ -32,8 +32,10 @@ public partial class SettingsViewModel : ViewModelBase
         IApplication application,
         IMessenger messenger,
         IEntitlementService entitlements,
-        INavigationService navigation)
+        INavigationService navigation,
+        AccountViewModel account)
     {
+        Account = account;
         _entitlements = entitlements;
         _navigation = navigation;
         _messenger = messenger;
@@ -46,16 +48,27 @@ public partial class SettingsViewModel : ViewModelBase
         MarkerSwatches = [.. Enum.GetValues<MarkerColor>().Select(c => new MarkerSwatch(c, _localizer[$"MarkerColor_{c}"]))];
     }
 
+    /// <summary>The account card.</summary>
+    public AccountViewModel Account { get; }
+
     public override void OnNavigatedTo(object? parameter)
     {
         base.OnNavigatedTo(parameter);
+        Account.Activate();
         if (!_isSubscribed)
         {
             _entitlements.Changed += OnEntitlementsChanged;
+            _messenger.Register<SettingsViewModel, PersonalizationReloadedMessage>(this, static (r, _) => r.LoadValues());
             _isSubscribed = true;
         }
 
         OnEntitlementsChanged(null, EventArgs.Empty);
+        LoadValues();
+    }
+
+    // Also after a sign-in or sync brought another account's personalization in.
+    private void LoadValues()
+    {
         try
         {
             _isInitializing = true;
@@ -77,9 +90,11 @@ public partial class SettingsViewModel : ViewModelBase
     public override void OnNavigatedFrom()
     {
         base.OnNavigatedFrom();
+        Account.Deactivate();
         if (_isSubscribed)
         {
             _entitlements.Changed -= OnEntitlementsChanged;
+            _messenger.Unregister<PersonalizationReloadedMessage>(this);
             _isSubscribed = false;
         }
     }

@@ -222,6 +222,12 @@ public sealed class JournalService(
 
     private async Task ValidateAsync(ActiveEnrollment? active, MetricTarget target, IReadOnlyDictionary<string, MetricValue> values)
     {
+        // The signed-in account's own bonus only: one shown before an account switch is not this account's to log against.
+        if (target.IsBonus && !(await enrollments.GetBonusWorkoutsAsync(DateOnly.MinValue, DateOnly.MaxValue)).Any(b => b.Id == target.BonusWorkoutId))
+        {
+            throw new InvalidOperationException("The bonus workout is no longer there.");
+        }
+
         if (!target.IsBonus)
         {
             if (active is null || target.EnrollmentId != active.Enrollment.Id)
