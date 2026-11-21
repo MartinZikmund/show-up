@@ -116,18 +116,19 @@ public sealed partial class MarkerCrossControl : Control
 
     private static int ClampStrokes(int value) => Math.Clamp(value, 0, 2);
 
-    private static bool AnimationsEnabled
+    private static readonly Lazy<UISettings?> _uiSettings = new(CreateUISettings);
+
+    private static bool AnimationsEnabled => _uiSettings.Value?.AnimationsEnabled ?? true;
+
+    private static UISettings? CreateUISettings()
     {
-        get
+        try
         {
-            try
-            {
-                return new UISettings().AnimationsEnabled;
-            }
-            catch
-            {
-                return true;
-            }
+            return new UISettings();
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -205,7 +206,7 @@ public sealed partial class MarkerCrossControl : Control
     private void Redraw()
     {
         StopAnimations();
-        if (!TryLayout(out var strokes, out _))
+        if (!TryLayout(out var strokes))
         {
             return;
         }
@@ -220,7 +221,7 @@ public sealed partial class MarkerCrossControl : Control
     private void Animate(int from, int to)
     {
         StopAnimations();
-        if (!TryLayout(out var strokes, out var thickness))
+        if (!TryLayout(out var strokes))
         {
             return;
         }
@@ -236,7 +237,7 @@ public sealed partial class MarkerCrossControl : Control
         for (var i = from; i < to; i++)
         {
             SetStroke(i, strokes[i], visible: true);
-            last = AnimateStroke(i, strokes[i].Length, thickness, delay);
+            last = AnimateStroke(i, strokes[i].Length, delay);
             ScheduleFeedback(delay);
             delay += StrokeDuration + StrokeGap;
         }
@@ -252,7 +253,7 @@ public sealed partial class MarkerCrossControl : Control
         }
     }
 
-    private Storyboard AnimateStroke(int index, double length, double thickness, TimeSpan delay)
+    private Storyboard AnimateStroke(int index, double length, TimeSpan delay)
     {
         Storyboard storyboard = new();
         foreach (var path in StrokeParts(index))
@@ -339,19 +340,18 @@ public sealed partial class MarkerCrossControl : Control
         }
     }
 
-    private bool TryLayout(out MarkerStroke[] strokes, out double thickness)
+    private bool TryLayout(out MarkerStroke[] strokes)
     {
         var (width, height) = (ActualWidth, ActualHeight);
         if (width <= 0 || height <= 0 || _parts[0] is null)
         {
             strokes = [];
-            thickness = 0;
             return false;
         }
 
         var (first, second) = MarkerGeometry.ForCell(Seed, width, height);
         strokes = [first, second];
-        thickness = BaseThickness * Math.Max(0.6, Math.Min(width, height) / ReferenceCellSize) * StrokeThicknessScale;
+        var thickness = BaseThickness * Math.Max(0.6, Math.Min(width, height) / ReferenceCellSize) * StrokeThicknessScale;
 
         for (var i = 0; i < 2; i++)
         {

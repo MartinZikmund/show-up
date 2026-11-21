@@ -124,18 +124,19 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         shown.TrySetResult();
     }
 
-    private static bool AnimationsEnabled
+    private static readonly Lazy<UISettings?> _uiSettings = new(CreateUISettings);
+
+    private static bool AnimationsEnabled => _uiSettings.Value?.AnimationsEnabled ?? true;
+
+    private static UISettings? CreateUISettings()
     {
-        get
+        try
         {
-            try
-            {
-                return new UISettings().AnimationsEnabled;
-            }
-            catch
-            {
-                return true;
-            }
+            return new UISettings();
+        }
+        catch
+        {
+            return null;
         }
     }
 
