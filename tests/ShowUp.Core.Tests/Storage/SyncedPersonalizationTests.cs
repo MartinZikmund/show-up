@@ -115,6 +115,62 @@ public sealed class SyncedPersonalizationTests
         personalization.MarkerColor.Should().Be(MarkerColor.Green);
     }
 
+    [TestMethod]
+    public async Task DataChanged_KeyWithNoValue_KeepsTheInMemoryOneWithoutWriting()
+    {
+        var personalization = Create();
+        await personalization.InitializeAsync();
+        personalization.MarkerColor = MarkerColor.Blue;
+        await personalization.FlushAsync();
+        // Another account signed in: its store has none of these yet.
+        _settings.Values.Clear();
+        var reloaded = Reloaded();
+
+        _messenger.Send(new DataChangedMessage());
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        personalization.MarkerColor.Should().Be(MarkerColor.Blue);
+        _settings.Values.Should().BeEmpty("a fresh row would beat the account's own value on the next sync");
+    }
+
+    [TestMethod]
+    public async Task DataChanged_NewMarkerColor_RepaintsTheMarker()
+    {
+        var personalization = Create();
+        await personalization.InitializeAsync();
+        _settings.Values["MarkerColor"] = ((int)MarkerColor.Green).ToString();
+        List<MarkerColor> painted = [];
+        _messenger.Register<MarkerColorChangedMessage>(this, (_, m) => painted.Add(m.Color));
+        var reloaded = Reloaded();
+
+        _messenger.Send(new DataChangedMessage());
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        painted.Should().Equal(MarkerColor.Green);
+    }
+
+    [TestMethod]
+    public async Task DataChanged_SameMarkerColor_DoesNotRepaint()
+    {
+        var personalization = Create();
+        await personalization.InitializeAsync();
+        var painted = 0;
+        _messenger.Register<MarkerColorChangedMessage>(this, (_, _) => painted++);
+        var reloaded = Reloaded();
+
+        _messenger.Send(new DataChangedMessage());
+        await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        painted.Should().Be(0);
+    }
+
+    private TaskCompletionSource Reloaded()
+    {
+        TaskCompletionSource done = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _messenger.Register<PersonalizationReloadedMessage>(done, (r, _) => ((TaskCompletionSource)r).TrySetResult());
+        return done;
+    }
+
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
         using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(5));
