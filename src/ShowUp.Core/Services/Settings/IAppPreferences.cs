@@ -30,4 +30,7 @@ public interface IAppPreferences
 
     /// <summary>Last Pro state the store reported, so offline launches keep it.</summary>
     bool LastKnownPro { get; set; }
+
+    /// <summary>When the cached Pro state lapses; null for lifetime or unknown.</summary>
+    DateTimeOffset? LastKnownProExpires { get; set; }
 }

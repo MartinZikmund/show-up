@@ -15,6 +15,8 @@ public enum PurchaseOutcome
     Purchased,
     Cancelled,
     Pending,
+    /// <summary>The store took the purchase but Pro has not shown up yet; check back or Restore.</summary>
+    Unverified,
     Failed,
     Unavailable,
 }

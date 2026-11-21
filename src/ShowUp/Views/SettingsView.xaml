@@ -143,37 +143,40 @@
                 ContentAlignment="Vertical"
                 Description="{markup:Localize Key=MarkerColorDescription}"
                 Header="{markup:Localize Key=MarkerColor}">
-                <controls:MarkerSwatchPicker
-                    x:Name="MarkerColorPicker"
-                    AutomationProperties.AutomationId="MarkerColorPicker"
-                    AutomationProperties.Name="{markup:Localize Key=MarkerColor}"
-                    IsEnabled="{x:Bind ViewModel.CanChangeMarkerColor, Mode=OneWay}"
-                    IsItemClickEnabled="False"
-                    ItemContainerStyle="{StaticResource MarkerSwatchItemStyle}"
-                    ItemsSource="{x:Bind ViewModel.MarkerSwatches}"
-                    SelectedItem="{x:Bind ViewModel.SelectedMarkerSwatch, Mode=TwoWay}"
-                    SelectionMode="Single">
-                    <controls:MarkerSwatchPicker.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </controls:MarkerSwatchPicker.ItemsPanel>
-                    <controls:MarkerSwatchPicker.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MarkerSwatch">
-                            <Grid
-                                Width="38"
-                                Height="38"
-                                ToolTipService.ToolTip="{x:Bind Name}">
-                                <Ellipse
-                                    Margin="1"
-                                    Stroke="{ThemeResource TextFillColorPrimaryBrush}"
-                                    StrokeThickness="2"
-                                    Visibility="{x:Bind IsSelected, Mode=OneWay}" />
-                                <controls:MarkerSwatchDot Color="{x:Bind Color}" />
-                            </Grid>
-                        </DataTemplate>
-                    </controls:MarkerSwatchPicker.ItemTemplate>
-                </controls:MarkerSwatchPicker>
+                <StackPanel Spacing="4">
+                    <controls:MarkerSwatchPicker
+                        x:Name="MarkerColorPicker"
+                        AutomationProperties.AutomationId="MarkerColorPicker"
+                        AutomationProperties.Name="{markup:Localize Key=MarkerColor}"
+                        IsEnabled="{x:Bind ViewModel.CanChangeMarkerColor, Mode=OneWay}"
+                        IsItemClickEnabled="False"
+                        ItemContainerStyle="{StaticResource MarkerSwatchItemStyle}"
+                        ItemsSource="{x:Bind ViewModel.MarkerSwatches}"
+                        SelectedItem="{x:Bind ViewModel.SelectedMarkerSwatch, Mode=TwoWay}"
+                        SelectionMode="Single">
+                        <controls:MarkerSwatchPicker.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </controls:MarkerSwatchPicker.ItemsPanel>
+                        <controls:MarkerSwatchPicker.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MarkerSwatch">
+                                <Grid
+                                    Width="38"
+                                    Height="38"
+                                    ToolTipService.ToolTip="{x:Bind Name}">
+                                    <Ellipse
+                                        Margin="1"
+                                        Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                                        StrokeThickness="2"
+                                        Visibility="{x:Bind IsSelected, Mode=OneWay}" />
+                                    <controls:MarkerSwatchDot Color="{x:Bind Color}" />
+                                </Grid>
+                            </DataTemplate>
+                        </controls:MarkerSwatchPicker.ItemTemplate>
+                    </controls:MarkerSwatchPicker>
+                    <controls:ProGateHint Command="{x:Bind ViewModel.OpenProCommand}" Visibility="{x:Bind ViewModel.IsMarkerColorLocked, Mode=OneWay}" />
+                </StackPanel>
             </toolkit:SettingsCard>
 
             <toolkit:SettingsCard Description="{markup:Localize Key=CrossMomentDescription}" Header="{markup:Localize Key=CrossMoment}">

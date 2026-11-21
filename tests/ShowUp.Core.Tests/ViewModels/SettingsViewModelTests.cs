@@ -291,6 +291,8 @@ public sealed class SettingsViewModelTests
 
         public bool LastKnownPro { get; set; }
 
+        public DateTimeOffset? LastKnownProExpires { get; set; }
+
         private void Record(string name, Action write)
         {
             Writes.Add(name);

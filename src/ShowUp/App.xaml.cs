@@ -142,6 +142,9 @@ public partial class App : Application, IApplication
         services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();
         RegisterEntitlements(context, services);
+        services.AddSingleton(new ProLinks(
+            new Uri(context.Configuration["Legal:TermsUrl"] is { Length: > 0 } terms ? terms : "https://github.com/MartinZikmund/show-up/blob/main/docs/terms.md"),
+            new Uri(context.Configuration["Legal:PrivacyUrl"] is { Length: > 0 } privacy ? privacy : "https://github.com/MartinZikmund/show-up/blob/main/docs/privacy.md")));
         services.AddSingleton<IJournalService, JournalService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
@@ -206,6 +209,7 @@ public partial class App : Application, IApplication
             sp.GetRequiredService<Uno.RevenueCat.Services.IRevenueCatBilling>(),
             sp.GetRequiredService<IAppPreferences>(),
             sp.GetRequiredService<IStringLocalizer>(),
+            sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<ILogger<RevenueCatEntitlementService>>(),
             apiKey));
 #elif !HAS_UNO

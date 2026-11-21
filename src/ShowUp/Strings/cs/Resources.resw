@@ -773,10 +773,10 @@
     <value>Připomínky</value>
   </data>
   <data name="ProFeatureRemindersFree" xml:space="preserve">
-    <value>1 připomínka</value>
+    <value>{0} připomínka</value>
   </data>
   <data name="ProFeatureRemindersPro" xml:space="preserve">
-    <value>Až 20</value>
+    <value>Až {0}</value>
   </data>
   <data name="ProFeatureHistory" xml:space="preserve">
     <value>Historie a statistiky</value>
@@ -839,7 +839,7 @@
     <value>Nákup čeká na dokončení. Pro se odemkne, jakmile projde.</value>
   </data>
   <data name="ProFailed" xml:space="preserve">
-    <value>Něco se nepovedlo. Nic vám nebylo strženo. Zkuste to prosím znovu.</value>
+    <value>Něco se nepovedlo. Zkuste to prosím znovu.</value>
   </data>
   <data name="ProRestored" xml:space="preserve">
     <value>Váš nákup byl obnoven.</value>
@@ -854,12 +854,42 @@
     <value>V této verzi nejsou nákupy dostupné.</value>
   </data>
   <data name="ProUnlockLink" xml:space="preserve">
-    <value>Odemknout Pro</value>
+    <value>Odemknout s Pro</value>
   </data>
   <data name="ProColumnFree" xml:space="preserve">
     <value>Zdarma</value>
   </data>
   <data name="ProColumnPro" xml:space="preserve">
     <value>Pro</value>
+  </data>
+  <data name="ProCheckBack" xml:space="preserve">
+    <value>Nákup proběhl, ale Pro se zatím neobjevilo. Zkuste to za minutu nebo klepněte na Obnovit nákupy.</value>
+  </data>
+  <data name="ProOffersFailed" xml:space="preserve">
+    <value>Nabídky se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.</value>
+  </data>
+  <data name="ProRetry" xml:space="preserve">
+    <value>Zkusit znovu</value>
+  </data>
+  <data name="ProSubscriptionDisclosure" xml:space="preserve">
+    <value>Předplatné se automaticky obnovuje každý měsíc nebo rok za zobrazenou cenu, dokud ho nezrušíte. Správu a zrušení najdete kdykoli v nastavení účtu v obchodě.</value>
+  </data>
+  <data name="ProOfferMonthlyNote" xml:space="preserve">
+    <value>Obnovuje se každý měsíc, dokud ho nezrušíte</value>
+  </data>
+  <data name="ProOfferYearlyNote" xml:space="preserve">
+    <value>Obnovuje se každý rok, dokud ho nezrušíte</value>
+  </data>
+  <data name="ProTerms" xml:space="preserve">
+    <value>Podmínky použití</value>
+  </data>
+  <data name="ProPrivacy" xml:space="preserve">
+    <value>Zásady ochrany osobních údajů</value>
+  </data>
+  <data name="ProManage" xml:space="preserve">
+    <value>Spravovat předplatné</value>
+  </data>
+  <data name="ProBusyName" xml:space="preserve">
+    <value>Pracuji</value>
   </data>
 </root>

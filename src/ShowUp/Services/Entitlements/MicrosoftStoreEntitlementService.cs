@@ -1,14 +1,20 @@
 #if !HAS_UNO
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Dispatching;
 using ShowUp.Core.Entitlements;
 using ShowUp.Services.Settings;
 using Windows.Services.Store;
 
 namespace ShowUp.Services.Entitlements;
 
-/// <summary>Packaged Windows Pro through Store add-ons: a subscription (monthly/yearly) and a durable lifetime one.</summary>
+/// <summary>
+/// Packaged Windows Pro through Store add-ons: a subscription (monthly/yearly) and a durable lifetime one.
+/// The Store reports subscription add-ons as <c>Durable</c> products; <see cref="StoreSku.IsSubscription"/> tells them apart.
+/// </summary>
 public sealed class MicrosoftStoreEntitlementService : IEntitlementService
 {
+    private const string AccountSubscriptionsPage = "https://account.microsoft.com/services";
+
     private readonly (string Id, ProOfferKind Kind)[] _products;
     private readonly IReadOnlySet<string> _proStoreIds;
     private readonly Func<nint> _windowHandle;
@@ -16,8 +22,11 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     private readonly IStringLocalizer _localizer;
     private readonly TimeProvider _time;
     private readonly ILogger<MicrosoftStoreEntitlementService> _logger;
+    private readonly DispatcherQueue? _dispatcher = DispatcherQueue.GetForCurrentThread();
+    private readonly SingleFlight _refresh = new();
     private StoreContext? _context;
     private bool _contextFailed;
+    private bool _isPro;
 
     public MicrosoftStoreEntitlementService(
         string monthlyId,
@@ -41,17 +50,19 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         _localizer = localizer;
         _time = time;
         _logger = logger;
-        IsPro = preferences.LastKnownPro && _proStoreIds.Count > 0;
+        _isPro = _proStoreIds.Count > 0 && ProCache.IsPro(preferences.LastKnownPro, preferences.LastKnownProExpires, time.GetUtcNow());
     }
 
-    public bool IsPro { get; private set; }
+    public bool IsPro => _isPro;
 
-    /// <summary>True once the Store has handed us at least one of the configured add-ons.</summary>
-    public bool PurchasesAvailable { get; private set; }
+    /// <summary>Needs configured Store IDs; whether the Store then answers is <see cref="OffersLoadFailed"/>.</summary>
+    public bool PurchasesAvailable => _proStoreIds.Count > 0 && !_contextFailed;
+
+    public bool OffersLoadFailed { get; private set; }
 
     public event EventHandler? Changed;
 
-    public async Task RefreshAsync()
+    public Task RefreshAsync() => _refresh.RunAsync(async () =>
     {
         if (GetContext() is not { } context)
         {
@@ -61,17 +72,21 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         try
         {
             var license = await context.GetAppLicenseAsync();
-            var addOns = license.AddOnLicenses.Values.Select(l => (BaseId(l.SkuStoreId), l.IsActive, Expiry(l)));
-            SetPro(StoreLicenseMapper.IsPro(addOns, _time.GetUtcNow(), _proStoreIds));
+            var addOns = license.AddOnLicenses.Values.Select(l => (BaseId(l.SkuStoreId), l.IsActive, Expiry(l))).ToList();
+            var proAddOns = addOns.Where(a => a.Item2 && _proStoreIds.Contains(a.Item1)).ToList();
+            // A durable (no expiry) license outlasts any subscription.
+            DateTimeOffset? expires = proAddOns.Any(a => a.Item3 is null) ? null : proAddOns.Max(a => a.Item3);
+            SetPro(StoreLicenseMapper.IsPro(addOns, _time.GetUtcNow(), _proStoreIds), expires);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Reading Store licenses failed.");
         }
-    }
+    });
 
     public async Task<IReadOnlyList<ProOffer>> GetOffersAsync()
     {
+        OffersLoadFailed = false;
         if (_proStoreIds.Count == 0 || GetContext() is not { } context)
         {
             return [];
@@ -79,10 +94,11 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
 
         try
         {
-            var result = await context.GetAssociatedStoreProductsAsync(["Durable", "Subscription"]);
+            var result = await context.GetAssociatedStoreProductsAsync(["Durable"]);
             if (result.ExtendedError is not null)
             {
                 _logger.LogInformation(result.ExtendedError, "The Store returned no add-ons.");
+                OffersLoadFailed = result.Products.Count == 0;
             }
 
             List<ProOffer> offers = [];
@@ -94,13 +110,13 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
                 }
             }
 
-            PurchasesAvailable = offers.Count > 0;
+            OffersLoadFailed |= offers.Count == 0;
             return [.. offers.OrderBy(o => o.Kind)];
         }
         catch (Exception ex)
         {
-            _logger.LogInformation(ex, "Loading Store add-ons failed; purchases are unavailable.");
-            PurchasesAvailable = false;
+            _logger.LogInformation(ex, "Loading Store add-ons failed.");
+            OffersLoadFailed = true;
             return [];
         }
     }
@@ -115,17 +131,25 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         try
         {
             var result = await context.RequestPurchaseAsync(offer.Id);
-            switch (result.Status)
+            var mapped = result.Status switch
             {
-                case StorePurchaseStatus.Succeeded:
-                case StorePurchaseStatus.AlreadyPurchased:
-                    await RefreshAsync();
-                    return IsPro ? PurchaseOutcome.Purchased : PurchaseOutcome.Pending;
-                case StorePurchaseStatus.NotPurchased:
-                    return PurchaseOutcome.Cancelled;
-                default:
-                    return PurchaseOutcome.Failed;
+                StorePurchaseStatus.Succeeded => BillingResult.Success,
+                StorePurchaseStatus.AlreadyPurchased => BillingResult.AlreadyOwned,
+                StorePurchaseStatus.NotPurchased => BillingResult.Cancelled,
+                StorePurchaseStatus.NetworkError or StorePurchaseStatus.ServerError => BillingResult.NetworkOrServer,
+                _ => BillingResult.Other,
+            };
+            var outcome = await PurchaseResolver.ResolveAsync(mapped, async () =>
+            {
+                await RefreshAsync();
+                return IsPro;
+            });
+            if (outcome == PurchaseOutcome.Unverified)
+            {
+                _logger.LogError(result.ExtendedError, "Store purchase of {Offer} ended as {Status} without a Pro license.", offer.Id, result.Status);
             }
+
+            return outcome;
         }
         catch (Exception ex)
         {
@@ -140,6 +164,9 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         return IsPro;
     }
 
+    public Task<Uri?> GetManageSubscriptionUriAsync() =>
+        Task.FromResult<Uri?>(_products.Any(p => p.Kind != ProOfferKind.Lifetime) ? new Uri(AccountSubscriptionsPage) : null);
+
     private StoreContext? GetContext()
     {
         if (_context is not null || _contextFailed || _proStoreIds.Count == 0)
@@ -151,7 +178,8 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
         {
             var context = StoreContext.GetDefault();
             WinRT.Interop.InitializeWithWindow.Initialize(context, _windowHandle());
-            context.OfflineLicensesChanged += (_, _) => _ = RefreshAsync();
+            // Raised on a pool thread: hop to the UI thread before touching state.
+            context.OfflineLicensesChanged += (_, _) => UiDispatch.Run(_dispatcher, () => _ = RefreshAsync());
             _context = context;
         }
         catch (Exception ex)
@@ -170,13 +198,14 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     private DateTimeOffset? Expiry(StoreLicense license) =>
         license.ExpirationDate > _time.GetUtcNow().AddYears(50) ? null : license.ExpirationDate;
 
-    private void SetPro(bool value)
+    private void SetPro(bool value, DateTimeOffset? expires)
     {
         _preferences.LastKnownPro = value;
-        if (IsPro != value)
+        _preferences.LastKnownProExpires = value ? expires : null;
+        if (_isPro != value)
         {
-            IsPro = value;
-            Changed?.Invoke(this, EventArgs.Empty);
+            _isPro = value;
+            UiDispatch.Run(_dispatcher, () => Changed?.Invoke(this, EventArgs.Empty));
         }
     }
 }

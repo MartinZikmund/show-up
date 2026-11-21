@@ -87,6 +87,7 @@ public partial class SettingsViewModel : ViewModelBase
     private void OnEntitlementsChanged(object? sender, EventArgs e)
     {
         OnPropertyChanged(nameof(CanChangeMarkerColor));
+        OnPropertyChanged(nameof(IsMarkerColorLocked));
         OnPropertyChanged(nameof(ProStatusText));
     }
 
@@ -185,6 +186,9 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     public bool CanChangeMarkerColor => FeatureGate.CanUse(ProFeature.Personalization, _entitlements.IsPro);
+
+    /// <summary>Shows the "Unlock with Pro" hint under the picker.</summary>
+    public bool IsMarkerColorLocked => !CanChangeMarkerColor;
 
     [ObservableProperty]
     public partial MarkerColor MarkerColor { get; set; }

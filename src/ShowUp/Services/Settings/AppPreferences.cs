@@ -97,6 +97,14 @@ public sealed class AppPreferences : IAppPreferences
         set => _preferences.Set(LastKnownProKey, value);
     }
 
+    // Ticks of the UTC expiry; 0 means none.
+    private const string LastKnownProExpiresKey = "LastKnownProExpires";
+    public DateTimeOffset? LastKnownProExpires
+    {
+        get => _preferences.Get(LastKnownProExpiresKey, 0L) is var ticks and > 0 ? new DateTimeOffset(ticks, TimeSpan.Zero) : null;
+        set => _preferences.Set(LastKnownProExpiresKey, value?.UtcTicks ?? 0L);
+    }
+
     private const string UnitSystemKey = "UnitSystem";
     public UnitSystem UnitSystem
     {

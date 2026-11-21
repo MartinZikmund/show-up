@@ -209,7 +209,7 @@ public partial class SettingsCard : ButtonBase
         }
     }
 
-    /// <summary>Runs the bound command, as a click would; used by UI Automation.</summary>
+    /// <summary>Runs the bound command, as a click would; used by UI Automation. Click event handlers are not raised.</summary>
     internal void InvokeCommand()
     {
         if (Command is { } command && command.CanExecute(CommandParameter))

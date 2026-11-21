@@ -18,6 +18,10 @@ internal sealed class FakeEntitlementService : IEntitlementService
 
     public bool RestoreResult { get; set; }
 
+    public bool OffersLoadFailed { get; set; }
+
+    public Uri? ManageUri { get; set; }
+
     public int PurchaseCalls { get; private set; }
 
     public TaskCompletionSource? PurchaseGate { get; set; }
@@ -51,4 +55,17 @@ internal sealed class FakeEntitlementService : IEntitlementService
     }
 
     public Task<bool> RestoreAsync() => Task.FromResult(RestoreResult);
+
+    public Task<Uri?> GetManageSubscriptionUriAsync() => Task.FromResult(ManageUri);
+}
+
+internal sealed class RecordingLauncher : ShowUp.Services.ILauncherService
+{
+    public List<Uri> Launched { get; } = [];
+
+    public Task<bool> LaunchUriAsync(Uri uri)
+    {
+        Launched.Add(uri);
+        return Task.FromResult(true);
+    }
 }

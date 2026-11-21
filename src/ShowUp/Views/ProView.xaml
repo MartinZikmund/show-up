@@ -2,7 +2,6 @@
     x:Class="ShowUp.Views.ProView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ent="using:ShowUp.Core.Entitlements"
     xmlns:local="using:ShowUp.Views"
     xmlns:markup="using:ShowUp.Markup"
     xmlns:vm="using:ShowUp.Core.ViewModels">
@@ -48,69 +47,72 @@
                 BorderThickness="1"
                 CornerRadius="{ThemeResource ControlCornerRadius}"
                 Visibility="{x:Bind ViewModel.StateText, Mode=OneWay, Converter={StaticResource StringVisibilityConverter}}">
-                <TextBlock
-                    AutomationProperties.AutomationId="ProStateText"
-                    Style="{StaticResource BodyTextBlockStyle}"
-                    Text="{x:Bind ViewModel.StateText, Mode=OneWay}"
-                    TextWrapping="Wrap" />
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        AutomationProperties.AutomationId="ProStateText"
+                        AutomationProperties.LiveSetting="Polite"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        Text="{x:Bind ViewModel.StateText, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <Button
+                        AutomationProperties.AutomationId="ProRetryButton"
+                        Command="{x:Bind ViewModel.LoadCommand}"
+                        Content="{markup:Localize Key=ProRetry}"
+                        Visibility="{x:Bind ViewModel.CanRetry, Mode=OneWay}" />
+                    <Button
+                        AutomationProperties.AutomationId="ProManageButton"
+                        Command="{x:Bind ViewModel.ManageSubscriptionCommand}"
+                        Content="{markup:Localize Key=ProManage}"
+                        Visibility="{x:Bind ViewModel.CanManageSubscription, Mode=OneWay}" />
+                </StackPanel>
             </Border>
 
-            <!--  Free vs Pro  -->
+            <!--  Free vs Pro: stacked rows so it reads the same on a phone and on a desktop  -->
             <Border
                 Padding="16,8"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="{ThemeResource OverlayCornerRadius}">
-                <StackPanel Spacing="4">
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="110" />
-                            <ColumnDefinition Width="130" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock
-                            Foreground="{ThemeResource MutedTextBrush}"
-                            Style="{StaticResource CaptionTextBlockStyle}"
-                            Text="{markup:Localize Key=ProFeaturesHeader}" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Style="{StaticResource BodyStrongTextBlockStyle}"
-                            Text="{markup:Localize Key=ProColumnFree}" />
-                        <TextBlock
-                            Grid.Column="2"
-                            Style="{StaticResource BodyStrongTextBlockStyle}"
-                            Text="{markup:Localize Key=ProColumnPro}" />
-                    </Grid>
-                    <ItemsControl AutomationProperties.AutomationId="ProFeatureList" ItemsSource="{x:Bind ViewModel.Features}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ProFeatureRow">
-                                <Grid Padding="0,8" ColumnSpacing="12">
+                <ItemsControl AutomationProperties.AutomationId="ProFeatureList" ItemsSource="{x:Bind ViewModel.Features}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ProFeatureRow">
+                            <StackPanel Padding="0,8" Spacing="4">
+                                <TextBlock
+                                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                                    Text="{x:Bind Title}"
+                                    TextWrapping="Wrap" />
+                                <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="110" />
-                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        Style="{StaticResource BodyTextBlockStyle}"
-                                        Text="{x:Bind Title}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        Grid.Column="1"
-                                        Foreground="{ThemeResource MutedTextBrush}"
-                                        Style="{StaticResource BodyTextBlockStyle}"
-                                        Text="{x:Bind Free}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        Grid.Column="2"
-                                        Style="{StaticResource BodyStrongTextBlockStyle}"
-                                        Text="{x:Bind Pro}"
-                                        TextWrapping="Wrap" />
+                                    <StackPanel>
+                                        <TextBlock
+                                            Foreground="{ThemeResource MutedTextBrush}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Text="{markup:Localize Key=ProColumnFree}" />
+                                        <TextBlock
+                                            Foreground="{ThemeResource MutedTextBrush}"
+                                            Style="{StaticResource BodyTextBlockStyle}"
+                                            Text="{x:Bind Free}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock
+                                            Foreground="{ThemeResource MutedTextBrush}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Text="{markup:Localize Key=ProColumnPro}" />
+                                        <TextBlock
+                                            Style="{StaticResource BodyTextBlockStyle}"
+                                            Text="{x:Bind Pro}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
                                 </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Border>
 
             <!--  Offers  -->
@@ -119,36 +121,48 @@
                 <ItemsControl
                     AutomationProperties.AutomationId="ProOffers"
                     IsEnabled="{x:Bind ViewModel.IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
-                    ItemsSource="{x:Bind ViewModel.Offers, Mode=OneWay}">
+                    ItemsSource="{x:Bind ViewModel.OfferRows, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="ent:ProOffer">
+                        <DataTemplate x:DataType="vm:ProOfferRow">
                             <Button
                                 Margin="0,0,0,8"
                                 Padding="16,12"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                AutomationProperties.AutomationId="{x:Bind Id}"
+                                AutomationProperties.AutomationId="{x:Bind Offer.Id}"
+                                AutomationProperties.Name="{x:Bind AutomationName}"
                                 Click="OnOfferClick"
-                                Tag="{x:Bind}">
+                                Tag="{x:Bind Offer}">
                                 <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        Style="{StaticResource BodyStrongTextBlockStyle}"
-                                        Text="{x:Bind Title}" />
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Offer.Title}" />
+                                        <TextBlock
+                                            Foreground="{ThemeResource MutedTextBrush}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Text="{x:Bind Note}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
                                     <TextBlock
                                         Grid.Column="1"
                                         VerticalAlignment="Center"
                                         Style="{StaticResource BodyStrongTextBlockStyle}"
-                                        Text="{x:Bind Price}" />
+                                        Text="{x:Bind Offer.Price}" />
                                 </Grid>
                             </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <TextBlock
+                    AutomationProperties.AutomationId="ProSubscriptionDisclosure"
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind ViewModel.SubscriptionDisclosure}"
+                    TextWrapping="Wrap"
+                    Visibility="{x:Bind ViewModel.ShowSubscriptionDisclosure, Mode=OneWay}" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Spacing="12">
@@ -159,7 +173,21 @@
                 <ProgressRing
                     Width="20"
                     Height="20"
+                    AutomationProperties.Name="{markup:Localize Key=ProBusyName}"
                     IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+            </StackPanel>
+
+            <!--  Store review wants both links where the purchase happens  -->
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <HyperlinkButton
+                    Margin="-12,0,0,0"
+                    AutomationProperties.AutomationId="ProTermsLink"
+                    Command="{x:Bind ViewModel.OpenTermsCommand}"
+                    Content="{markup:Localize Key=ProTerms}" />
+                <HyperlinkButton
+                    AutomationProperties.AutomationId="ProPrivacyLink"
+                    Command="{x:Bind ViewModel.OpenPrivacyCommand}"
+                    Content="{markup:Localize Key=ProPrivacy}" />
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

@@ -10,5 +10,9 @@ public static class FeatureGate
 
     public static int MaxActivePrograms(bool isPro) => isPro ? int.MaxValue : 1;
 
+    /// <summary>Lapsed users keep their stored choice (for re-subscribing) but see the default ink.</summary>
+    public static ShowUp.Core.Marking.MarkerColor EffectiveMarkerColor(ShowUp.Core.Marking.MarkerColor stored, bool isPro) =>
+        CanUse(ProFeature.Personalization, isPro) ? stored : ShowUp.Core.Marking.MarkerColor.Auto;
+
     public static int MaxReminders(bool isPro) => isPro ? ProReminders : FreeReminders;
 }

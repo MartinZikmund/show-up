@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.ViewModels;
@@ -106,5 +107,5 @@ public sealed class ProViewModelTests
     }
 
     private static ProViewModel CreateViewModel(FakeEntitlementService service) =>
-        new(service, new FakeStringLocalizer(), new RecordingNavigationService());
+        new(service, new FakeStringLocalizer(), new RecordingNavigationService(), new RecordingLauncher(), new ProLinks(new Uri("https://example.com/terms"), new Uri("https://example.com/privacy")), NullLogger<ProViewModel>.Instance);
 }
