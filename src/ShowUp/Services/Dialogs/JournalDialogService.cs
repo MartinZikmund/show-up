@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
@@ -13,7 +12,7 @@ public sealed class JournalDialogService(
     IServiceProvider services,
     IJournalService journal,
     IActiveEnrollmentService enrollments,
-    ILogger<JournalDialogService> logger) : IJournalDialogs
+    JournalSaveGuard saveGuard) : IJournalDialogs
 {
     public async Task ShowDayAsync(int dayIndex)
     {
@@ -71,16 +70,5 @@ public sealed class JournalDialogService(
         }
     }
 
-    // The enrollment can end while a dialog is open; losing the edit beats crashing.
-    private async Task SaveAsync(Func<Task> save)
-    {
-        try
-        {
-            await save();
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Saving notes or results failed.");
-        }
-    }
+    private Task SaveAsync(Func<Task> save) => saveGuard.RunAsync(save);
 }

@@ -457,6 +457,12 @@
   <data name="ProgramBackToPrograms" xml:space="preserve">
     <value>Zp&#283;t na programy</value>
   </data>
+  <data name="JournalSaveFailedTitle" xml:space="preserve">
+    <value>Ulo&#382;en&#237; se nepoda&#345;ilo</value>
+  </data>
+  <data name="JournalSaveFailedMessage" xml:space="preserve">
+    <value>Pozn&#225;mky nebo v&#253;sledky se neulo&#382;ily. Zkuste to pros&#237;m znovu.</value>
+  </data>
   <data name="ProgramStartFailedTitle" xml:space="preserve">
     <value>Program se nepoda&#345;ilo za&#269;&#237;t</value>
   </data>

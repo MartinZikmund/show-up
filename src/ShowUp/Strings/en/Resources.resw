@@ -457,6 +457,12 @@
   <data name="ProgramBackToPrograms" xml:space="preserve">
     <value>Back to programs</value>
   </data>
+  <data name="JournalSaveFailedTitle" xml:space="preserve">
+    <value>Couldn't save</value>
+  </data>
+  <data name="JournalSaveFailedMessage" xml:space="preserve">
+    <value>Your notes or results weren't saved. Please try again.</value>
+  </data>
   <data name="ProgramStartFailedTitle" xml:space="preserve">
     <value>Couldn't start the program</value>
   </data>
