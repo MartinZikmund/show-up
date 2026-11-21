@@ -1,4 +1,4 @@
-using AwesomeAssertions;
+﻿using AwesomeAssertions;
 using Microsoft.Extensions.Localization;
 using ShowUp.Core.Navigation;
 using ShowUp.Core.Services;
@@ -64,6 +64,25 @@ public sealed class WindowShellViewModelTests
     }
 
     [TestMethod]
+    public void NavigateToSection_BackStackCleared_NotifiesCanGoBackAfterClearing()
+    {
+        // The real Frame raises Navigated (and the CanGoBack sync) before the back stack is cleared.
+        FakeNavigationService navigation = new() { CanGoBack = true };
+        WindowShellViewModel viewModel = new(navigation, new FakeStringLocalizer());
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(WindowShellViewModel.CanGoBack))
+            {
+                navigation.Log.Add($"CanGoBack={viewModel.CanGoBack}");
+            }
+        };
+
+        viewModel.NavigateToSection(NavigationSection.History);
+
+        navigation.Log.Should().EndWith(["ClearBackStack", "CanGoBack=False"]);
+    }
+
+    [TestMethod]
     public void SyncWithNavigation_SectionChangedOutside_UpdatesSelectionAndTitle()
     {
         FakeNavigationService navigation = new();
@@ -90,7 +109,9 @@ public sealed class WindowShellViewModelTests
 
         public int BackStackClearCount { get; private set; }
 
-        public bool CanGoBack => false;
+        public List<string> Log { get; } = [];
+
+        public bool CanGoBack { get; set; }
 
         public NavigationSection? CurrentSection { get; set; }
 
@@ -102,7 +123,12 @@ public sealed class WindowShellViewModelTests
 
         public bool GoBack() => false;
 
-        public void ClearBackStack() => BackStackClearCount++;
+        public void ClearBackStack()
+        {
+            BackStackClearCount++;
+            CanGoBack = false;
+            Log.Add("ClearBackStack");
+        }
     }
 
     private sealed class FakeStringLocalizer : IStringLocalizer
