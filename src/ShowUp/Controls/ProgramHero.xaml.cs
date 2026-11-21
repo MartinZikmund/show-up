@@ -1,4 +1,7 @@
 using Microsoft.UI;
+#if !HAS_UNO
+using Microsoft.UI.System;
+#endif
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -15,6 +18,10 @@ public sealed partial class ProgramHero : UserControl
     public static readonly DependencyProperty TitleFontSizeProperty = Register(nameof(TitleFontSize), 32d);
 
     private readonly AccessibilitySettings _accessibility = new();
+#if !HAS_UNO
+    // AccessibilitySettings.HighContrastChanged needs a CoreWindow, which WinAppSDK windows don't have - subscribing throws.
+    private ThemeSettings? _themeSettings;
+#endif
 
     public ProgramHero()
     {
@@ -22,13 +29,37 @@ public sealed partial class ProgramHero : UserControl
         UpdateBackdrop();
         Loaded += (_, _) =>
         {
-            _accessibility.HighContrastChanged += Accessibility_HighContrastChanged;
+            SubscribeHighContrastChanged();
             UpdateHighContrast();
         };
-        Unloaded += (_, _) => _accessibility.HighContrastChanged -= Accessibility_HighContrastChanged;
+        Unloaded += (_, _) => UnsubscribeHighContrastChanged();
     }
 
-    private void Accessibility_HighContrastChanged(AccessibilitySettings sender, object args) =>
+#if HAS_UNO
+    private void SubscribeHighContrastChanged() => _accessibility.HighContrastChanged += OnHighContrastChanged;
+
+    private void UnsubscribeHighContrastChanged() => _accessibility.HighContrastChanged -= OnHighContrastChanged;
+#else
+    private void SubscribeHighContrastChanged()
+    {
+        if (_themeSettings is null && XamlRoot?.ContentIslandEnvironment is { } environment)
+        {
+            _themeSettings = ThemeSettings.CreateForWindowId(environment.AppWindowId);
+            _themeSettings.Changed += OnHighContrastChanged;
+        }
+    }
+
+    private void UnsubscribeHighContrastChanged()
+    {
+        if (_themeSettings is not null)
+        {
+            _themeSettings.Changed -= OnHighContrastChanged;
+            _themeSettings = null;
+        }
+    }
+#endif
+
+    private void OnHighContrastChanged(object sender, object args) =>
         DispatcherQueue.TryEnqueue(UpdateHighContrast);
 
     private void UpdateHighContrast() =>
