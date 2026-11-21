@@ -70,6 +70,61 @@ public sealed class MetricInputViewModelTests
         input.TextAutomationId.Should().Be(text);
     }
 
+    [TestMethod]
+    public void Value_PoundsTyped_StoredAsKilogramsAndShownBackAsPounds()
+    {
+        var typed = Create(MetricUnit.Weight, system: UnitSystem.Imperial);
+
+        typed.Number = 25;
+        var stored = typed.Value;
+
+        stored.Number.Should().BeApproximately(11.33980925, 1e-9);
+        Create(MetricUnit.Weight, stored, UnitSystem.Imperial).Number.Should().Be(25);
+    }
+
+    [TestMethod]
+    public void Value_UnitSystemChanged_StoredMeaningStays()
+    {
+        MetricValue stored = new(12.5);
+
+        var metric = Create(MetricUnit.Weight, stored, UnitSystem.Metric);
+        var imperial = Create(MetricUnit.Weight, stored, UnitSystem.Imperial);
+
+        metric.Number.Should().Be(12.5);
+        imperial.Number.Should().Be(27.56);
+        imperial.IsChanged.Should().BeFalse();
+        imperial.Value.Should().Be(stored, "an untouched box gives back the exact stored kilograms");
+    }
+
+    [TestMethod]
+    public void Value_Distance_MilesStoredAsKilometers()
+    {
+        var input = Create(MetricUnit.Distance, system: UnitSystem.Imperial);
+
+        input.Number = 3.1;
+
+        input.Value.Number.Should().BeApproximately(4.9889664, 1e-7);
+    }
+
+    [TestMethod]
+    [DataRow(MetricUnit.Reps, "Metric (MetricUnitReps)")]
+    [DataRow(MetricUnit.Duration, "Metric (mm:ss)")]
+    [DataRow(MetricUnit.Text, "Metric")]
+    public void AccessibleName_IncludesTheUnit(MetricUnit unit, string expected) =>
+        Create(unit).AccessibleName.Should().Be(expected);
+
+    [TestMethod]
+    public void ErrorText_InvalidDuration_IsSetForScreenReaders()
+    {
+        var input = Create(MetricUnit.Duration);
+
+        input.Text = "90";
+
+        input.ErrorText.Should().Be("MetricDurationError");
+        input.Text = "1:30";
+        input.ErrorText.Should().BeEmpty();
+    }
+
     private static MetricInputViewModel Create(MetricUnit unit, MetricValue? initial = null, UnitSystem system = UnitSystem.Metric) =>
         new(new WorkoutMetric("m", "Metric", unit), initial, new FakeStringLocalizer(), system);
 }
