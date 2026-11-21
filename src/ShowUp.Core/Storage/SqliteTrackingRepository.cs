@@ -190,7 +190,11 @@ public sealed class SqliteTrackingRepository(
             return;
         }
 
-        await connection.RunInTransactionAsync(c => Touch(c, row, delete: true));
+        await connection.RunInTransactionAsync(c =>
+        {
+            Touch(c, row, delete: true);
+            Tombstone(c, Query<MetricEntryEntity>(c, m => m.BonusWorkoutId == id));
+        });
     }
 
     private async Task<EnrollmentEntity> RequireActiveEnrollmentAsync(SQLiteAsyncConnection connection, Guid enrollmentId)
