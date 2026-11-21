@@ -19,4 +19,6 @@ public interface IAppPreferences
     bool MarkerHapticsEnabled { get; set; }
 
     CrossMomentMode CrossMomentMode { get; set; }
+
+    CrossOffStyle CrossOffStyle { get; set; }
 }

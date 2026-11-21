@@ -7,4 +7,6 @@ namespace ShowUp.Services.Marking;
 internal sealed class CrossMomentService(IWindowShellProvider shellProvider) : ICrossMoment
 {
     public Task ShowAsync(CrossMomentInfo info) => shellProvider.Shell.CrossMoment.ShowAsync(info);
+
+    public Task<CrossMomentResult> DrawAsync(CrossMomentDrawRequest request) => shellProvider.Shell.CrossMoment.DrawAsync(request);
 }

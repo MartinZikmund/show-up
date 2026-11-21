@@ -10,6 +10,8 @@ namespace ShowUp.Controls;
 /// <summary>
 /// Hand-drawn marker X: <see cref="Strokes"/> 1 draws the top-left to bottom-right diagonal, 2 completes the X.
 /// Increases animate stroke by stroke (with sound + haptics), decreases redraw instantly.
+/// <see cref="Inks"/> adds the user's drawn crosses on top, scaled to the control, so a mixed day shows both:
+/// the control must fill the whole cell, or the ink lands shrunk and offset.
 /// </summary>
 [TemplatePart(Name = FirstPartName, Type = typeof(Path))]
 [TemplatePart(Name = FirstUnderPartName, Type = typeof(Path))]
@@ -17,6 +19,7 @@ namespace ShowUp.Controls;
 [TemplatePart(Name = SecondUnderPartName, Type = typeof(Path))]
 [TemplatePart(Name = FirstTexturePartName, Type = typeof(Path))]
 [TemplatePart(Name = SecondTexturePartName, Type = typeof(Path))]
+[TemplatePart(Name = InkPartName, Type = typeof(InkView))]
 public sealed partial class MarkerCrossControl : Control
 {
     private static readonly TimeSpan BaseStrokeDuration = TimeSpan.FromMilliseconds(180);
@@ -41,6 +44,7 @@ public sealed partial class MarkerCrossControl : Control
     private const string SecondUnderPartName = "PART_SecondUnder";
     private const string FirstTexturePartName = "PART_FirstTexture";
     private const string SecondTexturePartName = "PART_SecondTexture";
+    private const string InkPartName = "PART_Ink";
     private const int PartsPerStroke = 3;
     private const double BaseThickness = 9;
     private const double UnderStrokeWidthRatio = 1.35;
@@ -65,6 +69,16 @@ public sealed partial class MarkerCrossControl : Control
         nameof(StrokeThicknessScale), typeof(double), typeof(MarkerCrossControl),
         new PropertyMetadata(1.0, (d, _) => ((MarkerCrossControl)d).Redraw()));
 
+    public static readonly DependencyProperty InksProperty = DependencyProperty.Register(
+        nameof(Inks), typeof(IReadOnlyList<string>), typeof(MarkerCrossControl),
+        new PropertyMetadata(null, (d, _) => ((MarkerCrossControl)d).UpdateInk()));
+
+    public static readonly DependencyProperty BleedBrushProperty = DependencyProperty.Register(
+        nameof(BleedBrush), typeof(Brush), typeof(MarkerCrossControl), new PropertyMetadata(null));
+
+    public static readonly DependencyProperty BleedOpacityProperty = DependencyProperty.Register(
+        nameof(BleedOpacity), typeof(double), typeof(MarkerCrossControl), new PropertyMetadata(0.35));
+
     public static readonly DependencyProperty AnimateChangesProperty = DependencyProperty.Register(
         nameof(AnimateChanges), typeof(bool), typeof(MarkerCrossControl), new PropertyMetadata(true));
 
@@ -72,6 +86,7 @@ public sealed partial class MarkerCrossControl : Control
     private readonly List<DispatcherQueueTimer> _pendingFeedback = [];
     // Per stroke: main, under, texture.
     private Path?[] _parts = new Path?[2 * PartsPerStroke];
+    private InkView? _ink;
     private int? _pendingAnimationFrom;
     private IMarkingFeedback? _feedback;
 
@@ -106,6 +121,30 @@ public sealed partial class MarkerCrossControl : Control
     {
         get => (double)GetValue(StrokeThicknessScaleProperty);
         set => SetValue(StrokeThicknessScaleProperty, value);
+    }
+
+    /// <summary>
+    /// Drawn crosses (<see cref="InkCodec"/> JSON), one per session crossed by drawing. <see cref="Strokes"/>
+    /// stays the count of generated strokes, so set it from the auto-crossed sessions only.
+    /// </summary>
+    public IReadOnlyList<string>? Inks
+    {
+        get => (IReadOnlyList<string>?)GetValue(InksProperty);
+        set => SetValue(InksProperty, value);
+    }
+
+    /// <summary>The wider stroke under the ink; <c>MarkerBleedBrush</c>, tinted toward the board on the dark theme.</summary>
+    public Brush? BleedBrush
+    {
+        get => (Brush?)GetValue(BleedBrushProperty);
+        set => SetValue(BleedBrushProperty, value);
+    }
+
+    /// <summary>The bleed's opacity; the style sets it from <c>MarkerBleedOpacity</c>.</summary>
+    public double BleedOpacity
+    {
+        get => (double)GetValue(BleedOpacityProperty);
+        set => SetValue(BleedOpacityProperty, value);
     }
 
     public bool AnimateChanges
@@ -145,9 +184,20 @@ public sealed partial class MarkerCrossControl : Control
             GetTemplateChild(SecondTexturePartName) as Path,
         ];
 
+        _ink = GetTemplateChild(InkPartName) as InkView;
+        UpdateInk();
+
         // Resolve early: some heads load sounds asynchronously, and the first stroke shouldn't be silent.
         _feedback ??= App.Current.Services.GetService<IMarkingFeedback>();
         Redraw();
+    }
+
+    private void UpdateInk()
+    {
+        if (_ink is not null)
+        {
+            _ink.Strokes = Inks is { Count: > 0 } inks ? [.. inks.SelectMany(InkCodec.Decode)] : [];
+        }
     }
 
     private void OnStrokesChanged(int oldValue, int newValue)

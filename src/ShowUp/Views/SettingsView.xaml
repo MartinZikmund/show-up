@@ -62,6 +62,23 @@
                     IsOn="{x:Bind ViewModel.MarkerHapticsEnabled, Mode=TwoWay}" />
             </toolkit:SettingsCard>
 
+            <toolkit:SettingsCard Description="{markup:Localize Key=CrossOffStyleDescription}" Header="{markup:Localize Key=CrossOffStyle}">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xEDC6;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox
+                    AutomationProperties.AutomationId="CrossOffStyleComboBox"
+                    AutomationProperties.Name="{markup:Localize Key=CrossOffStyle}"
+                    ItemsSource="{x:Bind ViewModel.CrossOffStyleOptions}"
+                    SelectedItem="{x:Bind ViewModel.CrossOffStyle, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="marking:CrossOffStyle">
+                            <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </toolkit:SettingsCard>
+
             <toolkit:SettingsCard Description="{markup:Localize Key=CrossMomentDescription}" Header="{markup:Localize Key=CrossMoment}">
                 <toolkit:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE73E;" />

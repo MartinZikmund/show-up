@@ -189,6 +189,8 @@
     <!--  Hand-drawn marker X; geometry and animation live in code (MarkerCrossControl.cs)  -->
     <Style TargetType="controls:MarkerCrossControl">
         <Setter Property="MarkerBrush" Value="{ThemeResource MarkerBrush}" />
+        <Setter Property="BleedBrush" Value="{ThemeResource MarkerBleedBrush}" />
+        <Setter Property="BleedOpacity" Value="{ThemeResource MarkerBleedOpacity}" />
         <Setter Property="IsTabStop" Value="False" />
         <Setter Property="IsHitTestVisible" Value="False" />
         <Setter Property="Template">
@@ -198,15 +200,15 @@
                         <!--  Bleed under both strokes first, then the ink, then the faint texture streaks  -->
                         <Path
                             x:Name="PART_FirstUnder"
-                            Opacity="0.35"
-                            Stroke="{TemplateBinding MarkerBrush}"
+                            Opacity="{TemplateBinding BleedOpacity}"
+                            Stroke="{TemplateBinding BleedBrush}"
                             StrokeDashCap="Round"
                             StrokeEndLineCap="Round"
                             StrokeStartLineCap="Round" />
                         <Path
                             x:Name="PART_SecondUnder"
-                            Opacity="0.35"
-                            Stroke="{TemplateBinding MarkerBrush}"
+                            Opacity="{TemplateBinding BleedOpacity}"
+                            Stroke="{TemplateBinding BleedBrush}"
                             StrokeDashCap="Round"
                             StrokeEndLineCap="Round"
                             StrokeStartLineCap="Round" />
@@ -238,6 +240,12 @@
                             StrokeDashCap="Round"
                             StrokeEndLineCap="Round"
                             StrokeStartLineCap="Round" />
+                        <!--  The user's own drawn crosses (Inks)  -->
+                        <controls:InkView
+                            x:Name="PART_Ink"
+                            BleedBrush="{TemplateBinding BleedBrush}"
+                            BleedOpacity="{TemplateBinding BleedOpacity}"
+                            MarkerBrush="{TemplateBinding MarkerBrush}" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

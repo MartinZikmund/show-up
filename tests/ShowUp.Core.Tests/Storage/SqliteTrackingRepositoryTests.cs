@@ -341,6 +341,19 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task CrossSession_WithInk_RoundTripsInCompletions()
+    {
+        var (repo, e) = await EnrolledAsync();
+        const string ink = "[[0.1,0.1,0.9,0.9],[0.9,0.1,0.1,0.9]]";
+        await repo.CrossSessionAsync(e.Id, 2, 0, _today, ink);
+        await repo.CrossSessionAsync(e.Id, 2, 1, _today);
+
+        var completions = await repo.GetCompletionsAsync(e.Id);
+
+        completions.Select(c => c.InkJson).Should().Equal(ink, null);
+    }
+
+    [TestMethod]
     public async Task Writes_SetUpdatedAtAndDeviceId()
     {
         Device.DeviceId = "dev-x";
