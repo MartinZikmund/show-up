@@ -141,6 +141,39 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
+    public async Task CrossNext_DrawThenDoItForMe_MomentSeedMatchesCell()
+    {
+        _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
+        _crossMoment.DrawResult = CrossMomentResult.Auto;
+        var viewModel = await LoadAsync(_today, "run");
+        var day = Day(viewModel, 0);
+
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+
+        _crossMoment.DrawRequests.Should().ContainSingle().Which.Info.Seed.Should().Be(day.Seed);
+        day.Seed.Should().NotBe(day.DayIndex);
+    }
+
+    [TestMethod]
+    public async Task Seed_UncrossAndRecrossFirstSession_KeepsRemainingShape()
+    {
+        var viewModel = await LoadAsync(_today, "run+abs");
+        var day = Day(viewModel, 0);
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+        _time.Advance(TimeSpan.FromMinutes(1));
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+        _time.Advance(TimeSpan.FromMinutes(1));
+        await _service!.UncrossAsync(0, 0);
+        await viewModel.RefreshAsync();
+        var seedOfRemaining = day.Seed;
+
+        await viewModel.CrossNextCommand.ExecuteAsync(day);
+
+        day.Seed.Should().Be(seedOfRemaining);
+        day.MarkStrokes.Should().Be(2);
+    }
+
+    [TestMethod]
     public async Task CrossNext_DrawCancelled_DoesNotWrite()
     {
         _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
@@ -259,13 +292,19 @@ public sealed class ProgramCalendarViewModelTests
 
         public CrossMomentResult DrawResult { get; set; } = CrossMomentResult.Auto;
 
+        public List<CrossMomentDrawRequest> DrawRequests { get; } = [];
+
         public Task ShowAsync(CrossMomentInfo info)
         {
             Shown.Add(info);
             return Task.CompletedTask;
         }
 
-        public Task<CrossMomentResult> DrawAsync(CrossMomentDrawRequest request) => Task.FromResult(DrawResult);
+        public Task<CrossMomentResult> DrawAsync(CrossMomentDrawRequest request)
+        {
+            DrawRequests.Add(request);
+            return Task.FromResult(DrawResult);
+        }
     }
 
     private sealed class FakeMarkingFeedback : IMarkingFeedback
