@@ -20,6 +20,9 @@ public interface IActiveEnrollmentService
 
     Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate);
 
+    /// <summary>Ends the current enrollment (if any) and starts a new one atomically: a failed start leaves the old one active.</summary>
+    Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate);
+
     Task EndAsync(EnrollmentEndReason reason);
 
     /// <param name="inkJson">The drawn cross (<c>InkCodec</c> JSON), or null for the marker X.</param>

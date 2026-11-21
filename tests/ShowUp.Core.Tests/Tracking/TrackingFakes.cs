@@ -77,8 +77,23 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
 
     private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
+    /// <summary>The next enroll or replace throws, the way a failing insert does.</summary>
+    public bool FailEnroll { get; set; }
+
+    public async Task<EnrollmentEntity> ReplaceEnrollmentAsync(Guid endEnrollmentId, EnrollmentEndReason reason, string programId, int revision, string trackId, DateOnly startDate)
+    {
+        var created = await EnrollAsync(programId, revision, trackId, startDate);
+        await EndEnrollmentAsync(endEnrollmentId, reason);
+        return created;
+    }
+
     public Task<EnrollmentEntity> EnrollAsync(string programId, int revision, string trackId, DateOnly startDate)
     {
+        if (FailEnroll)
+        {
+            return Task.FromException<EnrollmentEntity>(new InvalidOperationException("Insert failed."));
+        }
+
         EnrollmentEntity entity = new()
         {
             Id = Guid.NewGuid(),

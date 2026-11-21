@@ -92,6 +92,25 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
         return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
     }
 
+    public Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate)
+    {
+        if (EndFailure is not null)
+        {
+            return Task.FromException<ActiveEnrollment>(EndFailure);
+        }
+
+        if (EnrollFailure is not null)
+        {
+            return Task.FromException<ActiveEnrollment>(EnrollFailure);
+        }
+
+        Calls.Add($"Replace:{reason}");
+        EndReason = reason;
+        Enrolled = (program, track, startDate);
+        Active = null;
+        return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
+    }
+
     public Task EndAsync(EnrollmentEndReason reason)
     {
         if (EndFailure is not null)

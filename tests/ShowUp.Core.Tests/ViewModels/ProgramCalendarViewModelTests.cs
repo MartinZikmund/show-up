@@ -467,6 +467,9 @@ public sealed class ProgramCalendarViewModelTests
         public Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
             inner.EnrollAsync(program, track, startDate);
 
+        public Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
+            inner.ReplaceAsync(reason, program, track, startDate);
+
         public Task EndAsync(EnrollmentEndReason reason) => Write(() => inner.EndAsync(reason));
 
         public Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null) =>

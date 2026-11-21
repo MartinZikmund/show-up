@@ -56,6 +56,28 @@ public sealed class ActiveEnrollmentService(
         return await GetAsync() ?? throw new InvalidOperationException($"Enrollment in '{program.Id}' could not be resolved.");
     }
 
+    public async Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate)
+    {
+        ArgumentNullException.ThrowIfNull(program);
+        ArgumentNullException.ThrowIfNull(track);
+
+        if (await GetAsync() is not { } active)
+        {
+            return await EnrollAsync(program, track, startDate);
+        }
+
+        try
+        {
+            await repository.ReplaceEnrollmentAsync(active.Enrollment.Id, reason, program.Id, program.Revision, track.Id, startDate);
+        }
+        finally
+        {
+            NotifyChanged();
+        }
+
+        return await GetAsync() ?? throw new InvalidOperationException($"Enrollment in '{program.Id}' could not be resolved.");
+    }
+
     public async Task EndAsync(EnrollmentEndReason reason)
     {
         var active = await RequireAsync();

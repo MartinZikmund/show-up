@@ -25,6 +25,31 @@ public sealed class SqliteTrackingRepository(
         return entity;
     }
 
+    public async Task<EnrollmentEntity> ReplaceEnrollmentAsync(
+        Guid endEnrollmentId, EnrollmentEndReason reason, string programId, int revision, string trackId, DateOnly startDate)
+    {
+        var connection = await ConnectAsync();
+        var entity = Stamp(new EnrollmentEntity
+        {
+            ProgramId = programId,
+            ProgramRevision = revision,
+            TrackId = trackId,
+            StartDate = startDate,
+        });
+        await connection.RunInTransactionAsync(c =>
+        {
+            if (c.Find<EnrollmentEntity>(endEnrollmentId) is { } old && IsVisible(old))
+            {
+                old.EndedAt = UtcNow;
+                old.EndReason = reason;
+                Touch(c, old);
+            }
+
+            c.Insert(entity);
+        });
+        return entity;
+    }
+
     public async Task<IReadOnlyList<EnrollmentEntity>> GetActiveEnrollmentsAsync()
     {
         var connection = await ConnectAsync();
