@@ -1,0 +1,84 @@
+﻿<ContentDialog
+    x:Class="ShowUp.Views.SessionPickerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:models="using:ShowUp.Core.Catalog"
+    Title="{markup:Localize Key=SessionPickerTitle}"
+    CloseButtonText="{markup:Localize Key=Cancel}"
+    DefaultButton="Primary"
+    IsPrimaryButtonEnabled="False"
+    PrimaryButtonText="{markup:Localize Key=SessionPickerConfirm}">
+
+    <StackPanel MinWidth="300" Spacing="16">
+        <StackPanel Spacing="4">
+            <AutoSuggestBox
+                x:Name="WorkoutBox"
+                AutomationProperties.AutomationId="SessionPickerWorkoutBox"
+                Header="{markup:Localize Key=SessionPickerHeader}"
+                MaxSuggestionListHeight="240"
+                PlaceholderText="{markup:Localize Key=SessionPickerPlaceholder}"
+                QueryIcon="Find"
+                SuggestionChosen="WorkoutBox_SuggestionChosen"
+                TextChanged="WorkoutBox_TextChanged"
+                TextMemberPath="Name">
+                <AutoSuggestBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:Workout">
+                        <StackPanel Padding="0,4" Spacing="0">
+                            <TextBlock Style="{StaticResource BodyTextBlockStyle}" Text="{x:Bind Name}" />
+                            <TextBlock
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Family}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </AutoSuggestBox.ItemTemplate>
+            </AutoSuggestBox>
+            <TextBlock
+                Foreground="{ThemeResource MutedTextBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{markup:Localize Key=SessionPickerCustomHint}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Grid
+            x:Name="CustomFields"
+            ColumnSpacing="12"
+            Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ComboBox
+                x:Name="KindBox"
+                HorizontalAlignment="Stretch"
+                AutomationProperties.AutomationId="SessionPickerKindBox"
+                Header="{markup:Localize Key=SessionPickerKind}"
+                SelectionChanged="KindBox_SelectionChanged">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:WorkoutKind">
+                        <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <NumberBox
+                x:Name="DurationBox"
+                Grid.Column="1"
+                AutomationProperties.AutomationId="SessionPickerMinutesBox"
+                Header="{markup:Localize Key=SessionPickerMinutes}"
+                Maximum="600"
+                Minimum="1"
+                SmallChange="5"
+                SpinButtonPlacementMode="Inline"
+                ValidationMode="InvalidInputOverwritten"
+                ValueChanged="DurationBox_ValueChanged" />
+        </Grid>
+
+        <CheckBox
+            x:Name="OptionalBox"
+            AutomationProperties.AutomationId="SessionPickerOptionalBox"
+            Checked="OptionalBox_Changed"
+            Content="{markup:Localize Key=SessionPickerOptional}"
+            Unchecked="OptionalBox_Changed" />
+    </StackPanel>
+</ContentDialog>

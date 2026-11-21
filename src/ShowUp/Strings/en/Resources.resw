@@ -1009,4 +1009,235 @@
   <data name="ReminderBannerName" xml:space="preserve">
     <value>Reminder</value>
   </data>
+  <data name="BuilderNewTitle" xml:space="preserve">
+    <value>New schedule</value>
+  </data>
+  <data name="BuilderEditTitle" xml:space="preserve">
+    <value>Edit schedule</value>
+  </data>
+  <data name="BuilderNamePlaceholder" xml:space="preserve">
+    <value>My schedule</value>
+  </data>
+  <data name="BuilderNameHeader" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="BuilderAccentHeader" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="BuilderAccentRed" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="BuilderAccentOrange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="BuilderAccentMustard" xml:space="preserve">
+    <value>Mustard</value>
+  </data>
+  <data name="BuilderAccentGreen" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="BuilderAccentTeal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="BuilderAccentBlue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="BuilderAccentPurple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="BuilderAccentPink" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="BuilderWeeksHeader" xml:space="preserve">
+    <value>Weeks</value>
+  </data>
+  <data name="BuilderWeeksHint" xml:space="preserve">
+    <value>1 to 26 weeks of 7 days. Fewer weeks hides the extra ones until you add them back.</value>
+  </data>
+  <data name="BuilderMakeOptional" xml:space="preserve">
+    <value>Mark optional</value>
+  </data>
+  <data name="BuilderMakeRequired" xml:space="preserve">
+    <value>Mark required</value>
+  </data>
+  <data name="BuilderAddToDayFormat" xml:space="preserve">
+    <value>Add to week {0}, day {1}</value>
+  </data>
+  <data name="BuilderAddWorkout" xml:space="preserve">
+    <value>Add workout…</value>
+  </data>
+  <data name="BuilderRestDay" xml:space="preserve">
+    <value>Rest day</value>
+  </data>
+  <data name="BuilderClearDay" xml:space="preserve">
+    <value>Clear day</value>
+  </data>
+  <data name="BuilderRest" xml:space="preserve">
+    <value>Rest</value>
+  </data>
+  <data name="BuilderDayEmpty" xml:space="preserve">
+    <value>Nothing planned yet. Add a workout or make it a rest day.</value>
+  </data>
+  <data name="BuilderWeekEmptyDays_One" xml:space="preserve">
+    <value>{0} day to fill</value>
+  </data>
+  <data name="BuilderWeekEmptyDays_Few" xml:space="preserve">
+    <value>{0} days to fill</value>
+  </data>
+  <data name="BuilderWeekEmptyDays_Other" xml:space="preserve">
+    <value>{0} days to fill</value>
+  </data>
+  <data name="BuilderWeekSummaryFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="BuilderWorkouts_One" xml:space="preserve">
+    <value>{0} workout</value>
+  </data>
+  <data name="BuilderWorkouts_Few" xml:space="preserve">
+    <value>{0} workouts</value>
+  </data>
+  <data name="BuilderWorkouts_Other" xml:space="preserve">
+    <value>{0} workouts</value>
+  </data>
+  <data name="BuilderRestDays_One" xml:space="preserve">
+    <value>{0} rest day</value>
+  </data>
+  <data name="BuilderRestDays_Few" xml:space="preserve">
+    <value>{0} rest days</value>
+  </data>
+  <data name="BuilderRestDays_Other" xml:space="preserve">
+    <value>{0} rest days</value>
+  </data>
+  <data name="BuilderCopyToNext" xml:space="preserve">
+    <value>Copy to next week</value>
+  </data>
+  <data name="BuilderCopyToAll" xml:space="preserve">
+    <value>Copy to all weeks</value>
+  </data>
+  <data name="BuilderWeekActions" xml:space="preserve">
+    <value>Week actions</value>
+  </data>
+  <data name="BuilderSessionDetailFormat" xml:space="preserve">
+    <value>{0} min · {1}</value>
+  </data>
+  <data name="BuilderErrorName" xml:space="preserve">
+    <value>Give the schedule a name.</value>
+  </data>
+  <data name="BuilderErrorNoWeeks" xml:space="preserve">
+    <value>A schedule needs at least one week.</value>
+  </data>
+  <data name="BuilderErrorTooManyWeeks" xml:space="preserve">
+    <value>A schedule can have at most {0} weeks.</value>
+  </data>
+  <data name="BuilderErrorEmptyDays_One" xml:space="preserve">
+    <value>{0} day still needs a workout or a rest day.</value>
+  </data>
+  <data name="BuilderErrorEmptyDays_Few" xml:space="preserve">
+    <value>{0} days still need a workout or a rest day.</value>
+  </data>
+  <data name="BuilderErrorEmptyDays_Other" xml:space="preserve">
+    <value>{0} days still need a workout or a rest day.</value>
+  </data>
+  <data name="BuilderSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="BuilderSaveFailedTitle" xml:space="preserve">
+    <value>Couldn't save the schedule</value>
+  </data>
+  <data name="BuilderSaveFailedMessage" xml:space="preserve">
+    <value>Something went wrong while saving. Your changes are still here, so try again.</value>
+  </data>
+  <data name="BuilderLockedLink" xml:space="preserve">
+    <value>Unlock Pro to build and edit schedules</value>
+  </data>
+  <data name="BuilderMoveUp" xml:space="preserve">
+    <value>Move earlier</value>
+  </data>
+  <data name="BuilderMoveDown" xml:space="preserve">
+    <value>Move later</value>
+  </data>
+  <data name="BuilderSessionMore" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="BuilderRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="BuilderOptionalTag" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <data name="BuilderDaysHeader" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="SessionPickerTitle" xml:space="preserve">
+    <value>Add a workout</value>
+  </data>
+  <data name="SessionPickerHeader" xml:space="preserve">
+    <value>Workout</value>
+  </data>
+  <data name="SessionPickerPlaceholder" xml:space="preserve">
+    <value>Search the catalog or type your own</value>
+  </data>
+  <data name="SessionPickerCustomHint" xml:space="preserve">
+    <value>Not in the list? It becomes a workout of your own.</value>
+  </data>
+  <data name="SessionPickerKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="SessionPickerMinutes" xml:space="preserve">
+    <value>Minutes</value>
+  </data>
+  <data name="SessionPickerOptional" xml:space="preserve">
+    <value>Optional (doesn't count toward finishing the day)</value>
+  </data>
+  <data name="SessionPickerConfirm" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="MySchedulesHeader" xml:space="preserve">
+    <value>My schedules</value>
+  </data>
+  <data name="NewSchedule" xml:space="preserve">
+    <value>New schedule</value>
+  </data>
+  <data name="MySchedulesEmpty" xml:space="preserve">
+    <value>Build your own program from catalog workouts and your own, then track it like any other.</value>
+  </data>
+  <data name="ProCustomSchedulesLink" xml:space="preserve">
+    <value>Unlock Pro to build your own schedules</value>
+  </data>
+  <data name="CatalogHeader" xml:space="preserve">
+    <value>Catalog</value>
+  </data>
+  <data name="CustomProgramFamily" xml:space="preserve">
+    <value>My schedule</value>
+  </data>
+  <data name="CustomProgramBadgeFormat" xml:space="preserve">
+    <value>Custom · v{0}</value>
+  </data>
+  <data name="CustomProgramBadgeTooltip" xml:space="preserve">
+    <value>A schedule you built. Each save is a new version; programs already running keep theirs.</value>
+  </data>
+  <data name="ProgramEditSchedule" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="ProgramDeleteSchedule" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CustomProgramDeleteTitle" xml:space="preserve">
+    <value>Delete this schedule?</value>
+  </data>
+  <data name="CustomProgramDeleteMessageFormat" xml:space="preserve">
+    <value>"{0}" will disappear from your schedules.</value>
+  </data>
+  <data name="CustomProgramDeleteRunningMessageFormat" xml:space="preserve">
+    <value>"{0}" will disappear from your schedules. You're running it: that keeps going, with its days and history, until you end it.</value>
+  </data>
+  <data name="CustomProgramDeleteFailedTitle" xml:space="preserve">
+    <value>Couldn't delete the schedule</value>
+  </data>
+  <data name="CustomProgramDeleteFailedMessage" xml:space="preserve">
+    <value>Try again in a moment.</value>
+  </data>
+  <data name="CustomProgramLockedLink" xml:space="preserve">
+    <value>Custom schedules are read-only without Pro</value>
+  </data>
 </root>

@@ -193,6 +193,7 @@ public partial class App : Application, IApplication
         services.AddScoped<ICrossMoment, CrossMomentService>();
         services.AddScoped<ICalendarPrompts, CalendarPrompts>();
         services.AddScoped<IBonusWorkoutDialog, BonusWorkoutDialogService>();
+        services.AddScoped<ISessionPickerDialog, SessionPickerDialogService>();
         services.AddScoped<JournalSaveGuard>();
         services.AddScoped<IJournalDialogs, JournalDialogService>();
         services.AddScoped<ICrossingCoordinator, CrossingCoordinator>();
@@ -210,6 +211,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             service.RegisterView(typeof(Views.ProView), typeof(ProViewModel));
             service.RegisterView(typeof(Views.RemindersView), typeof(RemindersViewModel));
+            service.RegisterView(typeof(Views.ScheduleBuilderView), typeof(ScheduleBuilderViewModel));
             return service;
         });
 
@@ -228,6 +230,7 @@ public partial class App : Application, IApplication
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ProViewModel>();
         services.AddTransient<RemindersViewModel>();
+        services.AddTransient<ScheduleBuilderViewModel>();
     }
 
 #if DEBUG

@@ -54,7 +54,7 @@
                     AccentColor="{x:Bind ViewModel.Program.AccentColor, Mode=OneWay, FallbackValue=''}"
                     AutomationProperties.AutomationId="ProgramDetailHero"
                     AutomationProperties.Name="{x:Bind ViewModel.Program.Name, Mode=OneWay}"
-                    Family="{x:Bind ViewModel.Program.Family, Mode=OneWay, FallbackValue=''}"
+                    Family="{x:Bind ViewModel.FamilyText, Mode=OneWay}"
                     HeroImage="{x:Bind ViewModel.Program.HeroImage, Mode=OneWay}"
                     ProgramName="{x:Bind ViewModel.Program.Name, Mode=OneWay, FallbackValue=''}"
                     TitleFontSize="40" />
@@ -142,6 +142,29 @@
                         Command="{x:Bind ViewModel.OpenProCommand, Mode=OneWay}"
                         Text="{markup:Localize Key=ProMultiProgramLink}"
                         Visibility="{x:Bind ViewModel.ShowMultiProgramHint, Mode=OneWay}" />
+                    <controls:ProGateHint
+                        Command="{x:Bind ViewModel.OpenProCommand, Mode=OneWay}"
+                        Text="{markup:Localize Key=CustomProgramLockedLink}"
+                        Visibility="{x:Bind ViewModel.ShowCustomLockedHint, Mode=OneWay}" />
+
+                    <!--  The user's own program can be edited (a new version) or deleted  -->
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Visibility="{x:Bind ViewModel.IsCustom, Mode=OneWay}">
+                        <Button AutomationProperties.AutomationId="ProgramEditScheduleButton" Command="{x:Bind ViewModel.EditCommand, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="16" Glyph="&#xE70F;" />
+                                <TextBlock Text="{markup:Localize Key=ProgramEditSchedule}" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.AutomationId="ProgramDeleteScheduleButton" Command="{x:Bind ViewModel.DeleteCommand, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="16" Glyph="&#xE74D;" />
+                                <TextBlock Text="{markup:Localize Key=ProgramDeleteSchedule}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
                     <!--  The program being tracked has its results and notes here too  -->
                     <StackPanel
