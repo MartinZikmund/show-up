@@ -157,20 +157,24 @@
                             <StackLayout Spacing="4" />
                         </ItemsRepeater.Layout>
                     </ItemsRepeater>
-                    <StackPanel
-                        Orientation="Horizontal"
-                        Spacing="8"
-                        Visibility="{x:Bind IsEmpty, Mode=OneWay}">
+                    <Grid ColumnSpacing="8" Visibility="{x:Bind IsEmpty, Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
                         <FontIcon
+                            Margin="0,2,0,0"
+                            VerticalAlignment="Top"
                             FontSize="12"
                             Foreground="{ThemeResource SystemFillColorCautionBrush}"
                             Glyph="&#xE7BA;" />
                         <TextBlock
+                            Grid.Column="1"
                             Foreground="{ThemeResource MutedTextBrush}"
                             Style="{StaticResource CaptionTextBlockStyle}"
                             Text="{markup:Localize Key=BuilderDayEmpty}"
                             TextWrapping="Wrap" />
-                    </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -424,16 +428,23 @@
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
                                 <FontIcon
+                                    Margin="0,2,0,0"
+                                    VerticalAlignment="Top"
                                     FontSize="12"
                                     Foreground="{ThemeResource SystemFillColorCautionBrush}"
                                     Glyph="&#xE7BA;" />
                                 <TextBlock
+                                    Grid.Column="1"
                                     Style="{StaticResource CaptionTextBlockStyle}"
                                     Text="{x:Bind}"
                                     TextWrapping="Wrap" />
-                            </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
