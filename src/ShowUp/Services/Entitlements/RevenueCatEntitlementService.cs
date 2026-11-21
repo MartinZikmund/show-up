@@ -27,6 +27,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     private readonly ExpiryWatch _expiry;
     private volatile bool _recheckingExpiry;
     private bool _initialized;
+    private volatile bool _confirmed;
 
     public RevenueCatEntitlementService(
         IRevenueCatBilling billing,
@@ -50,6 +51,8 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     public bool IsPro => _recheckingExpiry || CachedIsPro;
 
     private bool CachedIsPro => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow());
+
+    public bool IsConfirmed => _confirmed;
 
     public bool PurchasesAvailable => _apiKey.Length > 0;
 
@@ -221,6 +224,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
             async () =>
             {
                 _recheckingExpiry = true;
+                _confirmed = false;
                 try
                 {
                     // Bounded here too, so a hung store can't keep IsPro forced on.
@@ -246,6 +250,7 @@ public sealed class RevenueCatEntitlementService : IEntitlementService
     {
         var entitlement = info?.Entitlements.FirstOrDefault(e => e.Identifier == EntitlementId && e.IsActive);
         var before = IsPro;
+        _confirmed = true;
         _preferences.LastKnownPro = entitlement is not null;
         _preferences.LastKnownProExpires = entitlement?.ExpirationDate is { } expiry
             ? new DateTimeOffset(DateTime.SpecifyKind(expiry, DateTimeKind.Utc))

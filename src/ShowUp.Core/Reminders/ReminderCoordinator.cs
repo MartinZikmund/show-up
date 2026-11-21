@@ -9,7 +9,7 @@ namespace ShowUp.Core.Reminders;
 /// <summary>
 /// Keeps the scheduler's next 14 days in step with reminders, tracking and entitlements.
 /// When Pro lapses with several reminders on, the earliest-created one stays on and the rest are
-/// disabled but kept; regaining Pro doesn't switch them back on, the user decides.
+/// disabled but kept, once the store has confirmed the lapse; regaining Pro doesn't switch them back on, the user decides.
 /// </summary>
 public sealed class ReminderCoordinator : IDisposable
 {
@@ -141,7 +141,8 @@ public sealed class ReminderCoordinator : IDisposable
         var all = await _reminders.ListAsync();
         var max = FeatureGate.MaxReminders(_entitlements.IsPro);
         var extra = all.Where(r => r.Enabled).OrderBy(r => r.CreatedAt).Skip(max).ToList();
-        if (_entitlements.IsPro || extra.Count == 0)
+        // Only a store answer counts: a cache-only or timed-out lapse must not switch anything off.
+        if (_entitlements.IsPro || !_entitlements.IsConfirmed || extra.Count == 0)
         {
             return all;
         }

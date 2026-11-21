@@ -6,6 +6,8 @@ internal sealed class FakeEntitlementService : IEntitlementService
 {
     public bool IsPro { get; set; }
 
+    public bool IsConfirmed { get; set; } = true;
+
     public bool PurchasesAvailable { get; set; } = true;
 
     public List<ProOffer> Offers { get; set; } =

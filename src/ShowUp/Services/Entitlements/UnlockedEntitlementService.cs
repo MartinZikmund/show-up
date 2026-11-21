@@ -7,6 +7,8 @@ public sealed class UnlockedEntitlementService : IEntitlementService
 {
     public bool IsPro => true;
 
+    public bool IsConfirmed => true;
+
     public bool PurchasesAvailable => false;
 
     public bool OffersLoadFailed => false;

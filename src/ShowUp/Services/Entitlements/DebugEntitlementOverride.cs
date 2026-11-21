@@ -30,6 +30,8 @@ public sealed class DebugEntitlementOverride : IEntitlementService
 
     public bool IsPro => !_simulateFree && _inner.IsPro;
 
+    public bool IsConfirmed => _simulateFree || _inner.IsConfirmed;
+
     public bool PurchasesAvailable => _inner.PurchasesAvailable;
 
     public bool OffersLoadFailed => _inner.OffersLoadFailed;

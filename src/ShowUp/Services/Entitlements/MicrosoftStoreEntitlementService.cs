@@ -28,6 +28,7 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     private StoreContext? _context;
     private bool _contextFailed;
     private bool _isPro;
+    private volatile bool _confirmed;
 
     public MicrosoftStoreEntitlementService(
         string monthlyId,
@@ -58,6 +59,8 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
 
     public bool IsPro => _isPro;
 
+    public bool IsConfirmed => _confirmed;
+
     /// <summary>Needs configured Store IDs; whether the Store then answers is <see cref="OffersLoadFailed"/>.</summary>
     public bool PurchasesAvailable => _proStoreIds.Count > 0 && !_contextFailed;
 
@@ -79,6 +82,7 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
             var proAddOns = addOns.Where(a => a.Item2 && _proStoreIds.Contains(a.Item1)).ToList();
             // A durable (no expiry) license outlasts any subscription.
             DateTimeOffset? expires = proAddOns.Any(a => a.Item3 is null) ? null : proAddOns.Max(a => a.Item3);
+            _confirmed = true;
             SetPro(StoreLicenseMapper.IsPro(addOns, _time.GetUtcNow(), _proStoreIds), expires);
         }
         catch (Exception ex)
@@ -201,7 +205,11 @@ public sealed class MicrosoftStoreEntitlementService : IEntitlementService
     private void WatchExpiry() =>
         _expiry.Schedule(
             _isPro ? _preferences.LastKnownProExpires : null,
-            RefreshAsync,
+            () =>
+            {
+                _confirmed = false;
+                return RefreshAsync();
+            },
             () => ProCache.IsPro(_preferences.LastKnownPro, _preferences.LastKnownProExpires, _time.GetUtcNow()),
             () => UiDispatch.Run(_dispatcher, () => SetPro(false, null)));
 
