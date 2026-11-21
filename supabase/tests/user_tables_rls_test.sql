@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(9 * 15);
+select plan(9 * 18);
 
 insert into auth.users (id, aud, role, email)
 values
@@ -33,6 +33,7 @@ declare
   n int;
   txt text;
   ts timestamptz;
+  passed boolean;
 begin
   execute format(ins, row_a, user_a, 'dev-a');
   execute format(ins, row_b, user_b, 'dev-b');
@@ -102,8 +103,9 @@ begin
   return next is(ts, now(), t || ': insert sets server_updated_at to the server clock');
 
   execute format('alter table public.%I disable trigger set_server_updated_at', t);
-  execute format('update public.%I set server_updated_at = $1 where id = $2', t) using stale, row_a;
+  execute format('update public.%I set server_updated_at = $1 where id = any($2)', t) using stale, array[row_a, row_new];
   execute format('alter table public.%I enable trigger set_server_updated_at', t);
+  execute format('select updated_at from public.%I where id = $1', t) into ts using row_new;
 
   set local role authenticated;
   perform set_config('request.jwt.claims', json_build_object('sub', user_a, 'role', 'authenticated')::text, true);
@@ -111,11 +113,25 @@ begin
   execute format('update public.%I set device_id = %L, updated_at = updated_at - interval ''1 day'' where id = $1', t, 'stale-write') using row_new;
   reset role;
 
-  execute format('select server_updated_at from public.%I where id = $1', t) into ts using row_a;
-  return next is(ts, now(), t || ': update advances server_updated_at');
+  execute format('select device_id from public.%I where id = $1', t) into txt using row_a;
+  return next is(txt, 'dev-a2'::text, t || ': an equal updated_at is accepted (idempotent re-push)');
 
-  execute format('select device_id from public.%I where id = $1', t) into txt using row_new;
-  return next is(txt, 'dev-a'::text, t || ': an older updated_at does not overwrite a newer row');
+  execute format('select server_updated_at = now() from public.%I where id = $1', t) into passed using row_a;
+  return next ok(passed, t || ': update advances server_updated_at');
+
+  execute format('select device_id = %L and updated_at = $2 from public.%I where id = $1', 'dev-a', t) into passed using row_new, ts;
+  return next ok(passed, t || ': an older updated_at leaves the stored row unchanged');
+
+  execute format('select server_updated_at = now() from public.%I where id = $1', t) into passed using row_new;
+  return next ok(passed, t || ': a kept-out stale update still advances server_updated_at');
+
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', user_a, 'role', 'authenticated')::text, true);
+  execute format('update public.%I set deleted_at = now(), updated_at = updated_at + interval ''1 second'' where id = $1', t) using row_a;
+  reset role;
+
+  execute format('select deleted_at is not null from public.%I where id = $1', t) into passed using row_a;
+  return next ok(passed, t || ': a newer tombstone goes through');
 end;
 $fn$;
 

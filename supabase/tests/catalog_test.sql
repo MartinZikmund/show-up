@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(11);
+select plan(13);
 
 insert into public.catalog_versions (version) values (1);
 insert into public.catalog_workouts (id, json, version) values ('plyo-cardio-circuit', '{}', 1);
@@ -16,7 +16,13 @@ select is((select count(*)::int from public.catalog_workouts), 1, 'anon can read
 select is((select count(*)::int from public.catalog_programs), 1, 'anon can read catalog_programs');
 select throws_ok(
   $$insert into public.catalog_workouts (id, json, version) values ('x', '{}', 2)$$,
-  '42501'::char(5), null::text, 'anon cannot write the catalog');
+  '42501'::char(5), null::text, 'anon cannot insert into the catalog');
+select throws_ok(
+  $$update public.catalog_programs set json = '{"hacked":true}'$$,
+  '42501'::char(5), null::text, 'anon cannot update the catalog');
+select throws_ok(
+  $$delete from public.catalog_versions$$,
+  '42501'::char(5), null::text, 'anon cannot delete from the catalog');
 
 reset role;
 set local role authenticated;

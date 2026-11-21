@@ -158,13 +158,14 @@ replaces, even when the clock steps back or two edits land in the same microseco
 - `user_tables_rls_test.sql`: for each of the nine user tables, as user A against user B's row: can't
   read, update, insert as B, upsert-take-over or reassign `user_id`; can't delete own rows; anon can't
   read or insert; B's row is unchanged; `server_updated_at` is the server clock on insert and advances on
-  update; an older `updated_at` doesn't overwrite a newer row.
-- `catalog_test.sql`: anon and authenticated read all three catalog tables, can't insert, update or
-  delete; the service role can write.
+  update; an equal `updated_at` is accepted; an older one leaves the stored row unchanged but still
+  advances `server_updated_at`; a newer tombstone goes through.
+- `catalog_test.sql`: anon and authenticated read all three catalog tables; neither can insert,
+  update or delete; the service role can write.
 - `schema_security_test.sql`: the exact table list, RLS everywhere, no `DELETE`/`ALL` policies, no
   user-table privileges for `anon`/`service_role`, no `DELETE`/`TRUNCATE` for `authenticated`, no
   `SECURITY DEFINER` in `public`, the trigger on every user table, every user-table policy
-  `TO authenticated` with an `auth.uid()` check.
+  `TO authenticated`, `auth.uid()` in `USING` (SELECT/UPDATE) and in `WITH CHECK` (INSERT/UPDATE).
 
 ## Hosted project
 

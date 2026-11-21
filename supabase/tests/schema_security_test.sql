@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(8);
+select plan(10);
 
 select tables_are('public', array[
   'enrollments', 'completions', 'schedule_shifts', 'bonus_workouts', 'notes', 'metric_entries',
@@ -47,9 +47,20 @@ select is(
 select is_empty($$
   select pol.tablename || ': ' || pol.policyname from pg_policies pol
   where pol.schemaname = 'public' and pol.tablename not like 'catalog\_%'
-    and (pol.roles <> array['authenticated']::name[]
-      or coalesce(pol.qual, pol.with_check) not like '%auth.uid()%')
-$$, 'user table policies are TO authenticated with an auth.uid() ownership check');
+    and pol.roles <> array['authenticated']::name[]
+$$, 'user table policies are TO authenticated only');
+
+select is_empty($$
+  select pol.tablename || ': ' || pol.policyname from pg_policies pol
+  where pol.schemaname = 'public' and pol.tablename not like 'catalog\_%'
+    and pol.cmd in ('SELECT', 'UPDATE') and coalesce(pol.qual, '') not like '%auth.uid()%'
+$$, 'user table SELECT and UPDATE policies check ownership in USING');
+
+select is_empty($$
+  select pol.tablename || ': ' || pol.policyname from pg_policies pol
+  where pol.schemaname = 'public' and pol.tablename not like 'catalog\_%'
+    and pol.cmd in ('INSERT', 'UPDATE') and coalesce(pol.with_check, '') not like '%auth.uid()%'
+$$, 'user table INSERT and UPDATE policies check ownership in WITH CHECK');
 
 select * from finish();
 rollback;
