@@ -1,6 +1,6 @@
 # Reminders
 
-Workout reminders: a time and weekdays, delivered as a notification that names the day's workout. Delivery per platform is not wired yet; this page covers planning and the UI.
+Workout reminders: a time and weekdays, delivered as a notification that names the day's workout. This page covers planning, the UI, and how each head delivers them.
 
 ## How it works
 
@@ -8,7 +8,30 @@ Workout reminders: a time and weekdays, delivered as a notification that names t
 - Days with nothing left to do (everything crossed, or nothing due in any active program) get no notification. A rest day says "Rest day. You earned it."; a workout day says "<workout> is waiting. Show up." With several open sessions the text reads "<first> + N more".
 - `ReminderDayProvider` reads each date from `IScheduleQuery`, so it covers all active programs.
 - `ReminderCoordinator` re-plans on app start, window activation, `TrackingChangedMessage`, `RemindersChangedMessage` and entitlement changes, then calls `IReminderScheduler.ReplaceAllAsync`. It skips scheduling when `IsSupported` is false.
-- Heads currently register `NullReminderScheduler` (`IsSupported` false). The Reminders page says so, but still lets people set reminders up.
+- `IReminderScheduler.Limit` says where delivery stops short of the OS (`WhileAppRunning`, `WhileTabOpen`); the Reminders page shows a note for it.
+- Tapping a notification sends `ReminderOpenedMessage`; `WindowShell` switches to Today and brings the window forward. A cold start lands on Today anyway.
+
+## Delivery per head
+
+`App.RegisterReminderScheduler` picks the implementation. Every OS id starts with `ReminderNotifications.KeyPrefix` and is derived from (reminder id, fire time), so a re-plan removes ours and only ours.
+
+| Head | Scheduler | Delivery | Permission | Limits |
+|---|---|---|---|---|
+| Android | `AndroidReminderScheduler` (`Platforms/Android/Reminders`) | `AlarmManager` alarm → `ReminderAlarmReceiver` posts a notification on channel `reminders`. Works with the app closed. | `POST_NOTIFICATIONS` asked at runtime on Android 13+. | Exact (`SetExactAndAllowWhileIdle`) only while `SCHEDULE_EXACT_ALARM` is allowed (`CanScheduleExactAlarms()`); otherwise `SetAndAllowWhileIdle`, which Doze can delay by several minutes. |
+| iOS | `IosReminderScheduler` (`Platforms/iOS/Reminders`) | `UNCalendarNotificationTrigger` per reminder, non-repeating, floating in the device's zone. Shown in the foreground too. | Alert + sound, asked on the first reminder. | iOS keeps 64 pending per app; we send the 60 soonest (14 days × several reminders can exceed that). Re-planning on every launch tops it up. |
+| Windows (packaged) | `WindowsReminderScheduler` (`Platforms/Windows/Reminders`) | `ToastNotifier.AddToSchedule` scheduled toasts (group `reminders`, tag = key), content from `AppNotificationBuilder`. Clicks activate the app through the manifest COM server and `AppNotificationManager.Register()`. | None; reports "denied" when notifications are off in Settings. | Windows drops a scheduled toast if the PC was off more than 5 minutes past its time. Unpackaged runs report `IsSupported = false`. |
+| WebAssembly | `BrowserReminderScheduler` + `WasmScripts/Reminders.js` | `setTimeout` per reminder in the next 24 h, shown with the `Notification` API (service worker fallback on Android Chrome). An hourly refresh and every re-plan on focus move the window along. | `Notification.requestPermission()` on the first reminder. | **Only while a tab with the app is open** - no push server. Reminders found more than 10 minutes late (sleep) are dropped. |
+| Desktop (Skia: Windows, macOS, Linux) | `InAppReminderScheduler` (Core) | Checks the clock every 15 s and shows an `InfoBar` banner at the top of the window plus the marker sound. | None. | **Only while the app is running** (minimized is fine). Reminders more than 10 minutes late are dropped. |
+
+### Android details
+
+- The last plan is stored as JSON (`planned-reminders.json` in the app's files dir) so `ReminderRescheduleReceiver` can re-arm alarms after `BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`, `TIME_SET`, `TIMEZONE_CHANGED` and an exact-alarm permission change, without starting the UI. `ReminderNotifications.Rebase` keeps each reminder at its wall-clock time in the new zone.
+- The receivers are declared by hand in `AndroidManifest.xml` and named with `[Register("showup.reminders.…")]`; `AndroidManifestTests` keeps the two in step.
+- We don't declare `USE_EXACT_ALARM`: Google Play reserves it for alarm clock and calendar apps.
+
+### Windows details
+
+The toast activator CLSID in `Package.appxmanifest` must match the COM server class (`PackageManifestTests`). Worktree builds share the CLSID, so with two worktrees installed a click may activate the other build.
 
 ## Free and Pro
 
