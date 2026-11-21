@@ -250,4 +250,43 @@
   <data name="DebugSlowMotion" xml:space="preserve">
     <value>Slow motion (25&#215;)</value>
   </data>
+  <data name="CrossOffStyle" xml:space="preserve">
+    <value>Cross-off style</value>
+  </data>
+  <data name="CrossOffStyleDescription" xml:space="preserve">
+    <value>Draw the cross yourself, or let the marker do it</value>
+  </data>
+  <data name="CrossOffStyle_DrawYourself" xml:space="preserve">
+    <value>Draw it yourself</value>
+  </data>
+  <data name="CrossOffStyle_AutoMarker" xml:space="preserve">
+    <value>Auto marker X</value>
+  </data>
+  <data name="DrawPrompt" xml:space="preserve">
+    <value>Cross it off your way: X, slash, scribble or scratch it out.</value>
+  </data>
+  <data name="DrawAnnouncement" xml:space="preserve">
+    <value>Draw to cross off, or press Do it for me</value>
+  </data>
+  <data name="DrawPadName" xml:space="preserve">
+    <value>Drawing square</value>
+  </data>
+  <data name="DrawInkMeterName" xml:space="preserve">
+    <value>Ink</value>
+  </data>
+  <data name="DrawDoItForMe" xml:space="preserve">
+    <value>Do it for me</value>
+  </data>
+  <data name="DrawUndo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="DrawCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="DrawDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="DebugDrawMoment" xml:space="preserve">
+    <value>Preview draw it yourself</value>
+  </data>
 </root>

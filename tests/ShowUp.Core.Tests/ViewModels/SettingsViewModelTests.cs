@@ -22,6 +22,7 @@ public sealed class SettingsViewModelTests
             MarkerSoundEnabled = false,
             MarkerHapticsEnabled = false,
             CrossMomentMode = CrossMomentMode.Always,
+            CrossOffStyle = CrossOffStyle.AutoMarker,
         };
         preferences.Writes.Clear();
         var viewModel = CreateViewModel(preferences);
@@ -31,6 +32,7 @@ public sealed class SettingsViewModelTests
         viewModel.MarkerSoundEnabled.Should().BeFalse();
         viewModel.MarkerHapticsEnabled.Should().BeFalse();
         viewModel.CrossMomentMode.Should().Be(CrossMomentMode.Always);
+        viewModel.CrossOffStyle.Should().Be(CrossOffStyle.AutoMarker);
         preferences.Writes.Should().BeEmpty();
     }
 
@@ -68,6 +70,26 @@ public sealed class SettingsViewModelTests
 
         preferences.CrossMomentMode.Should().Be(CrossMomentMode.Never);
         preferences.Writes.Should().Equal(nameof(IAppPreferences.CrossMomentMode));
+    }
+
+    [TestMethod]
+    public void CrossOffStyle_Changed_Persists()
+    {
+        FakeAppPreferences preferences = new();
+        var viewModel = Navigated(preferences);
+
+        viewModel.CrossOffStyle = CrossOffStyle.AutoMarker;
+
+        preferences.CrossOffStyle.Should().Be(CrossOffStyle.AutoMarker);
+        preferences.Writes.Should().Equal(nameof(IAppPreferences.CrossOffStyle));
+    }
+
+    [TestMethod]
+    public void CrossOffStyleOptions_StartWithDrawYourself()
+    {
+        var viewModel = CreateViewModel(new FakeAppPreferences());
+
+        viewModel.CrossOffStyleOptions.Should().Equal(CrossOffStyle.DrawYourself, CrossOffStyle.AutoMarker);
     }
 
     [TestMethod]
@@ -124,6 +146,12 @@ public sealed class SettingsViewModelTests
             get;
             set => Record(nameof(CrossMomentMode), () => field = value);
         } = CrossMomentMode.OnlyToday;
+
+        public CrossOffStyle CrossOffStyle
+        {
+            get;
+            set => Record(nameof(CrossOffStyle), () => field = value);
+        } = CrossOffStyle.DrawYourself;
 
         private void Record(string name, Action write)
         {

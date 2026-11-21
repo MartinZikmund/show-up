@@ -40,6 +40,7 @@ public partial class SettingsViewModel : ViewModelBase
             MarkerSoundEnabled = _appPreferences.MarkerSoundEnabled;
             MarkerHapticsEnabled = _appPreferences.MarkerHapticsEnabled;
             CrossMomentMode = _appPreferences.CrossMomentMode;
+            CrossOffStyle = _appPreferences.CrossOffStyle;
         }
         finally
         {
@@ -95,6 +96,19 @@ public partial class SettingsViewModel : ViewModelBase
         if (!_isInitializing)
         {
             _appPreferences.CrossMomentMode = value;
+        }
+    }
+
+    public CrossOffStyle[] CrossOffStyleOptions { get; } = [CrossOffStyle.DrawYourself, CrossOffStyle.AutoMarker];
+
+    [ObservableProperty]
+    public partial CrossOffStyle CrossOffStyle { get; set; }
+
+    partial void OnCrossOffStyleChanged(CrossOffStyle value)
+    {
+        if (!_isInitializing)
+        {
+            _appPreferences.CrossOffStyle = value;
         }
     }
 

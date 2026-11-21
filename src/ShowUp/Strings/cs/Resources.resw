@@ -250,4 +250,43 @@
   <data name="DebugSlowMotion" xml:space="preserve">
     <value>Zpomalen&#237; (25&#215;)</value>
   </data>
+  <data name="CrossOffStyle" xml:space="preserve">
+    <value>Zp&#367;sob od&#353;krtnut&#237;</value>
+  </data>
+  <data name="CrossOffStyleDescription" xml:space="preserve">
+    <value>Nakreslete k&#345;&#237;&#382;ek sami, nebo ho nechte na fixe</value>
+  </data>
+  <data name="CrossOffStyle_DrawYourself" xml:space="preserve">
+    <value>Nakreslit vlastn&#237; rukou</value>
+  </data>
+  <data name="CrossOffStyle_AutoMarker" xml:space="preserve">
+    <value>Automatick&#233; X</value>
+  </data>
+  <data name="DrawPrompt" xml:space="preserve">
+    <value>Od&#353;krtn&#283;te to po sv&#233;m: X, &#269;&#225;rou, &#269;m&#225;ranic&#237; nebo p&#345;e&#353;krtnut&#237;m.</value>
+  </data>
+  <data name="DrawAnnouncement" xml:space="preserve">
+    <value>Od&#353;krtn&#283;te kreslen&#237;m, nebo stiskn&#283;te Ud&#283;lej to za m&#283;</value>
+  </data>
+  <data name="DrawPadName" xml:space="preserve">
+    <value>Plocha na kreslen&#237;</value>
+  </data>
+  <data name="DrawInkMeterName" xml:space="preserve">
+    <value>Inkoust</value>
+  </data>
+  <data name="DrawDoItForMe" xml:space="preserve">
+    <value>Ud&#283;lej to za m&#283;</value>
+  </data>
+  <data name="DrawUndo" xml:space="preserve">
+    <value>Zp&#283;t</value>
+  </data>
+  <data name="DrawCancel" xml:space="preserve">
+    <value>Zru&#353;it</value>
+  </data>
+  <data name="DrawDone" xml:space="preserve">
+    <value>Hotovo</value>
+  </data>
+  <data name="DebugDrawMoment" xml:space="preserve">
+    <value>N&#225;hled kreslen&#237; vlastn&#237; rukou</value>
+  </data>
 </root>

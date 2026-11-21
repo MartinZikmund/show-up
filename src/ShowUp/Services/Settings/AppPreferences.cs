@@ -70,4 +70,13 @@ public sealed class AppPreferences : IAppPreferences
             : CrossMomentMode.OnlyToday;
         set => _preferences.Set(CrossMomentModeKey, (int)value);
     }
+
+    private const string CrossOffStyleKey = "CrossOffStyle";
+    public CrossOffStyle CrossOffStyle
+    {
+        get => _preferences.Get(CrossOffStyleKey, (int)CrossOffStyle.DrawYourself) is var raw && Enum.IsDefined((CrossOffStyle)raw)
+            ? (CrossOffStyle)raw
+            : CrossOffStyle.DrawYourself;
+        set => _preferences.Set(CrossOffStyleKey, (int)value);
+    }
 }
