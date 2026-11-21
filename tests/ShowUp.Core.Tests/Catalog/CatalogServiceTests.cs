@@ -192,6 +192,33 @@ public class CatalogServiceTests
     }
 
     [TestMethod]
+    public async Task GetCatalog_CustomProgramUsesARemovedWorkout_LoadsWithAPlaceholder()
+    {
+        FakeCustomProgramRepository custom = new();
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Mine").Replace("\"cardio\"", "\"removed-workout\""), "custom-a");
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+
+        var catalog = await service.GetCatalogAsync();
+
+        catalog.Programs.Should().ContainSingle(p => p.Name == "Mine");
+        catalog.WorkoutsById["removed-workout"].Should().Be(new Workout("removed-workout", "Unknown workout", null, WorkoutKind.Mixed, null));
+    }
+
+    [TestMethod]
+    public async Task GetProgram_PinnedRevisionUsesARemovedWorkout_StillLoadsWithAPlaceholder()
+    {
+        FakeCustomProgramRepository custom = new();
+        var (id, first) = await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Old").Replace("\"cardio\"", "\"removed-workout\""), "custom-a");
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "New"), id);
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+
+        var pinned = await service.GetProgramAsync(id, first);
+
+        pinned!.Name.Should().Be("Old");
+        (await service.GetWorkoutAsync("removed-workout"))!.Name.Should().Be("Unknown workout");
+    }
+
+    [TestMethod]
     public async Task GetCatalog_BundledProgramMarkedCustom_IsSkipped()
     {
         var sneaky = Fixture("sample-program.json").Replace("\"verification\": \"official\"", "\"verification\": \"custom\"");

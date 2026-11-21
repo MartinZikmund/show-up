@@ -39,6 +39,25 @@ public class CatalogFolderTests
         workouts["insanity-unhinged-fit-test"].Metrics!.Count(m => m.Unit == MetricUnit.Weight).Should().Be(2);
     }
 
+    [TestMethod]
+    public void WorkoutIds_AreAppendOnly_MatchTheLockFile()
+    {
+        var dir = FindCatalogDir();
+        var current = CatalogParser.ParseWorkouts(File.ReadAllText(Path.Combine(dir, "workouts.json"))).Select(w => w.Id).ToHashSet();
+        var locked = File.ReadAllLines(Path.Combine(dir, "workout-ids.lock")).Select(l => l.Trim()).Where(l => l.Length > 0).ToHashSet();
+
+        locked.Except(current).Should().BeEmpty("workout ids are never removed or renamed: custom programs and enrollments pin them");
+        current.Except(locked).Should().BeEmpty("append new workout ids to catalog/workout-ids.lock (keep it sorted)");
+    }
+
+    [TestMethod]
+    public void WorkoutIdsLock_IsSortedAndUnique()
+    {
+        var lines = File.ReadAllLines(Path.Combine(FindCatalogDir(), "workout-ids.lock")).Where(l => l.Trim().Length > 0).ToList();
+
+        lines.Should().BeInAscendingOrder(StringComparer.Ordinal).And.OnlyHaveUniqueItems();
+    }
+
     private static string FindCatalogDir()
     {
         for (DirectoryInfo? dir = new(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
