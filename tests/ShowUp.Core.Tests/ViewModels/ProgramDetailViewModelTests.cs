@@ -117,7 +117,7 @@ public sealed class ProgramDetailViewModelTests
 
         _confirmation.Asked.Should().ContainSingle().Which.Text.Should().Contain("Program old r1").And.Contain("Program new r1");
         _enrollments.EndReason.Should().Be(EnrollmentEndReason.Abandoned);
-        _enrollments.Calls.Should().Equal($"End:{EnrollmentEndReason.Abandoned}", "Enroll");
+        _enrollments.Calls.Should().Equal($"Replace:{EnrollmentEndReason.Abandoned}");
         _navigator.Sections.Should().Equal(NavigationSection.Calendar);
     }
 

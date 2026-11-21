@@ -40,12 +40,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private IReadOnlyDictionary<string, Workout> _workouts = new Dictionary<string, Workout>();
     private ActiveEnrollment? _active;
     private DateOnly _loadedToday;
-    private SynchronizationContext? _context;
-    private ITimer? _midnightTimer;
-    private bool _isActive;
-
-    // While this view model writes, it refreshes itself; the echoed TrackingChangedMessage is skipped.
-    private int _ownWrites;
+    private readonly LiveRefresher _live;
 
     public ProgramCalendarViewModel(
         IStringLocalizer localizer,
@@ -77,6 +72,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         _journalDialogs = journalDialogs;
         _navigation = navigation;
         _logger = logger;
+        _live = new(time, logger, "Refreshing the program calendar failed.", RefreshAsync, now => now.Date.AddDays(1) - now.DateTime);
         PageTitle = localizer["Calendar"];
     }
 
@@ -109,7 +105,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     public override void ViewLoaded()
     {
         base.ViewLoaded();
-        RunInBackground(LoadAsync);
+        _live.RunInBackground(LoadAsync);
     }
 
     public override void ViewUnloaded()
@@ -121,11 +117,9 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     /// <summary>Starts listening for tracking changes and midnight, then loads.</summary>
     public async Task LoadAsync()
     {
-        if (!_isActive)
+        if (_live.Activate())
         {
-            _isActive = true;
-            _context = SynchronizationContext.Current;
-            _messenger.Register<ProgramCalendarViewModel, TrackingChangedMessage>(this, static (r, _) => r.OnTrackingChanged());
+            _messenger.Register<ProgramCalendarViewModel, TrackingChangedMessage>(this, static (r, _) => r._live.OnTrackingChanged());
         }
 
         await RefreshAsync();
@@ -133,10 +127,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
     public void Unload()
     {
-        _isActive = false;
+        _live.Deactivate();
         _messenger.UnregisterAll(this);
-        _midnightTimer?.Dispose();
-        _midnightTimer = null;
     }
 
     /// <summary>For window activation: the app may have slept through midnight.</summary>
@@ -149,7 +141,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         {
             var today = Today;
             _loadedToday = today;
-            ScheduleMidnightRefresh();
+            _live.ScheduleNextChange();
 
             var active = await _enrollments.GetAsync();
             if (active is null)
@@ -235,7 +227,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             var dayCompletions = _completions.Where(c => c.DayIndex == day.DayIndex).ToList();
             await _crossing.CrossAsync(
                 new CrossTarget(day.DayIndex, session, SessionName(day.DayIndex, session), day.IsToday, day.Seed, status, _statuses, dayCompletions, Today),
-                new CrossHooks(WriteAsync, RefreshAsync, animate => day.AnimateMarks = animate));
+                new CrossHooks(_live.WriteAsync, RefreshAsync, animate => day.AnimateMarks = animate));
         }
         catch (InvalidOperationException)
         {
@@ -268,7 +260,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
                 return;
             }
 
-            await WriteAsync(() => _enrollments.UncrossAsync(day.DayIndex, session));
+            await _live.WriteAsync(() => _enrollments.UncrossAsync(day.DayIndex, session));
             await RefreshAsync();
         }
         catch (InvalidOperationException)
@@ -292,7 +284,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         BonusWorkoutEntity? logged = null;
         try
         {
-            await WriteAsync(async () => logged = await _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
+            await _live.WriteAsync(async () => logged = await _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
         }
         catch (InvalidOperationException)
         {
@@ -342,7 +334,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
         try
         {
-            await WriteAsync(() => _enrollments.ShiftAsync(Today, days));
+            await _live.WriteAsync(() => _enrollments.ShiftAsync(Today, days));
         }
         catch (InvalidOperationException)
         {
@@ -394,65 +386,4 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private string SessionName(int dayIndex, int session) => WorkoutName(_trackDays[dayIndex].Sessions[session].WorkoutId);
 
     private string WorkoutName(string workoutId) => _workouts.TryGetValue(workoutId, out var workout) ? workout.Name : workoutId;
-
-    private void ScheduleMidnightRefresh()
-    {
-        _midnightTimer?.Dispose();
-        _midnightTimer = null;
-        if (!_isActive)
-        {
-            return;
-        }
-
-        var now = _time.GetLocalNow();
-        var due = now.Date.AddDays(1) - now.DateTime + TimeSpan.FromSeconds(1);
-        _midnightTimer = _time.CreateTimer(_ => Post(() => RunInBackground(RefreshAsync)), null, due, Timeout.InfiniteTimeSpan);
-    }
-
-    private void OnTrackingChanged()
-    {
-        if (Volatile.Read(ref _ownWrites) == 0)
-        {
-            Post(() => RunInBackground(RefreshAsync));
-        }
-    }
-
-    private async Task WriteAsync(Func<Task> write)
-    {
-        Interlocked.Increment(ref _ownWrites);
-        try
-        {
-            await write();
-        }
-        finally
-        {
-            Interlocked.Decrement(ref _ownWrites);
-        }
-    }
-
-    // Fire-and-forget loads must never take the app down; log and keep showing the last good state.
-    private async void RunInBackground(Func<Task> work)
-    {
-        try
-        {
-            await work();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Refreshing the program calendar failed.");
-        }
-    }
-
-    // Timers and messages can arrive off the UI thread; the collections must change on it.
-    private void Post(Action action)
-    {
-        if (_context is null || _context == SynchronizationContext.Current)
-        {
-            action();
-        }
-        else
-        {
-            _context.Post(_ => action(), null);
-        }
-    }
 }

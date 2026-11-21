@@ -181,12 +181,7 @@ public partial class ProgramDetailViewModel : ViewModelBase
 
             try
             {
-                if (active is not null)
-                {
-                    await _enrollments.EndAsync(EnrollmentEndReason.Abandoned);
-                }
-
-                await _enrollments.EnrollAsync(program, track, ClampedStartDate());
+                await _enrollments.ReplaceAsync(EnrollmentEndReason.Abandoned, program, track, ClampedStartDate());
             }
             catch (Exception ex)
             {

@@ -6,6 +6,9 @@ public interface ITrackingRepository
 {
     Task<EnrollmentEntity> EnrollAsync(string programId, int revision, string trackId, DateOnly startDate);
 
+    /// <summary>Ends one enrollment and starts another in a single transaction: if the new one can't be stored, the old one stays active.</summary>
+    Task<EnrollmentEntity> ReplaceEnrollmentAsync(Guid endEnrollmentId, EnrollmentEndReason reason, string programId, int revision, string trackId, DateOnly startDate);
+
     Task<IReadOnlyList<EnrollmentEntity>> GetActiveEnrollmentsAsync();
 
     Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason);

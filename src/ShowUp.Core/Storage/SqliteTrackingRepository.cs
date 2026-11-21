@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using ShowUp.Core.Tracking;
 using SQLite;
 
@@ -8,15 +7,13 @@ public sealed class SqliteTrackingRepository(
     ShowUpDatabase db,
     TimeProvider time,
     IUserScope user,
-    IDeviceIdProvider device) : ITrackingRepository
+    IDeviceIdProvider device) : SqliteRepositoryBase(db, time, user, device), ITrackingRepository
 {
     private const int MaxShiftDays = 30;
 
-    private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
-
     public async Task<EnrollmentEntity> EnrollAsync(string programId, int revision, string trackId, DateOnly startDate)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var entity = Stamp(new EnrollmentEntity
         {
             ProgramId = programId,
@@ -28,27 +25,50 @@ public sealed class SqliteTrackingRepository(
         return entity;
     }
 
+    public async Task<EnrollmentEntity> ReplaceEnrollmentAsync(
+        Guid endEnrollmentId, EnrollmentEndReason reason, string programId, int revision, string trackId, DateOnly startDate)
+    {
+        var connection = await ConnectAsync();
+        var entity = Stamp(new EnrollmentEntity
+        {
+            ProgramId = programId,
+            ProgramRevision = revision,
+            TrackId = trackId,
+            StartDate = startDate,
+        });
+        await connection.RunInTransactionAsync(c =>
+        {
+            if (c.Find<EnrollmentEntity>(endEnrollmentId) is { } old && IsVisible(old))
+            {
+                old.EndedAt = UtcNow;
+                old.EndReason = reason;
+                Touch(c, old);
+            }
+
+            c.Insert(entity);
+        });
+        return entity;
+    }
+
     public async Task<IReadOnlyList<EnrollmentEntity>> GetActiveEnrollmentsAsync()
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var rows = await QueryAsync<EnrollmentEntity>(connection, e => e.DeletedAt == null && e.EndedAt == null);
         return rows.OrderBy(e => e.CreatedAt).ToList();
     }
 
     public async Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var row = await connection.FindAsync<EnrollmentEntity>(enrollmentId);
         if (row is null || !IsVisible(row))
         {
             return;
         }
 
-        DateTimeOffset now = time.GetUtcNow();
-        row.EndedAt = now;
+        row.EndedAt = UtcNow;
         row.EndReason = reason;
-        row.UpdatedAt = now;
-        await connection.UpdateAsync(row);
+        await connection.RunInTransactionAsync(c => Touch(c, row));
     }
 
     public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null, Guid? completionId = null)
@@ -62,7 +82,7 @@ public sealed class SqliteTrackingRepository(
             throw new InvalidOperationException($"Cannot cross a future day ({dayDate}).");
         }
 
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         await RequireActiveEnrollmentAsync(connection, enrollmentId);
         var existing = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
         if (existing.Count > 0)
@@ -76,7 +96,7 @@ public sealed class SqliteTrackingRepository(
             DayIndex = dayIndex,
             SessionIndex = sessionIndex,
             CompletedOn = today,
-            CompletedAt = time.GetUtcNow(),
+            CompletedAt = UtcNow,
             InkJson = inkJson,
         });
         entity.Id = completionId ?? entity.Id;
@@ -85,16 +105,10 @@ public sealed class SqliteTrackingRepository(
 
     public async Task UncrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         await RequireActiveEnrollmentAsync(connection, enrollmentId);
         var rows = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
-        DateTimeOffset now = time.GetUtcNow();
-        foreach (CompletionEntity row in rows)
-        {
-            row.DeletedAt = now;
-            row.UpdatedAt = now;
-            await connection.UpdateAsync(row);
-        }
+        await connection.RunInTransactionAsync(c => Tombstone(c, rows));
     }
 
     public async Task<IReadOnlySet<(int Day, int Session)>> GetCompletedSessionsAsync(Guid enrollmentId)
@@ -105,7 +119,7 @@ public sealed class SqliteTrackingRepository(
 
     public async Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync(Guid enrollmentId)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var rows = await QueryAsync<CompletionEntity>(connection, c => c.EnrollmentId == enrollmentId && c.DeletedAt == null);
         return rows
             .GroupBy(c => (c.DayIndex, c.SessionIndex))
@@ -118,7 +132,7 @@ public sealed class SqliteTrackingRepository(
 
     public async Task<IReadOnlyList<ScheduleShift>> GetShiftsAsync(Guid enrollmentId)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var rows = await QueryAsync<ScheduleShiftEntity>(connection, s => s.EnrollmentId == enrollmentId && s.DeletedAt == null);
         return rows
             .OrderBy(s => s.CreatedAt)
@@ -132,7 +146,7 @@ public sealed class SqliteTrackingRepository(
         ArgumentOutOfRangeException.ThrowIfLessThan(days, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(days, MaxShiftDays);
 
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         EnrollmentEntity enrollment = await RequireActiveEnrollmentAsync(connection, enrollmentId);
 
         EnrollmentCalendar calendar = new(enrollment.StartDate, dayCount, await GetShiftsAsync(enrollmentId));
@@ -169,7 +183,7 @@ public sealed class SqliteTrackingRepository(
             throw new ArgumentOutOfRangeException(nameof(date), date, "A bonus workout can't be logged for a future day.");
         }
 
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var entity = Stamp(new BonusWorkoutEntity
         {
             WorkoutId = workoutId,
@@ -183,7 +197,7 @@ public sealed class SqliteTrackingRepository(
 
     public async Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         int fromNumber = from.DayNumber;
         int toNumber = to.DayNumber;
         var rows = await QueryAsync<BonusWorkoutEntity>(
@@ -194,17 +208,18 @@ public sealed class SqliteTrackingRepository(
 
     public async Task RemoveBonusAsync(Guid id)
     {
-        var connection = await db.GetConnectionAsync();
+        var connection = await ConnectAsync();
         var row = await connection.FindAsync<BonusWorkoutEntity>(id);
         if (row is null || !IsVisible(row))
         {
             return;
         }
 
-        DateTimeOffset now = time.GetUtcNow();
-        row.DeletedAt = now;
-        row.UpdatedAt = now;
-        await connection.UpdateAsync(row);
+        await connection.RunInTransactionAsync(c =>
+        {
+            Touch(c, row, delete: true);
+            Tombstone(c, Query<MetricEntryEntity>(c, m => m.BonusWorkoutId == id));
+        });
     }
 
     private async Task<EnrollmentEntity> RequireActiveEnrollmentAsync(SQLiteAsyncConnection connection, Guid enrollmentId)
@@ -216,27 +231,6 @@ public sealed class SqliteTrackingRepository(
         }
 
         return row;
-    }
-
-    private T Stamp<T>(T entity)
-        where T : SyncableEntity
-    {
-        DateTimeOffset now = time.GetUtcNow();
-        entity.Id = Guid.NewGuid();
-        entity.UserId = user.CurrentUserId;
-        entity.DeviceId = device.DeviceId;
-        entity.CreatedAt = now;
-        entity.UpdatedAt = now;
-        return entity;
-    }
-
-    private bool IsVisible(SyncableEntity e) => e.DeletedAt is null && e.UserId == user.CurrentUserId;
-
-    private Task<List<T>> QueryAsync<T>(SQLiteAsyncConnection connection, Expression<Func<T, bool>> where)
-        where T : SyncableEntity, new()
-    {
-        string? uid = user.CurrentUserId;
-        return connection.Table<T>().Where(where).Where(x => x.UserId == uid).ToListAsync();
     }
 
     private Task<List<CompletionEntity>> MatchingCompletionsAsync(

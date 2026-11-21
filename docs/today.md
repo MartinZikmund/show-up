@@ -5,8 +5,9 @@ What is on today, how to cross it off, and how to log a workout that is not in y
 ## The page
 
 `TodayView` hosts `TodayPanel` (`src/ShowUp/Controls/TodayPanel.xaml`), a self-contained control bound to
-`TodayViewModel`. At 1008 px and wider the view puts the panel (400 px) beside `ProgramCalendarControl`;
-narrower, it is the panel alone. Because the panel owns all of Today's content, it can move into the
+`TodayViewModel`. When the page itself is 1120 px wide or more the view puts the panel (400 px) beside
+`ProgramCalendarControl`; narrower, it is the panel alone. 1120 is the page width, not the window's
+(the nav pane takes some), and it is deliberate: it keeps calendar cells at 84 px or more. Because the panel owns all of Today's content, it can move into the
 calendar page later without touching the view model.
 
 The panel shows a greeting by time of day, the program and day ("Day 12 of 60"), the streak, and one card

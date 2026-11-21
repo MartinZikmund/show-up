@@ -36,12 +36,7 @@ public partial class TodayViewModel : ViewModelBase
     private int _dayIndex = -1;
     private DateOnly _loadedToday;
     private int _loadedGreetingHour = -1;
-    private SynchronizationContext? _context;
-    private ITimer? _midnightTimer;
-    private bool _isActive;
-
-    // While this view model writes, it refreshes itself; the echoed TrackingChangedMessage is skipped.
-    private int _ownWrites;
+    private readonly LiveRefresher _live;
 
     public TodayViewModel(
         IStringLocalizer localizer,
@@ -67,6 +62,7 @@ public partial class TodayViewModel : ViewModelBase
         _navigator = navigator;
         _journalDialogs = journalDialogs;
         _logger = logger;
+        _live = new(time, logger, "Refreshing Today failed.", RefreshAsync, NextChangeIn);
         PageTitle = localizer["Today"];
     }
 
@@ -136,7 +132,7 @@ public partial class TodayViewModel : ViewModelBase
     public override void ViewLoaded()
     {
         base.ViewLoaded();
-        RunInBackground(LoadAsync);
+        _live.RunInBackground(LoadAsync);
     }
 
     public override void ViewUnloaded()
@@ -148,11 +144,9 @@ public partial class TodayViewModel : ViewModelBase
     /// <summary>Starts listening for tracking changes and midnight, then loads.</summary>
     public async Task LoadAsync()
     {
-        if (!_isActive)
+        if (_live.Activate())
         {
-            _isActive = true;
-            _context = SynchronizationContext.Current;
-            _messenger.Register<TodayViewModel, TrackingChangedMessage>(this, static (r, _) => r.OnTrackingChanged());
+            _messenger.Register<TodayViewModel, TrackingChangedMessage>(this, static (r, _) => r._live.OnTrackingChanged());
         }
 
         await RefreshAsync();
@@ -160,10 +154,8 @@ public partial class TodayViewModel : ViewModelBase
 
     public void Unload()
     {
-        _isActive = false;
+        _live.Deactivate();
         _messenger.UnregisterAll(this);
-        _midnightTimer?.Dispose();
-        _midnightTimer = null;
     }
 
     /// <summary>For window activation: the app may have slept through midnight.</summary>
@@ -177,7 +169,7 @@ public partial class TodayViewModel : ViewModelBase
         {
             var today = Today;
             _loadedToday = today;
-            ScheduleMidnightRefresh();
+            _live.ScheduleNextChange();
             _loadedGreetingHour = GreetingStart(_time.GetLocalNow().Hour);
             Greeting = GreetingFor(_loadedGreetingHour);
             var recent = await _enrollments.GetBonusWorkoutsAsync(today.AddDays(1 - RecentBonusDays), today);
@@ -233,7 +225,7 @@ public partial class TodayViewModel : ViewModelBase
         BonusWorkoutEntity? logged = null;
         try
         {
-            await WriteAsync(async () => logged = await _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
+            await _live.WriteAsync(async () => logged = await _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
         }
         catch (ArgumentException ex)
         {
@@ -263,7 +255,7 @@ public partial class TodayViewModel : ViewModelBase
             return;
         }
 
-        await WriteAsync(() => _enrollments.RemoveBonusAsync(bonus.Id));
+        await _live.WriteAsync(() => _enrollments.RemoveBonusAsync(bonus.Id));
         await RefreshAsync();
     }
 
@@ -288,7 +280,7 @@ public partial class TodayViewModel : ViewModelBase
             var dayCompletions = _completions.Where(c => c.DayIndex == _dayIndex).ToList();
             await _crossing.CrossAsync(
                 new CrossTarget(_dayIndex, session.Index, session.Name, true, CalendarDayViewModel.SeedFor(dayCompletions, _dayIndex), status, _statuses, dayCompletions, Today),
-                new CrossHooks(WriteAsync, RefreshAsync, animate => AnimateMarks = animate));
+                new CrossHooks(_live.WriteAsync, RefreshAsync, animate => AnimateMarks = animate));
         }
         catch (InvalidOperationException)
         {
@@ -422,66 +414,10 @@ public partial class TodayViewModel : ViewModelBase
         return bonus.DurationMinutes is { } minutes ? $"{day} · {_localizer["TodayDurationFormat", minutes].Value}" : day;
     }
 
-    private void ScheduleMidnightRefresh()
+    // Next change of day or greeting, whichever comes first.
+    private static TimeSpan NextChangeIn(DateTimeOffset now)
     {
-        _midnightTimer?.Dispose();
-        _midnightTimer = null;
-        if (!_isActive)
-        {
-            return;
-        }
-
-        // Next change of day or greeting, whichever comes first.
-        var now = _time.GetLocalNow();
         var nextHour = new[] { 5, 12, 18, 22 }.Where(h => h > now.Hour).DefaultIfEmpty(24).First();
-        var due = now.Date.AddHours(nextHour) - now.DateTime + TimeSpan.FromSeconds(1);
-        _midnightTimer = _time.CreateTimer(_ => Post(() => RunInBackground(RefreshAsync)), null, due, Timeout.InfiniteTimeSpan);
-    }
-
-    private void OnTrackingChanged()
-    {
-        if (Volatile.Read(ref _ownWrites) == 0)
-        {
-            Post(() => RunInBackground(RefreshAsync));
-        }
-    }
-
-    private async Task WriteAsync(Func<Task> write)
-    {
-        Interlocked.Increment(ref _ownWrites);
-        try
-        {
-            await write();
-        }
-        finally
-        {
-            Interlocked.Decrement(ref _ownWrites);
-        }
-    }
-
-    // Fire-and-forget loads must never take the app down; log and keep showing the last good state.
-    private async void RunInBackground(Func<Task> work)
-    {
-        try
-        {
-            await work();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Refreshing Today failed.");
-        }
-    }
-
-    // Timers and messages can arrive off the UI thread; the properties must change on it.
-    private void Post(Action action)
-    {
-        if (_context is null || _context == SynchronizationContext.Current)
-        {
-            action();
-        }
-        else
-        {
-            _context.Post(_ => action(), null);
-        }
+        return now.Date.AddHours(nextHour) - now.DateTime;
     }
 }

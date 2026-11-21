@@ -66,8 +66,6 @@ internal sealed class StubConfirmationDialogService : IConfirmationDialogService
 /// <summary>Records the write calls; <see cref="Active"/> is what GetAsync returns.</summary>
 internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 {
-    public event EventHandler? Changed { add { } remove { } }
-
     public ActiveEnrollment? Active { get; set; }
 
     public List<string> Calls { get; } = [];
@@ -91,6 +89,25 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
         Calls.Add("Enroll");
         Enrolled = (program, track, startDate);
+        return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
+    }
+
+    public Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate)
+    {
+        if (EndFailure is not null)
+        {
+            return Task.FromException<ActiveEnrollment>(EndFailure);
+        }
+
+        if (EnrollFailure is not null)
+        {
+            return Task.FromException<ActiveEnrollment>(EnrollFailure);
+        }
+
+        Calls.Add($"Replace:{reason}");
+        EndReason = reason;
+        Enrolled = (program, track, startDate);
+        Active = null;
         return Task.FromResult(new ActiveEnrollment(new EnrollmentEntity(), program, track, new EnrollmentCalendar(startDate, 1, [])));
     }
 

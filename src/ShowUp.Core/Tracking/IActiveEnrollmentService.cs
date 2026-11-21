@@ -11,9 +11,6 @@ public sealed record ActiveEnrollment(EnrollmentEntity Enrollment, WorkoutProgra
 /// </summary>
 public interface IActiveEnrollmentService
 {
-    /// <summary>Raised after every write; <see cref="Messages.TrackingChangedMessage"/> goes out at the same time.</summary>
-    event EventHandler? Changed;
-
     Task<ActiveEnrollment?> GetAsync();
 
     Task<IReadOnlyList<CompletedSession>> GetCompletionsAsync();
@@ -22,6 +19,9 @@ public interface IActiveEnrollmentService
     Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync();
 
     Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate);
+
+    /// <summary>Ends the current enrollment (if any) and starts a new one atomically: a failed start leaves the old one active.</summary>
+    Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate);
 
     Task EndAsync(EnrollmentEndReason reason);
 

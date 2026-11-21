@@ -73,6 +73,9 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
     public bool IsOpen => _shown is not null;
 
+    /// <summary>The page content under the overlay; hidden from screen readers while the overlay is open.</summary>
+    public UIElement? ShellContent { get; set; }
+
     public Task ShowAsync(CrossMomentInfo info)
     {
         ArgumentNullException.ThrowIfNull(info);
@@ -124,6 +127,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
         _shown = null;
         Visibility = Visibility.Collapsed;
+        SetShellAccessible(true);
         StopFades();
         HideCaptionFromAutomation();
 
@@ -147,6 +151,14 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         catch
         {
             return null;
+        }
+    }
+
+    private void SetShellAccessible(bool accessible)
+    {
+        if (ShellContent is { } shell)
+        {
+            AutomationProperties.SetAccessibilityView(shell, accessible ? AccessibilityView.Content : AccessibilityView.Raw);
         }
     }
 
@@ -175,6 +187,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
         _previousFocus = XamlRoot is { } root ? FocusManager.GetFocusedElement(root) as UIElement : null;
         Visibility = Visibility.Visible;
+        SetShellAccessible(false);
         UpdateCellSize();
 
         // Measure now so the strokes are computed for the cell's final size.

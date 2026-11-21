@@ -343,6 +343,18 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
+    public async Task LogBonus_OneBonus_IsAnnouncedWithThePluralForm()
+    {
+        _bonusDialog.Title = "Evening run";
+        var viewModel = await LoadAsync(_today, "run");
+        var day = Day(viewModel, 0);
+
+        await viewModel.LogBonusCommand.ExecuteAsync(day);
+
+        day.AutomationName.Should().Contain("CalendarDayBonus_One(1)");
+    }
+
+    [TestMethod]
     public async Task LogBonus_WorkoutWithMetrics_OffersItsResults()
     {
         _bonusDialog.Title = "Fit Test";
@@ -454,12 +466,6 @@ public sealed class ProgramCalendarViewModelTests
 
         public bool FailWrites { get; set; }
 
-        public event EventHandler? Changed
-        {
-            add => inner.Changed += value;
-            remove => inner.Changed -= value;
-        }
-
         public Task<ActiveEnrollment?> GetAsync()
         {
             Gets++;
@@ -472,6 +478,9 @@ public sealed class ProgramCalendarViewModelTests
 
         public Task<ActiveEnrollment> EnrollAsync(WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
             inner.EnrollAsync(program, track, startDate);
+
+        public Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate) =>
+            inner.ReplaceAsync(reason, program, track, startDate);
 
         public Task EndAsync(EnrollmentEndReason reason) => Write(() => inner.EndAsync(reason));
 

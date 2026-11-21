@@ -427,6 +427,85 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
         row.EndedAt.Should().Be(Time.GetUtcNow());
     }
 
+    [TestMethod]
+    public async Task Uncross_SetsUpdatedAtAndDeviceId()
+    {
+        var (repo, e) = await EnrolledAsync();
+        await repo.CrossSessionAsync(e.Id, 1, 0, _today);
+        Device.DeviceId = "dev-y";
+        Time.Advance(TimeSpan.FromHours(1));
+
+        await repo.UncrossSessionAsync(e.Id, 1, 0);
+
+        var connection = await Db.GetConnectionAsync();
+        var row = (await connection.Table<CompletionEntity>().ToListAsync()).Should().ContainSingle().Subject;
+        row.DeletedAt.Should().Be(Time.GetUtcNow());
+        row.UpdatedAt.Should().Be(Time.GetUtcNow());
+        row.DeviceId.Should().Be("dev-y");
+    }
+
+    [TestMethod]
+    public async Task RemoveBonus_SetsUpdatedAtAndDeviceId()
+    {
+        var repo = CreateRepository();
+        var bonus = await repo.LogBonusAsync(null, "Run", _today, null);
+        Device.DeviceId = "dev-y";
+        Time.Advance(TimeSpan.FromHours(1));
+
+        await repo.RemoveBonusAsync(bonus.Id);
+
+        var connection = await Db.GetConnectionAsync();
+        var row = (await connection.Table<BonusWorkoutEntity>().ToListAsync()).Should().ContainSingle().Subject;
+        row.DeletedAt.Should().Be(Time.GetUtcNow());
+        row.UpdatedAt.Should().Be(Time.GetUtcNow());
+        row.DeviceId.Should().Be("dev-y");
+    }
+
+    [TestMethod]
+    public async Task EndEnrollment_StampsTheEndingDevice()
+    {
+        var (repo, e) = await EnrolledAsync();
+        Device.DeviceId = "dev-y";
+
+        await repo.EndEnrollmentAsync(e.Id, EnrollmentEndReason.Finished);
+
+        var connection = await Db.GetConnectionAsync();
+        (await connection.Table<EnrollmentEntity>().FirstAsync()).DeviceId.Should().Be("dev-y");
+    }
+
+    [TestMethod]
+    public async Task ReplaceEnrollment_EndsTheOldAndStartsTheNew()
+    {
+        var (repo, old) = await EnrolledAsync();
+        Time.Advance(TimeSpan.FromHours(1));
+
+        var created = await repo.ReplaceEnrollmentAsync(old.Id, EnrollmentEndReason.Abandoned, "q", 2, "t2", _today);
+
+        var active = await repo.GetActiveEnrollmentsAsync();
+        active.Should().ContainSingle().Which.Id.Should().Be(created.Id);
+        var connection = await Db.GetConnectionAsync();
+        var ended = await connection.FindAsync<EnrollmentEntity>(old.Id);
+        ended.EndReason.Should().Be(EnrollmentEndReason.Abandoned);
+        ended.UpdatedAt.Should().Be(Time.GetUtcNow());
+    }
+
+    [TestMethod]
+    public async Task ReplaceEnrollment_InsertFails_OldStaysActive()
+    {
+        var (repo, old) = await EnrolledAsync();
+        var connection = await Db.GetConnectionAsync();
+        await connection.ExecuteAsync("""
+            CREATE TRIGGER "NoNewEnrollments" BEFORE INSERT ON "EnrollmentEntity"
+            BEGIN SELECT RAISE(ABORT, 'insert refused'); END
+            """);
+
+        Func<Task> act = () => repo.ReplaceEnrollmentAsync(old.Id, EnrollmentEndReason.Abandoned, "q", 2, "t2", _today);
+
+        await act.Should().ThrowAsync<Exception>();
+        var active = await repo.GetActiveEnrollmentsAsync();
+        active.Should().ContainSingle().Which.Id.Should().Be(old.Id);
+    }
+
     private Task InsertCompletionAsync(Guid enrollmentId, string deviceId) =>
         InsertCompletionAsync(enrollmentId, deviceId, Guid.NewGuid(), Time.GetUtcNow());
 

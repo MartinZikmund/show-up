@@ -153,5 +153,31 @@ internal sealed class StubJournalService : IJournalService
 
     public IReadOnlyList<ResultsTable> Results { get; set; } = [];
 
-    public Task<IReadOnlyList<ResultsTable>> GetResultsAsync() => Task.FromResult(Results);
+    /// <summary>When set, loads wait for it; <see cref="MaxConcurrentLoads"/> shows whether they overlapped.</summary>
+    public TaskCompletionSource? ResultsGate { get; set; }
+
+    public int ResultsCalls { get; private set; }
+
+    public int MaxConcurrentLoads { get; private set; }
+
+    private int _loading;
+
+    public async Task<IReadOnlyList<ResultsTable>> GetResultsAsync()
+    {
+        ResultsCalls++;
+        MaxConcurrentLoads = Math.Max(MaxConcurrentLoads, ++_loading);
+        try
+        {
+            if (ResultsGate is { } gate)
+            {
+                await gate.Task;
+            }
+
+            return Results;
+        }
+        finally
+        {
+            _loading--;
+        }
+    }
 }

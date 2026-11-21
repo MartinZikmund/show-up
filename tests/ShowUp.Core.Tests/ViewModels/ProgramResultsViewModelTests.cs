@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Tests.Tracking;
 using ShowUp.Core.Tracking;
@@ -60,6 +61,39 @@ public sealed class ProgramResultsViewModelTests
         row.Cells[1].IsBetter.Should().BeTrue();
     }
 
+    [TestMethod]
+    public async Task ViewLoaded_CalledTwice_ListensOnce()
+    {
+        var viewModel = Create(today: _start);
+
+        viewModel.ViewLoaded();
+        viewModel.ViewLoaded();
+        await Task.Delay(50);
+        var calls = _journal.ResultsCalls;
+        _messenger.Send(new JournalChangedMessage());
+        await Task.Delay(50);
+
+        _journal.ResultsCalls.Should().Be(calls + 1);
+    }
+
+    [TestMethod]
+    public async Task Load_Overlapping_RunsOneAtATime()
+    {
+        _journal.ResultsGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var viewModel = Create(today: _start);
+
+        var first = viewModel.LoadAsync();
+        var second = viewModel.LoadAsync();
+        await Task.Delay(50);
+        _journal.ResultsGate.SetResult();
+        await Task.WhenAll(first, second);
+
+        _journal.ResultsCalls.Should().Be(2);
+        _journal.MaxConcurrentLoads.Should().Be(1);
+    }
+
+    private readonly WeakReferenceMessenger _messenger = new();
+
     private ProgramResultsViewModel Create(DateOnly today)
     {
         FakeTimeProvider time = new(new DateTimeOffset(today.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero));
@@ -69,7 +103,7 @@ public sealed class ProgramResultsViewModelTests
             new RecordingEnrollmentService(),
             new RecordingJournalDialogs(),
             new RecordingNavigationService(),
-            new WeakReferenceMessenger(),
+            _messenger,
             new FakeStringLocalizer(),
             _preferences,
             time,

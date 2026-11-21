@@ -5,7 +5,12 @@ Where Show Up keeps its data, and whether it survives a restart on each head.
 ## What is stored where
 
 One SQLite file, `showup.db`, in `ApplicationData.Current.LocalFolder`, opened through
-`ShowUpDatabase` (sqlite-net) and used via `ITrackingRepository` / `SqliteTrackingRepository`.
+`ShowUpDatabase` (sqlite-net). Three repositories share it, all on `SqliteRepositoryBase` (user scoping,
+stamping `Id`/`UserId`/`DeviceId`/timestamps, tombstones):
+
+- `ITrackingRepository` / `SqliteTrackingRepository`: enrollments, completions, shifts, bonus workouts.
+- `INotesRepository` / `SqliteNotesRepository`: program, day and session notes.
+- `IMetricsRepository` / `SqliteMetricsRepository`: logged results.
 
 | Head | Location | Persistence |
 |---|---|---|

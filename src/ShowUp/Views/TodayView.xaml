@@ -19,7 +19,6 @@
                 HorizontalAlignment="Stretch"
                 Spacing="16">
                 <controls:TodayPanel x:Name="Panel" ViewModel="{x:Bind ViewModel, Mode=OneWay}" />
-                <StackPanel x:Name="DebugPanel" Spacing="8" />
             </StackPanel>
         </ScrollViewer>
 

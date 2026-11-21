@@ -17,8 +17,6 @@ public sealed class ActiveEnrollmentService(
     private int _version;
     private int _loadedVersion = -1;
 
-    public event EventHandler? Changed;
-
     public async Task<ActiveEnrollment?> GetAsync()
     {
         await _gate.WaitAsync();
@@ -55,6 +53,28 @@ public sealed class ActiveEnrollmentService(
 
         await repository.EnrollAsync(program.Id, program.Revision, track.Id, startDate);
         NotifyChanged();
+        return await GetAsync() ?? throw new InvalidOperationException($"Enrollment in '{program.Id}' could not be resolved.");
+    }
+
+    public async Task<ActiveEnrollment> ReplaceAsync(EnrollmentEndReason reason, WorkoutProgram program, ProgramTrack track, DateOnly startDate)
+    {
+        ArgumentNullException.ThrowIfNull(program);
+        ArgumentNullException.ThrowIfNull(track);
+
+        if (await GetAsync() is not { } active)
+        {
+            return await EnrollAsync(program, track, startDate);
+        }
+
+        try
+        {
+            await repository.ReplaceEnrollmentAsync(active.Enrollment.Id, reason, program.Id, program.Revision, track.Id, startDate);
+        }
+        finally
+        {
+            NotifyChanged();
+        }
+
         return await GetAsync() ?? throw new InvalidOperationException($"Enrollment in '{program.Id}' could not be resolved.");
     }
 
@@ -145,7 +165,6 @@ public sealed class ActiveEnrollmentService(
     private void NotifyChanged()
     {
         Interlocked.Increment(ref _version);
-        Changed?.Invoke(this, EventArgs.Empty);
         messenger.Send(new TrackingChangedMessage());
     }
 }
