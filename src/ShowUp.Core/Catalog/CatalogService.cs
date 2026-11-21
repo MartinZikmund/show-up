@@ -19,9 +19,16 @@ public sealed class CatalogService(IBundledCatalogSource source, ICustomProgramR
     private WorkoutCatalog? _bundled;
     private volatile Merged? _merged;
 
+    // Bumped by every invalidation, so a merge that raced one isn't cached.
+    private int _generation;
+
     public async Task<WorkoutCatalog> GetCatalogAsync() => (await GetMergedAsync()).Catalog;
 
-    public void InvalidateCustomPrograms() => _merged = null;
+    public void InvalidateCustomPrograms()
+    {
+        Interlocked.Increment(ref _generation);
+        _merged = null;
+    }
 
     public async Task<WorkoutProgram?> GetProgramAsync(string programId, int? revision = null)
     {
@@ -46,19 +53,31 @@ public sealed class CatalogService(IBundledCatalogSource source, ICustomProgramR
     public IReadOnlyList<ScheduleDay> GetTrackDays(ProgramTrack track) =>
         _days.GetValue(track, t => t.Days);
 
-    private static bool IsCustomId(string programId) => programId.StartsWith(SqliteCustomProgramRepository.IdPrefix, StringComparison.Ordinal);
+    private static bool IsCustomId(string programId) => CustomProgramFactory.IsCustomId(programId);
 
     private async Task<Merged> GetMergedAsync()
     {
-        if (_merged is { } merged)
+        if (_merged is { } cached)
         {
-            return merged;
+            return cached;
         }
 
         await _gate.WaitAsync();
         try
         {
-            return _merged ??= await MergeAsync(_bundled ??= await LoadBundledAsync());
+            if (_merged is { } current)
+            {
+                return current;
+            }
+
+            int generation = Volatile.Read(ref _generation);
+            var merged = await MergeAsync(_bundled ??= await LoadBundledAsync());
+            if (generation == Volatile.Read(ref _generation))
+            {
+                _merged = merged;
+            }
+
+            return merged;
         }
         finally
         {
@@ -124,7 +143,11 @@ public sealed class CatalogService(IBundledCatalogSource source, ICustomProgramR
         }
 
         // Latest revisions first, so a renamed custom workout shows its newest name.
-        IEnumerable<Workout> customWorkouts = custom.Concat(_pinned.Values).SelectMany(p => p.Workouts ?? []);
+        // Revisions repeat their workouts; keep one each, from the latest revision.
+        IEnumerable<Workout> customWorkouts = custom.Concat(_pinned.Values)
+            .SelectMany(p => p.Workouts ?? [])
+            .GroupBy(w => w.Id)
+            .Select(g => g.First());
         WorkoutCatalog catalog = new(bundled.Version, [.. bundled.Workouts, .. customWorkouts], [.. bundled.Programs, .. custom]);
         return new(catalog, catalog.WorkoutsById);
     }

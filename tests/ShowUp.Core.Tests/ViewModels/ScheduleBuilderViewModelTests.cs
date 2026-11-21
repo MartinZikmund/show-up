@@ -18,6 +18,7 @@ public sealed class ScheduleBuilderViewModelTests
     private readonly RecordingNavigationService _navigation = new();
     private readonly FakeSessionPicker _picker = new();
     private readonly RecordingDialogService _dialogs = new();
+    private readonly StubConfirmationDialogService _confirmation = new();
 
     [TestMethod]
     public async Task Save_EmptyDay_Blocked()
@@ -251,7 +252,7 @@ public sealed class ScheduleBuilderViewModelTests
         viewModel.WeekCount = 3;
         FillWeek(viewModel.Weeks[1]);
 
-        viewModel.Weeks[1].CopyToAllCommand.Execute(null);
+        await viewModel.Weeks[1].CopyToAllCommand.ExecuteAsync(null);
 
         var draft = viewModel.ToDraft();
         draft.Weeks[0].Should().BeEquivalentTo(draft.Weeks[1], o => o.WithStrictOrdering());
@@ -321,7 +322,7 @@ public sealed class ScheduleBuilderViewModelTests
     }
 
     private ScheduleBuilderViewModel Create(ICatalogService catalog) =>
-        new(new PassThroughLocalizer(), catalog, _programs, _entitlements, _navigation, _picker, _dialogs, NullLogger<ScheduleBuilderViewModel>.Instance);
+        new(new PassThroughLocalizer(), catalog, _programs, _entitlements, _navigation, _picker, _dialogs, _confirmation, NullLogger<ScheduleBuilderViewModel>.Instance);
 
     private sealed class FakeSessionPicker : ISessionPickerDialog
     {

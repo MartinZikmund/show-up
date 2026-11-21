@@ -32,6 +32,7 @@ public partial class ScheduleBuilderViewModel : ViewModelBase
     private readonly INavigationService _navigation;
     private readonly ISessionPickerDialog _picker;
     private readonly IDialogService _dialogs;
+    private readonly IConfirmationDialogService _confirmation;
     private readonly ILogger<ScheduleBuilderViewModel> _logger;
     private readonly List<BuilderWeekViewModel> _weekStore = [];
     private readonly List<Workout> _ownWorkouts = [];
@@ -49,6 +50,7 @@ public partial class ScheduleBuilderViewModel : ViewModelBase
         INavigationService navigation,
         ISessionPickerDialog picker,
         IDialogService dialogs,
+        IConfirmationDialogService confirmation,
         ILogger<ScheduleBuilderViewModel> logger)
     {
         _localizer = localizer;
@@ -58,6 +60,7 @@ public partial class ScheduleBuilderViewModel : ViewModelBase
         _navigation = navigation;
         _picker = picker;
         _dialogs = dialogs;
+        _confirmation = confirmation;
         _logger = logger;
         ProgramId = CustomProgramFactory.NewProgramId();
         PageTitle = localizer["BuilderNewTitle"];
@@ -283,6 +286,22 @@ public partial class ScheduleBuilderViewModel : ViewModelBase
         return new(day, session.WorkoutId, title, isRest || workout is null ? "" : Detail(workout), isRest, session.Optional && !isRest);
     }
 
+    internal async Task CopyToAllAsync(BuilderWeekViewModel source)
+    {
+        if (Weeks.Count < 2)
+        {
+            return;
+        }
+
+        var answer = await _confirmation.ShowAsync(
+            _localizer["BuilderCopyAllTitle", source.Number],
+            _localizer["BuilderCopyAllMessage"]);
+        if (answer == ConfirmationResult.Confirmed)
+        {
+            CopyWeek(source, toAll: true);
+        }
+    }
+
     internal void CopyWeek(BuilderWeekViewModel source, bool toAll)
     {
         var days = source.ToDays();
@@ -399,7 +418,7 @@ public partial class ScheduleBuilderViewModel : ViewModelBase
 
     partial void OnValidationMessagesChanged(IReadOnlyList<string> value) => OnPropertyChanged(nameof(HasValidationMessages));
 
-    private static bool IsCustomWorkout(Workout workout) => workout.Id.StartsWith(Storage.SqliteCustomProgramRepository.IdPrefix, StringComparison.Ordinal);
+    private static bool IsCustomWorkout(Workout workout) => CustomProgramFactory.IsCustomId(workout.Id);
 
     private string Detail(Workout workout)
     {

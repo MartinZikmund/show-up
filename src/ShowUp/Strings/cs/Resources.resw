@@ -1150,15 +1150,6 @@
   <data name="BuilderLockedLink" xml:space="preserve">
     <value>Odemkněte Pro a sestavujte a upravujte rozvrhy</value>
   </data>
-  <data name="BuilderMoveUp" xml:space="preserve">
-    <value>Posunout dřív</value>
-  </data>
-  <data name="BuilderMoveDown" xml:space="preserve">
-    <value>Posunout později</value>
-  </data>
-  <data name="BuilderSessionMore" xml:space="preserve">
-    <value>Další možnosti</value>
-  </data>
   <data name="BuilderRemove" xml:space="preserve">
     <value>Odebrat</value>
   </data>
@@ -1239,5 +1230,20 @@
   </data>
   <data name="CustomProgramLockedLink" xml:space="preserve">
     <value>Bez Pro jsou vlastní rozvrhy jen ke čtení</value>
+  </data>
+  <data name="BuilderMoveUpFormat" xml:space="preserve">
+    <value>Posunout {0} dřív</value>
+  </data>
+  <data name="BuilderMoveDownFormat" xml:space="preserve">
+    <value>Posunout {0} později</value>
+  </data>
+  <data name="BuilderSessionMoreFormat" xml:space="preserve">
+    <value>Další možnosti pro {0}</value>
+  </data>
+  <data name="BuilderCopyAllTitle" xml:space="preserve">
+    <value>Kopírovat týden {0} do všech týdnů?</value>
+  </data>
+  <data name="BuilderCopyAllMessage" xml:space="preserve">
+    <value>Dny všech ostatních týdnů se nahradí dny tohoto týdne.</value>
   </data>
 </root>

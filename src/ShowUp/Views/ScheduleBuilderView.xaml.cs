@@ -16,14 +16,6 @@ public sealed partial class ScheduleBuilderView : ScheduleBuilderViewBase
 
     public static Brush BrushOf(string hex) => new SolidColorBrush(ProgramHero.ParseColor(hex));
 
-    private void Accent_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { Tag: AccentSwatch swatch })
-        {
-            ViewModel?.SelectAccentCommand.Execute(swatch);
-        }
-    }
-
     private void WideWeeks_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ViewModel is { } viewModel && WideWeeks.SelectedItem is BuilderWeekViewModel week)

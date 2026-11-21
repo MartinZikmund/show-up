@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
+using ShowUp.Core.CustomPrograms;
 
 namespace ShowUp.Core.Storage;
 
@@ -12,7 +13,7 @@ public sealed class SqliteCustomProgramRepository(
     ILogger<SqliteCustomProgramRepository> logger)
     : SqliteRepositoryBase(db, time, user, device), ICustomProgramRepository
 {
-    public const string IdPrefix = "custom-";
+    public const string IdPrefix = CustomProgramFactory.IdPrefix;
 
     private const string DeletedPrefix = "custom-deleted:";
 

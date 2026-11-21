@@ -25,11 +25,11 @@
                 <AutoSuggestBox.ItemTemplate>
                     <DataTemplate x:DataType="models:Workout">
                         <StackPanel Padding="0,4" Spacing="0">
-                            <TextBlock Style="{StaticResource BodyTextBlockStyle}" Text="{x:Bind Name}" />
+                            <TextBlock Style="{StaticResource BodyTextBlockStyle}" Text="{x:Bind Name, Mode=OneTime}" />
                             <TextBlock
                                 Foreground="{ThemeResource MutedTextBrush}"
                                 Style="{StaticResource CaptionTextBlockStyle}"
-                                Text="{x:Bind Family}" />
+                                Text="{x:Bind Family, Mode=OneTime}" />
                         </StackPanel>
                     </DataTemplate>
                 </AutoSuggestBox.ItemTemplate>
@@ -57,7 +57,7 @@
                 SelectionChanged="KindBox_SelectionChanged">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="models:WorkoutKind">
-                        <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}}" />
+                        <TextBlock Text="{x:Bind Converter={StaticResource EnumLocalizationConverter}, Mode=OneTime}" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>

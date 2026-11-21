@@ -5,7 +5,7 @@ using ShowUp.Core.CustomPrograms;
 namespace ShowUp.Core.ViewModels;
 
 /// <summary>One of the builder's eight accent colors.</summary>
-public sealed partial class AccentSwatch(string hex, string name) : ObservableObject
+public sealed partial class AccentSwatch(string hex, string name) : ObservableObject, ISwatchItem
 {
     public string Hex { get; } = hex;
 
@@ -62,6 +62,18 @@ public sealed partial class BuilderSessionViewModel : ObservableObject
 
     public string AutomationName => IsOptional ? _day.Owner.Text("ProgramOptionalFormat", Title) : Title;
 
+    public string UpAutomationId => $"{AutomationId}_Up";
+
+    public string DownAutomationId => $"{AutomationId}_Down";
+
+    public string MoreAutomationId => $"{AutomationId}_More";
+
+    public string MoveUpName => _day.Owner.Text("BuilderMoveUpFormat", Title);
+
+    public string MoveDownName => _day.Owner.Text("BuilderMoveDownFormat", Title);
+
+    public string MoreName => _day.Owner.Text("BuilderSessionMoreFormat", Title);
+
     internal CustomSession ToSession() => new(WorkoutId, IsOptional);
 
     [RelayCommand]
@@ -81,7 +93,13 @@ public sealed partial class BuilderSessionViewModel : ObservableObject
     [RelayCommand]
     private void Remove() => _day.Remove(this);
 
-    partial void OnPositionChanged(int value) => OnPropertyChanged(nameof(AutomationId));
+    partial void OnPositionChanged(int value)
+    {
+        OnPropertyChanged(nameof(AutomationId));
+        OnPropertyChanged(nameof(UpAutomationId));
+        OnPropertyChanged(nameof(DownAutomationId));
+        OnPropertyChanged(nameof(MoreAutomationId));
+    }
 }
 
 /// <summary>One of a builder week's seven days.</summary>
@@ -241,11 +259,14 @@ public sealed partial class BuilderWeekViewModel : ObservableObject
 
     public bool CanCopyToNext => Owner.HasWeekAfter(this);
 
+    public bool CanCopyToAll => Owner.Weeks.Count > 1;
+
     [RelayCommand]
     private void CopyToNext() => Owner.CopyWeek(this, toAll: false);
 
+    /// <summary>Overwrites every other week, so it asks first.</summary>
     [RelayCommand]
-    private void CopyToAll() => Owner.CopyWeek(this, toAll: true);
+    private Task CopyToAllAsync() => Owner.CopyToAllAsync(this);
 
     [RelayCommand]
     private void Select() => Owner.SelectedWeek = this;
@@ -270,5 +291,9 @@ public sealed partial class BuilderWeekViewModel : ObservableObject
         Owner.Revalidate();
     }
 
-    internal void RefreshCopyState() => OnPropertyChanged(nameof(CanCopyToNext));
+    internal void RefreshCopyState()
+    {
+        OnPropertyChanged(nameof(CanCopyToNext));
+        OnPropertyChanged(nameof(CanCopyToAll));
+    }
 }

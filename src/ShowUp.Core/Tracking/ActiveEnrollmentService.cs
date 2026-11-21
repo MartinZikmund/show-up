@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using ShowUp.Core.Catalog;
+using ShowUp.Core.CustomPrograms;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
@@ -239,7 +240,7 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
     {
         if (program.IsCustom && !FeatureGate.CanUse(ProFeature.CustomSchedules, _entitlements.IsPro))
         {
-            throw new CustomPrograms.CustomProgramLockedException();
+            throw new CustomProgramLockedException();
         }
     }
 

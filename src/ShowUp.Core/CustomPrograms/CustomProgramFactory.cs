@@ -37,7 +37,12 @@ public static class CustomProgramFactory
     public const string RestWorkoutId = "rest";
     public const string TrackId = "main";
 
-    public static string NewProgramId() => $"{SqliteCustomProgramRepository.IdPrefix}{Guid.NewGuid():D}";
+    /// <summary>Every custom program id, and so every custom workout id, starts with this.</summary>
+    public const string IdPrefix = "custom-";
+
+    public static bool IsCustomId(string id) => id.StartsWith(IdPrefix, StringComparison.Ordinal);
+
+    public static string NewProgramId() => $"{IdPrefix}{Guid.NewGuid():D}";
 
     /// <summary><c>{programId}-{n}</c>, one past the highest number used so far (ids are never reused).</summary>
     public static string NextWorkoutId(string programId, IEnumerable<Workout> existing)
@@ -93,7 +98,8 @@ public static class CustomProgramFactory
             throw new ArgumentException($"The schedule isn't valid: {string.Join(", ", errors)}.", nameof(draft));
         }
 
-        string name = draft.Name.Trim();
+        string trimmed = draft.Name.Trim();
+        string name = trimmed.Length > MaxNameLength ? trimmed[..MaxNameLength] : trimmed;
         List<ScheduleWeek> weeks =
         [
             .. draft.Weeks.Select(week => new ScheduleWeek(
@@ -105,7 +111,7 @@ public static class CustomProgramFactory
         return new WorkoutProgram(
             draft.ProgramId,
             0,
-            name.Length > MaxNameLength ? name[..MaxNameLength] : name,
+            name,
             "",
             "",
             null,

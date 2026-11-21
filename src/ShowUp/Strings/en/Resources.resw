@@ -1150,15 +1150,6 @@
   <data name="BuilderLockedLink" xml:space="preserve">
     <value>Unlock Pro to build and edit schedules</value>
   </data>
-  <data name="BuilderMoveUp" xml:space="preserve">
-    <value>Move earlier</value>
-  </data>
-  <data name="BuilderMoveDown" xml:space="preserve">
-    <value>Move later</value>
-  </data>
-  <data name="BuilderSessionMore" xml:space="preserve">
-    <value>More options</value>
-  </data>
   <data name="BuilderRemove" xml:space="preserve">
     <value>Remove</value>
   </data>
@@ -1239,5 +1230,20 @@
   </data>
   <data name="CustomProgramLockedLink" xml:space="preserve">
     <value>Custom schedules are read-only without Pro</value>
+  </data>
+  <data name="BuilderMoveUpFormat" xml:space="preserve">
+    <value>Move {0} earlier</value>
+  </data>
+  <data name="BuilderMoveDownFormat" xml:space="preserve">
+    <value>Move {0} later</value>
+  </data>
+  <data name="BuilderSessionMoreFormat" xml:space="preserve">
+    <value>More options for {0}</value>
+  </data>
+  <data name="BuilderCopyAllTitle" xml:space="preserve">
+    <value>Copy week {0} to every week?</value>
+  </data>
+  <data name="BuilderCopyAllMessage" xml:space="preserve">
+    <value>Every other week's days are replaced by this week's.</value>
   </data>
 </root>

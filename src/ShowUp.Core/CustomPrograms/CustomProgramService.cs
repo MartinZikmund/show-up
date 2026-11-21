@@ -1,7 +1,5 @@
-using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Entitlements;
-using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
 
 namespace ShowUp.Core.CustomPrograms;
@@ -10,7 +8,6 @@ public sealed class CustomProgramService(
     ICustomProgramRepository repository,
     ICatalogService catalog,
     IEntitlementService entitlements,
-    IMessenger messenger,
     TimeProvider time) : ICustomProgramService
 {
     public bool CanEdit => FeatureGate.CanUse(ProFeature.CustomSchedules, entitlements.IsPro);
@@ -22,7 +19,7 @@ public sealed class CustomProgramService(
 
         var program = CustomProgramFactory.Create(draft, DateOnly.FromDateTime(time.GetLocalNow().DateTime));
         // Checked as the catalog will load it: against bundled workouts plus its own.
-        var bundled = (await catalog.GetCatalogAsync()).Workouts.Where(w => !w.Id.StartsWith(SqliteCustomProgramRepository.IdPrefix, StringComparison.Ordinal)).ToList();
+        var bundled = (await catalog.GetCatalogAsync()).Workouts.Where(w => !CustomProgramFactory.IsCustomId(w.Id)).ToList();
         var errors = CatalogValidator.Validate(new WorkoutCatalog(CatalogService.BundledCatalogVersion, bundled, [program]));
         if (errors.Count > 0)
         {
@@ -31,7 +28,6 @@ public sealed class CustomProgramService(
 
         var saved = await repository.SaveNewRevisionAsync(CustomProgramFactory.Serialize(program), draft.ProgramId);
         catalog.InvalidateCustomPrograms();
-        messenger.Send(new CustomProgramsChangedMessage(saved.ProgramId));
         return saved;
     }
 
@@ -40,7 +36,6 @@ public sealed class CustomProgramService(
     {
         await repository.DeleteAsync(programId);
         catalog.InvalidateCustomPrograms();
-        messenger.Send(new CustomProgramsChangedMessage(programId));
     }
 
     public async Task<int> GetVersionNumberAsync(string programId, int revision)

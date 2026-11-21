@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.CustomPrograms;
-using ShowUp.Core.Messages;
 using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Tests.Tracking;
 
@@ -26,7 +25,7 @@ public sealed class CustomProgramServiceTests
     {
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
         _catalog = new(new TestCatalogSource(), _repository, NullLogger<CatalogService>.Instance);
-        _service = new(_repository, _catalog, _entitlements, _messenger, _time);
+        _service = new(_repository, _catalog, _entitlements, _time);
     }
 
     [TestMethod]
@@ -56,17 +55,6 @@ public sealed class CustomProgramServiceTests
         await _service.SaveAsync(Draft("Mine", own.Id) with { Workouts = [own] });
 
         (await _catalog.GetWorkoutAsync(own.Id)).Should().Be(own);
-    }
-
-    [TestMethod]
-    public async Task Save_SendsTheChangedMessage()
-    {
-        List<string> changed = [];
-        _messenger.Register<CustomProgramsChangedMessage>(this, (_, m) => changed.Add(m.ProgramId));
-
-        await _service.SaveAsync(Draft("Mine", "run"));
-
-        changed.Should().Equal(Id);
     }
 
     [TestMethod]
