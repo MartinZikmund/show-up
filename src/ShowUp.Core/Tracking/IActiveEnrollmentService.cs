@@ -34,5 +34,11 @@ public interface IActiveEnrollmentService
     /// <summary>Pushes the schedule back from <paramref name="fromDate"/>; crossed days never move.</summary>
     Task ShiftAsync(DateOnly fromDate, int days);
 
-    Task LogBonusAsync(string title, DateOnly date);
+    /// <summary>Bonus workouts on any day in the range, with or without an enrollment.</summary>
+    Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to);
+
+    /// <summary>Logs a workout outside the program; works with no enrollment. Future days and blank titles throw <see cref="ArgumentException"/>.</summary>
+    Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes);
+
+    Task RemoveBonusAsync(Guid id);
 }

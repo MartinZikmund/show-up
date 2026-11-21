@@ -117,7 +117,12 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
 
     public Task ShiftAsync(DateOnly fromDate, int days) => Task.CompletedTask;
 
-    public Task LogBonusAsync(string title, DateOnly date) => Task.CompletedTask;
+    public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<BonusWorkoutEntity>>([]);
+
+    public Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes) =>
+        Task.FromResult(new BonusWorkoutEntity { WorkoutId = workoutId, Title = title, Date = date, DurationMinutes = durationMinutes });
+
+    public Task RemoveBonusAsync(Guid id) => Task.CompletedTask;
 }
 
 internal sealed class RecordingDialogService : IDialogService

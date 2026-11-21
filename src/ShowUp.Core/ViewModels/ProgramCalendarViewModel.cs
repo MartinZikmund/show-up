@@ -20,12 +20,11 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private readonly ICatalogService _catalog;
     private readonly TimeProvider _time;
     private readonly IMessenger _messenger;
-    private readonly IAppPreferences _preferences;
-    private readonly ICrossMoment _crossMoment;
-    private readonly IMarkingFeedback _feedback;
+    private readonly ICrossingCoordinator _crossing;
     private readonly IConfirmationDialogService _confirmation;
     private readonly IDialogService _dialogs;
     private readonly ICalendarPrompts _prompts;
+    private readonly IBonusWorkoutDialog _bonusDialog;
     private readonly ISectionNavigator _navigator;
     private readonly ILogger<ProgramCalendarViewModel> _logger;
 
@@ -51,12 +50,11 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         ICatalogService catalog,
         TimeProvider time,
         IMessenger messenger,
-        IAppPreferences preferences,
-        ICrossMoment crossMoment,
-        IMarkingFeedback feedback,
+        ICrossingCoordinator crossing,
         IConfirmationDialogService confirmation,
         IDialogService dialogs,
         ICalendarPrompts prompts,
+        IBonusWorkoutDialog bonusDialog,
         ISectionNavigator navigator,
         ILogger<ProgramCalendarViewModel> logger)
     {
@@ -65,12 +63,11 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         _catalog = catalog;
         _time = time;
         _messenger = messenger;
-        _preferences = preferences;
-        _crossMoment = crossMoment;
-        _feedback = feedback;
+        _crossing = crossing;
         _confirmation = confirmation;
         _dialogs = dialogs;
         _prompts = prompts;
+        _bonusDialog = bonusDialog;
         _navigator = navigator;
         _logger = logger;
         PageTitle = localizer["Calendar"];
@@ -229,42 +226,9 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             }
 
             var dayCompletions = _completions.Where(c => c.DayIndex == day.DayIndex).ToList();
-            var autos = dayCompletions.Where(c => c.InkJson is null).Select(c => c.SessionIndex).ToHashSet();
-            var (before, afterAuto, afterDrawn) = MarkerAppearance.Outcomes(status, autos, session);
-
-            // The id is made up front: a day's first completion picks the wobble, and the moment must draw the same X.
-            var completionId = Guid.NewGuid();
-            var seed = dayCompletions.Count == 0 ? MarkerGeometry.SeedFrom(completionId) : day.Seed;
-            var info = MomentInfo(day, status, session, before, afterAuto, seed);
-
-            if (_preferences.CrossOffStyle == CrossOffStyle.DrawYourself)
-            {
-                List<string> priorInks = [.. dayCompletions.Where(c => c.InkJson is not null).Select(c => c.InkJson!)];
-                var result = await _crossMoment.DrawAsync(new CrossMomentDrawRequest(info, priorInks, afterDrawn));
-                if (!result.Crossed)
-                {
-                    return;
-                }
-
-                day.AnimateMarks = false;
-                await WriteAsync(() => _enrollments.CrossAsync(day.DayIndex, session, result.InkJson, completionId));
-                await RefreshAsync();
-            }
-            else
-            {
-                var showMoment = CrossMomentPolicy.ShouldShow(_preferences.CrossMomentMode, day.IsToday);
-                day.AnimateMarks = !showMoment;
-                await WriteAsync(() => _enrollments.CrossAsync(day.DayIndex, session, completionId: completionId));
-                await RefreshAsync();
-                if (showMoment)
-                {
-                    await _crossMoment.ShowAsync(info with { CurrentStreak = CurrentStreak });
-                }
-                else if (afterAuto == before)
-                {
-                    _feedback.SessionTicked();
-                }
-            }
+            await _crossing.CrossAsync(
+                new CrossTarget(day.DayIndex, session, SessionName(day.DayIndex, session), day.IsToday, day.Seed, status, _statuses, dayCompletions, Today),
+                new CrossHooks(WriteAsync, RefreshAsync, animate => day.AnimateMarks = animate));
         }
         catch (InvalidOperationException)
         {
@@ -313,14 +277,14 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     [RelayCommand]
     private async Task LogBonusAsync(CalendarDayViewModel? day)
     {
-        if (day is null || day.IsFuture || await _prompts.AskBonusTitleAsync() is not { } title || string.IsNullOrWhiteSpace(title))
+        if (day is null || day.IsFuture || await _bonusDialog.ShowAsync(day.Date) is not { } entry)
         {
             return;
         }
 
         try
         {
-            await WriteAsync(() => _enrollments.LogBonusAsync(title.Trim(), day.Date));
+            await WriteAsync(() => _enrollments.LogBonusAsync(entry.WorkoutId, entry.Title, entry.Date, entry.DurationMinutes));
         }
         catch (InvalidOperationException)
         {
@@ -388,24 +352,6 @@ public partial class ProgramCalendarViewModel : ViewModelBase
                 [.. week]));
             previousPhase = phase;
         }
-    }
-
-    private CrossMomentInfo MomentInfo(CalendarDayViewModel day, DayStatus status, int session, int before, int afterAuto, int seed)
-    {
-        var after = status with { CompletedSessions = new HashSet<int>(status.CompletedSessions) { session } };
-        List<DayStatus> statusesAfter = [.. _statuses];
-        statusesAfter[day.DayIndex] = after;
-
-        return new CrossMomentInfo(
-            day.DayNumber,
-            _statuses.Count,
-            SessionName(day.DayIndex, session),
-            before,
-            afterAuto,
-            seed,
-            after.CompletedSessions.Count(i => !after.OptionalSessions.Contains(i)),
-            after.RequiredCount,
-            StreakCalculator.Current(statusesAfter, Today));
     }
 
     private string SessionName(int dayIndex, int session) => WorkoutName(_trackDays[dayIndex].Sessions[session].WorkoutId);

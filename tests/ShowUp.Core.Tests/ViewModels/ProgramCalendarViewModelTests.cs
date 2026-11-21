@@ -29,6 +29,7 @@ public sealed class ProgramCalendarViewModelTests
     private readonly FakeCrossMoment _crossMoment = new();
     private readonly FakeConfirmationDialogService _confirmation = new();
     private readonly FakeCalendarPrompts _prompts = new();
+    private readonly FakeBonusWorkoutDialog _bonusDialog = new();
     private readonly FakeDialogService _dialogs = new();
     private readonly FakeSectionNavigator _navigator = new();
     private ActiveEnrollmentService? _service;
@@ -329,7 +330,7 @@ public sealed class ProgramCalendarViewModelTests
     [TestMethod]
     public async Task LogBonus_TitleGiven_ShowsBonusOnDay()
     {
-        _prompts.BonusTitle = "  Evening run ";
+        _bonusDialog.Title = "  Evening run ";
         var viewModel = await LoadAsync(_today, "run");
         var day = Day(viewModel, 0);
 
@@ -342,7 +343,7 @@ public sealed class ProgramCalendarViewModelTests
     [TestMethod]
     public async Task LogBonus_FutureDay_DoesNotWrite()
     {
-        _prompts.BonusTitle = "Evening run";
+        _bonusDialog.Title = "Evening run";
         var viewModel = await LoadAsync(_today, "run", "run");
 
         await viewModel.LogBonusCommand.ExecuteAsync(Day(viewModel, 1));
@@ -387,12 +388,11 @@ public sealed class ProgramCalendarViewModelTests
             catalog,
             _time,
             messenger,
-            _preferences,
-            _crossMoment,
-            new FakeMarkingFeedback(),
+            new CrossingCoordinator(_preferences, _crossMoment, new FakeMarkingFeedback(), _counting),
             _confirmation,
             _dialogs,
             _prompts,
+            _bonusDialog,
             _navigator,
             NullLogger<ProgramCalendarViewModel>.Instance);
     }
@@ -432,68 +432,18 @@ public sealed class ProgramCalendarViewModelTests
 
         public Task ShiftAsync(DateOnly fromDate, int days) => Write(() => inner.ShiftAsync(fromDate, days));
 
-        public Task LogBonusAsync(string title, DateOnly date) => Write(() => inner.LogBonusAsync(title, date));
+        public Task<IReadOnlyList<BonusWorkoutEntity>> GetBonusWorkoutsAsync(DateOnly from, DateOnly to) => inner.GetBonusWorkoutsAsync(from, to);
+
+        public async Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes)
+        {
+            await Write(() => Task.CompletedTask);
+            return await inner.LogBonusAsync(workoutId, title, date, durationMinutes);
+        }
+
+        public Task RemoveBonusAsync(Guid id) => inner.RemoveBonusAsync(id);
 
         private Task Write(Func<Task> write) =>
             FailWrites ? Task.FromException(new InvalidOperationException("Enrollment ended.")) : write();
-    }
-
-    private sealed class FakeStringLocalizer : IStringLocalizer
-    {
-        public LocalizedString this[string name] => new(name, name, resourceNotFound: true);
-
-        public LocalizedString this[string name, params object[] arguments] => new(name, $"{name}({string.Join(",", arguments)})", resourceNotFound: true);
-
-        public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
-    }
-
-    private sealed class FakeCrossMoment : ICrossMoment
-    {
-        public List<CrossMomentInfo> Shown { get; } = [];
-
-        public CrossMomentResult DrawResult { get; set; } = CrossMomentResult.Auto;
-
-        public List<CrossMomentDrawRequest> DrawRequests { get; } = [];
-
-        public Task ShowAsync(CrossMomentInfo info)
-        {
-            Shown.Add(info);
-            return Task.CompletedTask;
-        }
-
-        public Task<CrossMomentResult> DrawAsync(CrossMomentDrawRequest request)
-        {
-            DrawRequests.Add(request);
-            return Task.FromResult(DrawResult);
-        }
-    }
-
-    private sealed class FakeMarkingFeedback : IMarkingFeedback
-    {
-        public bool SoundEnabled { get; set; }
-
-        public bool HapticsEnabled { get; set; }
-
-        public void StrokeDrawn() { }
-
-        public void SessionTicked() { }
-
-        public void CrossLanded() { }
-
-        public void ScratchStart() { }
-
-        public void ScratchSpeed(double normalizedSpeed) { }
-
-        public void ScratchStop() { }
-
-        public void DayTaken() { }
-    }
-
-    private sealed class FakeConfirmationDialogService : IConfirmationDialogService
-    {
-        public ConfirmationResult Result { get; set; } = ConfirmationResult.Confirmed;
-
-        public Task<ConfirmationResult> ShowAsync(string title, string text) => Task.FromResult(Result);
     }
 
     private sealed class FakeDialogService : IDialogService
@@ -513,38 +463,6 @@ public sealed class ProgramCalendarViewModelTests
     {
         public int? ShiftDays { get; set; }
 
-        public string? BonusTitle { get; set; }
-
         public Task<int?> AskShiftDaysAsync() => Task.FromResult(ShiftDays);
-
-        public Task<string?> AskBonusTitleAsync() => Task.FromResult(BonusTitle);
-    }
-
-    private sealed class FakeSectionNavigator : ISectionNavigator
-    {
-        public List<NavigationSection> Sections { get; } = [];
-
-        public void NavigateToSection(NavigationSection section) => Sections.Add(section);
-    }
-
-    private sealed class FakeAppPreferences : IAppPreferences
-    {
-        public int DataVersion { get; set; }
-
-        public bool FirstStart { get; set; }
-
-        public int LaunchCount { get; set; }
-
-        public bool OfferUserRating { get; set; }
-
-        public ElementTheme Theme { get; set; }
-
-        public bool MarkerSoundEnabled { get; set; }
-
-        public bool MarkerHapticsEnabled { get; set; }
-
-        public CrossMomentMode CrossMomentMode { get; set; }
-
-        public CrossOffStyle CrossOffStyle { get; set; }
     }
 }

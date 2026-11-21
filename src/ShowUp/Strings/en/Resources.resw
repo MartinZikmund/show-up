@@ -478,4 +478,109 @@
   <data name="ProgramStartFailedMessage" xml:space="preserve">
     <value>Something went wrong while starting it. Please try again.</value>
   </data>
+  <data name="GreetingMorning" xml:space="preserve">
+    <value>Good morning</value>
+  </data>
+  <data name="GreetingAfternoon" xml:space="preserve">
+    <value>Good afternoon</value>
+  </data>
+  <data name="GreetingEvening" xml:space="preserve">
+    <value>Good evening</value>
+  </data>
+  <data name="GreetingNight" xml:space="preserve">
+    <value>Burning the midnight oil?</value>
+  </data>
+  <data name="TodayDayFormat" xml:space="preserve">
+    <value>Day {0} of {1}</value>
+  </data>
+  <data name="TodayDurationFormat" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="WorkoutKind_Cardio" xml:space="preserve">
+    <value>Cardio</value>
+  </data>
+  <data name="WorkoutKind_Strength" xml:space="preserve">
+    <value>Strength</value>
+  </data>
+  <data name="WorkoutKind_Abs" xml:space="preserve">
+    <value>Abs</value>
+  </data>
+  <data name="WorkoutKind_Yoga" xml:space="preserve">
+    <value>Yoga</value>
+  </data>
+  <data name="WorkoutKind_Stretch" xml:space="preserve">
+    <value>Stretch</value>
+  </data>
+  <data name="WorkoutKind_Recovery" xml:space="preserve">
+    <value>Recovery</value>
+  </data>
+  <data name="WorkoutKind_Rest" xml:space="preserve">
+    <value>Rest</value>
+  </data>
+  <data name="WorkoutKind_FitTest" xml:space="preserve">
+    <value>Fit test</value>
+  </data>
+  <data name="WorkoutKind_Mixed" xml:space="preserve">
+    <value>Mixed</value>
+  </data>
+  <data name="TodayCrossItOff" xml:space="preserve">
+    <value>Cross it off</value>
+  </data>
+  <data name="TodaySessionDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="TodayOptionalBadge" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="TodayRestDayTitle" xml:space="preserve">
+    <value>Rest day</value>
+  </data>
+  <data name="TodayRestDayMessage" xml:space="preserve">
+    <value>Recovery is part of the plan. Put your feet up.</value>
+  </data>
+  <data name="TodayOffScheduleTitle" xml:space="preserve">
+    <value>Nothing scheduled today</value>
+  </data>
+  <data name="TodayOffScheduleMessage" xml:space="preserve">
+    <value>Your program has no workout for today. A bonus workout is always welcome.</value>
+  </data>
+  <data name="TodayNoProgramTitle" xml:space="preserve">
+    <value>No program yet</value>
+  </data>
+  <data name="TodayNoProgramMessage" xml:space="preserve">
+    <value>Pick a program to get a daily plan, or just log what you did.</value>
+  </data>
+  <data name="TodayBrowsePrograms" xml:space="preserve">
+    <value>Browse programs</value>
+  </data>
+  <data name="TodayBonusHeader" xml:space="preserve">
+    <value>Bonus workouts</value>
+  </data>
+  <data name="TodayBonusAdd" xml:space="preserve">
+    <value>Bonus workout</value>
+  </data>
+  <data name="TodayBonusEmpty" xml:space="preserve">
+    <value>Nothing logged this week. Extra credit is optional, but fun.</value>
+  </data>
+  <data name="TodayBonusToday" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="TodayBonusRemove" xml:space="preserve">
+    <value>Remove bonus workout</value>
+  </data>
+  <data name="BonusRemoveConfirmTitle" xml:space="preserve">
+    <value>Remove bonus workout?</value>
+  </data>
+  <data name="BonusRemoveConfirmFormat" xml:space="preserve">
+    <value>{0} will be removed from your log.</value>
+  </data>
+  <data name="BonusDialogSearchPlaceholder" xml:space="preserve">
+    <value>Search workouts or type your own</value>
+  </data>
+  <data name="BonusDialogDuration" xml:space="preserve">
+    <value>Minutes</value>
+  </data>
+  <data name="BonusDialogDate" xml:space="preserve">
+    <value>Day</value>
+  </data>
 </root>
