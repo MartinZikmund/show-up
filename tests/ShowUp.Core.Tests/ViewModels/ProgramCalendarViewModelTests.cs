@@ -4,6 +4,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.Marking;
 using ShowUp.Core.Navigation;
@@ -28,6 +29,7 @@ public sealed class ProgramCalendarViewModelTests
     private readonly FakeCrossMoment _crossMoment = new();
     private readonly FakeConfirmationDialogService _confirmation = new();
     private readonly FakeCalendarPrompts _prompts = new();
+    private readonly FakeDialogService _dialogs = new();
     private readonly FakeSectionNavigator _navigator = new();
     private ActiveEnrollmentService? _service;
     private CountingEnrollmentService? _counting;
@@ -376,6 +378,7 @@ public sealed class ProgramCalendarViewModelTests
             _crossMoment,
             new FakeMarkingFeedback(),
             _confirmation,
+            _dialogs,
             _prompts,
             _navigator,
             NullLogger<ProgramCalendarViewModel>.Instance);
@@ -478,6 +481,19 @@ public sealed class ProgramCalendarViewModelTests
         public ConfirmationResult Result { get; set; } = ConfirmationResult.Confirmed;
 
         public Task<ConfirmationResult> ShowAsync(string title, string text) => Task.FromResult(Result);
+    }
+
+    private sealed class FakeDialogService : IDialogService
+    {
+        public List<string> Shown { get; } = [];
+
+        public Task<ContentDialogResult> ShowAsync(string title, string content)
+        {
+            Shown.Add(title);
+            return Task.FromResult(ContentDialogResult.Primary);
+        }
+
+        public Task<ContentDialogResult> ShowAsync(ContentDialog contentDialog) => Task.FromResult(ContentDialogResult.Primary);
     }
 
     private sealed class FakeCalendarPrompts : ICalendarPrompts

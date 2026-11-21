@@ -24,6 +24,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
     private readonly ICrossMoment _crossMoment;
     private readonly IMarkingFeedback _feedback;
     private readonly IConfirmationDialogService _confirmation;
+    private readonly IDialogService _dialogs;
     private readonly ICalendarPrompts _prompts;
     private readonly ISectionNavigator _navigator;
     private readonly ILogger<ProgramCalendarViewModel> _logger;
@@ -54,6 +55,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         ICrossMoment crossMoment,
         IMarkingFeedback feedback,
         IConfirmationDialogService confirmation,
+        IDialogService dialogs,
         ICalendarPrompts prompts,
         ISectionNavigator navigator,
         ILogger<ProgramCalendarViewModel> logger)
@@ -67,6 +69,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         _crossMoment = crossMoment;
         _feedback = feedback;
         _confirmation = confirmation;
+        _dialogs = dialogs;
         _prompts = prompts;
         _navigator = navigator;
         _logger = logger;
@@ -349,7 +352,8 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         }
         catch (InvalidOperationException)
         {
-            // Nothing left to shift (every remaining day is crossed or past the end).
+            // Nothing left to shift: every remaining day is crossed, or the program is over.
+            await _dialogs.ShowAsync(_localizer["ShiftFailedTitle"], _localizer["ShiftFailedMessage"]);
         }
 
         await RefreshAsync();

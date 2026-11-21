@@ -38,11 +38,14 @@ public sealed class CalendarPrompts(IDialogCoordinator dialogCoordinator, IXamlR
             XamlRoot = xamlRootProvider.XamlRoot,
         };
 
+        // Cleared or out of range: no Shift until it's a valid count.
+        days.ValueChanged += (_, _) => dialog.IsPrimaryButtonEnabled = IsValidShift(days.Value);
+
         var result = await dialogCoordinator.ShowAsync(dialog);
-        return result == ContentDialogResult.Primary && !double.IsNaN(days.Value)
-            ? (int)Math.Clamp(Math.Round(days.Value), 1, MaxShiftDays)
-            : null;
+        return result == ContentDialogResult.Primary && IsValidShift(days.Value) ? (int)Math.Round(days.Value) : null;
     }
+
+    private static bool IsValidShift(double value) => !double.IsNaN(value) && value >= 1 && value <= MaxShiftDays;
 
     public async Task<string?> AskBonusTitleAsync()
     {

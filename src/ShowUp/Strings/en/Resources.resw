@@ -376,4 +376,10 @@
   <data name="BonusDialogConfirm" xml:space="preserve">
     <value>Log</value>
   </data>
+  <data name="ShiftFailedTitle" xml:space="preserve">
+    <value>Nothing to shift</value>
+  </data>
+  <data name="ShiftFailedMessage" xml:space="preserve">
+    <value>Every remaining day is already crossed off or the program is over, so there's nothing left to move.</value>
+  </data>
 </root>

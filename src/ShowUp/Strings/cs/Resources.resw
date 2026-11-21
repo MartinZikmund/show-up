@@ -376,4 +376,10 @@
   <data name="BonusDialogConfirm" xml:space="preserve">
     <value>Zapsat</value>
   </data>
+  <data name="ShiftFailedTitle" xml:space="preserve">
+    <value>Nen&#237; co posunout</value>
+  </data>
+  <data name="ShiftFailedMessage" xml:space="preserve">
+    <value>V&#353;echny zb&#253;vaj&#237;c&#237; dny u&#382; m&#225;te od&#353;krtnut&#233; nebo program skon&#269;il, tak&#382;e nen&#237; co posunout.</value>
+  </data>
 </root>
