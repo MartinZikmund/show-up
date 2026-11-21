@@ -23,6 +23,8 @@
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#CFC6B2" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#D9372B" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#D9372B" />
+            <!--  Fixed accent: the marker color setting does not recolor the tab underline  -->
+            <SolidColorBrush x:Key="TabIndicatorBrush" Color="#D9372B" />
             <SolidColorBrush x:Key="MarkerBleedBrush" Color="#D9372B" />
             <x:Double x:Key="MarkerBleedOpacity">0.35</x:Double>
             <SolidColorBrush x:Key="BonusStickerBackgroundBrush" Color="#F2C14E" />
@@ -52,6 +54,7 @@
             <SolidColorBrush x:Key="CalendarCellBorderBrush" Color="#454B52" />
             <SolidColorBrush x:Key="CalendarCellTodayBorderBrush" Color="#F3EFE4" />
             <SolidColorBrush x:Key="MarkerBrush" Color="#F3EFE4" />
+            <SolidColorBrush x:Key="TabIndicatorBrush" Color="#F3EFE4" />
             <!--  Chalk dust tinted toward the board: a soft halo, not a grey rim; translucent so it never cuts other strokes  -->
             <SolidColorBrush x:Key="MarkerBleedBrush" Color="#6B6F72" />
             <x:Double x:Key="MarkerBleedOpacity">0.35</x:Double>
@@ -71,6 +74,7 @@
             <StaticResource x:Key="CalendarCellBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="CalendarCellTodayBorderBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="MarkerBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="TabIndicatorBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="MarkerBleedBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <x:Double x:Key="MarkerBleedOpacity">0.35</x:Double>
             <StaticResource x:Key="BonusStickerBackgroundBrush" ResourceKey="SystemColorHighlightColorBrush" />

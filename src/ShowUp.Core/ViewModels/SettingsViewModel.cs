@@ -48,6 +48,7 @@ public partial class SettingsViewModel : ViewModelBase
             CrossMomentMode = _appPreferences.CrossMomentMode;
             CrossOffStyle = _appPreferences.CrossOffStyle;
             MarkerColor = _appPreferences.MarkerColor;
+            SyncSwatches();
         }
         finally
         {
@@ -121,6 +122,15 @@ public partial class SettingsViewModel : ViewModelBase
 
     public MarkerSwatch[] MarkerSwatches { get; }
 
+    // The property's default (Auto) raises no change, so the swatches need an explicit first sync.
+    private void SyncSwatches()
+    {
+        foreach (var swatch in MarkerSwatches)
+        {
+            swatch.IsSelected = swatch.Color == MarkerColor;
+        }
+    }
+
     /// <summary>Whether the marker color picker is unlocked; Plan 3 wires this to the Personalization feature gate.</summary>
     public bool CanChangeMarkerColor => true;
 
@@ -129,11 +139,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     partial void OnMarkerColorChanged(MarkerColor value)
     {
-        foreach (var swatch in MarkerSwatches)
-        {
-            swatch.IsSelected = swatch.Color == value;
-        }
-
+        SyncSwatches();
         if (_isInitializing)
         {
             return;

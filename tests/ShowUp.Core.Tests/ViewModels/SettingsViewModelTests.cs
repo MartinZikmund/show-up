@@ -165,6 +165,14 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
+    public void OnNavigatedTo_DefaultMarkerColor_SelectsAuto()
+    {
+        var viewModel = Navigated(new FakeAppPreferences());
+
+        viewModel.MarkerSwatches.Where(s => s.IsSelected).Select(s => s.Color).Should().Equal(MarkerColor.Auto);
+    }
+
+    [TestMethod]
     public void CanChangeMarkerColor_ForNow_IsTrue()
     {
         CreateViewModel(new FakeAppPreferences()).CanChangeMarkerColor.Should().BeTrue();
