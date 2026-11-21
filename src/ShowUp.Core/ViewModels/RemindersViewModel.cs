@@ -135,6 +135,8 @@ public partial class RemindersViewModel : ViewModelBase
 
     public bool IsSupported => _scheduler.IsSupported;
 
+    public bool IsUnsupported => !_scheduler.IsSupported;
+
     public bool IsEmpty => Items.Count == 0;
 
     /// <summary>Another reminder fits under the tier's limit.</summary>
@@ -277,7 +279,8 @@ public partial class RemindersViewModel : ViewModelBase
     {
         if (item.IsEnabled && Items.Count(i => i.IsEnabled) > FeatureGate.MaxReminders(_entitlements.IsPro))
         {
-            // Lapsed: the extra reminders stay off until Pro is back.
+            // Lapsed: the extra reminders stay off until Pro is back. Yield so the switch finishes its own update first.
+            await Task.Yield();
             item.SetEnabledSilently(false);
             RaiseLimitChanged();
             return;

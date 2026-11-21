@@ -226,6 +226,7 @@ public sealed class RemindersViewModelTests
         var viewModel = await OpenAsync();
 
         viewModel.Items[1].IsEnabled = true;
+        await Task.Delay(50);
 
         viewModel.Items[1].IsEnabled.Should().BeFalse();
         (await _repository.ListAsync()).Single(r => r.MinutesOfDay == 540).Enabled.Should().BeFalse();

@@ -3,6 +3,7 @@ using ShowUp.Core.Catalog;
 using ShowUp.Core.Entitlements;
 using ShowUp.Core.Infrastructure;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Reminders;
 using ShowUp.Core.Services;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Tracking;
@@ -13,6 +14,7 @@ using ShowUp.Services.Entitlements;
 using ShowUp.Services.Marking;
 using ShowUp.Services.Navigation;
 using ShowUp.Services.Rating;
+using ShowUp.Services.Reminders;
 using ShowUp.Services.Settings;
 using ShowUp.Services.Storage;
 using ShowUp.Services.Theming;
@@ -115,6 +117,16 @@ public partial class App : Application, IApplication
         };
         _ = entitlements.RefreshAsync();
 
+        var reminders = Host.Services.GetRequiredService<ReminderCoordinator>();
+        _ = reminders.StartAsync();
+        MainWindow.Activated += (_, e) =>
+        {
+            if (e.WindowActivationState != WindowActivationState.Deactivated)
+            {
+                _ = reminders.ResumeAsync();
+            }
+        };
+
         MainWindow.Activate();
     }
 
@@ -157,6 +169,10 @@ public partial class App : Application, IApplication
         services.AddSingleton<IJournalService, JournalService>();
         services.AddSingleton<IScheduleQuery, ScheduleQuery>();
         services.AddSingleton<LapseCoordinator>();
+        services.AddSingleton<IReminderScheduler, NullReminderScheduler>();
+        services.AddSingleton<IReminderDayProvider, ReminderDayProvider>();
+        services.AddSingleton<ReminderMessageBuilder>(sp => new ReminderMessageBuilder(sp.GetRequiredService<IStringLocalizer>()));
+        services.AddSingleton<ReminderCoordinator>();
         services.AddScoped<IAppRatingService, AppRatingService>();
 
         // Per-window scoped services
@@ -189,6 +205,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.HistoryView), typeof(HistoryViewModel));
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             service.RegisterView(typeof(Views.ProView), typeof(ProViewModel));
+            service.RegisterView(typeof(Views.RemindersView), typeof(RemindersViewModel));
             return service;
         });
 
@@ -206,6 +223,7 @@ public partial class App : Application, IApplication
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ProViewModel>();
+        services.AddTransient<RemindersViewModel>();
     }
 
 #if DEBUG

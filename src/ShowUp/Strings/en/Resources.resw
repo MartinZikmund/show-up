@@ -925,4 +925,70 @@
   <data name="ProgramReadOnlyRestartMessage" xml:space="preserve">
     <value>Free keeps one program going, so this one stays just as it is until Pro is back. Unlock Pro to restart it.</value>
   </data>
+  <data name="Reminders" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="RemindersCardDescription" xml:space="preserve">
+    <value>Daily nudges to show up</value>
+  </data>
+  <data name="ReminderTitle" xml:space="preserve">
+    <value>Show Up</value>
+  </data>
+  <data name="ReminderWorkoutBody" xml:space="preserve">
+    <value>{0} is waiting. Show up.</value>
+  </data>
+  <data name="ReminderRestBody" xml:space="preserve">
+    <value>Rest day. You earned it.</value>
+  </data>
+  <data name="ReminderMore_One" xml:space="preserve">
+    <value>{0} + 1 more</value>
+  </data>
+  <data name="ReminderMore_Few" xml:space="preserve">
+    <value>{0} + {1} more</value>
+  </data>
+  <data name="ReminderMore_Other" xml:space="preserve">
+    <value>{0} + {1} more</value>
+  </data>
+  <data name="ReminderAdd" xml:space="preserve">
+    <value>Add reminder</value>
+  </data>
+  <data name="ReminderEdit" xml:space="preserve">
+    <value>Edit reminder</value>
+  </data>
+  <data name="ReminderEveryDay" xml:space="preserve">
+    <value>Every day</value>
+  </data>
+  <data name="ReminderDeleteTitle" xml:space="preserve">
+    <value>Delete reminder?</value>
+  </data>
+  <data name="ReminderDeleteText" xml:space="preserve">
+    <value>The {0} reminder will be removed.</value>
+  </data>
+  <data name="ReminderDelete" xml:space="preserve">
+    <value>Delete reminder</value>
+  </data>
+  <data name="ReminderEditAction" xml:space="preserve">
+    <value>Edit reminder</value>
+  </data>
+  <data name="ReminderEmpty" xml:space="preserve">
+    <value>No reminders yet. Add one and we will nudge you on workout days.</value>
+  </data>
+  <data name="ReminderTimeLabel" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="ReminderDaysLabel" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="ReminderEnabledName" xml:space="preserve">
+    <value>Reminder on</value>
+  </data>
+  <data name="ReminderUnsupported" xml:space="preserve">
+    <value>Reminders aren't supported on this device yet. You can set them up now and they will start working once they are.</value>
+  </data>
+  <data name="ReminderPermissionDenied" xml:space="preserve">
+    <value>Notifications are turned off for Show Up. Allow them in your system settings to get reminders.</value>
+  </data>
+  <data name="ReminderProLink" xml:space="preserve">
+    <value>Unlock Pro for up to 20 reminders</value>
+  </data>
 </root>

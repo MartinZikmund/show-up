@@ -99,6 +99,9 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
+    [RelayCommand]
+    private void OpenReminders() => _navigation.Navigate<RemindersViewModel>();
+
     public ElementTheme[] ThemeOptions { get; } = [ElementTheme.Default, ElementTheme.Light, ElementTheme.Dark];
 
     [ObservableProperty]
