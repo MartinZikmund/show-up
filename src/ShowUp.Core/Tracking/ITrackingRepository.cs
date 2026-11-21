@@ -20,7 +20,8 @@ public interface ITrackingRepository
 
     Task<IReadOnlyList<ScheduleShift>> GetShiftsAsync(Guid enrollmentId);
 
-    Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days);
+    /// <summary>Shifts the schedule by 1 to 30 days; a day that is already crossed never moves.</summary>
+    Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days, int dayCount);
 
     Task<BonusWorkoutEntity> LogBonusAsync(string? workoutId, string title, DateOnly date, int? durationMinutes);
 

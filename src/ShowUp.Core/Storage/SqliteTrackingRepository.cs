@@ -10,6 +10,8 @@ public sealed class SqliteTrackingRepository(
     IUserScope user,
     IDeviceIdProvider device) : ITrackingRepository
 {
+    private const int MaxShiftDays = 30;
+
     private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
     public async Task<EnrollmentEntity> EnrollAsync(string programId, int revision, string trackId, DateOnly startDate)
@@ -123,9 +125,31 @@ public sealed class SqliteTrackingRepository(
             .ToList();
     }
 
-    public async Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days)
+    public async Task ShiftScheduleAsync(Guid enrollmentId, DateOnly fromDate, int days, int dayCount)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(days, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(days, MaxShiftDays);
+
         var connection = await db.GetConnectionAsync();
+        EnrollmentEntity enrollment = await RequireActiveEnrollmentAsync(connection, enrollmentId);
+
+        EnrollmentCalendar calendar = new(enrollment.StartDate, dayCount, await GetShiftsAsync(enrollmentId));
+        var completions = await GetCompletionsAsync(enrollmentId);
+        int lastCrossed = completions.Where(c => c.DayIndex < dayCount).Select(c => c.DayIndex).DefaultIfEmpty(-1).Max();
+        if (lastCrossed >= 0)
+        {
+            DateOnly earliest = calendar.DateOf(lastCrossed).AddDays(1);
+            if (fromDate < earliest)
+            {
+                fromDate = earliest;
+            }
+        }
+
+        if (fromDate > calendar.EndDate)
+        {
+            throw new InvalidOperationException($"Nothing left to shift from {fromDate}; the schedule ends on {calendar.EndDate}.");
+        }
+
         var entity = Stamp(new ScheduleShiftEntity
         {
             EnrollmentId = enrollmentId,

@@ -8,6 +8,7 @@ namespace ShowUp.Core.Tests.Storage;
 public class SqliteTrackingRepositoryTests : StorageTestBase
 {
     private static readonly DateOnly _today = new(2026, 12, 10);
+    private const int DayCount = 30;
 
     private async Task<(SqliteTrackingRepository Repo, EnrollmentEntity Enrollment)> EnrolledAsync()
     {
@@ -208,7 +209,7 @@ public class SqliteTrackingRepositoryTests : StorageTestBase
     {
         var (repo, e) = await EnrolledAsync();
 
-        await repo.ShiftScheduleAsync(e.Id, new DateOnly(2026, 12, 5), 2);
+        await repo.ShiftScheduleAsync(e.Id, new DateOnly(2026, 12, 5), 2, DayCount);
 
         var shifts = await repo.GetShiftsAsync(e.Id);
         shifts.Should().BeEquivalentTo([new ScheduleShift(new DateOnly(2026, 12, 5), 2)]);
