@@ -65,10 +65,10 @@ public sealed class ActiveEnrollmentService(
         NotifyChanged();
     }
 
-    public async Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null)
+    public async Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null)
     {
         var active = await RequireAsync();
-        await repository.CrossSessionAsync(active.Enrollment.Id, dayIndex, sessionIndex, active.Calendar.DateOf(dayIndex), inkJson);
+        await repository.CrossSessionAsync(active.Enrollment.Id, dayIndex, sessionIndex, active.Calendar.DateOf(dayIndex), inkJson, completionId);
         NotifyChanged();
     }
 

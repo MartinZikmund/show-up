@@ -227,7 +227,11 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             var dayCompletions = _completions.Where(c => c.DayIndex == day.DayIndex).ToList();
             var autos = dayCompletions.Where(c => c.InkJson is null).Select(c => c.SessionIndex).ToHashSet();
             var (before, afterAuto, afterDrawn) = MarkerAppearance.Outcomes(status, autos, session);
-            var info = MomentInfo(day, status, session, before, afterAuto);
+
+            // The id is made up front: a day's first completion picks the wobble, and the moment must draw the same X.
+            var completionId = Guid.NewGuid();
+            var seed = dayCompletions.Count == 0 ? MarkerGeometry.SeedFrom(completionId) : day.Seed;
+            var info = MomentInfo(day, status, session, before, afterAuto, seed);
 
             if (_preferences.CrossOffStyle == CrossOffStyle.DrawYourself)
             {
@@ -239,18 +243,18 @@ public partial class ProgramCalendarViewModel : ViewModelBase
                 }
 
                 day.AnimateMarks = false;
-                await _enrollments.CrossAsync(day.DayIndex, session, result.InkJson);
+                await _enrollments.CrossAsync(day.DayIndex, session, result.InkJson, completionId);
                 await RefreshAsync();
             }
             else
             {
                 var showMoment = CrossMomentPolicy.ShouldShow(_preferences.CrossMomentMode, day.IsToday);
                 day.AnimateMarks = !showMoment;
-                await _enrollments.CrossAsync(day.DayIndex, session);
+                await _enrollments.CrossAsync(day.DayIndex, session, completionId: completionId);
                 await RefreshAsync();
                 if (showMoment)
                 {
-                    await _crossMoment.ShowAsync(info with { Seed = day.Seed, CurrentStreak = CurrentStreak });
+                    await _crossMoment.ShowAsync(info with { CurrentStreak = CurrentStreak });
                 }
                 else if (afterAuto == before)
                 {
@@ -384,7 +388,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         }
     }
 
-    private CrossMomentInfo MomentInfo(CalendarDayViewModel day, DayStatus status, int session, int before, int afterAuto)
+    private CrossMomentInfo MomentInfo(CalendarDayViewModel day, DayStatus status, int session, int before, int afterAuto, int seed)
     {
         var after = status with { CompletedSessions = new HashSet<int>(status.CompletedSessions) { session } };
         List<DayStatus> statusesAfter = [.. _statuses];
@@ -396,7 +400,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             SessionName(day.DayIndex, session),
             before,
             afterAuto,
-            day.Seed,
+            seed,
             after.CompletedSessions.Count(i => !after.OptionalSessions.Contains(i)),
             after.RequiredCount,
             StreakCalculator.Current(statusesAfter, Today));

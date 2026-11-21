@@ -26,7 +26,8 @@ public interface IActiveEnrollmentService
     Task EndAsync(EnrollmentEndReason reason);
 
     /// <param name="inkJson">The drawn cross (<c>InkCodec</c> JSON), or null for the marker X.</param>
-    Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null);
+    /// <param name="completionId">The new completion's id, generated up front so the cross moment can use its seed.</param>
+    Task CrossAsync(int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null);
 
     Task UncrossAsync(int dayIndex, int sessionIndex);
 

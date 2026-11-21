@@ -119,7 +119,7 @@ public sealed partial class CalendarDayViewModel : ObservableObject
         ShowsTicks = status.ShowsSessionTicks || (status.RequiredCount == 0 && !status.IsRestDay);
 
         // Seed and ink before strokes: a seed change redraws, which would cut a stroke animation short.
-        Seed = completions.Count > 0 ? MarkerGeometry.SeedFrom(completions[0].CompletionId) : DayIndex;
+        Seed = SeedFor(completions, DayIndex);
         if (!Inks.SequenceEqual(inks))
         {
             Inks = inks;
@@ -128,6 +128,16 @@ public sealed partial class CalendarDayViewModel : ObservableObject
         MarkStrokes = MarkerAppearance.StrokesFor(status, autos);
         AutomationName = BuildAutomationName(status, sessionNames);
     }
+
+    /// <summary>
+    /// The day's earliest completion picks the wobble, so uncrossing and re-crossing a session never reshapes the others.
+    /// </summary>
+    internal static int SeedFor(IReadOnlyList<CompletedSession> dayCompletions, int dayIndex) =>
+        dayCompletions
+            .OrderBy(c => c.CompletedAt)
+            .ThenBy(c => c.CompletionId.ToString("D"), StringComparer.Ordinal)
+            .Select(c => (int?)MarkerGeometry.SeedFrom(c.CompletionId))
+            .FirstOrDefault() ?? dayIndex;
 
     private string BuildAutomationName(DayStatus status, IReadOnlyList<string> sessionNames)
     {

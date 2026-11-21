@@ -102,7 +102,7 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
         return Task.CompletedTask;
     }
 
-    public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null)
+    public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null, Guid? completionId = null)
     {
         if (!CrossingPolicy.CanCross(dayDate, Today))
         {
@@ -117,7 +117,7 @@ internal sealed class FakeTrackingRepository(TimeProvider time) : ITrackingRepos
         Crosses.Add((dayIndex, sessionIndex, dayDate, inkJson));
         if (!_completions.Any(c => c.DayIndex == dayIndex && c.SessionIndex == sessionIndex))
         {
-            _completions.Add(new(dayIndex, sessionIndex, Guid.NewGuid(), Today, inkJson));
+            _completions.Add(new(dayIndex, sessionIndex, completionId ?? Guid.NewGuid(), Today, inkJson, time.GetUtcNow()));
         }
     }
 
