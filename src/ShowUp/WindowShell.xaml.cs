@@ -40,7 +40,11 @@ public sealed partial class WindowShell : Page, IWindowShell
 
         InnerFrame.Navigated += InnerFrame_Navigated;
         Loading += WindowShell_Loading;
-        Loaded += (_, _) => UpdateStatusBarForeground();
+        Loaded += (_, _) =>
+        {
+            UpdateStatusBarForeground();
+            UpdateTitleBarPaneToggle(WidthStates.CurrentState);
+        };
         ActualThemeChanged += (_, _) => UpdateStatusBarForeground();
 
         UpdateWindowTitle();
@@ -171,6 +175,17 @@ public sealed partial class WindowShell : Page, IWindowShell
     private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
         => NavView.IsPaneOpen = !NavView.IsPaneOpen;
 #endif
+
+    // The TitleBar only exists on Windows, so its pane toggle follows the width state from code.
+    private void WidthStates_CurrentStateChanged(object sender, VisualStateChangedEventArgs e)
+        => UpdateTitleBarPaneToggle(e.NewState);
+
+    private void UpdateTitleBarPaneToggle(VisualState? widthState)
+    {
+#if !HAS_UNO
+        AppTitleBar.IsPaneToggleButtonVisible = widthState != Narrow;
+#endif
+    }
 
     private void UpdateNavigationViewSelection()
     {

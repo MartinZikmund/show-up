@@ -96,11 +96,10 @@
 
     <Border
         toolkit:VisibleBoundsPadding.PaddingMask="Bottom"
-        AutomationProperties.Name="{markup:Localize Key=SectionsTabBarName}"
         Background="{ThemeResource TabBarBackgroundBrush}"
         BorderBrush="{ThemeResource TabBarBorderBrush}"
         BorderThickness="0,1,0,0">
-        <Grid>
+        <Grid AutomationProperties.LandmarkType="Navigation" AutomationProperties.Name="{markup:Localize Key=SectionsTabBarName}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />

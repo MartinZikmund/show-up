@@ -62,6 +62,9 @@ public partial class WindowShellViewModel : ObservableObject
         // Sections are top-level destinations; switching between them shouldn't build a back stack.
         _navigationService.ClearBackStack();
         Select(section);
+
+        // Frame.Navigated (and its CanGoBack sync) fired before the back stack was cleared.
+        NotifyCanGoBackChanged();
     }
 
     /// <summary>Re-reads the current section after a navigation the shell didn't start (e.g. back).</summary>
