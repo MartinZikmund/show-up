@@ -252,4 +252,128 @@
         </Setter>
     </Style>
 
+    <!--  Calendar phase header ("Month 1"), between program weeks  -->
+    <Style
+        x:Key="CalendarPhaseHeaderTextBlockStyle"
+        BasedOn="{StaticResource DisplayNumberTextBlockStyle}"
+        TargetType="TextBlock">
+        <Setter Property="CharacterSpacing" Value="20" />
+    </Style>
+
+    <!--  One day of the paper calendar; parts are filled from code (CalendarDayCell.cs)  -->
+    <Style TargetType="controls:CalendarDayCell">
+        <Setter Property="Background" Value="{ThemeResource CalendarCellBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CalendarCellBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="FocusVisualMargin" Value="-3" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:CalendarDayCell">
+                    <Grid
+                        x:Name="RootGrid"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid.RenderTransform>
+                            <TranslateTransform x:Name="PART_Shake" />
+                        </Grid.RenderTransform>
+                        <Rectangle
+                            x:Name="HoverOverlay"
+                            Fill="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            Opacity="0" />
+                        <Grid x:Name="PART_Content" Padding="6,2,6,5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                x:Name="PART_DayNumber"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource DisplayNumberTextBlockStyle}" />
+                            <TextBlock
+                                x:Name="PART_Date"
+                                Margin="0,5,0,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}" />
+                            <StackPanel
+                                x:Name="PART_Ticks"
+                                Grid.Row="1"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal"
+                                Spacing="3" />
+                            <TextBlock
+                                x:Name="PART_Title"
+                                Grid.Row="2"
+                                MaxLines="2"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                        <!--  Bonus sticker, slightly askew like a real one; the date moves aside for it (CalendarDayCell)  -->
+                        <Border
+                            x:Name="PART_Bonus"
+                            Height="18"
+                            MinWidth="18"
+                            Margin="0,4,4,0"
+                            Padding="4,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Background="{ThemeResource BonusStickerBackgroundBrush}"
+                            CornerRadius="9"
+                            RenderTransformOrigin="0.5,0.5"
+                            Visibility="Collapsed">
+                            <Border.RenderTransform>
+                                <RotateTransform Angle="8" />
+                            </Border.RenderTransform>
+                            <TextBlock
+                                x:Name="PART_BonusText"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource BonusStickerForegroundBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}" />
+                        </Border>
+                        <controls:MarkerCrossControl x:Name="PART_Cross" AutomationProperties.AccessibilityView="Raw" />
+                        <Border
+                            x:Name="PART_Today"
+                            BorderBrush="{ThemeResource CalendarCellTodayBorderBrush}"
+                            BorderThickness="2"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="HoverOverlay.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="HoverOverlay.Opacity" Value="1" />
+                                        <Setter Target="HoverOverlay.Fill" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_Content.Opacity" Value="0.5" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>
