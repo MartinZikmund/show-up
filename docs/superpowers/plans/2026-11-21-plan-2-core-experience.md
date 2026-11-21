@@ -164,6 +164,32 @@
 
 ---
 
+### Task 9: Marker color (Martin's request)
+
+**Files:** Core `Marking/MarkerColor.cs` (enum `Auto, Red, Blue, Green, Purple, Orange, Contrast`), `Marking/MarkerPalette.cs` (pure: `(Color Light, Color Dark) Resolve(MarkerColor)`), `IAppPreferences.MarkerColor` (+ impl), `SettingsViewModel` (+ swatch list), head: `Services/Marking/MarkerBrushUpdater.cs` (updates the app-level `MarkerBrush` in Light and Dark dictionaries at runtime, or a bindable `IMarkerPalette` service the controls read — pick what updates live on all heads), Settings swatch picker (`GridView`/`ItemsRepeater` of 32 px circles, selected ring, AutomationId `MarkerColor_<Name>`, Name = localized color name), tests `Marking/MarkerPaletteTests.cs`, `ViewModels/SettingsViewModelTests` additions.
+
+- Palette (Light / Dark): Auto = `#D9372B` / `#F3EFE4`; Red `#D9372B` / `#FF6B5E`; Blue `#2457C5` / `#7FA6FF`; Green `#1D8F4E` / `#5FD08E`; Purple `#7B3FC4` / `#C29BFF`; Orange `#E06A12` / `#FFA45C`; Contrast `#1F1F1F` / `#F3EFE4`. Dark variants must keep ≥ 3:1 contrast against the chalkboard cell `#2B3035`; light variants ≥ 3:1 against `#FFFDF7` (test it with a WCAG contrast helper in Core).
+- Applies live to every marker surface: calendar cells, Today cards, cross moment (auto + drawn ink), the vector streak flame, BottomTabBar selected indicator stays accent (unchanged). High Contrast ignores the setting (system colors).
+- Pro feature `Personalization` per spec — Plan 3 adds the gate; until then unlocked. Leave a `// Pro: Personalization` marker? No — add a TODO-free hook: `SettingsViewModel.CanChangeMarkerColor` (true for now) that Plan 3 wires to `FeatureGate`.
+- [ ] Tests: `Resolve_AllColors_MeetContrastInBothThemes`, `Resolve_Auto_IsRedOnPaperChalkOnBoard`, `SettingsViewModel_MarkerColor_PersistsOnChange`.
+- [ ] Verify live switching on Desktop + WASM (light and dark) with screenshots of the cross moment and a calendar cell in 2 colors. Commit (feature), PR `Closes #53`.
+
+- [ ] **Paper background (Martin's pick, #50):** replace the graph-grid `PaperGrid` with **plain paper + subtle grain** in Light and Dark (no lines). Generate small tileable grain PNGs (e.g. 256×256, very low-contrast fractal noise, light: warm brown on transparent; dark: light specks on transparent) with a committed stdlib-only script under `tools/` (zlib + struct PNG writer), tile them with an `ImageBrush`/`Rectangle` behind the content at low opacity (strength ~ the playground's 12/30 — subtle). High Contrast: flat `SystemColorWindowColorBrush`, no texture. Must not hurt scrolling performance (single tiled brush, no per-frame work). Screenshots light/dark at 390 and 1280; PR `Closes #50`.
+
+### Task 10: Notes and tracked results (Martin's request)
+
+**Files:** Core `Catalog/WorkoutMetric.cs` (`sealed record WorkoutMetric(string Id, string Name, MetricUnit Unit)`, `enum MetricUnit { Reps, Count, Seconds, Duration /* mm:ss */, Weight, Distance, Text }`), `Workout` gains optional `IReadOnlyList<WorkoutMetric>? Metrics` (JSON `metrics`, schema + validator: unique ids per workout), `Storage/NoteEntity.cs` (`EnrollmentId`, `DayIndex?` (null = program note), `SessionIndex?`, `Text`), `Storage/MetricEntryEntity.cs` (`EnrollmentId`, `DayIndex`, `SessionIndex`, `WorkoutId`, `MetricId`, `double? Value`, `string? TextValue`), migration **v3** frozen DDL (v2 = InkJson from Task 8), `INotesRepository` + `IMetricsRepository` (sqlite, tombstones, user scoping, upsert by natural key), `Tracking/ResultsTable.cs` (pure: rows = metrics, columns = occurrences of the workout in the enrollment ordered by day, cells = values + delta vs first), VMs `DayDetailViewModel`, `ProgramResultsViewModel`, `LogResultsViewModel`; head: `Views/DayDetailView` (sheet/flyout: sessions, crossed state, per-session note, metric inputs), `Views/ProgramResultsView` (table, horizontally scrollable on phones), cross moment gains a "Log your results" button when the crossed workout has metrics (opens LogResults; never blocks dismissal); program notes on the Calendar header ("Program notes" button) and Program detail.
+- Calendar: tap on an already-crossed cell opens DayDetail (uncross moves into DayDetail as an action); bonus workouts in DayDetail too.
+- Duration input `mm:ss` parsed/validated in Core (`DurationParser.TryParse`), stored as seconds.
+- Free: notes + entering results + the results table. Pro: charts/trends (Statistics #22, later).
+- [ ] Tests: `ResultsTable_FitTests_OrderedByDayWithDeltas`, `ResultsTable_MissingValues_AreEmpty`, `DurationParser_Valid_mmss`, `DurationParser_Invalid_ReturnsFalse`, `Notes_ProgramAndDay_RoundTrip`, `Metrics_Upsert_ReplacesValue`, `Migrate_V2ToV3_KeepsData`, `Validator_DuplicateMetricId_ReturnsError`, `LogResults_WorkoutWithoutMetrics_NotOffered`.
+- [ ] Catalog data source: `C:/Users/Martin/AppData/Local/Temp/claude/38a953a20e6c1229/65cb0797-d349-4faa-bd8a-1af0fd25a207/scratchpad/catalog-research/metrics/metrics.json` + `NOTES.md` (all official). Change Asylum Vol 2 Sudden Death Rotations unit to `count`. Add the held **Insanity Unhinged Fit Test** as a standalone workout (id suggested in NOTES `missingWorkouts`, 6 moves; Renegade Row and Thrusters record weight + reps as two metrics each) — not placed on the calendar (Bodi's grid has no Fit Test day); users log it as a bonus workout, and bonus-logged workouts with metrics also feed the results table (rows keyed by workout across the enrollment period).
+- [ ] Catalog data: metric definitions from the verified metrics research (Insanity Fit Test 8 moves as reps; MAX:30 Max Out time per workout; others only where verified) — lands as its own catalog commit with sources in `catalog/VERIFICATION.md`.
+- [ ] Verify on Desktop + WASM: log Fit Test results on two fit-test days, see the table with deltas; MAX:30 max-out times. Screenshots. PR `Closes #55`.
+
+
+---
+
 ## Following plans
 
 3. Entitlements (Free/Pro, Uno.RevenueCat) + reminders per platform
