@@ -9,6 +9,8 @@ When you add a setting or a table, add it here first.
 | --- | --- | --- |
 | `DataVersion`, `FirstStart`, `LaunchCount`, `OfferUserRating` | `IAppPreferences` | per device |
 | `LastKnownPro`, `LastKnownProExpires` | `IAppPreferences` via `AccountProCache` | per device, per account (key carries a hash of the user id) |
+| `AccountClaimAsked.{hash}` | `IPreferences` | per device, per account: the claim question was answered here |
+| `DebugSimulateSignIn`, `DebugSimulatedSession` | `IPreferences` | per device, debug builds only |
 | `SelectedEnrollmentId` | `IAppPreferences` | per device: each device's Calendar can show a different program |
 | `Theme`, `MarkerSoundEnabled`, `MarkerHapticsEnabled`, `CrossMomentMode` | `IAppPreferences` | per device |
 | Notification permission state | the OS | per device |

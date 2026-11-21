@@ -13,6 +13,7 @@ One page per topic. Keep it that way.
 
 ## Architecture
 
+- [accounts.md](./accounts.md) — optional email-code sign-in, the Settings account card, user scoping, claiming signed-out progress and the simulated sign-in for debug builds.
 - [calendar.md](./calendar.md) — the program calendar page: the enrollment service, tap-to-cross flow, and the reusable grid control.
 - [catalog.md](./catalog.md) — how the bundled workout programs are verified, the file format, optional sessions, and held programs.
 - [custom-schedules.md](./custom-schedules.md) — the Pro schedule builder: drafts, own workouts, revisions, the catalog merge and read-only after a lapse.
