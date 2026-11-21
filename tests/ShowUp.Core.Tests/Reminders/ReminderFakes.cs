@@ -80,14 +80,34 @@ internal sealed class FakeReminderScheduler : IReminderScheduler
 
     public List<IReadOnlyList<PlannedReminder>> Replaced { get; } = [];
 
-    public Task<bool> RequestPermissionAsync()
+    /// <summary>Set to hold the permission prompt open until it is completed.</summary>
+    public TaskCompletionSource<bool>? PendingPermission { get; set; }
+
+    /// <summary>Makes every <see cref="ReplaceAllAsync"/> throw.</summary>
+    public bool FailReplace { get; set; }
+
+    public ReminderDeliveryLimit Limit { get; set; }
+
+    /// <summary>What the OS reports without asking; a refused prompt turns it on, as it would on a device.</summary>
+    public bool Denied { get; set; }
+
+    public async Task<bool> RequestPermissionAsync()
     {
         PermissionRequests++;
-        return Task.FromResult(PermissionResult);
+        var granted = PendingPermission is null ? PermissionResult : await PendingPermission.Task;
+        Denied = !granted;
+        return granted;
     }
+
+    public Task<bool> IsDeniedAsync() => Task.FromResult(Denied);
 
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders)
     {
+        if (FailReplace)
+        {
+            throw new InvalidOperationException("scheduler down");
+        }
+
         Replaced.Add(reminders);
         return Task.CompletedTask;
     }

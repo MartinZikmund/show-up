@@ -20,7 +20,7 @@ One page per topic. Keep it that way.
 - [marking.md](./marking.md) — the hand-drawn marker X, drawing the cross yourself, sound and haptics, and the cross moment.
 - [multiple-programs.md](./multiple-programs.md) — running several programs at once (Pro): enrollment-addressed APIs, the selected program, Today's groups, and read-only programs after a lapse.
 - [programs.md](./programs.md) — browsing the catalog, the program detail page, starting a program, and the hero fallback.
-- [reminders.md](./reminders.md) — planning notifications for the next 14 days, the scheduler contract, and the Free limit after a lapse.
+- [reminders.md](./reminders.md) — planning notifications for the next 14 days, delivery on each head, and the Free limit after a lapse.
 - [results.md](./results.md) — notes, logging Fit Test and Max Out results, the day detail sheet and the results table.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
 - [theme.md](./theme.md) — marker color picker, how it repaints live, and the grain paper background.

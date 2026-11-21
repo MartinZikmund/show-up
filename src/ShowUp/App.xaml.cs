@@ -117,6 +117,9 @@ public partial class App : Application, IApplication
         };
         _ = entitlements.RefreshAsync();
 
+#if !HAS_UNO
+        ShowUp.Platforms.Windows.Reminders.WindowsReminderScheduler.RegisterActivation(Host.Services.GetRequiredService<IMessenger>());
+#endif
         var reminders = Host.Services.GetRequiredService<ReminderCoordinator>();
         _ = reminders.StartAsync();
         MainWindow.Activated += (_, e) =>
@@ -169,7 +172,7 @@ public partial class App : Application, IApplication
         services.AddSingleton<IJournalService, JournalService>();
         services.AddSingleton<IScheduleQuery, ScheduleQuery>();
         services.AddSingleton<LapseCoordinator>();
-        services.AddSingleton<IReminderScheduler, NullReminderScheduler>();
+        RegisterReminderScheduler(services);
         services.AddSingleton<IReminderDayProvider, ReminderDayProvider>();
         services.AddSingleton<ReminderMessageBuilder>(sp => new ReminderMessageBuilder(sp.GetRequiredService<IStringLocalizer>()));
         services.AddSingleton<ReminderCoordinator>();
@@ -242,6 +245,24 @@ public partial class App : Application, IApplication
         services.AddSingleton<IEntitlementService>(sp => sp.GetRequiredService<DebugEntitlementOverride>());
     }
 #endif
+
+    private static void RegisterReminderScheduler(IServiceCollection services)
+    {
+#if __ANDROID__
+        services.AddSingleton<IReminderScheduler, ShowUp.Droid.Reminders.AndroidReminderScheduler>();
+#elif __IOS__
+        services.AddSingleton<IReminderScheduler, ShowUp.iOS.Reminders.IosReminderScheduler>();
+#elif !HAS_UNO
+        services.AddSingleton<IReminderScheduler, ShowUp.Platforms.Windows.Reminders.WindowsReminderScheduler>();
+#elif __WASM__
+        services.AddSingleton<IReminderScheduler, ShowUp.Platforms.WebAssembly.Reminders.BrowserReminderScheduler>();
+#elif __DESKTOP__
+        services.AddSingleton<InAppReminderScheduler>();
+        services.AddSingleton<IReminderScheduler>(sp => sp.GetRequiredService<InAppReminderScheduler>());
+#else
+        services.AddSingleton<IReminderScheduler, NullReminderScheduler>();
+#endif
+    }
 
     private static void RegisterEntitlements(HostBuilderContext context, IServiceCollection services)
     {

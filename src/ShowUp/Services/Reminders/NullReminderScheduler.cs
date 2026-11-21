@@ -7,7 +7,11 @@ public sealed class NullReminderScheduler : IReminderScheduler
 {
     public bool IsSupported => false;
 
+    public ReminderDeliveryLimit Limit => ReminderDeliveryLimit.None;
+
     public Task<bool> RequestPermissionAsync() => Task.FromResult(false);
+
+    public Task<bool> IsDeniedAsync() => Task.FromResult(false);
 
     public Task ReplaceAllAsync(IReadOnlyList<PlannedReminder> reminders) => Task.CompletedTask;
 }

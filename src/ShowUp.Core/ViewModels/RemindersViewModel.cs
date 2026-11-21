@@ -51,7 +51,7 @@ public sealed partial class ReminderItemViewModel : ObservableObject
         _syncing = true;
         IsEnabled = reminder.Enabled;
         _syncing = false;
-        ToggleCommand = new AsyncRelayCommand(() => toggled(this));
+        ToggleCommand = new AsyncRelayCommand(() => toggled(this), AsyncRelayCommandOptions.AllowConcurrentExecutions);
         OpenProCommand = new RelayCommand(openPro);
         EditCommand = new AsyncRelayCommand(() => edit(this));
         DeleteCommand = new AsyncRelayCommand(() => delete(this));
@@ -115,6 +115,8 @@ public partial class RemindersViewModel : ViewModelBase
     private Guid? _editingId;
     private bool _listening;
     private int _sending;
+    private readonly SemaphoreSlim _writeGate = new(1, 1);
+    private Task? _permission;
 
     public RemindersViewModel(
         IReminderRepository repository,
@@ -149,6 +151,16 @@ public partial class RemindersViewModel : ViewModelBase
     public bool IsSupported => _scheduler.IsSupported;
 
     public bool IsUnsupported => !_scheduler.IsSupported;
+
+    /// <summary>Where delivery stops short of the OS: "only while the app is running" or "only while a tab is open".</summary>
+    public string? LimitNote => !_scheduler.IsSupported ? null : _scheduler.Limit switch
+    {
+        ReminderDeliveryLimit.WhileAppRunning => _localizer["ReminderOnlyWhileRunning"].Value,
+        ReminderDeliveryLimit.WhileTabOpen => _localizer["ReminderOnlyWhileTabOpen"].Value,
+        _ => null,
+    };
+
+    public bool HasLimitNote => LimitNote is not null;
 
     public bool IsEmpty => Items.Count == 0;
 
@@ -221,6 +233,26 @@ public partial class RemindersViewModel : ViewModelBase
         }
 
         RaiseLimitChanged();
+        await RefreshPermissionAsync();
+    }
+
+    // Notifications can be switched off in system settings at any time; show it while a reminder is on.
+    private async Task RefreshPermissionAsync()
+    {
+        if (!_scheduler.IsSupported || !Items.Any(i => i.IsEnabled) || _permission is { IsCompleted: false })
+        {
+            PermissionDenied = false;
+            return;
+        }
+
+        try
+        {
+            PermissionDenied = await _scheduler.IsDeniedAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Checking notification permission failed.");
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanAdd))]
@@ -244,18 +276,24 @@ public partial class RemindersViewModel : ViewModelBase
     {
         var minutes = (int)EditTime.TotalMinutes;
         var mask = Weekdays.Where(d => d.IsChecked).Sum(d => 1 << d.Bit);
-        IsEditing = false;
+        var editingId = _editingId;
+
+        // Asked before the write: browsers only show the prompt inside the click's user gesture.
+        var permission = editingId is null && CanAdd ? AskPermissionAsync() : Task.CompletedTask;
         await GuardAsync(async () =>
         {
-            if (_editingId is { } id)
+            if (editingId is { } id)
             {
                 await _repository.UpdateAsync(id, minutes, mask);
             }
             else if (CanAdd)
             {
                 await _repository.AddAsync(minutes, mask);
-                await AskPermissionAsync();
             }
+
+            // Only now: a failed write keeps what the user picked on screen.
+            IsEditing = false;
+            await permission;
 
             await LoadAsync();
             SendChanged();
@@ -292,17 +330,36 @@ public partial class RemindersViewModel : ViewModelBase
         });
     }
 
-    private Task ToggleAsync(ReminderItemViewModel item) => GuardAsync(async () =>
+    // Writes are serialized and store the switch as it is now, so a flip during a pending permission prompt isn't lost.
+    private Task ToggleAsync(ReminderItemViewModel item)
     {
-        await _repository.SetEnabledAsync(item.Id, item.IsEnabled);
-        RefreshLimits();
-        if (item.IsEnabled)
+        // Before the write, inside the switch's user gesture (see SaveAsync).
+        var permission = item.IsEnabled ? AskPermissionAsync() : Task.CompletedTask;
+        return GuardAsync(() => WriteToggleAsync(item, permission));
+    }
+
+    private async Task WriteToggleAsync(ReminderItemViewModel item, Task permission)
+    {
+        bool enabled;
+        await _writeGate.WaitAsync();
+        try
         {
-            await AskPermissionAsync();
+            enabled = item.IsEnabled;
+            await _repository.SetEnabledAsync(item.Id, enabled);
+            RefreshLimits();
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
+
+        if (enabled)
+        {
+            await permission;
         }
 
         SendChanged();
-    });
+    }
 
     /// <summary>Runs a write; a failure is logged, shown, and the list reloaded so it matches what is stored.</summary>
     private async Task GuardAsync(Func<Task> write)
@@ -349,13 +406,24 @@ public partial class RemindersViewModel : ViewModelBase
         }
     }
 
-    private async Task AskPermissionAsync()
+    private Task AskPermissionAsync()
     {
         if (!_scheduler.IsSupported)
         {
-            return;
+            return Task.CompletedTask;
         }
 
+        // One prompt at a time: a second toggle waits for the answer already being asked for.
+        if (_permission is { IsCompleted: false } pending)
+        {
+            return pending;
+        }
+
+        return _permission = AskPermissionCoreAsync();
+    }
+
+    private async Task AskPermissionCoreAsync()
+    {
         try
         {
             PermissionDenied = !await _scheduler.RequestPermissionAsync();
@@ -363,6 +431,10 @@ public partial class RemindersViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Asking for notification permission failed.");
+        }
+        finally
+        {
+            _permission = null;
         }
     }
 

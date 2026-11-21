@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ShowUp.Core.Messages;
+using ShowUp.Core.Reminders;
 using ShowUp.Services.Dialogs;
 using ShowUp.Core.Tests.Entitlements;
 using ShowUp.Core.Tests.Reminders;
@@ -372,7 +373,72 @@ public sealed class RemindersViewModelTests
 
         _dialogs.Shown.Should().ContainSingle();
         viewModel.Items.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Save_RepositoryFails_KeepsTheEditorOpenWithWhatWasPicked()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        viewModel.EditTime = TimeSpan.FromMinutes(6 * 60 + 30);
+        Pick(viewModel, "Tue");
+        _repository.FailWrites = true;
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        viewModel.IsEditing.Should().BeTrue();
+        viewModel.EditTime.Should().Be(TimeSpan.FromMinutes(6 * 60 + 30));
+        viewModel.Weekdays.Where(d => d.IsChecked).Select(d => d.Label).Should().Equal("Tue");
+    }
+
+    [TestMethod]
+    public async Task Save_Succeeds_ClosesTheEditor()
+    {
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
         viewModel.IsEditing.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Toggle_OffWhilePermissionPromptIsOpen_StoresOff()
+    {
+        var reminder = await _repository.AddAsync(8 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        _scheduler.PendingPermission = new();
+
+        viewModel.Items[0].IsEnabled = true;
+        await Task.Delay(50);
+        viewModel.Items[0].IsEnabled = false;
+        await Task.Delay(50);
+        _scheduler.PendingPermission.SetResult(true);
+        await Task.Delay(50);
+
+        (await _repository.ListAsync()).Single(r => r.Id == reminder.Id).Enabled.Should().BeFalse();
+        _repository.SetEnabledCalls.Should().Be(2);
+        _scheduler.PermissionRequests.Should().Be(1, "the second toggle doesn't stack another prompt");
+    }
+
+    [TestMethod]
+    public async Task Toggle_TwoRowsOnWhilePromptIsOpen_AsksOnce()
+    {
+        _entitlements.SetPro(true);
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+        await _repository.AddAsync(9 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        _scheduler.PendingPermission = new();
+
+        viewModel.Items[0].IsEnabled = true;
+        viewModel.Items[1].IsEnabled = true;
+        await Task.Delay(50);
+        _scheduler.PendingPermission.SetResult(false);
+        await Task.Delay(50);
+
+        _scheduler.PermissionRequests.Should().Be(1);
+        viewModel.PermissionDenied.Should().BeTrue();
+        (await _repository.ListAsync()).Should().OnlyContain(r => r.Enabled);
     }
 
     [TestMethod]
@@ -414,5 +480,99 @@ public sealed class RemindersViewModelTests
         viewModel.Weekdays.Should().BeSameAs(weekdays);
         viewModel.Weekdays[0].IsChecked.Should().BeFalse();
         _repository.ListCalls.Should().Be(before);
+    }
+
+    [TestMethod]
+    [DataRow(ReminderDeliveryLimit.WhileAppRunning, "ReminderOnlyWhileRunning")]
+    [DataRow(ReminderDeliveryLimit.WhileTabOpen, "ReminderOnlyWhileTabOpen")]
+    public async Task LimitNote_LimitedDelivery_SaysWhen(ReminderDeliveryLimit limit, string key)
+    {
+        _scheduler.Limit = limit;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.LimitNote.Should().Be(key);
+        viewModel.HasLimitNote.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task LimitNote_OsDelivery_IsHidden()
+    {
+        var viewModel = await OpenAsync();
+
+        viewModel.HasLimitNote.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task LimitNote_Unsupported_IsHiddenBehindTheUnsupportedNotice()
+    {
+        _scheduler.IsSupported = false;
+        _scheduler.Limit = ReminderDeliveryLimit.WhileAppRunning;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.HasLimitNote.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Add_RepositoryFails_PromptWasStillStartedBeforeTheWrite()
+    {
+        // The browser only shows its prompt inside the click, so it can't wait for the write.
+        var viewModel = await OpenAsync();
+        viewModel.StartAddCommand.Execute(null);
+        _repository.FailWrites = true;
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        _scheduler.PermissionRequests.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Toggle_OnAndRepositoryFails_PromptWasStillStartedBeforeTheWrite()
+    {
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+        var viewModel = await OpenAsync();
+        _repository.FailWrites = true;
+
+        viewModel.Items[0].IsEnabled = true;
+        await Task.Delay(100);
+
+        _scheduler.PermissionRequests.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Open_ReminderOnAndNotificationsOff_ShowsTheNotice()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        _scheduler.Denied = true;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.PermissionDenied.Should().BeTrue();
+        _scheduler.PermissionRequests.Should().Be(0, "checking never prompts");
+    }
+
+    [TestMethod]
+    public async Task Open_NotificationsOffButNoReminderOn_NoNotice()
+    {
+        await _repository.AddAsync(8 * 60, 127, enabled: false);
+        _scheduler.Denied = true;
+
+        var viewModel = await OpenAsync();
+
+        viewModel.PermissionDenied.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task Load_NotificationsSwitchedBackOn_ClearsTheNotice()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        _scheduler.Denied = true;
+        var viewModel = await OpenAsync();
+
+        _scheduler.Denied = false;
+        await viewModel.LoadAsync();
+
+        viewModel.PermissionDenied.Should().BeFalse();
     }
 }

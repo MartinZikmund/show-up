@@ -997,4 +997,16 @@
   <data name="ReminderErrorText" xml:space="preserve">
     <value>Při ukládání připomínek se něco pokazilo. Seznam ukazuje, co je uložené.</value>
   </data>
+  <data name="ReminderOnlyWhileRunning" xml:space="preserve">
+    <value>Na tomhle zařízení se připomínky ukážou, jen když je Show Up spuštěné. Minimalizované stačí, zavřené ne.</value>
+  </data>
+  <data name="ReminderOnlyWhileTabOpen" xml:space="preserve">
+    <value>V prohlížeči připomínky dorazí, jen když je otevřená karta se Show Up. Aby dorazily vždy, použijte aplikaci Show Up pro Android, iOS nebo Windows.</value>
+  </data>
+  <data name="ReminderBannerOpen" xml:space="preserve">
+    <value>Otevřít Dnes</value>
+  </data>
+  <data name="ReminderBannerName" xml:space="preserve">
+    <value>Připomínka</value>
+  </data>
 </root>

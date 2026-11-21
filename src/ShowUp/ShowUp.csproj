@@ -106,6 +106,7 @@
     <!-- The bootstrapper only loads WasmScripts that are embedded resources. -->
     <ItemGroup Condition="$(TargetFramework.Contains('browserwasm'))">
         <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MarkerScratch.js" />
+        <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\Reminders.js" />
     </ItemGroup>
 
     <ItemGroup>

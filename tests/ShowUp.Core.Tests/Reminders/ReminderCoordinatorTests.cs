@@ -188,6 +188,22 @@ public sealed class ReminderCoordinatorTests
     }
 
     [TestMethod]
+    public async Task BackgroundReplan_SchedulerAndLoggerThrow_DoesNotEscape()
+    {
+        await _repository.AddAsync(8 * 60, 127);
+        using ReminderCoordinator coordinator = new(_repository, _scheduler, _days, _entitlements, _messenger, _time, EnglishReminderLocalizer.Messages, new ThrowingLogger<ReminderCoordinator>());
+        await coordinator.StartAsync();
+        _scheduler.FailReplace = true;
+
+        _messenger.Send(new TrackingChangedMessage());
+        await Task.Delay(50);
+        _scheduler.FailReplace = false;
+        await coordinator.ReplanAsync();
+
+        _scheduler.Replaced.Should().HaveCount(2, "the start plan and the one after the failure");
+    }
+
+    [TestMethod]
     public async Task Dispose_StopsListening()
     {
         await _coordinator.StartAsync();
@@ -215,4 +231,15 @@ public sealed class ReminderCoordinatorTests
 
         _scheduler.Replaced.Should().ContainSingle();
     }
+}
+
+internal sealed class ThrowingLogger<T> : Microsoft.Extensions.Logging.ILogger<T>
+{
+    public IDisposable? BeginScope<TState>(TState state)
+        where TState : notnull => null;
+
+    public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
+
+    public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+        throw new InvalidOperationException("logging is broken");
 }

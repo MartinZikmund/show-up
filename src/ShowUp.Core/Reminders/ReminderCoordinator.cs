@@ -70,8 +70,18 @@ public sealed class ReminderCoordinator : IDisposable
 
     private void OnEntitlementsChanged(object? sender, EventArgs e) => ReplanInBackground();
 
-    // ReplanAsync logs its own failures, so nothing is left unobserved.
-    private async void ReplanInBackground() => await ReplanAsync();
+    // async void: whatever escapes ReplanAsync (even a failing logger) would take the app down.
+    private async void ReplanInBackground()
+    {
+        try
+        {
+            await ReplanAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Background reminder planning failed: {ex}");
+        }
+    }
 
     /// <summary>The app came back to the foreground.</summary>
     public Task ResumeAsync() => ReplanAsync();
