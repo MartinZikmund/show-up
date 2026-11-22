@@ -10,6 +10,7 @@ catalog that anyone can read.
 supabase/
   config.toml                         # local stack (supabase init, CLI v3)
   migrations/<timestamp>_initial.sql  # schema, RLS, grants, triggers
+  migrations/<timestamp>_catalog_heroes_bucket.sql  # public Storage bucket for program hero images
   tests/*_test.sql                    # pgTAP, run by `supabase test db`
 .github/workflows/supabase.yml        # CI: start, reset, test, lint, advisors
 ```
@@ -26,7 +27,7 @@ Needs Docker. Use the CLI through `npx supabase@3` (or an installed v3); v3 targ
 unless you pass `--remote`, so none of these touch a hosted project.
 
 ```bash
-npx supabase@3 start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+npx supabase@3 start -x realtime,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
 npx supabase@3 db reset          # re-applies every migration from scratch
 npx supabase@3 test db           # pgTAP
 npx supabase@3 db lint -s public,private --fail-on error
@@ -40,7 +41,7 @@ Drop the `-x` list to get Studio and the rest of the stack.
 
 `.github/workflows/supabase.yml` runs on pull requests and pushes to `main` that touch `supabase/**`
 (or the workflow). It installs the CLI with `supabase/setup-cli@v3` pinned to `3.2.0`, starts the stack
-without the services the database doesn't need, then `db reset`, `test db`, `db lint` and
+without the services the database doesn't need (Storage stays: the hero bucket lives in its schema), then `db reset`, `test db`, `db lint` and
 `db advisors`. Any failing test, lint error or advisor error fails the job. No secrets are involved.
 
 ## Tables
@@ -162,6 +163,8 @@ replaces, even when the clock steps back or two edits land in the same microseco
   advances `server_updated_at`; a newer tombstone goes through.
 - `catalog_test.sql`: anon and authenticated read all three catalog tables; neither can insert,
   update or delete; the service role can write.
+- `catalog_heroes_bucket_test.sql`: the `catalog-heroes` bucket is public, 2 MiB, webp/png/jpeg only; no
+  `storage.objects` policy for `anon`/`authenticated`; neither can upload or list.
 - `schema_security_test.sql`: the exact table list, RLS everywhere, no `DELETE`/`ALL` policies, no
   user-table privileges for `anon`/`service_role`, no `DELETE`/`TRUNCATE` for `authenticated`, no
   `SECURITY DEFINER` in `public`, the trigger on every user table, every user-table policy
@@ -224,7 +227,45 @@ A file or keychain entry that cannot be decrypted reads as "signed out", never a
   objects must have the same keys), and a null has to reach the server to clear a column such as `deleted_at`.
 - Chunk big upserts (`UpsertAsync` sends what it is given), and make row records with an `Id` property `partial`.
 
-## Hosted project
+## Going live
 
-Not created yet. Linking a project, pushing migrations (`--remote` and an explicit confirmation in CLI
-v3), keys and the custom SMTP requirement are covered when the catalog publish job lands.
+Nothing in the repo touches a hosted project by itself. These are the steps you do once, by hand.
+
+1. **Create the project** in the Supabase dashboard (Free plan is fine to start). Note the project ref
+   (20 lowercase letters, in the dashboard URL) and set the database password.
+2. **Link and push the schema.** CLI v3 is local by default, so hosted commands need `--remote` and an
+   explicit confirmation:
+
+   ```bash
+   npx supabase@3 login                      # or SUPABASE_ACCESS_TOKEN with a scoped token
+   npx supabase@3 link --project-ref <ref>
+   npx supabase@3 db push --remote --dry-run # lists the migrations it would apply
+   npx supabase@3 db push --remote           # asks for confirmation; --yes (or SUPABASE_YES) skips it
+   ```
+
+   This applies both migrations, including the `catalog-heroes` bucket. `db push` connects with the database
+   password (`--password` or `SUPABASE_DB_PASSWORD`), so the token's scope doesn't limit it.
+3. **Data API.** The migrations grant explicitly, so they work either way, but keep *Automatically expose new
+   tables* off (Dashboard, Integrations, Data API, Settings) to match `config.toml`. Then check that
+   `anon`/`authenticated` can read the catalog tables and nothing else.
+4. **Auth settings** (Authentication in the dashboard):
+   - Email provider on. Sign-in is a code: edit the **Magic Link** template and put
+     `{{ .Token }}` in it (see [accounts.md](./accounts.md)).
+   - Email OTP length 6 (the app's code field expects six digits) and a short *Email OTP expiration* (the
+     default is 1 hour; shorter is safer).
+   - **Custom SMTP.** The built-in sender only mails project team members and is limited to 2 messages an
+     hour, so real users never get a code. Add an SMTP provider (Authentication, Emails, SMTP Settings), then
+     raise the rate limits to match. Set this up before the first public build.
+5. **Keys for the app.** Put the project URL and the **publishable** key (`sb_publishable_...`) in
+   `appsettings.json` as `Supabase:Url` and `Supabase:PublishableKey` (or the build's configuration source).
+   Never the secret key. Empty values keep every Supabase feature hidden.
+6. **Keys for CI.** In GitHub, Settings, Environments, create `catalog` (add required reviewers if you want a
+   manual gate on every publish) and add the secrets `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
+   (`sb_secret_...`, from Settings, API Keys; create a dedicated one so it can be rotated alone). Without them
+   the publish workflow just prints a notice. Any CLI token CI ever needs must be a scoped access token
+   limited to this project, never a classic one.
+7. **First publish.** Run the *Catalog publish* workflow by hand with *dry run* ticked, read the plan, then run
+   it again without. See [catalog-delivery.md](./catalog-delivery.md#publishing).
+
+The secret key maps to the `service_role` role and bypasses RLS; the grants still apply, which is why the
+catalog tables give it write access and the user tables give it none.

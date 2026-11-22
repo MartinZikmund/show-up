@@ -38,7 +38,7 @@ has, with a debug log and no user-facing error. A failed check does not use up t
   everything else must be an absolute `https` URL on that host, so `ms-appx:` URIs, `https:/host/x`, `//host/x` and
   rooted paths are all refused.
 - **Same revision, different content:** a `(id, revision)` the app already holds is never replaced. A fix to a
-  published program needs a new revision number (the publish job, Task 6, must bump it).
+  published program needs a new revision number (the publisher refuses to overwrite one, see Publishing).
 - Custom programs never come from the server.
 
 ## Storage
@@ -70,3 +70,44 @@ program is gone entirely; nothing throws.
 A program's `heroImage` may be an `https` URL on the Supabase host (see Validation); `ProgramHero` checks the same
 rule again (`HeroImagePolicy`, host set at startup). It shows the accent gradient first, swaps the image in on
 `BitmapImage.ImageOpened`, and goes back to the gradient on `ImageFailed`. Images are not downloaded ahead of time.
+
+## Publishing
+
+`tools/publish-catalog` (a .NET console app that references `ShowUp.Core`, so it uses the app's parser and
+`CatalogValidator`) pushes `catalog/` to Supabase. `.github/workflows/catalog-publish.yml` runs it on pushes to
+`main` that touch `catalog/**` and on demand, after the unit tests pass. It needs the `SUPABASE_URL` and
+`SUPABASE_SECRET_KEY` secrets (environment `catalog`, setup in [supabase.md](./supabase.md#going-live)); without
+them it logs a notice and succeeds. Only one publish runs at a time.
+
+```bash
+SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SECRET_KEY=sb_secret_...   dotnet run --project tools/publish-catalog -- --dry-run      # drop --dry-run to publish
+```
+
+What it does, in order:
+
+1. Validates the whole folder (exit 1 on any error, nothing is sent).
+2. Reads the server: newest `catalog_versions`, every workout and every program revision.
+3. Refuses (exit 1, lists every problem) when
+   - a workout id is gone from `workouts.json` but is in `workout-ids.lock` or already on the server;
+   - a published `(id, revision)` has different JSON (bump `revision`; JSON is compared structurally, so key order
+     and number spelling don't count);
+   - a program's revision is lower than one already published.
+4. If nothing differs from the server, stops: no version bump.
+5. Otherwise, with `N` the newest version: uploads new hero images, writes **every** workout at version `N + 1` (one
+   request, so one transaction), inserts the new program revisions at `N + 1` with `ignore-duplicates` (an existing
+   revision is never touched), and **last** inserts `catalog_versions(N + 1)`. A client therefore never sees a
+   version without its rows, and two overlapping publishes fail on the version primary key.
+
+Requests carry the secret key in the `apikey` header only (secret keys are not JWTs: no bearer token), and the key is
+never printed. Exit codes: 0 published or nothing to do, 1 refused or invalid, 2 request failed.
+
+**Heroes.** `catalog/heroes/` (not there yet) holds the images, at most 2 MiB each, webp, png or jpeg. A program whose
+`heroImage` is a bundled path such as `Assets/heroes/t25.webp` with a file of that name in `catalog/heroes/` is published
+with `heroImage` rewritten to the public Storage URL
+`https://<ref>.supabase.co/storage/v1/object/public/catalog-heroes/t25-<hash>.webp` (the hash is of the file content, so
+an object never changes and caches never go stale). The JSON in `catalog/programs/` stays as authored, which keeps the
+bundled fallback. Changing a published hero is a program JSON change and needs a revision bump like any other.
+
+**Known window.** The workouts are bumped before the version row is inserted, so for a moment a client that checks
+`N` finds no workouts at version `<= N`. It rejects that set (known ids would be missing) and tries again next start;
+nothing is applied half way.
