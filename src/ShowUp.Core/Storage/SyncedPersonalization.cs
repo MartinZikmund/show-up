@@ -110,7 +110,8 @@ public sealed class SyncedPersonalization
 
         var legacy = LegacyRaw(key);
         var value = ParseEnum(legacy, fallback);
-        await _settings.SetAsync(key, Raw(value));
+        // A fresh stamp here would beat the value this account already has on the server.
+        await _settings.SeedAsync(key, Raw(value));
         if (legacy is not null)
         {
             _legacy.Remove(key);

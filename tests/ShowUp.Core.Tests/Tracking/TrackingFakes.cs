@@ -212,6 +212,18 @@ internal sealed class FakeSyncedSettings : ISyncedSettings
         Values[key] = value;
         return Task.CompletedTask;
     }
+
+    public HashSet<string> Seeded { get; } = [];
+
+    public Task SeedAsync(string key, string value)
+    {
+        if (Values.TryAdd(key, value))
+        {
+            Seeded.Add(key);
+        }
+
+        return Task.CompletedTask;
+    }
 }
 
 internal static class TestEnrollments

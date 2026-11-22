@@ -8,4 +8,10 @@ public interface ISyncedSettings
     Task<IReadOnlyDictionary<string, string>> GetByPrefixAsync(string prefix);
 
     Task SetAsync(string key, string value);
+
+    /// <summary>
+    /// Stores a default only when the key has no value, as the oldest possible version: any real choice, made here or
+    /// pulled from another device, wins over it.
+    /// </summary>
+    Task SeedAsync(string key, string value);
 }
