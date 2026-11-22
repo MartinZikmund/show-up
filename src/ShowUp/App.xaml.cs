@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Accounts;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.CustomPrograms;
@@ -124,6 +124,9 @@ public partial class App : Application, IApplication
             // The old per-device values stay in effect.
             Host.Services.GetRequiredService<ILogger<App>>().LogError(ex, "Loading the synced settings failed.");
         }
+        // Built here so its status events come back on the UI thread.
+        var sync = Host.Services.GetRequiredService<SyncService>();
+        _ = sync.StartAsync();
         appPreferences.LaunchCount++;
         Host.Services.GetRequiredService<MarkerBrushUpdater>().Apply();
 
@@ -156,6 +159,7 @@ public partial class App : Application, IApplication
             if (e.WindowActivationState != WindowActivationState.Deactivated)
             {
                 _ = reminders.ResumeAsync();
+                _ = sync.ResumeAsync();
             }
         };
 
@@ -188,7 +192,6 @@ public partial class App : Application, IApplication
         services.AddSingleton<ICustomProgramRepository, SqliteCustomProgramRepository>();
         services.AddSingleton<ISyncedSettings, SqliteSyncedSettings>();
         services.AddSingleton<ILocalDataClaim, SqliteLocalDataClaim>();
-        services.AddSingleton<ISyncStatus, NoSyncStatus>();
         services.AddSingleton<DataChangeAnnouncer>();
         services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
         services.AddSingleton<ICatalogService, CatalogService>();
@@ -327,6 +330,11 @@ public partial class App : Application, IApplication
 #else
         services.AddSingleton<ISupabaseAuth>(sp => sp.GetRequiredService<SupabaseAuth>());
 #endif
+#if DEBUG
+        Func<IServiceProvider, bool> isAvailable = sp => options.IsConfigured || sp.GetRequiredService<Services.Auth.DebugSupabaseAuth>().Simulate;
+#else
+        Func<IServiceProvider, bool> isAvailable = _ => options.IsConfigured;
+#endif
         services.AddSingleton(sp => new AccountService(
             sp.GetRequiredService<ISupabaseAuth>(),
             sp.GetRequiredService<UserScope>(),
@@ -336,16 +344,35 @@ public partial class App : Application, IApplication
             sp.GetRequiredService<DataChangeAnnouncer>(),
             sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<ILogger<AccountService>>(),
-#if DEBUG
-            () => options.IsConfigured || sp.GetRequiredService<Services.Auth.DebugSupabaseAuth>().Simulate));
-#else
-            () => options.IsConfigured));
-#endif
+            () => isAvailable(sp)));
         services.AddSingleton<IAccessTokenProvider>(sp => sp.GetRequiredService<ISupabaseAuth>());
-        services.AddSingleton<ISupabaseRest>(sp => new SupabaseRest(
+        services.AddSingleton(sp => new SupabaseRest(
             new HttpClient { Timeout = TimeSpan.FromSeconds(60) },
             options,
             sp.GetRequiredService<IAccessTokenProvider>()));
+#if DEBUG
+        services.AddSingleton<ISupabaseRest>(sp => new Services.Sync.DebugSupabaseRest(
+            sp.GetRequiredService<SupabaseRest>(),
+            sp.GetRequiredService<Services.Auth.DebugSupabaseAuth>(),
+            sp.GetRequiredService<TimeProvider>()));
+#else
+        services.AddSingleton<ISupabaseRest>(sp => sp.GetRequiredService<SupabaseRest>());
+#endif
+        services.AddSingleton(sp => new SyncEngine(
+            sp.GetRequiredService<ShowUpDatabase>(),
+            sp.GetRequiredService<ISupabaseRest>(),
+            sp.GetRequiredService<ILogger<SyncEngine>>()));
+        services.AddSingleton(sp => new SyncService(
+            sp.GetRequiredService<SyncEngine>(),
+            sp.GetRequiredService<ShowUpDatabase>(),
+            sp.GetRequiredService<IUserScope>(),
+            sp.GetRequiredService<IEntitlementService>(),
+            sp.GetRequiredService<DataChangeAnnouncer>(),
+            sp.GetRequiredService<MZikmund.Toolkit.WinUI.Services.IPreferences>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<SyncService>>(),
+            () => isAvailable(sp)));
+        services.AddSingleton<ISyncStatus>(sp => sp.GetRequiredService<SyncService>());
     }
 
     // Where the session lives per head: see docs/supabase.md.

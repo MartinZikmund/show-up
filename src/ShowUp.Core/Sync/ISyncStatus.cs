@@ -1,13 +1,17 @@
 namespace ShowUp.Core.Sync;
 
+/// <summary>What the account card shows about sync, and its "Sync now".</summary>
 public interface ISyncStatus
 {
-    /// <summary>Rows of the signed-in user changed after the last successful push.</summary>
-    Task<bool> HasUnsyncedChangesAsync();
-}
+    SyncState State { get; }
 
-/// <summary>Stands in until the sync engine lands. Signing out never deletes rows, so answering false loses nothing.</summary>
-public sealed class NoSyncStatus : ISyncStatus
-{
-    public Task<bool> HasUnsyncedChangesAsync() => Task.FromResult(false);
+    DateTimeOffset? LastSyncedAt { get; }
+
+    /// <summary>On the UI thread.</summary>
+    event EventHandler? Changed;
+
+    /// <summary>Rows of the signed-in user that sync would send but the server hasn't confirmed (false when sync is off or paused).</summary>
+    Task<bool> HasUnsyncedChangesAsync();
+
+    Task SyncNowAsync();
 }

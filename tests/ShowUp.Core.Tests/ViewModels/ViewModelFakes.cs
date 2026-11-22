@@ -67,6 +67,10 @@ internal sealed class FakeConfirmationDialogService : IConfirmationDialogService
     public ConfirmationResult Result { get; set; } = ConfirmationResult.Confirmed;
 
     public Task<ConfirmationResult> ShowAsync(string title, string text) => Task.FromResult(Result);
+
+    public DialogChoice Choice { get; set; } = DialogChoice.Secondary;
+
+    public Task<DialogChoice> ChooseAsync(string title, string text, string primary, string secondary) => Task.FromResult(Choice);
 }
 
 internal sealed class FakeBonusWorkoutDialog : IBonusWorkoutDialog

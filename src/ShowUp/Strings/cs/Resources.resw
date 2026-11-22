@@ -1345,9 +1345,6 @@
   <data name="AccountSyncHeader" xml:space="preserve">
     <value>Synchronizace</value>
   </data>
-  <data name="AccountSyncComingSoon" xml:space="preserve">
-    <value>Funkce Pro · již brzy</value>
-  </data>
   <data name="AccountErrorInvalidEmail" xml:space="preserve">
     <value>Tohle nevypadá jako e-mailová adresa.</value>
   </data>
@@ -1373,7 +1370,7 @@
     <value>Odhlásit se se změnami, které se ještě nesynchronizovaly?</value>
   </data>
   <data name="AccountSignOutUnsyncedMessage" xml:space="preserve">
-    <value>Některé změny z tohoto zařízení se do účtu ještě nedostaly. Nic se nesmaže: zůstanou tady a synchronizují se při příštím přihlášení k tomuto účtu.</value>
+    <value>Některé změny z tohoto zařízení se do účtu ještě nedostaly. Synchronizujte je nejdřív, nebo se přesto odhlaste: nic se nesmaže, zůstanou tady a synchronizují se při příštím přihlášení k tomuto účtu.</value>
   </data>
   <data name="DebugSimulateSignIn" xml:space="preserve">
     <value>Simulovat přihlášení</value>
@@ -1431,5 +1428,71 @@
   </data>
   <data name="AccountBusy" xml:space="preserve">
     <value>Pracuji…</value>
+  </data>
+  <data name="AccountSignOutSyncNow" xml:space="preserve">
+    <value>Synchronizovat</value>
+  </data>
+  <data name="AccountSignOutAnyway" xml:space="preserve">
+    <value>Přesto odhlásit</value>
+  </data>
+  <data name="AccountSignOutStillUnsynced" xml:space="preserve">
+    <value>Některé změny se stále nesynchronizovaly. Zkontrolujte připojení a zkuste to znovu, nebo se přesto odhlaste.</value>
+  </data>
+  <data name="AccountSyncNow" xml:space="preserve">
+    <value>Synchronizovat</value>
+  </data>
+  <data name="SyncStatusSyncing" xml:space="preserve">
+    <value>Synchronizuji…</value>
+  </data>
+  <data name="SyncStatusNever" xml:space="preserve">
+    <value>Zatím nesynchronizováno</value>
+  </data>
+  <data name="SyncStatusOffline" xml:space="preserve">
+    <value>Offline – zkusím to znovu</value>
+  </data>
+  <data name="SyncStatusSignInAgain" xml:space="preserve">
+    <value>Pro synchronizaci se znovu přihlaste</value>
+  </data>
+  <data name="SyncStatusPaused" xml:space="preserve">
+    <value>Pozastaveno · Synchronizace je funkce Pro</value>
+  </data>
+  <data name="SyncStatusFailed" xml:space="preserve">
+    <value>Synchronizace se nezdařila – zkusím to znovu</value>
+  </data>
+  <data name="SyncLastSyncedFormat" xml:space="preserve">
+    <value>Naposledy synchronizováno {0}</value>
+  </data>
+  <data name="SyncJustNow" xml:space="preserve">
+    <value>právě teď</value>
+  </data>
+  <data name="SyncMinutesAgo_One" xml:space="preserve">
+    <value>před {0} minutou</value>
+  </data>
+  <data name="SyncMinutesAgo_Few" xml:space="preserve">
+    <value>před {0} minutami</value>
+  </data>
+  <data name="SyncMinutesAgo_Other" xml:space="preserve">
+    <value>před {0} minutami</value>
+  </data>
+  <data name="SyncHoursAgo_One" xml:space="preserve">
+    <value>před {0} hodinou</value>
+  </data>
+  <data name="SyncHoursAgo_Few" xml:space="preserve">
+    <value>před {0} hodinami</value>
+  </data>
+  <data name="SyncHoursAgo_Other" xml:space="preserve">
+    <value>před {0} hodinami</value>
+  </data>
+  <data name="SyncDaysAgo_One" xml:space="preserve">
+    <value>před {0} dnem</value>
+  </data>
+  <data name="SyncDaysAgo_Few" xml:space="preserve">
+    <value>před {0} dny</value>
+  </data>
+  <data name="SyncDaysAgo_Other" xml:space="preserve">
+    <value>před {0} dny</value>
+  </data>
+  <data name="AccountSyncBusy" xml:space="preserve">
+    <value>Synchronizuji</value>
   </data>
 </root>

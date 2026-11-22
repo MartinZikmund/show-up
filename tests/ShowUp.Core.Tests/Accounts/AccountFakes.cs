@@ -133,7 +133,39 @@ internal sealed class FakeSyncStatus : ISyncStatus
 {
     public bool HasUnsynced { get; set; }
 
+    public SyncState State { get; set; } = SyncState.Idle;
+
+    public DateTimeOffset? LastSyncedAt { get; set; }
+
+    public int SyncNowCalls { get; private set; }
+
+    /// <summary>What "Sync now" leaves behind: true when everything went up.</summary>
+    public bool SyncNowSucceeds { get; set; } = true;
+
+    public event EventHandler? Changed;
+
     public Task<bool> HasUnsyncedChangesAsync() => Task.FromResult(HasUnsynced);
+
+    public Task SyncNowAsync()
+    {
+        SyncNowCalls++;
+        if (SyncNowSucceeds)
+        {
+            HasUnsynced = false;
+            LastSyncedAt = DateTimeOffset.UnixEpoch;
+        }
+
+        State = SyncNowSucceeds ? SyncState.Idle : SyncState.Offline;
+        Changed?.Invoke(this, EventArgs.Empty);
+        return Task.CompletedTask;
+    }
+
+    public void Raise(SyncState state, DateTimeOffset? lastSyncedAt = null)
+    {
+        State = state;
+        LastSyncedAt = lastSyncedAt;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 }
 
 internal sealed class MemoryPreferences : IPreferences
