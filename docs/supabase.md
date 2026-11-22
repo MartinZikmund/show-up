@@ -93,7 +93,10 @@ Catalog tables (written by the publish job, read by the app):
 
 Integer and string columns keep their local names in snake_case (`DayIndex` → `day_index`,
 `MinutesOfDay` → `minutes_of_day`, `SubjectKey` → `subject_key`, ...). `reminders` keeps the local
-validation as check constraints: `minutes_of_day` 0-1439, `days_mask` 1-127.
+validation as check constraints: `minutes_of_day` 0-1439, `days_mask` 1-127. Free-text and JSON columns are
+capped in bytes (`octet_length`): `completions.ink_json` 64 KB, `custom_programs.program_json` 256 KB, `notes.text`
+16 KB and `metric_entries.text_value` 4 KB. The app stays below each (ink 600 points, notes 4000 chars, metric
+text 200 chars, and the schedule builder refuses a program over 256 KB).
 
 **Timestamp precision:** sqlite-net stores `DateTimeOffset` as 100 ns ticks, Postgres keeps
 microseconds. A value with a non-zero last tick digit comes back from the server 0-900 ns earlier than
@@ -128,10 +131,6 @@ included, pulls the winning row again on its next sync.
 - **A far-future `updated_at`** (a device with a badly wrong clock) freezes that row: no correctly
   clocked write can beat it until real time passes it. Only the user's own row is affected (RLS keeps
   it inside their account), so a device can only hurt itself.
-
-Hand-off for the sync engine (Task 4): stamp a row's local `UpdatedAt` monotonic per row,
-`max(now, previous + 1 µs)`, truncated to whole microseconds. An edit then always beats the version it
-replaces, even when the clock steps back or two edits land in the same microsecond.
 
 ## Security model
 
@@ -182,8 +181,8 @@ generation, so it is trim and AOT safe. It only knows what the app needs.
 - `ISupabaseAuth` is GoTrue email codes: `SendCodeAsync` (`POST /auth/v1/otp`, `create_user: true`),
   `VerifyCodeAsync` (`POST /auth/v1/verify`, `type: "email"`), `RefreshAsync`
   (`POST /auth/v1/token?grant_type=refresh_token`), `SignOutAsync` (`POST /auth/v1/logout?scope=local`, best effort,
-  the local session is always cleared). The Magic Link email template must include `{{ .Token }}` or users get a
-  link instead of a code. `Current` is the `Session`; `SessionChanged` fires on sign-in, refresh and sign-out.
+  the local session is always cleared). The Magic Link and Confirm signup email templates must include `{{ .Token }}` or
+  users get a link instead of a code. `Current` is the `Session`; `SessionChanged` fires on sign-in, refresh and sign-out.
 - Refresh is proactive (the access token expires within 60 s) and reactive (a 401 refreshes once and retries once).
   Concurrent callers share one refresh (a caller that cancels only stops waiting). Only a real GoTrue rejection
   signs the device out: HTTP 400, 401 or 403 with `error_code` `refresh_token_not_found`, `refresh_token_already_used`,
@@ -217,16 +216,6 @@ generation, so it is trim and AOT safe. It only knows what the app needs.
 
 A file or keychain entry that cannot be decrypted reads as "signed out", never as an error.
 
-### Hand-off for the sync engine (Task 4)
-
-- **Overlap on the first page of a sync.** Start each pull with the cursor minus a few seconds (cursor only, no
-  `lastId`: `server_updated_at=gte.`), then keep paging with `(server_updated_at, id)` from the last row. A
-  transaction that committed late can show up just below the stored cursor; applying a row twice is harmless.
-- **Row contexts serialize every key.** Do not use `DefaultIgnoreCondition = WhenWritingNull` on the row
-  `JsonSerializerContext`: a batch upsert with different key sets per row fails with PostgREST `PGRST102` (all
-  objects must have the same keys), and a null has to reach the server to clear a column such as `deleted_at`.
-- Chunk big upserts (`UpsertAsync` sends what it is given), and make row records with an `Id` property `partial`.
-
 ## Going live
 
 Nothing in the repo touches a hosted project by itself. These are the steps you do once, by hand.
@@ -243,14 +232,16 @@ Nothing in the repo touches a hosted project by itself. These are the steps you 
    npx supabase@3 db push --remote           # asks for confirmation; --yes (or SUPABASE_YES) skips it
    ```
 
-   This applies both migrations, including the `catalog-heroes` bucket. `db push` connects with the database
+   This applies every migration, including the `catalog-heroes` bucket. `db push` connects with the database
    password (`--password` or `SUPABASE_DB_PASSWORD`), so the token's scope doesn't limit it.
 3. **Data API.** The migrations grant explicitly, so they work either way, but keep *Automatically expose new
    tables* off (Dashboard, Integrations, Data API, Settings) to match `config.toml`. Then check that
    `anon`/`authenticated` can read the catalog tables and nothing else.
 4. **Auth settings** (Authentication in the dashboard):
-   - Email provider on. Sign-in is a code: edit the **Magic Link** template and put
-     `{{ .Token }}` in it (see [accounts.md](./accounts.md)).
+   - Email provider on. Sign-in is a code: put `{{ .Token }}` in **both** the **Magic Link** template (returning
+     users) and the **Confirm signup** template (new users get that one while email confirmation is on); see
+     [accounts.md](./accounts.md). Verify in the dashboard, then by signing up a fresh address and checking the
+     mail shows a code, not just a link.
    - Email OTP length 6 (the app's code field expects six digits) and a short *Email OTP expiration* (the
      default is 1 hour; shorter is safer).
    - **Custom SMTP.** The built-in sender only mails project team members and is limited to 2 messages an

@@ -1,6 +1,6 @@
 # What syncs and what stays on the device
 
-Plan 4 (accounts and sync) needs to know, for every piece of state, whether it follows the user or belongs to this device.
+Accounts and sync need to know, for every piece of state, whether it follows the user or belongs to this device.
 When you add a setting or a table, add it here first.
 
 ## Settings
@@ -29,4 +29,4 @@ into synced settings and removes the old keys.
 All of these are synced (they carry `UserId`, `DeviceId`, timestamps and tombstones, see [storage.md](./storage.md)):
 reminders, custom programs (every revision), notes, metrics (logged results), completions, enrollments, schedule shifts and bonus workouts.
 
-Not synced: the bundled catalog (it ships with the app; Plan 4 adds over-the-air updates).
+Not synced: the bundled catalog (it ships with the app; over-the-air updates are cached separately, see [catalog-delivery.md](./catalog-delivery.md)).

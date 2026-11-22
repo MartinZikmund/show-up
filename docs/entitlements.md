@@ -72,7 +72,7 @@ RevenueCat packages are read from the current offering: `$rc_monthly`, `$rc_annu
 
 ## Accounts
 
-`IEntitlementService.SetUserAsync(userId)` is what Plan 4's sign-in calls (nothing does yet). RevenueCat logs in or out so a
+`IEntitlementService.SetUserAsync(userId)` is what `AccountService` calls on sign-in, sign-out and restore. RevenueCat logs in or out so a
 purchase follows the user across devices; the Microsoft Store and the unlocked heads ignore it. The cached Pro state is kept
 per account (`AccountProCache`: preference keys carry a hash of the user id, anonymous keeps the original keys), so signing
 in as someone else never inherits the previous account's Pro.

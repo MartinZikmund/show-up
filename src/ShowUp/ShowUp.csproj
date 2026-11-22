@@ -56,7 +56,7 @@
         <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
     </ItemGroup>
 
-    <!-- DPAPI for the session file on Windows (packaged builds use the Credential Locker instead). -->
+    <!-- DPAPI for the session file on Windows (packaged Windows builds use it too). -->
     <ItemGroup Condition="'$(IsWinAppSdk)' == 'true' or $(TargetFramework.Contains('desktop'))">
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>

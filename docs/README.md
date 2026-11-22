@@ -28,7 +28,7 @@ One page per topic. Keep it that way.
 - [results.md](./results.md) — notes, logging Fit Test and Max Out results, the day detail sheet and the results table.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
 - [supabase.md](./supabase.md) — the Supabase schema mirroring local storage, RLS and grants, pgTAP tests, the CI job, and the local↔server column mapping, and the thin client (config keys, where tokens live per head).
-- [Sync classification](./sync-classification.md) — which settings and rows follow the user across devices and which stay on this one.
+- [sync-classification.md](./sync-classification.md) — which settings and rows follow the user across devices and which stay on this one.
 - [sync.md](./sync.md) — the sync engine: dirty marker, push and pull, cursors and overlap, last writer wins, triggers, states and the sign-out prompt.
 - [theme.md](./theme.md) — marker color picker, how it repaints live, and the grain paper background.
 - [today.md](./today.md) — the Today page, the shared crossing flow, and bonus workouts.
