@@ -137,4 +137,12 @@ public class CatalogPlannerTests
         plan.Recovering.Should().BeFalse();
         plan.HasChanges.Should().BeFalse();
     }
+
+    [TestMethod]
+    public void Plan_ServerBehindTheBundledCatalog_NeverPlansTheBundledVersion()
+    {
+        var plan = CatalogPlanner.Plan(Local(_workouts, []), EmptyServer);
+
+        plan.NewVersion.Should().BeGreaterThan(ShowUp.Core.Catalog.CatalogService.BundledCatalogVersion);
+    }
 }
