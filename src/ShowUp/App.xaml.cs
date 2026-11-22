@@ -127,6 +127,8 @@ public partial class App : Application, IApplication
         // Built here so its status events come back on the UI thread.
         var sync = Host.Services.GetRequiredService<SyncService>();
         _ = sync.StartAsync();
+        var supabaseOptions = Host.Services.GetRequiredService<SupabaseOptions>();
+        ShowUp.Controls.ProgramHero.AllowedRemoteHost = supabaseOptions.IsConfigured ? new Uri(supabaseOptions.Url).Host : null;
         var catalogUpdates = Host.Services.GetRequiredService<CatalogUpdateService>();
         _ = catalogUpdates.StartAsync();
         appPreferences.LaunchCount++;

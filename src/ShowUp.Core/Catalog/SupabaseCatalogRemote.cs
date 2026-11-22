@@ -7,6 +7,9 @@ public sealed class SupabaseCatalogRemote(ISupabaseRest rest, SupabaseOptions op
 {
     public const int PageSize = 200;
 
+    /// <summary>A table longer than this is treated as a broken or hostile response, not downloaded.</summary>
+    public const int MaxPages = 50;
+
     public bool IsAvailable => options.IsConfigured;
 
     public async Task<int?> GetLatestVersionAsync(CancellationToken ct = default)
@@ -19,27 +22,39 @@ public sealed class SupabaseCatalogRemote(ISupabaseRest rest, SupabaseOptions op
     {
         string filter = $"version=lte.{version}";
         List<string> workouts = [];
-        for (int offset = 0; ; offset += PageSize)
+        for (int page = 0; ; page++)
         {
-            var page = await rest.SelectAsync("catalog_workouts", filter, "id.asc", offset, PageSize, CatalogRowsJsonContext.Default.CatalogWorkoutRow, ct);
-            workouts.AddRange(page.Select(r => r.Json.GetRawText()));
-            if (page.Count < PageSize)
+            var rows = await rest.SelectAsync("catalog_workouts", filter, "id.asc", page * PageSize, PageSize, CatalogRowsJsonContext.Default.CatalogWorkoutRow, ct);
+            workouts.AddRange(rows.Select(r => r.Json.GetRawText()));
+            if (rows.Count < PageSize)
             {
                 break;
             }
+
+            EnsureWithinCeiling(page);
         }
 
         List<RemoteProgram> programs = [];
-        for (int offset = 0; ; offset += PageSize)
+        for (int page = 0; ; page++)
         {
-            var page = await rest.SelectAsync("catalog_programs", filter, "id.asc,revision.asc", offset, PageSize, CatalogRowsJsonContext.Default.CatalogProgramRow, ct);
-            programs.AddRange(page.Select(r => new RemoteProgram(r.Id, r.Revision, r.Json.GetRawText())));
-            if (page.Count < PageSize)
+            var rows = await rest.SelectAsync("catalog_programs", filter, "id.asc,revision.asc", page * PageSize, PageSize, CatalogRowsJsonContext.Default.CatalogProgramRow, ct);
+            programs.AddRange(rows.Select(r => new RemoteProgram(r.Id, r.Revision, r.Json.GetRawText())));
+            if (rows.Count < PageSize)
             {
                 break;
             }
+
+            EnsureWithinCeiling(page);
         }
 
         return new(version, workouts, programs);
+    }
+
+    private static void EnsureWithinCeiling(int page)
+    {
+        if (page + 1 >= MaxPages)
+        {
+            throw new InvalidOperationException($"The catalog is longer than {MaxPages * PageSize} rows.");
+        }
     }
 }

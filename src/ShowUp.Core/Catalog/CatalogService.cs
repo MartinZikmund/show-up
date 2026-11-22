@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using ShowUp.Core.CustomPrograms;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Storage;
+using ShowUp.Core.Supabase;
 
 namespace ShowUp.Core.Catalog;
 
@@ -19,6 +20,7 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
     private readonly ICustomProgramRepository _customPrograms;
     private readonly ILogger<CatalogService> _logger;
     private readonly ICatalogCache? _cache;
+    private readonly string? _heroHost;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly ConditionalWeakTable<ProgramTrack, IReadOnlyList<ScheduleDay>> _days = new();
 
@@ -33,9 +35,10 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
     // Bumped by full invalidations only, so a bundled read that raced one isn't cached.
     private int _bundledGeneration;
 
-    public CatalogService(IBundledCatalogSource source, ICustomProgramRepository customPrograms, ILogger<CatalogService> logger, IMessenger? messenger = null, ICatalogCache? cache = null)
+    public CatalogService(IBundledCatalogSource source, ICustomProgramRepository customPrograms, ILogger<CatalogService> logger, IMessenger? messenger = null, ICatalogCache? cache = null, SupabaseOptions? options = null)
     {
         _cache = cache;
+        _heroHost = options is { IsConfigured: true } ? new Uri(options.Url).Host : null;
         _source = source;
         _customPrograms = customPrograms;
         _logger = logger;
@@ -266,8 +269,9 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
                 return false;
             }
 
-            var (workouts, workoutsJson) = AcceptWorkouts(remote, current);
+            var (workouts, workoutsJson, workoutsAccepted) = AcceptWorkouts(remote, current);
             List<CachedProgram> accepted = [];
+            List<WorkoutProgram> added = [];
             foreach (var row in remote.Programs)
             {
                 if (current.Archive.ContainsKey((row.Id, row.Revision)))
@@ -275,9 +279,10 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
                     continue;
                 }
 
-                if (TryAcceptProgram(row.Json, workouts) is { } program && program.Id == row.Id && program.Revision == row.Revision)
+                if (TryAcceptProgram(row.Json, workouts, out bool heroStripped) is { } program && program.Id == row.Id && program.Revision == row.Revision)
                 {
                     accepted.Add(new(row.Id, row.Revision, remote.Version, row.Json));
+                    added.Add(heroStripped ? WithFallbackHero(program, [.. current.All, .. added]) : program);
                 }
                 else
                 {
@@ -285,9 +290,28 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
                 }
             }
 
-            // Nothing changes in memory unless this commits.
-            await _cache.SaveAsync(remote.Version, workoutsJson, accepted);
-            Invalidate();
+            // Rejected workouts: the version is not recorded, so a corrected publish is looked at again.
+            int version = workoutsAccepted ? remote.Version : current.Catalog.Version;
+            if (!workoutsAccepted && accepted.Count == 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                await _cache.SaveAsync(version, workoutsJson, accepted);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Saving catalog version {Version} failed; keeping the installed catalog.", remote.Version);
+                throw;
+            }
+
+            // Only now does memory change: the cache and the catalog never disagree.
+            var loaded = BuildLoaded(version, workouts, [.. current.All, .. added], workoutsJson);
+            Interlocked.Increment(ref _bundledGeneration);
+            Volatile.Write(ref _bundled, loaded);
+            InvalidateCustomPrograms();
             return true;
         }
         finally
@@ -297,7 +321,7 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
     }
 
     // The downloaded workouts replace the current ones only if every id known today is still there.
-    private (IReadOnlyList<Workout> Workouts, string? Json) AcceptWorkouts(RemoteCatalog remote, Loaded current)
+    private (IReadOnlyList<Workout> Workouts, string? Json, bool Accepted) AcceptWorkouts(RemoteCatalog remote, Loaded current)
     {
         IReadOnlyList<Workout> keep = current.Catalog.Workouts;
         try
@@ -309,7 +333,7 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
             var errors = CatalogValidator.Validate(new WorkoutCatalog(remote.Version, incoming, []));
             if (removed.Count == 0 && errors.Count == 0)
             {
-                return (incoming, json);
+                return (incoming, json, true);
             }
 
             _logger.LogWarning(
@@ -323,11 +347,12 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
             _logger.LogWarning(ex, "Rejecting the unreadable workouts of catalog version {Version}.", remote.Version);
         }
 
-        return (keep, current.CachedWorkoutsJson);
+        return (keep, current.CachedWorkoutsJson, false);
     }
 
-    private WorkoutProgram? TryAcceptProgram(string json, IReadOnlyList<Workout> workouts)
+    private WorkoutProgram? TryAcceptProgram(string json, IReadOnlyList<Workout> workouts, out bool heroStripped)
     {
+        heroStripped = false;
         if (!CatalogParser.TryParseProgram(json, out var program, out var error))
         {
             _logger.LogWarning("Skipping unreadable catalog program: {Error}", error);
@@ -347,18 +372,31 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
             return null;
         }
 
+        if (!HeroImagePolicy.IsAllowed(program.HeroImage, _heroHost))
+        {
+            _logger.LogWarning("Dropping the hero image of '{ProgramId}' revision {Revision}: only https URLs on the Supabase host are loaded.", program.Id, program.Revision);
+            heroStripped = true;
+            return program with { HeroImage = null };
+        }
+
         return program;
     }
+
+    // A dropped hero falls back to the art an earlier revision of the same program had (the bundled one).
+    private static WorkoutProgram WithFallbackHero(WorkoutProgram program, IEnumerable<WorkoutProgram> known) => program with
+    {
+        HeroImage = known.Where(p => p.Id == program.Id && p.HeroImage is not null).OrderByDescending(p => p.Revision).FirstOrDefault()?.HeroImage,
+    };
 
     private async Task<Loaded> LoadBundledAsync()
     {
         IReadOnlyList<Workout> workouts = CatalogParser.ParseWorkouts(await _source.ReadWorkoutsAsync());
         List<WorkoutProgram> programs = [];
-        Dictionary<(string Id, int Revision), WorkoutProgram> archive = [];
+        HashSet<(string, int)> seen = [];
 
         foreach (var json in await _source.ReadProgramsAsync())
         {
-            if (TryAcceptProgram(json, workouts) is { } program && archive.TryAdd((program.Id, program.Revision), program))
+            if (TryAcceptProgram(json, workouts, out _) is { } program && seen.Add((program.Id, program.Revision)))
             {
                 programs.Add(program);
             }
@@ -376,20 +414,31 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
 
             foreach (var row in cached.Programs.OrderBy(p => p.Id, StringComparer.Ordinal).ThenBy(p => p.Revision))
             {
-                if (!archive.ContainsKey((row.Id, row.Revision))
-                    && TryAcceptProgram(row.Json, workouts) is { } program
-                    && archive.TryAdd((program.Id, program.Revision), program))
+                if (!seen.Contains((row.Id, row.Revision))
+                    && TryAcceptProgram(row.Json, workouts, out bool heroStripped) is { } program
+                    && seen.Add((program.Id, program.Revision)))
                 {
-                    programs.Add(program);
+                    programs.Add(heroStripped ? WithFallbackHero(program, programs) : program);
                 }
             }
 
             version = Math.Max(version, cached.Version);
         }
 
-        // One card per program: the newest revision. Older ones stay resolvable through the archive.
-        List<WorkoutProgram> latest = [.. programs.GroupBy(p => p.Id).Select(g => g.OrderByDescending(p => p.Revision).First())];
-        return new(new WorkoutCatalog(version, workouts, latest), archive, cachedWorkoutsJson);
+        return BuildLoaded(version, workouts, programs, cachedWorkoutsJson);
+    }
+
+    // One card per program: the newest revision. Older ones stay resolvable through the archive.
+    private static Loaded BuildLoaded(int version, IReadOnlyList<Workout> workouts, IReadOnlyList<WorkoutProgram> all, string? cachedWorkoutsJson)
+    {
+        Dictionary<(string Id, int Revision), WorkoutProgram> archive = [];
+        foreach (var program in all)
+        {
+            archive.TryAdd((program.Id, program.Revision), program);
+        }
+
+        List<WorkoutProgram> latest = [.. all.GroupBy(p => p.Id).Select(g => g.OrderByDescending(p => p.Revision).First())];
+        return new(new WorkoutCatalog(version, workouts, latest), archive, cachedWorkoutsJson, all);
     }
 
     private async Task<CachedCatalog?> ReadCacheAsync()
@@ -431,7 +480,11 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
         return null;
     }
 
-    private sealed record Loaded(WorkoutCatalog Catalog, IReadOnlyDictionary<(string Id, int Revision), WorkoutProgram> Archive, string? CachedWorkoutsJson);
+    private sealed record Loaded(
+        WorkoutCatalog Catalog,
+        IReadOnlyDictionary<(string Id, int Revision), WorkoutProgram> Archive,
+        string? CachedWorkoutsJson,
+        IReadOnlyList<WorkoutProgram> All);
 
     private sealed record Merged(WorkoutCatalog Catalog, IReadOnlyDictionary<string, Workout> WorkoutsById);
 }

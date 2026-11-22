@@ -17,11 +17,15 @@ public sealed class CatalogUpdateService(
     public static readonly TimeSpan Interval = TimeSpan.FromHours(12);
 
     private readonly SemaphoreSlim _running = new(1, 1);
-    private DateTimeOffset? _lastCheck;
+    private long _lastCheckTicks = long.MinValue;
 
     public Task StartAsync() => CheckAsync();
 
-    public Task ResumeAsync() => _lastCheck is { } last && time.GetUtcNow() - last < Interval ? Task.CompletedTask : CheckAsync();
+    public Task ResumeAsync()
+    {
+        long last = Volatile.Read(ref _lastCheckTicks);
+        return last != long.MinValue && time.GetUtcNow().UtcTicks - last < Interval.Ticks ? Task.CompletedTask : CheckAsync();
+    }
 
     private async Task CheckAsync()
     {
@@ -36,13 +40,21 @@ public sealed class CatalogUpdateService(
             if (latest is { } version && version > await target.GetInstalledVersionAsync())
             {
                 var download = await remote.DownloadAsync(version);
+
+                // Published while downloading: the rows may be a mix, so take none and look again next time.
+                if (await remote.GetLatestVersionAsync() != version)
+                {
+                    logger.LogDebug("Catalog version moved during the download; trying again later.");
+                    return;
+                }
+
                 if (await target.ApplyAsync(download))
                 {
                     announcer.Announce();
                 }
             }
 
-            _lastCheck = time.GetUtcNow();
+            Volatile.Write(ref _lastCheckTicks, time.GetUtcNow().UtcTicks);
         }
         catch (Exception ex)
         {
