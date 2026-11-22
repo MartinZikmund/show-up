@@ -114,18 +114,39 @@ public sealed partial class ProgramHero : UserControl
             return;
         }
 
-        if (!string.IsNullOrEmpty(HeroImage))
+        var gradient = AccentGradient();
+        Backdrop.Background = gradient;
+        if (string.IsNullOrEmpty(HeroImage))
         {
-            Backdrop.Background = new ImageBrush
+            return;
+        }
+
+        // Downloaded catalog art is a Storage URL: the gradient shows until it loads, and stays if it never does.
+        if (Uri.TryCreate(HeroImage, UriKind.Absolute, out var remote) && (remote.Scheme == Uri.UriSchemeHttps || remote.Scheme == Uri.UriSchemeHttp))
+        {
+            string requested = HeroImage;
+            ImageBrush brush = new() { ImageSource = new BitmapImage(remote), Stretch = Stretch.UniformToFill };
+            brush.ImageOpened += (_, _) =>
             {
-                ImageSource = new BitmapImage(new Uri($"ms-appx:///{HeroImage.TrimStart('/')}")),
-                Stretch = Stretch.UniformToFill,
+                if (HeroImage == requested)
+                {
+                    Backdrop.Background = brush;
+                }
             };
             return;
         }
 
+        Backdrop.Background = new ImageBrush
+        {
+            ImageSource = new BitmapImage(new Uri($"ms-appx:///{HeroImage.TrimStart('/')}")),
+            Stretch = Stretch.UniformToFill,
+        };
+    }
+
+    private LinearGradientBrush AccentGradient()
+    {
         var accent = ParseColor(AccentColor);
-        Backdrop.Background = new LinearGradientBrush
+        return new LinearGradientBrush
         {
             StartPoint = new Point(0, 0),
             EndPoint = new Point(1, 1),

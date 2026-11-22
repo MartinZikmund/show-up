@@ -16,6 +16,7 @@ One page per topic. Keep it that way.
 - [accounts.md](./accounts.md) — optional email-code sign-in, the Settings account card, user scoping, claiming signed-out progress and the simulated sign-in for debug builds.
 - [calendar.md](./calendar.md) — the program calendar page: the enrollment service, tap-to-cross flow, and the reusable grid control.
 - [catalog.md](./catalog.md) — how the bundled workout programs are verified, the file format, optional sessions, and held programs.
+- [catalog-delivery.md](./catalog-delivery.md) — over-the-air catalog updates: the check, validation, the local cache, pinned revisions and remote hero images.
 - [custom-schedules.md](./custom-schedules.md) — the Pro schedule builder: drafts, own workouts, revisions, the catalog merge and read-only after a lapse.
 - [entitlements.md](./entitlements.md) — Show Up Pro: the feature gate, the paywall, per-head billing (RevenueCat, Microsoft Store, unlocked) and its configuration.
 - [history.md](./history.md) — the History tab: programs with streaks, bonus workouts by month, and the Free limit.
