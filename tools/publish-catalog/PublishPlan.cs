@@ -4,8 +4,8 @@ namespace PublishCatalog;
 
 public sealed partial record ServerProgram(string Id, int Revision, JsonElement Json);
 
-/// <summary>What is on the server now. <see cref="Version"/> is 0 for an empty project.</summary>
-public sealed record ServerState(int Version, IReadOnlyDictionary<string, JsonElement> Workouts, IReadOnlyList<ServerProgram> Programs);
+/// <summary>What is on the server now. <see cref="Version"/> is 0 for an empty project; <see cref="MaxRowVersion"/> is the highest version any workout or program row carries (above <see cref="Version"/> after a failed run).</summary>
+public sealed record ServerState(int Version, IReadOnlyDictionary<string, JsonElement> Workouts, IReadOnlyList<ServerProgram> Programs, int MaxRowVersion = 0);
 
 public sealed record PublishPlan(
     int NewVersion,
@@ -13,11 +13,12 @@ public sealed record PublishPlan(
     IReadOnlyList<string> NewWorkouts,
     IReadOnlyList<string> ChangedWorkouts,
     IReadOnlyList<LocalProgram> NewPrograms,
-    IReadOnlyList<string> Warnings)
+    IReadOnlyList<string> Warnings,
+    bool Recovering = false)
 {
     public bool IsRefused => Errors.Count > 0;
 
-    public bool HasChanges => NewWorkouts.Count + ChangedWorkouts.Count + NewPrograms.Count > 0;
+    public bool HasChanges => Recovering || NewWorkouts.Count + ChangedWorkouts.Count + NewPrograms.Count > 0;
 
     /// <summary>Only new and changed workouts move to the new version; the rest stay visible at their old one.</summary>
     public bool WritesWorkout(string id) => NewWorkouts.Contains(id) || ChangedWorkouts.Contains(id);
@@ -82,7 +83,9 @@ public static class CatalogPlanner
         List<string> warnings = [.. server.Programs.Select(p => p.Id).Distinct().Where(id => !localProgramIds.Contains(id)).Order(StringComparer.Ordinal)
             .Select(id => $"Program '{id}' is published but has no file in catalog/programs/. It stays on the server.")];
 
-        return new(server.Version + 1, errors, newWorkouts, changedWorkouts, newPrograms, warnings);
+        // Rows above the recorded version are orphans of a failed run: finish that version instead of skipping past it.
+        bool recovering = server.MaxRowVersion > server.Version;
+        return new(recovering ? server.MaxRowVersion : server.Version + 1, errors, newWorkouts, changedWorkouts, newPrograms, warnings, recovering);
     }
 
     public static string Describe(PublishPlan plan) =>
@@ -100,7 +103,9 @@ public static class CatalogPlanner
             return "Nothing changed since the published catalog: no new version.";
         }
 
-        List<string> lines = [$"Publish catalog version {plan.NewVersion}:"];
+        List<string> lines = [plan.Recovering
+            ? $"Publish catalog version {plan.NewVersion} (recovering version {plan.NewVersion}: a previous run left its rows without the version record):"
+            : $"Publish catalog version {plan.NewVersion}:"];
         lines.Add($"  workouts: write {plan.NewWorkouts.Count + plan.ChangedWorkouts.Count} at version {plan.NewVersion} ({plan.NewWorkouts.Count} new, {plan.ChangedWorkouts.Count} changed)");
         foreach (var id in plan.NewWorkouts)
         {

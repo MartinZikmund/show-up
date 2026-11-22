@@ -21,8 +21,8 @@ internal static class Catalogs
     public static LocalCatalog Local(IEnumerable<LocalWorkout> workouts, IEnumerable<LocalProgram> programs, params string[] locked) =>
         new([.. workouts], [.. programs], locked.ToHashSet(), []);
 
-    public static ServerState Server(int version, IEnumerable<LocalWorkout> workouts, IEnumerable<LocalProgram> programs) =>
-        new(version, workouts.ToDictionary(w => w.Id, w => w.Json), [.. programs.Select(p => new ServerProgram(p.Id, p.Revision, p.Json))]);
+    public static ServerState Server(int version, IEnumerable<LocalWorkout> workouts, IEnumerable<LocalProgram> programs, int maxRowVersion = 0) =>
+        new(version, workouts.ToDictionary(w => w.Id, w => w.Json), [.. programs.Select(p => new ServerProgram(p.Id, p.Revision, p.Json))], maxRowVersion);
 
     public static ServerState EmptyServer => Server(0, [], []);
 }
@@ -59,8 +59,8 @@ internal sealed class FakeSupabaseHandler(ServerState state) : HttpMessageHandle
             var rows = path switch
             {
                 _ when path.EndsWith("catalog_versions") => state.Version == 0 ? "[]" : $"[{{\"version\":{state.Version}}}]",
-                _ when path.EndsWith("catalog_workouts") => "[" + string.Join(',', state.Workouts.Skip(offset).Take(PageCap).Select(w => $"{{\"id\":\"{w.Key}\",\"json\":{w.Value.GetRawText()}}}")) + "]",
-                _ when path.EndsWith("catalog_programs") => "[" + string.Join(',', state.Programs.Skip(offset).Take(PageCap).Select(p => $"{{\"id\":\"{p.Id}\",\"revision\":{p.Revision},\"json\":{p.Json.GetRawText()}}}")) + "]",
+                _ when path.EndsWith("catalog_workouts") => "[" + string.Join(',', state.Workouts.Skip(offset).Take(PageCap).Select(w => $"{{\"id\":\"{w.Key}\",\"json\":{w.Value.GetRawText()},\"version\":{state.MaxRowVersion}}}")) + "]",
+                _ when path.EndsWith("catalog_programs") => "[" + string.Join(',', state.Programs.Skip(offset).Take(PageCap).Select(p => $"{{\"id\":\"{p.Id}\",\"revision\":{p.Revision},\"json\":{p.Json.GetRawText()},\"version\":{state.MaxRowVersion}}}")) + "]",
                 _ => "[]",
             };
             return new(HttpStatusCode.OK) { Content = new StringContent(rows, Encoding.UTF8, "application/json") };
