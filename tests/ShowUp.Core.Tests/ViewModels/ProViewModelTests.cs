@@ -215,6 +215,14 @@ public sealed class ProViewModelTests
     }
 
     [TestMethod]
+    public void Features_SupabaseProjectConfigured_SyncIsAProFeature()
+    {
+        var sync = CreateViewModel(new FakeEntitlementService(), syncConfigured: true).Features.Single(f => f.Title == "ProFeatureSync");
+
+        sync.Pro.Should().Be("ProFeatureSyncPro");
+    }
+
+    [TestMethod]
     public void Features_AreLocalizedRows() => CreateViewModel(new FakeEntitlementService()).Features.Should().HaveCount(6);
 
     private static async Task<ProViewModel> LoadedAsync(FakeEntitlementService service)
