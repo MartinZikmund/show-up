@@ -12,7 +12,8 @@ public sealed record PublishPlan(
     IReadOnlyList<string> Errors,
     IReadOnlyList<string> NewWorkouts,
     IReadOnlyList<string> ChangedWorkouts,
-    IReadOnlyList<LocalProgram> NewPrograms)
+    IReadOnlyList<LocalProgram> NewPrograms,
+    IReadOnlyList<string> Warnings)
 {
     public bool IsRefused => Errors.Count > 0;
 
@@ -76,10 +77,18 @@ public static class CatalogPlanner
             }
         }
 
-        return new(server.Version + 1, errors, newWorkouts, changedWorkouts, newPrograms);
+        // Programs are never removed from the server, so a missing local file is allowed but worth a look.
+        var localProgramIds = local.Programs.Select(p => p.Id).ToHashSet();
+        List<string> warnings = [.. server.Programs.Select(p => p.Id).Distinct().Where(id => !localProgramIds.Contains(id)).Order(StringComparer.Ordinal)
+            .Select(id => $"Program '{id}' is published but has no file in catalog/programs/. It stays on the server.")];
+
+        return new(server.Version + 1, errors, newWorkouts, changedWorkouts, newPrograms, warnings);
     }
 
-    public static string Describe(PublishPlan plan)
+    public static string Describe(PublishPlan plan) =>
+        string.Concat(plan.Warnings.Select(w => $"Warning: {w}{Environment.NewLine}")) + DescribeBody(plan);
+
+    private static string DescribeBody(PublishPlan plan)
     {
         if (plan.IsRefused)
         {

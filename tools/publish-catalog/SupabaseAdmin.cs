@@ -53,6 +53,7 @@ public sealed class SupabaseAdmin
         request.Content = new ByteArrayContent(await File.ReadAllBytesAsync(hero.FilePath, ct));
         request.Content.Headers.ContentType = new(hero.ContentType);
         request.Headers.Add("x-upsert", "false");
+        request.Headers.TryAddWithoutValidation("cache-control", "max-age=31536000, immutable");
         using var _ = await SendAsync(request, $"upload hero {hero.ObjectName}", ct);
     }
 
@@ -109,14 +110,16 @@ public sealed class SupabaseAdmin
     private async Task<List<JsonElement>> GetAllAsync(string path, CancellationToken ct)
     {
         List<JsonElement> all = new();
-        for (int offset = 0; ; offset += PageSize)
+        for (int offset = 0; ;)
         {
             var page = await GetArrayAsync($"{path}&limit={PageSize}&offset={offset}", ct);
-            all.AddRange(page);
-            if (page.Count < PageSize)
+            if (page.Count == 0)
             {
                 return all;
             }
+
+            all.AddRange(page);
+            offset += page.Count;
         }
     }
 

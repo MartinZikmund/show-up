@@ -5,6 +5,18 @@ namespace PublishCatalog;
 /// <summary>Structural JSON equality: key order, whitespace and number spelling (30 vs 30.0) don't matter, as with jsonb.</summary>
 public static class JsonCompare
 {
+    // A duplicate key keeps the last value, like System.Text.Json and jsonb.
+    private static Dictionary<string, JsonElement> Members(JsonElement e)
+    {
+        Dictionary<string, JsonElement> members = new(StringComparer.Ordinal);
+        foreach (var property in e.EnumerateObject())
+        {
+            members[property.Name] = property.Value;
+        }
+
+        return members;
+    }
+
     public static bool Equal(JsonElement a, JsonElement b)
     {
         if (a.ValueKind != b.ValueKind)
@@ -15,8 +27,8 @@ public static class JsonCompare
         switch (a.ValueKind)
         {
             case JsonValueKind.Object:
-                var left = a.EnumerateObject().ToDictionary(p => p.Name, p => p.Value, StringComparer.Ordinal);
-                var right = b.EnumerateObject().ToDictionary(p => p.Name, p => p.Value, StringComparer.Ordinal);
+                var left = Members(a);
+                var right = Members(b);
                 return left.Count == right.Count
                     && left.All(p => right.TryGetValue(p.Key, out var other) && Equal(p.Value, other));
             case JsonValueKind.Array:
