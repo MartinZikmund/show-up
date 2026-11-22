@@ -18,6 +18,9 @@ public sealed record PublishPlan(
 
     public bool HasChanges => NewWorkouts.Count + ChangedWorkouts.Count + NewPrograms.Count > 0;
 
+    /// <summary>Only new and changed workouts move to the new version; the rest stay visible at their old one.</summary>
+    public bool WritesWorkout(string id) => NewWorkouts.Contains(id) || ChangedWorkouts.Contains(id);
+
     public IEnumerable<HeroUpload> Heroes => NewPrograms.Select(p => p.Hero).OfType<HeroUpload>().DistinctBy(h => h.ObjectName);
 }
 
@@ -76,7 +79,7 @@ public static class CatalogPlanner
         return new(server.Version + 1, errors, newWorkouts, changedWorkouts, newPrograms);
     }
 
-    public static string Describe(PublishPlan plan, int workoutCount)
+    public static string Describe(PublishPlan plan)
     {
         if (plan.IsRefused)
         {
@@ -89,7 +92,7 @@ public static class CatalogPlanner
         }
 
         List<string> lines = [$"Publish catalog version {plan.NewVersion}:"];
-        lines.Add($"  workouts: write all {workoutCount} at version {plan.NewVersion} ({plan.NewWorkouts.Count} new, {plan.ChangedWorkouts.Count} changed)");
+        lines.Add($"  workouts: write {plan.NewWorkouts.Count + plan.ChangedWorkouts.Count} at version {plan.NewVersion} ({plan.NewWorkouts.Count} new, {plan.ChangedWorkouts.Count} changed)");
         foreach (var id in plan.NewWorkouts)
         {
             lines.Add($"    + {id}");

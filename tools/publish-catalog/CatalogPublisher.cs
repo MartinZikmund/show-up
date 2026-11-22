@@ -23,7 +23,7 @@ public sealed class CatalogPublisher(SupabaseAdmin admin, TextWriter output)
         try
         {
             var plan = CatalogPlanner.Plan(local, await admin.ReadStateAsync(ct));
-            output.WriteLine(CatalogPlanner.Describe(plan, local.Workouts.Count));
+            output.WriteLine(CatalogPlanner.Describe(plan));
             if (plan.IsRefused)
             {
                 return Refused;
@@ -49,7 +49,7 @@ public sealed class CatalogPublisher(SupabaseAdmin admin, TextWriter output)
                 }
             }
 
-            await admin.UpsertWorkoutsAsync(local.Workouts, plan.NewVersion, ct);
+            await admin.UpsertWorkoutsAsync(local.Workouts.Where(w => plan.WritesWorkout(w.Id)), plan.NewVersion, ct);
             await admin.InsertProgramsAsync(plan.NewPrograms, plan.NewVersion, ct);
             await admin.InsertVersionAsync(plan.NewVersion, ct);
             output.WriteLine($"Published catalog version {plan.NewVersion}.");

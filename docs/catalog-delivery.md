@@ -93,8 +93,8 @@ What it does, in order:
      and number spelling don't count);
    - a program's revision is lower than one already published.
 4. If nothing differs from the server, stops: no version bump.
-5. Otherwise, with `N` the newest version: uploads new hero images, writes **every** workout at version `N + 1` (one
-   request, so one transaction), inserts the new program revisions at `N + 1` with `ignore-duplicates` (an existing
+5. Otherwise, with `N` the newest version: uploads new hero images, writes the **new and changed** workouts at version `N + 1` (one
+   request, so one transaction; unchanged rows keep their old version and stay in every client's `<=` view), inserts the new program revisions at `N + 1` with `ignore-duplicates` (an existing
    revision is never touched), and **last** inserts `catalog_versions(N + 1)`. A client therefore never sees a
    version without its rows, and two overlapping publishes fail on the version primary key.
 
@@ -108,6 +108,6 @@ with `heroImage` rewritten to the public Storage URL
 an object never changes and caches never go stale). The JSON in `catalog/programs/` stays as authored, which keeps the
 bundled fallback. Changing a published hero is a program JSON change and needs a revision bump like any other.
 
-**Known window.** The workouts are bumped before the version row is inserted, so for a moment a client that checks
-`N` finds no workouts at version `<= N`. It rejects that set (known ids would be missing) and tries again next start;
-nothing is applied half way.
+**Known window.** A changed workout's row moves to `N + 1` before the version row is inserted, so for a moment a
+client that checks `N` finds that one workout missing. It rejects the set (a known id is gone) and tries again next
+start; nothing is applied half way. New workouts and unchanged ones don't open the window.
