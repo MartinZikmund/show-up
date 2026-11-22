@@ -15,10 +15,31 @@ public interface ISyncTable
     string RemoteName { get; }
 
     /// <returns>Rows pushed, and rows the server answered with a newer winner that was applied here.</returns>
-    Task<(int Pushed, int Applied)> PushAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, string userId, CancellationToken ct);
+    Task<(int Pushed, int Applied)> PushAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, SyncPass pass);
 
     /// <returns>Rows applied here.</returns>
-    Task<int> PullAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, string userId, CancellationToken ct);
+    Task<int> PullAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, SyncPass pass);
+}
+
+/// <summary>
+/// One sync for one account. The session can switch accounts at any await: every request and every transaction checks
+/// first, so nothing the next account's token fetched is written under this account (and its cursor never moves).
+/// </summary>
+public sealed class SyncPass(string userId, Func<bool>? isCurrent = null, CancellationToken ct = default)
+{
+    public string UserId => userId;
+
+    public CancellationToken Token => ct;
+
+    /// <exception cref="OperationCanceledException">Cancelled, or no longer the signed-in account.</exception>
+    public void EnsureCurrent()
+    {
+        ct.ThrowIfCancellationRequested();
+        if (isCurrent is not null && !isCurrent())
+        {
+            throw new OperationCanceledException("The account switched during the sync.");
+        }
+    }
 }
 
 public sealed class SyncTable<TEntity, TRow>(
@@ -34,17 +55,22 @@ public sealed class SyncTable<TEntity, TRow>(
 
     public string RemoteName => remoteName;
 
-    public async Task<(int Pushed, int Applied)> PushAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, string userId, CancellationToken ct)
+    public async Task<(int Pushed, int Applied)> PushAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, SyncPass pass)
     {
+        string userId = pass.UserId;
+        pass.EnsureCurrent();
         var pending = await connection.QueryAsync<TEntity>($"""SELECT * FROM "{LocalName}" WHERE "UserId" = ? AND "SyncPending" = 1""", userId);
         int pushed = 0;
         int applied = 0;
         foreach (var chunk in pending.Chunk(SyncEngine.PushBatchSize))
         {
-            var stored = await rest.UpsertAsync(remoteName, [.. chunk.Select(ToRow)], typeInfo, ct);
+            pass.EnsureCurrent();
+            var stored = await rest.UpsertAsync(remoteName, [.. chunk.Select(ToRow)], typeInfo, pass.Token);
             var sent = chunk.ToDictionary(e => e.Id);
+            int chunkApplied = 0;
             await connection.RunInTransactionAsync(c =>
             {
+                pass.EnsureCurrent();
                 foreach (var row in stored)
                 {
                     if (row.UserId != userId || !sent.TryGetValue(row.Id, out var mine))
@@ -68,7 +94,7 @@ public sealed class SyncTable<TEntity, TRow>(
                     {
                         // The server kept a newer version (keep_newest_row): it wins here too.
                         c.InsertOrReplace(ToEntity(row));
-                        applied++;
+                        chunkApplied++;
                     }
                     else
                     {
@@ -76,14 +102,17 @@ public sealed class SyncTable<TEntity, TRow>(
                     }
                 }
             });
+            applied += chunkApplied;
             pushed += chunk.Length;
         }
 
         return (pushed, applied);
     }
 
-    public async Task<int> PullAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, string userId, CancellationToken ct)
+    public async Task<int> PullAsync(SQLiteAsyncConnection connection, ISupabaseRest rest, SyncPass pass)
     {
+        string userId = pass.UserId;
+        pass.EnsureCurrent();
         long ticks = await connection.ExecuteScalarAsync<long>(
             """SELECT "PullCursor" FROM "sync_state" WHERE "TableName" = ? AND "UserId" = ?""", LocalName, userId);
         DateTimeOffset? cursor = ticks > 0 ? new DateTimeOffset(ticks, TimeSpan.Zero) : null;
@@ -94,35 +123,43 @@ public sealed class SyncTable<TEntity, TRow>(
         int applied = 0;
         while (true)
         {
-            var page = await rest.SelectPageAsync(remoteName, from, after, SyncEngine.PullPageSize, typeInfo, ct);
+            pass.EnsureCurrent();
+            var page = await rest.SelectPageAsync(remoteName, from, after, SyncEngine.PullPageSize, typeInfo, pass.Token);
             if (page.Count == 0)
             {
                 break;
             }
 
             var last = page[^1];
+            // Only this account's rows move its cursor.
+            var ownLast = page.LastOrDefault(r => r.UserId == userId);
+            int pageApplied = 0;
+            DateTimeOffset? pageCursor = cursor;
             await connection.RunInTransactionAsync(c =>
             {
+                pass.EnsureCurrent();
                 foreach (var row in page)
                 {
                     if (Apply(c, row, userId))
                     {
-                        applied++;
+                        pageApplied++;
                     }
                 }
 
                 // Same transaction as the rows: a failure on a later page resumes from here.
-                if (last.ServerUpdatedAt is { } at && (cursor is null || at > cursor))
+                if (ownLast?.ServerUpdatedAt is { } at && (pageCursor is null || at > pageCursor))
                 {
-                    cursor = at;
+                    pageCursor = at;
                     c.Execute(
                         """INSERT OR REPLACE INTO "sync_state" ("TableName", "UserId", "PullCursor", "PullLastId") VALUES (?, ?, ?, ?)""",
                         LocalName,
                         userId,
                         at.UtcTicks,
-                        last.Id.ToString("D"));
+                        ownLast.Id.ToString("D"));
                 }
             });
+            applied += pageApplied;
+            cursor = pageCursor;
 
             if (page.Count < SyncEngine.PullPageSize || last.ServerUpdatedAt is not { } next)
             {

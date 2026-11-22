@@ -202,7 +202,7 @@ public sealed class SyncEngineTests
         await laptop.Reminders.UpdateAsync(reminder.Id, 30, 1);
 
         var reminders = laptop.Engine.Tables.Single(t => t.LocalName == nameof(ReminderEntity));
-        await reminders.PullAsync(await laptop.Db.GetConnectionAsync(), laptop.Rest, "alice", CancellationToken.None);
+        await reminders.PullAsync(await laptop.Db.GetConnectionAsync(), laptop.Rest, new SyncPass("alice"));
 
         (await laptop.Reminders.ListAsync()).Single().MinutesOfDay.Should().Be(30);
         (await laptop.AllRowsAsync<ReminderEntity>()).Single().SyncPending.Should().BeTrue();

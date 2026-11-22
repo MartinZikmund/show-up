@@ -56,6 +56,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
     private readonly ITimer _retry;
     private readonly Lock _gate = new();
     private Task? _running;
+    private CancellationTokenSource? _pass;
     private bool _again;
     private bool _started;
     private int _failures;
@@ -202,12 +203,22 @@ public sealed class SyncService : ISyncStatus, IDisposable
         string uid = _scope.CurrentUserId!;
         SetState(SyncState.Syncing);
         SyncProgress progress = new();
+        using CancellationTokenSource pass = new();
+        Volatile.Write(ref _pass, pass);
         try
         {
-            await _engine.SyncAsync(uid, progress);
+            await _engine.SyncAsync(uid, progress, () => _scope.CurrentUserId == uid, pass.Token);
             Interlocked.Exchange(ref _failures, 0);
-            _preferences.Set(LastSyncedKey + AccountProCache.KeySuffix(uid), _time.GetUtcNow().UtcTicks);
-            SetState(SyncState.Idle);
+            if (_scope.CurrentUserId == uid)
+            {
+                _preferences.Set(LastSyncedKey + AccountProCache.KeySuffix(uid), _time.GetUtcNow().UtcTicks);
+                SetState(SyncState.Idle);
+            }
+        }
+        catch (OperationCanceledException) when (_scope.CurrentUserId != uid || pass.IsCancellationRequested)
+        {
+            // The account switched; the switch already asked for a sync of the new one.
+            _logger.LogInformation("Sync stopped: the account switched.");
         }
         catch (SupabaseException ex) when (ex.Kind is SupabaseErrorKind.Unauthorized or SupabaseErrorKind.NotSignedIn)
         {
@@ -228,6 +239,8 @@ public sealed class SyncService : ISyncStatus, IDisposable
         }
         finally
         {
+            Interlocked.CompareExchange(ref _pass, null, pass);
+
             // An account switch meanwhile announces by itself.
             if (progress.Applied > 0 && _scope.CurrentUserId == uid)
             {
@@ -267,6 +280,15 @@ public sealed class SyncService : ISyncStatus, IDisposable
 
     private void OnScopeChanged(object? sender, EventArgs e)
     {
+        try
+        {
+            Volatile.Read(ref _pass)?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // That pass just finished.
+        }
+
         Interlocked.Exchange(ref _failures, 0);
         _ = RequestSyncAsync();
     }

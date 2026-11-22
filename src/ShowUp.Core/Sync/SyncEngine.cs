@@ -33,17 +33,20 @@ public sealed class SyncEngine
     public IReadOnlyList<ISyncTable> Tables { get; }
 
     /// <param name="progress">Counts as it goes, so a sync that fails halfway still tells what it applied.</param>
-    public async Task<SyncResult> SyncAsync(string userId, SyncProgress? progress = null, CancellationToken ct = default)
+    /// <param name="isCurrent">False once <paramref name="userId"/> is no longer signed in: the pass stops before its next request or write.</param>
+    /// <exception cref="OperationCanceledException">Cancelled, or the account switched.</exception>
+    public async Task<SyncResult> SyncAsync(string userId, SyncProgress? progress = null, Func<bool>? isCurrent = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
         progress ??= new();
+        SyncPass pass = new(userId, isCurrent, ct);
         var connection = await _db.GetConnectionAsync();
         foreach (var table in Tables)
         {
-            var push = await table.PushAsync(connection, _rest, userId, ct);
+            var push = await table.PushAsync(connection, _rest, pass);
             progress.Pushed += push.Pushed;
             progress.Applied += push.Applied;
-            progress.Applied += await table.PullAsync(connection, _rest, userId, ct);
+            progress.Applied += await table.PullAsync(connection, _rest, pass);
         }
 
         return new(progress.Pushed, progress.Applied);
