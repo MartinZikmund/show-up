@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Publishes catalog/ to Supabase; see docs/catalog-delivery.md. Reuses the app's parser and validator. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PublishCatalog</RootNamespace>
+    <AssemblyName>PublishCatalog</AssemblyName>
+    <UseAppHost>false</UseAppHost>
+    <!-- Core is an Uno project; this plain console only borrows its parser and validator. -->
+    <UnoDisableUNOB0029Validation>true</UnoDisableUNOB0029Validation>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ShowUp.Core\ShowUp.Core.csproj" />
+  </ItemGroup>
+
+</Project>
