@@ -215,10 +215,11 @@ public sealed class SyncService : ISyncStatus, IDisposable
                 SetState(SyncState.Idle);
             }
         }
-        catch (OperationCanceledException) when (_scope.CurrentUserId != uid || pass.IsCancellationRequested)
+        // A request already out with the next account's token fails RLS instead: just as stale.
+        catch (Exception ex) when (_scope.CurrentUserId != uid || (ex is OperationCanceledException && pass.IsCancellationRequested))
         {
-            // The account switched; the switch already asked for a sync of the new one.
-            _logger.LogInformation("Sync stopped: the account switched.");
+            // The switch already asked for a sync of the new account.
+            _logger.LogInformation("Sync stopped: the account switched ({Error}).", ex.GetType().Name);
         }
         catch (SupabaseException ex) when (ex.Kind is SupabaseErrorKind.Unauthorized or SupabaseErrorKind.NotSignedIn)
         {
