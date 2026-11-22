@@ -54,6 +54,10 @@ public partial class AccountViewModel : ObservableObject
 
     public bool IsSignedOut => !IsSignedIn;
 
+    /// <summary>The server ended the session; shown on the signed-out card until dismissed or the next sign-in.</summary>
+    [ObservableProperty]
+    public partial bool HasSessionEnded { get; private set; }
+
     [ObservableProperty]
     public partial string? SignedInEmail { get; private set; }
 
@@ -131,6 +135,7 @@ public partial class AccountViewModel : ObservableObject
         var session = _account.Current;
         IsSignedIn = session is not null;
         SignedInEmail = session?.Email;
+        HasSessionEnded = _account.SessionEnded && !IsSignedIn;
         if (IsSignedIn)
         {
             IsCodeSent = false;
@@ -257,6 +262,13 @@ public partial class AccountViewModel : ObservableObject
         }
 
         await RunAsync(() => _account.SignInAsync(Email, code, ConfirmClaimAsync));
+        Update();
+    }
+
+    [RelayCommand]
+    private void DismissSessionEnded()
+    {
+        _account.DismissSessionEnded();
         Update();
     }
 

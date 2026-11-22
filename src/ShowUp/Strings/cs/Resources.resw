@@ -1306,6 +1306,9 @@
   <data name="AccountHeader" xml:space="preserve">
     <value>Účet</value>
   </data>
+  <data name="AccountSessionEnded" xml:space="preserve">
+    <value>Vaše relace skončila. Přihlaste se znovu, aby synchronizace pokračovala.</value>
+  </data>
   <data name="AccountSignedOutDescription" xml:space="preserve">
     <value>Nepovinné. Přihlaste se e-mailem a připravte si synchronizaci mezi zařízeními.</value>
   </data>

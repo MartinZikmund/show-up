@@ -1306,6 +1306,9 @@
   <data name="AccountHeader" xml:space="preserve">
     <value>Account</value>
   </data>
+  <data name="AccountSessionEnded" xml:space="preserve">
+    <value>Your session ended. Sign in again to keep syncing.</value>
+  </data>
   <data name="AccountSignedOutDescription" xml:space="preserve">
     <value>Optional. Sign in with your email to get ready for sync across your devices.</value>
   </data>

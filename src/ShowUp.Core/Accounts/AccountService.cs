@@ -56,6 +56,15 @@ public sealed class AccountService
 
     public Session? Current => _auth.Current;
 
+    /// <summary>The server ended the session (e.g. a revoked refresh token): the card says "sign in again" until the next sign-in or <see cref="DismissSessionEnded"/>.</summary>
+    public bool SessionEnded { get; private set; }
+
+    public void DismissSessionEnded()
+    {
+        SessionEnded = false;
+        Raise(() => Changed?.Invoke(this, EventArgs.Empty));
+    }
+
     /// <summary>Signed in or out, on the thread that built this service when it had one.</summary>
     public event EventHandler? Changed;
 
@@ -138,6 +147,11 @@ public sealed class AccountService
         await _switchGate.WaitAsync();
         try
         {
+            if (userId is not null)
+            {
+                SessionEnded = false;
+            }
+
             if (_scope.CurrentUserId != userId)
             {
                 // Pending writes belong to the account that made them.
@@ -194,6 +208,11 @@ public sealed class AccountService
         if (Volatile.Read(ref _interactive) > 0)
         {
             return;
+        }
+
+        if (session is null && _scope.CurrentUserId is not null)
+        {
+            SessionEnded = true;
         }
 
         Raise(async () =>
