@@ -286,6 +286,39 @@ public sealed class AccountServiceTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task SessionRevokedByTheServer_FlagsSessionEndedUntilTheNextSignIn()
+    {
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+        _auth.ForceSignOut();
+        _account.SessionEnded.Should().BeTrue();
+
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+
+        _account.SessionEnded.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task SignOut_ByTheUser_DoesNotFlagSessionEnded()
+    {
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+
+        await _account.SignOutAsync();
+
+        _account.SessionEnded.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task DismissSessionEnded_ClearsTheFlag()
+    {
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+        _auth.ForceSignOut();
+
+        _account.DismissSessionEnded();
+
+        _account.SessionEnded.Should().BeFalse();
+    }
+
+    [TestMethod]
     public async Task SessionRevokedDuringSignIn_IsAppliedAfterwards()
     {
         await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
