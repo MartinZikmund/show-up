@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ShowUp.Core.Catalog;
 
 namespace PublishCatalog;
 
@@ -85,7 +86,7 @@ public static class CatalogPlanner
 
         // Rows above the recorded version are orphans of a failed run: finish that version instead of skipping past it.
         bool recovering = server.MaxRowVersion > server.Version;
-        return new(recovering ? server.MaxRowVersion : server.Version + 1, errors, newWorkouts, changedWorkouts, newPrograms, warnings, recovering);
+        return new(recovering ? server.MaxRowVersion : Math.Max(server.Version, CatalogService.BundledCatalogVersion) + 1, errors, newWorkouts, changedWorkouts, newPrograms, warnings, recovering);
     }
 
     public static string Describe(PublishPlan plan) =>

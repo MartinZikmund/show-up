@@ -10,12 +10,12 @@ public class CatalogPlannerTests
     private static readonly LocalWorkout[] _workouts = [Workout("a"), Workout("b")];
 
     [TestMethod]
-    public void Plan_EmptyServer_PublishesVersionOneWithEverything()
+    public void Plan_EmptyServer_PublishesVersionAfterTheBundledOneWithEverything()
     {
         var plan = CatalogPlanner.Plan(Local(_workouts, [Program("p", 1)]), EmptyServer);
 
         plan.IsRefused.Should().BeFalse();
-        plan.NewVersion.Should().Be(1);
+        plan.NewVersion.Should().Be(2);
         plan.NewWorkouts.Should().Equal("a", "b");
         plan.NewPrograms.Should().ContainSingle();
     }
