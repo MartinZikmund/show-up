@@ -1,0 +1,82 @@
+name: Catalog publish
+
+# Publishes catalog/ to Supabase (see docs/catalog-delivery.md). Needs the SUPABASE_URL and
+# SUPABASE_SECRET_KEY secrets; without them the publish job says so and succeeds.
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "catalog/**"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the plan, write nothing"
+        type: boolean
+        default: false
+
+# Two publishes at once would race on the version number. Queue, never cancel one half way.
+concurrency:
+  group: catalog-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-dotnet-build
+        with:
+          workloads: src/ShowUp.slnx
+
+      # Validates the whole catalog folder and covers the publisher's own tests.
+      - name: Run unit tests
+        run: dotnet test tests/ShowUp.Core.Tests/ShowUp.Core.Tests.csproj -c Release
+
+  publish:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: catalog
+    steps:
+      - name: Check secrets
+        id: secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SECRET_KEY" ]; then
+            echo "::notice::SUPABASE_URL / SUPABASE_SECRET_KEY are not set, so nothing was published. See docs/supabase.md (Going live)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.secrets.outputs.enabled == 'true'
+
+      - uses: ./.github/actions/setup-dotnet-build
+        if: steps.secrets.outputs.enabled == 'true'
+        with:
+          workloads: src/ShowUp.slnx
+
+      - name: Publish catalog
+        if: steps.secrets.outputs.enabled == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          dotnet run --project tools/publish-catalog -c Release -- "${args[@]}"
