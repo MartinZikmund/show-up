@@ -34,7 +34,9 @@ has, with a debug log and no user-facing error. A failed check does not use up t
   version is recorded only when the workouts were accepted, so a corrected publish is looked at again.
 - **Hero images:** an absolute `heroImage` must be `https` on the host of `SupabaseOptions.Url` (Storage public
   URLs). Anything else is dropped with a warning, the program stays, and it takes the hero an earlier revision of the
-  same program had (the bundled art). Relative paths are bundled assets and pass.
+  same program had (the bundled art). A plain relative path (`Assets/heroes/x.webp`: no `:`, not starting with `/` or `\`) is a bundled asset and passes;
+  everything else must be an absolute `https` URL on that host, so `ms-appx:` URIs, `https:/host/x`, `//host/x` and
+  rooted paths are all refused.
 - **Same revision, different content:** a `(id, revision)` the app already holds is never replaced. A fix to a
   published program needs a new revision number (the publish job, Task 6, must bump it).
 - Custom programs never come from the server.

@@ -131,7 +131,9 @@ public sealed partial class ProgramHero : UserControl
         }
 
         // Downloaded catalog art is a Storage URL: the gradient shows until the bitmap opens, and stays if it never does.
-        if (Uri.TryCreate(HeroImage, UriKind.Absolute, out var remote) && remote.Scheme == Uri.UriSchemeHttps)
+        if (Uri.TryCreate(HeroImage, UriKind.Absolute, out var remote)
+            && remote.Scheme == Uri.UriSchemeHttps
+            && string.Equals(remote.Host, AllowedRemoteHost, StringComparison.OrdinalIgnoreCase))
         {
             string requested = HeroImage;
             BitmapImage bitmap = new(remote);
