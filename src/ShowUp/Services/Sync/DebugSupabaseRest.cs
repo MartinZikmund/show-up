@@ -27,5 +27,8 @@ public sealed class DebugSupabaseRest(ISupabaseRest real, DebugSupabaseAuth auth
         JsonTypeInfo<T> typeInfo,
         CancellationToken ct = default) =>
         Target.SelectPageAsync(table, cursor, lastId, limit, typeInfo, ct);
+
+    public Task<IReadOnlyList<T>> SelectAsync<T>(string table, string? filter, string order, int offset, int limit, JsonTypeInfo<T> typeInfo, CancellationToken ct = default) =>
+        real.SelectAsync(table, filter, order, offset, limit, typeInfo, ct);
 }
 #endif

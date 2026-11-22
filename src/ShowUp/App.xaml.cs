@@ -127,6 +127,10 @@ public partial class App : Application, IApplication
         // Built here so its status events come back on the UI thread.
         var sync = Host.Services.GetRequiredService<SyncService>();
         _ = sync.StartAsync();
+        var supabaseOptions = Host.Services.GetRequiredService<SupabaseOptions>();
+        ShowUp.Controls.ProgramHero.AllowedRemoteHost = supabaseOptions.IsConfigured ? new Uri(supabaseOptions.Url).Host : null;
+        var catalogUpdates = Host.Services.GetRequiredService<CatalogUpdateService>();
+        _ = catalogUpdates.StartAsync();
         appPreferences.LaunchCount++;
         Host.Services.GetRequiredService<MarkerBrushUpdater>().Apply();
 
@@ -160,6 +164,7 @@ public partial class App : Application, IApplication
             {
                 _ = reminders.ResumeAsync();
                 _ = sync.ResumeAsync();
+                _ = catalogUpdates.ResumeAsync();
             }
         };
 
@@ -194,7 +199,10 @@ public partial class App : Application, IApplication
         services.AddSingleton<ILocalDataClaim, SqliteLocalDataClaim>();
         services.AddSingleton<DataChangeAnnouncer>();
         services.AddSingleton<IBundledCatalogSource, Services.Catalog.BundledCatalogSource>();
-        services.AddSingleton<ICatalogService, CatalogService>();
+        services.AddSingleton<ICatalogCache, SqliteCatalogCache>();
+        services.AddSingleton<CatalogService>();
+        services.AddSingleton<ICatalogService>(sp => sp.GetRequiredService<CatalogService>());
+        services.AddSingleton<ICatalogUpdateTarget>(sp => sp.GetRequiredService<CatalogService>());
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
         services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
         services.AddSingleton<MarkerBrushUpdater>();
@@ -374,6 +382,8 @@ public partial class App : Application, IApplication
             sp.GetRequiredService<ILogger<SyncService>>(),
             sp.GetRequiredService<CloudSyncAvailability>()));
         services.AddSingleton<ISyncStatus>(sp => sp.GetRequiredService<SyncService>());
+        services.AddSingleton<ICatalogRemote>(sp => new SupabaseCatalogRemote(sp.GetRequiredService<ISupabaseRest>(), options));
+        services.AddSingleton<CatalogUpdateService>();
     }
 
     // Where the session lives per head: see docs/supabase.md.

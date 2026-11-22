@@ -179,6 +179,9 @@ internal sealed class FaultyRest(ISupabaseRest inner) : ISupabaseRest
         return WithExtrasAsync(inner.SelectPageAsync(table, cursor, lastId, limit, typeInfo, ct));
     }
 
+    public Task<IReadOnlyList<T>> SelectAsync<T>(string table, string? filter, string order, int offset, int limit, JsonTypeInfo<T> typeInfo, CancellationToken ct = default) =>
+        inner.SelectAsync(table, filter, order, offset, limit, typeInfo, ct);
+
     private async Task<IReadOnlyList<T>> WithExtrasAsync<T>(Task<IReadOnlyList<T>> page) => [.. await page, .. ExtraRows.OfType<T>()];
 
     private int Count(string op, string table) => _calls[(op, table)] = _calls.GetValueOrDefault((op, table)) + 1;

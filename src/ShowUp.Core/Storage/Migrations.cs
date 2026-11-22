@@ -5,7 +5,7 @@ namespace ShowUp.Core.Storage;
 // Each version is frozen DDL, never the live entity classes, so later versions can ALTER safely.
 public static class Migrations
 {
-    public const int LatestVersion = 5;
+    public const int LatestVersion = 6;
 
     /// <param name="targetVersion">Stop after this version (tests build older schemas with it).</param>
     public static async Task ApplyAsync(SQLiteAsyncConnection connection, int targetVersion = LatestVersion)
@@ -35,6 +35,11 @@ public static class Migrations
         if (version < 5 && targetVersion >= 5)
         {
             await connection.RunInTransactionAsync(V5);
+        }
+
+        if (version < 6 && targetVersion >= 6)
+        {
+            await connection.RunInTransactionAsync(V6);
         }
     }
 
@@ -226,5 +231,27 @@ public static class Migrations
         }
 
         c.Execute("PRAGMA user_version = 5");
+    }
+
+    // Over-the-air catalog: the newest downloaded version and every program revision ever downloaded (never deleted).
+    private static void V6(SQLiteConnection c)
+    {
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "catalog_cache_state" (
+                "Id" integer primary key not null,
+                "Version" integer not null,
+                "WorkoutsJson" varchar
+            )
+            """);
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "catalog_cache_program" (
+                "ProgramId" varchar not null,
+                "Revision" integer not null,
+                "Version" integer not null,
+                "Json" varchar not null,
+                primary key ("ProgramId", "Revision")
+            )
+            """);
+        c.Execute("PRAGMA user_version = 6");
     }
 }

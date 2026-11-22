@@ -136,5 +136,8 @@ public sealed class InMemorySyncServer(TimeProvider clock)
             ct.ThrowIfCancellationRequested();
             return Task.FromResult(server.Select(table, userId(), cursor, lastId, limit, typeInfo));
         }
+
+        public Task<IReadOnlyList<T>> SelectAsync<T>(string table, string? filter, string order, int offset, int limit, JsonTypeInfo<T> typeInfo, CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyList<T>>([]);
     }
 }

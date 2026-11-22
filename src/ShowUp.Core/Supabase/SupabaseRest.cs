@@ -60,6 +60,29 @@ public sealed class SupabaseRest(HttpClient http, SupabaseOptions options, IAcce
         return SendAsync(() => new HttpRequestMessage(HttpMethod.Get, url), typeInfo, ct);
     }
 
+    public async Task<IReadOnlyList<T>> SelectAsync<T>(string table, string? filter, string order, int offset, int limit, JsonTypeInfo<T> typeInfo, CancellationToken ct = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, 0);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        if (!options.IsConfigured)
+        {
+            throw new SupabaseException(SupabaseErrorKind.NotConfigured, "Supabase is not configured.");
+        }
+
+        string query = $"select=*&order={order}&limit={limit}&offset={offset}" + (string.IsNullOrEmpty(filter) ? "" : $"&{filter}");
+        using HttpRequestMessage request = new(HttpMethod.Get, $"{options.Url}/rest/v1/{Uri.EscapeDataString(table)}?{query}");
+        request.Headers.Add("apikey", options.PublishableKey);
+        try
+        {
+            using HttpResponseMessage response = await http.SendAsync(request, ct);
+            return await ReadAsync(response, typeInfo, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException || (ex is OperationCanceledException && !ct.IsCancellationRequested))
+        {
+            throw SupabaseErrors.Network(ex);
+        }
+    }
+
     private async Task<IReadOnlyList<T>> SendAsync<T>(Func<HttpRequestMessage> build, JsonTypeInfo<T> typeInfo, CancellationToken ct)
     {
         if (!options.IsConfigured)

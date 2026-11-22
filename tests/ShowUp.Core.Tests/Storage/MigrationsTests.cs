@@ -14,7 +14,7 @@ public class MigrationsTests : StorageTestBase
 
         int version = await connection.ExecuteScalarAsync<int>("PRAGMA user_version");
 
-        version.Should().Be(Migrations.LatestVersion).And.Be(5);
+        version.Should().Be(Migrations.LatestVersion).And.Be(6);
     }
 
     [TestMethod]
@@ -140,7 +140,7 @@ public class MigrationsTests : StorageTestBase
 
             await Migrations.ApplyAsync(connection);
 
-            (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(5);
+            (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(Migrations.LatestVersion);
             (await connection.ExecuteScalarAsync<int>("""SELECT "SyncPending" FROM "CompletionEntity" WHERE "Id" = 'c1'""")).Should().Be(1);
             (await connection.ExecuteScalarAsync<int>("""SELECT "SyncPending" FROM "SyncedSettingEntity" WHERE "Id" = 's1'""")).Should().Be(1);
             (await connection.ExecuteScalarAsync<int>("""SELECT "DayIndex" FROM "CompletionEntity" WHERE "Id" = 'c1'""")).Should().Be(3);
@@ -152,6 +152,30 @@ public class MigrationsTests : StorageTestBase
 
             var stateColumns = await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('sync_state')""");
             stateColumns.Should().Equal("TableName", "UserId", "PullCursor", "PullLastId");
+        }
+        finally
+        {
+            await connection.CloseAsync();
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task Migrate_V5ToV6_AddsCatalogCacheAndKeepsData()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"showup-v5-{Guid.NewGuid():N}.db");
+        SQLiteAsyncConnection connection = new(path);
+        try
+        {
+            await Migrations.ApplyAsync(connection, targetVersion: 5);
+            await connection.ExecuteAsync("""INSERT INTO "CompletionEntity" ("Id", "DayIndex") VALUES ('c1', 3)""");
+
+            await Migrations.ApplyAsync(connection);
+
+            (await connection.ExecuteScalarAsync<int>("PRAGMA user_version")).Should().Be(6);
+            (await connection.ExecuteScalarAsync<int>("""SELECT "DayIndex" FROM "CompletionEntity" WHERE "Id" = 'c1'""")).Should().Be(3);
+            (await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('catalog_cache_state')""")).Should().Equal("Id", "Version", "WorkoutsJson");
+            (await connection.QueryScalarsAsync<string>("""SELECT "name" FROM pragma_table_info('catalog_cache_program')""")).Should().Equal("ProgramId", "Revision", "Version", "Json");
         }
         finally
         {

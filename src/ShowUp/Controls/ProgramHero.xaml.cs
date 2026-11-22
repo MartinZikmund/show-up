@@ -3,6 +3,7 @@ using Microsoft.UI;
 using Microsoft.UI.System;
 #endif
 using Microsoft.UI.Xaml.Media.Imaging;
+using ShowUp.Core.Catalog;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 
@@ -11,6 +12,9 @@ namespace ShowUp.Controls;
 /// <summary>Hero art for a program; without an image, a gradient from its accent colour with the name on top.</summary>
 public sealed partial class ProgramHero : UserControl
 {
+    /// <summary>The Supabase host: the only one remote hero art may come from. Set once at startup; null means no remote art.</summary>
+    public static string? AllowedRemoteHost { get; set; }
+
     public static readonly DependencyProperty ProgramNameProperty = Register(nameof(ProgramName), "", (d, _) => ((ProgramHero)d).UpdateFamilyVisibility());
     public static readonly DependencyProperty FamilyProperty = Register(nameof(Family), "", (d, _) => ((ProgramHero)d).UpdateFamilyVisibility());
     public static readonly DependencyProperty AccentColorProperty = Register(nameof(AccentColor), "", (d, _) => ((ProgramHero)d).UpdateBackdrop());
@@ -114,18 +118,54 @@ public sealed partial class ProgramHero : UserControl
             return;
         }
 
-        if (!string.IsNullOrEmpty(HeroImage))
+        var gradient = AccentGradient();
+        Backdrop.Background = gradient;
+        if (string.IsNullOrEmpty(HeroImage))
         {
-            Backdrop.Background = new ImageBrush
+            return;
+        }
+
+        if (!HeroImagePolicy.IsAllowed(HeroImage, AllowedRemoteHost))
+        {
+            return;
+        }
+
+        // Downloaded catalog art is a Storage URL: the gradient shows until the bitmap opens, and stays if it never does.
+        if (Uri.TryCreate(HeroImage, UriKind.Absolute, out var remote)
+            && remote.Scheme == Uri.UriSchemeHttps
+            && string.Equals(remote.Host, AllowedRemoteHost, StringComparison.OrdinalIgnoreCase))
+        {
+            string requested = HeroImage;
+            BitmapImage bitmap = new(remote);
+            ImageBrush brush = new() { ImageSource = bitmap, Stretch = Stretch.UniformToFill };
+            bitmap.ImageOpened += (_, _) =>
             {
-                ImageSource = new BitmapImage(new Uri($"ms-appx:///{HeroImage.TrimStart('/')}")),
-                Stretch = Stretch.UniformToFill,
+                if (HeroImage == requested)
+                {
+                    Backdrop.Background = brush;
+                }
+            };
+            bitmap.ImageFailed += (_, _) =>
+            {
+                if (HeroImage == requested)
+                {
+                    Backdrop.Background = gradient;
+                }
             };
             return;
         }
 
+        Backdrop.Background = new ImageBrush
+        {
+            ImageSource = new BitmapImage(new Uri($"ms-appx:///{HeroImage.TrimStart('/')}")),
+            Stretch = Stretch.UniformToFill,
+        };
+    }
+
+    private LinearGradientBrush AccentGradient()
+    {
         var accent = ParseColor(AccentColor);
-        Backdrop.Background = new LinearGradientBrush
+        return new LinearGradientBrush
         {
             StartPoint = new Point(0, 0),
             EndPoint = new Point(1, 1),

@@ -22,4 +22,11 @@ public interface ISupabaseRest
         int limit,
         JsonTypeInfo<T> typeInfo,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// One page of a public table (the catalog), read with the publishable key only: no session needed, works signed
+    /// out. <paramref name="filter"/> is a raw PostgREST condition such as <c>version=lte.3</c>; <paramref name="order"/>
+    /// must be a total order (e.g. <c>id.asc</c>) so offset paging is stable.
+    /// </summary>
+    Task<IReadOnlyList<T>> SelectAsync<T>(string table, string? filter, string order, int offset, int limit, JsonTypeInfo<T> typeInfo, CancellationToken ct = default);
 }
