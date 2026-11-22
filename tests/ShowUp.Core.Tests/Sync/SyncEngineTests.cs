@@ -272,6 +272,88 @@ public sealed class SyncEngineTests
     }
 
     [TestMethod]
+    public async Task Pull_AccountSwitchesMidPass_LeavesTheOldAccountUntouched()
+    {
+        var tablet = _world.AddDevice("tablet", userId: "bob");
+        await tablet.Reminders.AddAsync(300, 1);
+        await tablet.SyncAsync();
+        _world.Advance(TimeSpan.FromSeconds(10));
+        var laptop = _world.AddDevice("laptop");
+        await laptop.Reminders.AddAsync(60, 1);
+        await laptop.SyncAsync();
+        var phone = _world.AddDevice("phone");
+        phone.Rest.Fault = (op, table, n) =>
+        {
+            // Signed in as Bob while Alice's pull is out: the request goes with Bob's token.
+            if (op == "select" && table == "reminders" && n == 1)
+            {
+                phone.User.CurrentUserId = "bob";
+            }
+
+            return null;
+        };
+
+        var act = phone.SyncAsync;
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        (await phone.CursorAsync(nameof(ReminderEntity), "alice")).Should().Be(0);
+        (await phone.AllRowsAsync<ReminderEntity>()).Should().BeEmpty("Bob's rows were not written as Alice's pull");
+
+        phone.Rest.Fault = null;
+        phone.User.CurrentUserId = "alice";
+        await phone.SyncAsync();
+
+        (await phone.Reminders.ListAsync()).Select(r => r.MinutesOfDay).Should().Equal(60);
+    }
+
+    [TestMethod]
+    public async Task Push_AccountSwitchesMidPass_KeepsTheRowsPending()
+    {
+        var phone = _world.AddDevice("phone");
+        await phone.Reminders.AddAsync(60, 1);
+        phone.Rest.Fault = (op, _, _) =>
+        {
+            if (op == "upsert")
+            {
+                phone.User.CurrentUserId = "bob";
+            }
+
+            return null;
+        };
+
+        var act = phone.SyncAsync;
+
+        await act.Should().ThrowAsync<Exception>();
+        _world.Server.Rows("reminders").Should().BeEmpty();
+        (await phone.Engine.CountPendingAsync("alice")).Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Pull_ForeignUsersRow_IsSkippedAndDoesNotMoveTheCursor()
+    {
+        var phone = _world.AddDevice("phone");
+        var laptop = _world.AddDevice("laptop");
+        await phone.Reminders.AddAsync(60, 1);
+        await phone.SyncAsync();
+        laptop.Rest.ExtraRows.Add(new ReminderRow
+        {
+            Id = Guid.NewGuid(),
+            UserId = "mallory",
+            DeviceId = "elsewhere",
+            CreatedAt = SyncWorld.Start,
+            UpdatedAt = SyncWorld.Start,
+            ServerUpdatedAt = SyncWorld.Start.AddHours(1),
+            MinutesOfDay = 999,
+            DaysMask = 1,
+        });
+
+        await laptop.SyncAsync();
+
+        (await laptop.AllRowsAsync<ReminderEntity>()).Select(r => r.MinutesOfDay).Should().Equal(60);
+        (await laptop.CursorAsync(nameof(ReminderEntity))).Should().Be(SyncWorld.Start.UtcTicks);
+    }
+
+    [TestMethod]
     public async Task Push_OnlySendsTheSignedInUsersRows()
     {
         var phone = _world.AddDevice("phone", userId: "alice");

@@ -220,6 +220,31 @@ public sealed class SyncServiceTests
     }
 
     [TestMethod]
+    public async Task AccountSwitchesMidSync_OldAccountIsNotMarkedSyncedAndTheNewOneSyncs()
+    {
+        var phone = _world.AddDevice("phone");
+        await phone.Reminders.AddAsync(60, 1);
+        var service = Create(phone);
+        phone.Rest.Fault = (op, table, n) =>
+        {
+            if (op == "select" && table == "reminders" && n == 1)
+            {
+                phone.User.Switch("bob");
+            }
+
+            return null;
+        };
+
+        await service.StartAsync();
+        await service.WaitForIdleAsync();
+
+        _preferences.Values.Should().NotContainKey("LastSyncedAt" + ShowUp.Core.Entitlements.AccountProCache.KeySuffix("alice"));
+        _preferences.Values.Should().ContainKey("LastSyncedAt" + ShowUp.Core.Entitlements.AccountProCache.KeySuffix("bob"));
+        (await phone.CursorAsync(nameof(ShowUp.Core.Storage.ReminderEntity), "alice")).Should().Be(0);
+        service.State.Should().Be(SyncState.Idle);
+    }
+
+    [TestMethod]
     public async Task SyncNow_Concurrent_RunsOneSyncAtATime()
     {
         var phone = _world.AddDevice("phone");

@@ -85,7 +85,12 @@ internal sealed class SimDevice : IAsyncDisposable
 
     public SqliteSyncedSettings Settings => new(Db, Clock, User, DeviceId);
 
-    public Task<SyncResult> SyncAsync() => Engine.SyncAsync(User.CurrentUserId!);
+    /// <summary>As the app does: the pass stops once the signed-in account changes.</summary>
+    public Task<SyncResult> SyncAsync()
+    {
+        string uid = User.CurrentUserId!;
+        return Engine.SyncAsync(uid, isCurrent: () => User.CurrentUserId == uid);
+    }
 
     public async Task<List<T>> AllRowsAsync<T>()
         where T : SyncableEntity, new()
@@ -94,10 +99,11 @@ internal sealed class SimDevice : IAsyncDisposable
         return await connection.Table<T>().ToListAsync();
     }
 
-    public async Task<long> CursorAsync(string table)
+    public async Task<long> CursorAsync(string table, string? userId = null)
     {
         var connection = await Db.GetConnectionAsync();
-        return await connection.ExecuteScalarAsync<long>("""SELECT "PullCursor" FROM "sync_state" WHERE "TableName" = ? AND "UserId" = ?""", table, User.CurrentUserId);
+        return await connection.ExecuteScalarAsync<long>(
+            """SELECT "PullCursor" FROM "sync_state" WHERE "TableName" = ? AND "UserId" = ?""", table, userId ?? User.CurrentUserId);
     }
 
     /// <summary>Many reminders in one go (faster than the repository's one insert each).</summary>
@@ -146,6 +152,9 @@ internal sealed class FaultyRest(ISupabaseRest inner) : ISupabaseRest
 
     public List<string> UpsertBodies { get; } = [];
 
+    /// <summary>Rows appended to every page, as a server that leaked them would (RLS should make this impossible).</summary>
+    public List<SyncRow> ExtraRows { get; } = [];
+
     public Task<IReadOnlyList<T>> UpsertAsync<T>(string table, IReadOnlyList<T> rows, JsonTypeInfo<T> typeInfo, CancellationToken ct = default)
     {
         Upserts++;
@@ -167,8 +176,10 @@ internal sealed class FaultyRest(ISupabaseRest inner) : ISupabaseRest
             return Task.FromException<IReadOnlyList<T>>(error);
         }
 
-        return inner.SelectPageAsync(table, cursor, lastId, limit, typeInfo, ct);
+        return WithExtrasAsync(inner.SelectPageAsync(table, cursor, lastId, limit, typeInfo, ct));
     }
+
+    private async Task<IReadOnlyList<T>> WithExtrasAsync<T>(Task<IReadOnlyList<T>> page) => [.. await page, .. ExtraRows.OfType<T>()];
 
     private int Count(string op, string table) => _calls[(op, table)] = _calls.GetValueOrDefault((op, table)) + 1;
 }
