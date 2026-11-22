@@ -38,6 +38,16 @@ public sealed class SyncedPersonalizationTests
     }
 
     [TestMethod]
+    public async Task Initialize_NoSyncedValue_SeedsInsteadOfSetting()
+    {
+        var personalization = Create();
+
+        await personalization.InitializeAsync();
+
+        _settings.Seeded.Should().BeEquivalentTo(["MarkerColor", "CrossOffStyle", "UnitSystem"]);
+    }
+
+    [TestMethod]
     public async Task Initialize_SyncedValueExists_WinsOverTheOldOne()
     {
         _settings.Values["MarkerColor"] = ((int)MarkerColor.Green).ToString();
