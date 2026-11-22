@@ -1345,9 +1345,6 @@
   <data name="AccountSyncHeader" xml:space="preserve">
     <value>Sync</value>
   </data>
-  <data name="AccountSyncComingSoon" xml:space="preserve">
-    <value>Pro feature · coming soon</value>
-  </data>
   <data name="AccountErrorInvalidEmail" xml:space="preserve">
     <value>That doesn't look like an email address.</value>
   </data>
@@ -1373,7 +1370,7 @@
     <value>Sign out with changes that haven't synced?</value>
   </data>
   <data name="AccountSignOutUnsyncedMessage" xml:space="preserve">
-    <value>Some changes on this device haven't reached your account yet. Nothing is deleted: they stay here and sync the next time you sign in to this account.</value>
+    <value>Some changes on this device haven't reached your account yet. Sync now to send them first, or sign out anyway: nothing is deleted, they stay here and sync the next time you sign in to this account.</value>
   </data>
   <data name="DebugSimulateSignIn" xml:space="preserve">
     <value>Simulate sign-in</value>
@@ -1431,5 +1428,71 @@
   </data>
   <data name="AccountBusy" xml:space="preserve">
     <value>Working…</value>
+  </data>
+  <data name="AccountSignOutSyncNow" xml:space="preserve">
+    <value>Sync now</value>
+  </data>
+  <data name="AccountSignOutAnyway" xml:space="preserve">
+    <value>Sign out anyway</value>
+  </data>
+  <data name="AccountSignOutStillUnsynced" xml:space="preserve">
+    <value>Some changes still haven't synced. Check your connection and try again, or sign out anyway.</value>
+  </data>
+  <data name="AccountSyncNow" xml:space="preserve">
+    <value>Sync now</value>
+  </data>
+  <data name="SyncStatusSyncing" xml:space="preserve">
+    <value>Syncing…</value>
+  </data>
+  <data name="SyncStatusNever" xml:space="preserve">
+    <value>Not synced yet</value>
+  </data>
+  <data name="SyncStatusOffline" xml:space="preserve">
+    <value>Offline — will retry</value>
+  </data>
+  <data name="SyncStatusSignInAgain" xml:space="preserve">
+    <value>Sign in again to sync</value>
+  </data>
+  <data name="SyncStatusPaused" xml:space="preserve">
+    <value>Paused · Sync is a Pro feature</value>
+  </data>
+  <data name="SyncStatusFailed" xml:space="preserve">
+    <value>Sync failed — will retry</value>
+  </data>
+  <data name="SyncLastSyncedFormat" xml:space="preserve">
+    <value>Last synced {0}</value>
+  </data>
+  <data name="SyncJustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="SyncMinutesAgo_One" xml:space="preserve">
+    <value>{0} minute ago</value>
+  </data>
+  <data name="SyncMinutesAgo_Few" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="SyncMinutesAgo_Other" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="SyncHoursAgo_One" xml:space="preserve">
+    <value>{0} hour ago</value>
+  </data>
+  <data name="SyncHoursAgo_Few" xml:space="preserve">
+    <value>{0} hours ago</value>
+  </data>
+  <data name="SyncHoursAgo_Other" xml:space="preserve">
+    <value>{0} hours ago</value>
+  </data>
+  <data name="SyncDaysAgo_One" xml:space="preserve">
+    <value>{0} day ago</value>
+  </data>
+  <data name="SyncDaysAgo_Few" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="SyncDaysAgo_Other" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="AccountSyncBusy" xml:space="preserve">
+    <value>Syncing</value>
   </data>
 </root>

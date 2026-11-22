@@ -42,7 +42,7 @@ What happens when Pro ends. Nothing is ever deleted.
 | Reminders for read-only programs | no longer ask for their workouts | asked for again |
 | Marker color | shows Auto; the stored choice is kept | the stored color |
 | History | current program only | all programs and stats |
-| Cloud sync | stops (not shipped yet; the paywall says "Coming soon") | resumes |
+| Cloud sync | pauses: nothing syncs, nothing is deleted (builds without a Supabase project say "Coming soon", see [sync.md](./sync.md)) | resumes |
 
 ## Trying it out
 

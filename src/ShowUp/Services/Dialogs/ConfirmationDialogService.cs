@@ -29,4 +29,25 @@ public sealed class ConfirmationDialogService : IConfirmationDialogService
         var result = await _dialogCoordinator.ShowAsync(dialog);
         return result == ContentDialogResult.Primary ? ConfirmationResult.Confirmed : ConfirmationResult.Denied;
     }
+
+    public async Task<DialogChoice> ChooseAsync(string title, string text, string primary, string secondary)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = text,
+            PrimaryButtonText = primary,
+            SecondaryButtonText = secondary,
+            CloseButtonText = Localizer.Instance.GetString("Cancel"),
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = _xamlRootProvider.XamlRoot,
+        };
+
+        return await _dialogCoordinator.ShowAsync(dialog) switch
+        {
+            ContentDialogResult.Primary => DialogChoice.Primary,
+            ContentDialogResult.Secondary => DialogChoice.Secondary,
+            _ => DialogChoice.Cancel,
+        };
+    }
 }

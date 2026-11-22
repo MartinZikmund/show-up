@@ -139,12 +139,25 @@
 
                 <toolkit:SettingsCard
                     AutomationProperties.AutomationId="AccountSyncCard"
-                    Description="{markup:Localize Key=AccountSyncComingSoon}"
+                    Description="{x:Bind ViewModel.Account.SyncStatusText, Mode=OneWay}"
                     Header="{markup:Localize Key=AccountSyncHeader}"
                     Visibility="{x:Bind ViewModel.Account.IsSignedIn, Mode=OneWay}">
                     <toolkit:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE895;" />
                     </toolkit:SettingsCard.HeaderIcon>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ProgressRing
+                            Width="20"
+                            Height="20"
+                            AutomationProperties.AutomationId="AccountSyncProgress"
+                            AutomationProperties.Name="{markup:Localize Key=AccountSyncBusy}"
+                            IsActive="{x:Bind ViewModel.Account.IsSyncing, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.Account.IsSyncing, Mode=OneWay}" />
+                        <Button
+                            AutomationProperties.AutomationId="AccountSyncNowButton"
+                            Command="{x:Bind ViewModel.Account.SyncNowCommand}"
+                            Content="{markup:Localize Key=AccountSyncNow}" />
+                    </StackPanel>
                 </toolkit:SettingsCard>
             </StackPanel>
 

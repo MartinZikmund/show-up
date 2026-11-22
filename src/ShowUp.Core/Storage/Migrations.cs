@@ -5,7 +5,7 @@ namespace ShowUp.Core.Storage;
 // Each version is frozen DDL, never the live entity classes, so later versions can ALTER safely.
 public static class Migrations
 {
-    public const int LatestVersion = 4;
+    public const int LatestVersion = 5;
 
     /// <param name="targetVersion">Stop after this version (tests build older schemas with it).</param>
     public static async Task ApplyAsync(SQLiteAsyncConnection connection, int targetVersion = LatestVersion)
@@ -30,6 +30,11 @@ public static class Migrations
         if (version < 4 && targetVersion >= 4)
         {
             await connection.RunInTransactionAsync(V4);
+        }
+
+        if (version < 5 && targetVersion >= 5)
+        {
+            await connection.RunInTransactionAsync(V5);
         }
     }
 
@@ -196,5 +201,30 @@ public static class Migrations
             """);
         c.Execute("""CREATE INDEX IF NOT EXISTS "IX_SyncedSetting_Subject" ON "SyncedSettingEntity" ("SubjectKey")""");
         c.Execute("PRAGMA user_version = 4");
+    }
+
+    // Sync: per-table pull cursors per account, and a dirty marker on every synced row (existing rows start dirty).
+    private static void V5(SQLiteConnection c)
+    {
+        c.Execute("""
+            CREATE TABLE IF NOT EXISTS "sync_state" (
+                "TableName" varchar not null,
+                "UserId" varchar not null,
+                "PullCursor" bigint,
+                "PullLastId" varchar,
+                primary key ("TableName", "UserId")
+            )
+            """);
+        foreach (var table in new[]
+        {
+            "EnrollmentEntity", "CompletionEntity", "ScheduleShiftEntity", "BonusWorkoutEntity", "NoteEntity",
+            "MetricEntryEntity", "ReminderEntity", "CustomProgramEntity", "SyncedSettingEntity",
+        })
+        {
+            c.Execute($"""ALTER TABLE "{table}" ADD COLUMN "SyncPending" integer not null default 1""");
+            c.Execute($"""CREATE INDEX IF NOT EXISTS "IX_{table}_SyncPending" ON "{table}" ("UserId", "SyncPending")""");
+        }
+
+        c.Execute("PRAGMA user_version = 5");
     }
 }

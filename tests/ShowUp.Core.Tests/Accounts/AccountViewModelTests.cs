@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Time.Testing;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Supabase;
+using ShowUp.Core.Sync;
 using ShowUp.Core.ViewModels;
 using ShowUp.Services.Dialogs;
 
@@ -117,20 +118,117 @@ public sealed class AccountViewModelTests
     }
 
     [TestMethod]
-    public async Task SignOut_UnsyncedRows_Warns()
+    public async Task SignOut_UnsyncedRows_WarnsAndCancelKeepsTheAccount()
     {
         await SignedInAsync();
         _sync.HasUnsynced = true;
-        _confirmation.Result = ConfirmationResult.Denied;
+        _confirmation.Choice = DialogChoice.Cancel;
 
         await _viewModel.SignOutCommand.ExecuteAsync(null);
 
-        _confirmation.Asked.Should().Equal("AccountSignOutUnsyncedTitle");
+        _confirmation.Choices.Should().Equal("AccountSignOutUnsyncedTitle");
         _viewModel.IsSignedIn.Should().BeTrue("the user kept the account");
-        _confirmation.Result = ConfirmationResult.Confirmed;
+        _sync.SyncNowCalls.Should().Be(0);
+    }
+
+    [TestMethod]
+    public async Task SignOut_UnsyncedRowsSignOutAnyway_SignsOut()
+    {
+        await SignedInAsync();
+        _sync.HasUnsynced = true;
+        _confirmation.Choice = DialogChoice.Secondary;
+
         await _viewModel.SignOutCommand.ExecuteAsync(null);
+
         _viewModel.IsSignedIn.Should().BeFalse();
         _viewModel.IsEnteringEmail.Should().BeTrue();
+        _sync.SyncNowCalls.Should().Be(0);
+    }
+
+    [TestMethod]
+    public async Task SignOut_UnsyncedRowsSyncNow_SyncsThenSignsOut()
+    {
+        await SignedInAsync();
+        _sync.HasUnsynced = true;
+        _confirmation.Choice = DialogChoice.Primary;
+
+        await _viewModel.SignOutCommand.ExecuteAsync(null);
+
+        _sync.SyncNowCalls.Should().Be(1);
+        _viewModel.IsSignedIn.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task SignOut_SyncNowLeavesRowsBehind_StaysSignedInAndSaysSo()
+    {
+        await SignedInAsync();
+        _sync.HasUnsynced = true;
+        _sync.SyncNowSucceeds = false;
+        _confirmation.Choice = DialogChoice.Primary;
+
+        await _viewModel.SignOutCommand.ExecuteAsync(null);
+
+        _viewModel.IsSignedIn.Should().BeTrue();
+        _viewModel.ErrorText.Should().Be("AccountSignOutStillUnsynced");
+    }
+
+    [TestMethod]
+    [DataRow(SyncState.Syncing, "SyncStatusSyncing")]
+    [DataRow(SyncState.Offline, "SyncStatusOffline")]
+    [DataRow(SyncState.SignInAgain, "SyncStatusSignInAgain")]
+    [DataRow(SyncState.Paused, "SyncStatusPaused")]
+    [DataRow(SyncState.Failed, "SyncStatusFailed")]
+    [DataRow(SyncState.Idle, "SyncStatusNever")]
+    public async Task SyncStatus_State_ShowsIt(SyncState state, string expected)
+    {
+        await SignedInAsync();
+
+        _sync.Raise(state);
+
+        _viewModel.SyncStatusText.Should().Be(expected);
+    }
+
+    [TestMethod]
+    [DataRow(20, "SyncLastSyncedFormat(SyncJustNow)")]
+    [DataRow(5 * 60, "SyncLastSyncedFormat(SyncMinutesAgo_Other(5))")]
+    [DataRow(3 * 3600, "SyncLastSyncedFormat(SyncHoursAgo_Other(3))")]
+    [DataRow(2 * 86400, "SyncLastSyncedFormat(SyncDaysAgo_Other(2))")]
+    public async Task SyncStatus_Idle_ShowsWhenItLastSynced(int secondsAgo, string expected)
+    {
+        FakeTimeProvider time = new(new DateTimeOffset(2026, 12, 10, 12, 0, 0, TimeSpan.Zero));
+        var viewModel = AccountTestFactory.CreateViewModel(AccountTestFactory.CreateService(_auth, _claim), _sync, _confirmation, time);
+        viewModel.Activate();
+        viewModel.Email = "alice@example.com";
+        await viewModel.SendCodeCommand.ExecuteAsync(null);
+        viewModel.Code = FakeSupabaseAuth.GoodCode;
+        await viewModel.VerifyCommand.ExecuteAsync(null);
+
+        _sync.Raise(SyncState.Idle, time.GetUtcNow().AddSeconds(-secondsAgo));
+
+        viewModel.SyncStatusText.Should().Be(expected);
+    }
+
+    [TestMethod]
+    public async Task SyncNow_RunsASync()
+    {
+        await SignedInAsync();
+
+        await _viewModel.SyncNowCommand.ExecuteAsync(null);
+
+        _sync.SyncNowCalls.Should().Be(1);
+    }
+
+    [TestMethod]
+    [DataRow(SyncState.Paused)]
+    [DataRow(SyncState.Syncing)]
+    public async Task SyncNow_PausedOrRunning_IsDisabled(SyncState state)
+    {
+        await SignedInAsync();
+
+        _sync.Raise(state);
+
+        _viewModel.SyncNowCommand.CanExecute(null).Should().BeFalse();
+        _viewModel.IsSyncing.Should().Be(state == SyncState.Syncing);
     }
 
     [TestMethod]
@@ -226,6 +324,16 @@ public sealed class AccountViewModelTests
         {
             Asked.Add(title);
             return Task.FromResult(Result);
+        }
+
+        public DialogChoice Choice { get; set; } = DialogChoice.Cancel;
+
+        public List<string> Choices { get; } = [];
+
+        public Task<DialogChoice> ChooseAsync(string title, string text, string primary, string secondary)
+        {
+            Choices.Add(title);
+            return Task.FromResult(Choice);
         }
     }
 

@@ -16,4 +16,7 @@ public abstract class SyncableEntity
     public DateTimeOffset? DeletedAt { get; set; }
 
     public string DeviceId { get; set; } = "";
+
+    /// <summary>Changed here since the server last confirmed it; every local write sets it, a confirmed push clears it.</summary>
+    public bool SyncPending { get; set; } = true;
 }

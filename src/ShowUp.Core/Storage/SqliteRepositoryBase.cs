@@ -3,10 +3,13 @@ using SQLite;
 
 namespace ShowUp.Core.Storage;
 
-/// <summary>User scoping, stamping and tombstones shared by the notes and metrics repositories.</summary>
+/// <summary>
+/// User scoping, stamping and tombstones shared by the repositories. Every write goes through <see cref="Insert{T}"/> or
+/// <see cref="Touch"/>: whole-microsecond stamps, monotonic per row, the row marked for the next push.
+/// </summary>
 public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time, IUserScope user, IDeviceIdProvider device)
 {
-    protected DateTimeOffset UtcNow => time.GetUtcNow();
+    protected DateTimeOffset UtcNow => Timestamps.Truncate(time.GetUtcNow());
 
     protected DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
@@ -23,13 +26,31 @@ public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time,
     protected T Stamp<T>(T entity)
         where T : SyncableEntity
     {
-        DateTimeOffset now = time.GetUtcNow();
+        DateTimeOffset now = UtcNow;
         entity.Id = Guid.NewGuid();
         entity.UserId = user.CurrentUserId;
         entity.DeviceId = device.DeviceId;
         entity.CreatedAt = now;
         entity.UpdatedAt = now;
+        entity.SyncPending = true;
         return entity;
+    }
+
+    protected async Task InsertAsync<T>(SQLiteAsyncConnection connection, T entity)
+        where T : SyncableEntity
+    {
+        entity.SyncPending = true;
+        await connection.InsertAsync(entity);
+        db.NotifyLocalChange();
+    }
+
+    /// <summary><see cref="InsertAsync{T}"/> inside a transaction.</summary>
+    protected void Insert<T>(SQLiteConnection connection, T entity)
+        where T : SyncableEntity
+    {
+        entity.SyncPending = true;
+        connection.Insert(entity);
+        db.NotifyLocalChange();
     }
 
     /// <summary>Live rows of the current user only.</summary>
@@ -50,15 +71,17 @@ public abstract class SqliteRepositoryBase(ShowUpDatabase db, TimeProvider time,
 
     protected void Touch(SQLiteConnection connection, SyncableEntity entity, bool delete = false)
     {
-        DateTimeOffset now = time.GetUtcNow();
-        entity.UpdatedAt = now;
+        DateTimeOffset stamp = Timestamps.Next(time.GetUtcNow(), entity.UpdatedAt);
+        entity.UpdatedAt = stamp;
         entity.DeviceId = device.DeviceId;
+        entity.SyncPending = true;
         if (delete)
         {
-            entity.DeletedAt = now;
+            entity.DeletedAt = stamp;
         }
 
         connection.Update(entity);
+        db.NotifyLocalChange();
     }
 
     /// <summary>Tombstones rows that share a key with the kept one (two devices can write the same key before they sync).</summary>

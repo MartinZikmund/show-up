@@ -6,9 +6,14 @@ internal sealed class FakeUserScope : IUserScope
 {
     public string? CurrentUserId { get; set; }
 
-#pragma warning disable CS0067 // Tests switch the user directly.
     public event EventHandler? Changed;
-#pragma warning restore CS0067
+
+    /// <summary>Switches the user and tells listeners, as the account flow does.</summary>
+    public void Switch(string? userId)
+    {
+        CurrentUserId = userId;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 }
 
 internal sealed class FakeDeviceIdProvider : IDeviceIdProvider

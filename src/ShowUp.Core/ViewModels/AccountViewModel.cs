@@ -8,7 +8,7 @@ using ShowUp.Services.Dialogs;
 
 namespace ShowUp.Core.ViewModels;
 
-/// <summary>The Settings account card: email, then the emailed 6-digit code, then who is signed in and "Sign out".</summary>
+/// <summary>The Settings account card: email, then the emailed 6-digit code, then who is signed in, sync status, "Sync now" and "Sign out".</summary>
 public partial class AccountViewModel : ObservableObject
 {
     public const int CodeLength = 6;
@@ -26,6 +26,7 @@ public partial class AccountViewModel : ObservableObject
     private bool _isActive;
     private DateTimeOffset _resendAt;
     private ITimer? _resendTimer;
+    private ITimer? _relativeTimer;
 
     public AccountViewModel(
         AccountService account,
@@ -83,6 +84,18 @@ public partial class AccountViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string? ErrorText { get; private set; }
 
+    /// <summary>"Last synced 5 minutes ago", "Offline — will retry", ...</summary>
+    [ObservableProperty]
+    public partial string SyncStatusText { get; private set; } = "";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SyncNowCommand))]
+    public partial bool IsSyncing { get; private set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SyncNowCommand))]
+    public partial bool CanSync { get; private set; }
+
     public bool HasError => !string.IsNullOrEmpty(ErrorText);
 
     public void Activate()
@@ -90,6 +103,9 @@ public partial class AccountViewModel : ObservableObject
         if (!_isActive)
         {
             _account.Changed += OnAccountChanged;
+            _sync.Changed += OnSyncChanged;
+            // "5 minutes ago" keeps counting while the card is open.
+            _relativeTimer = _time.CreateTimer(_ => Post(UpdateSync), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
             _isActive = true;
         }
 
@@ -101,6 +117,9 @@ public partial class AccountViewModel : ObservableObject
         if (_isActive)
         {
             _account.Changed -= OnAccountChanged;
+            _sync.Changed -= OnSyncChanged;
+            _relativeTimer?.Dispose();
+            _relativeTimer = null;
             _isActive = false;
         }
     }
@@ -117,6 +136,55 @@ public partial class AccountViewModel : ObservableObject
             IsCodeSent = false;
             Code = "";
         }
+
+        UpdateSync();
+    }
+
+    private void UpdateSync()
+    {
+        var state = _sync.State;
+        IsSyncing = state is SyncState.Syncing;
+        CanSync = IsSignedIn && state is SyncState.Idle or SyncState.Offline or SyncState.Failed or SyncState.SignInAgain;
+        SyncStatusText = state switch
+        {
+            SyncState.Syncing => _localizer["SyncStatusSyncing"],
+            SyncState.Offline => _localizer["SyncStatusOffline"],
+            SyncState.SignInAgain => _localizer["SyncStatusSignInAgain"],
+            SyncState.Paused => _localizer["SyncStatusPaused"],
+            SyncState.Failed => _localizer["SyncStatusFailed"],
+            _ when _sync.LastSyncedAt is { } at => _localizer["SyncLastSyncedFormat", DescribeAgo(at)],
+            _ => _localizer["SyncStatusNever"],
+        };
+    }
+
+    /// <summary>"just now", "5 minutes ago", "3 hours ago", "2 days ago".</summary>
+    public string DescribeAgo(DateTimeOffset at)
+    {
+        var ago = _time.GetUtcNow() - at;
+        return ago switch
+        {
+            _ when ago < TimeSpan.FromMinutes(1) => _localizer["SyncJustNow"],
+            _ when ago < TimeSpan.FromHours(1) => _localizer.Format("SyncMinutesAgo", (int)ago.TotalMinutes),
+            _ when ago < TimeSpan.FromDays(1) => _localizer.Format("SyncHoursAgo", (int)ago.TotalHours),
+            _ => _localizer.Format("SyncDaysAgo", (int)ago.TotalDays),
+        };
+    }
+
+    private bool CanSyncNow() => CanSync && !IsSyncing;
+
+    [RelayCommand(CanExecute = nameof(CanSyncNow))]
+    private async Task SyncNowAsync()
+    {
+        try
+        {
+            await _sync.SyncNowAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sync now failed.");
+        }
+
+        UpdateSync();
     }
 
     /// <summary>A pasted "123 456" or "Your code: 123456" still counts.</summary>
@@ -210,10 +278,27 @@ public partial class AccountViewModel : ObservableObject
     {
         await RunAsync(async () =>
         {
-            if (await _sync.HasUnsyncedChangesAsync()
-                && await _confirmation.ShowAsync(_localizer["AccountSignOutUnsyncedTitle"], _localizer["AccountSignOutUnsyncedMessage"]) != ConfirmationResult.Confirmed)
+            if (await _sync.HasUnsyncedChangesAsync())
             {
-                return;
+                var choice = await _confirmation.ChooseAsync(
+                    _localizer["AccountSignOutUnsyncedTitle"],
+                    _localizer["AccountSignOutUnsyncedMessage"],
+                    _localizer["AccountSignOutSyncNow"],
+                    _localizer["AccountSignOutAnyway"]);
+                if (choice is DialogChoice.Cancel)
+                {
+                    return;
+                }
+
+                if (choice is DialogChoice.Primary)
+                {
+                    await _sync.SyncNowAsync();
+                    if (await _sync.HasUnsyncedChangesAsync())
+                    {
+                        ErrorText = _localizer["AccountSignOutStillUnsynced"];
+                        return;
+                    }
+                }
             }
 
             await _account.SignOutAsync();
@@ -285,4 +370,6 @@ public partial class AccountViewModel : ObservableObject
     }
 
     private void OnAccountChanged(object? sender, EventArgs e) => Update();
+
+    private void OnSyncChanged(object? sender, EventArgs e) => UpdateSync();
 }

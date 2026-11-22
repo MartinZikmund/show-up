@@ -178,6 +178,43 @@ public class ProStorageRepositoriesTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task Settings_Seed_LosesToAValueFromAnotherDevice()
+    {
+        var settings = CreateSettings();
+        await settings.SeedAsync("marker", "default");
+        var connection = await Db.GetConnectionAsync();
+
+        await connection.InsertAsync(Setting("phone", Time.GetUtcNow().AddDays(-30)));
+
+        (await settings.GetAsync("marker")).Should().Be("phone");
+    }
+
+    [TestMethod]
+    public async Task Settings_Seed_KeyHasValue_LeavesItAlone()
+    {
+        var settings = CreateSettings();
+        await settings.SetAsync("marker", "chosen");
+
+        await settings.SeedAsync("marker", "default");
+
+        (await settings.GetAsync("marker")).Should().Be("chosen");
+        var connection = await Db.GetConnectionAsync();
+        (await connection.Table<SyncedSettingEntity>().CountAsync()).Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Settings_SetAfterSeed_StampsNow()
+    {
+        var settings = CreateSettings();
+        await settings.SeedAsync("marker", "default");
+
+        await settings.SetAsync("marker", "chosen");
+
+        var connection = await Db.GetConnectionAsync();
+        (await connection.Table<SyncedSettingEntity>().FirstAsync()).UpdatedAt.Should().Be(Time.GetUtcNow());
+    }
+
+    [TestMethod]
     public async Task CustomPrograms_TwoDevicesOffline_ProduceDistinctRevisions()
     {
         var phone = CreateCustomPrograms();

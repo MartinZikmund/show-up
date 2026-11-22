@@ -40,7 +40,7 @@ public sealed class SqliteNotesRepository(ShowUpDatabase db, TimeProvider time, 
 
                 if (existing.Count == 0)
                 {
-                    c.Insert(Stamp(new NoteEntity
+                    Insert(c, Stamp(new NoteEntity
                     {
                         EnrollmentId = enrollmentId,
                         DayIndex = edit.DayIndex,

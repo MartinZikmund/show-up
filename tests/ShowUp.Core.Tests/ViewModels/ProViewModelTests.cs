@@ -207,13 +207,19 @@ public sealed class ProViewModelTests
     }
 
     [TestMethod]
-    public void Features_CloudSyncNotShipped_SaysComingSoon()
+    public void Features_NoSupabaseProject_SyncSaysComingSoon()
     {
         var sync = CreateViewModel(new FakeEntitlementService()).Features.Single(f => f.Title == "ProFeatureSync");
 
         sync.Pro.Should().Be("ProFeatureSyncSoon");
-        FeatureGate.IsAvailable(ProFeature.CloudSync).Should().BeFalse("Plan 4 flips this when sync ships");
-        FeatureGate.IsAvailable(ProFeature.CustomSchedules).Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void Features_SupabaseProjectConfigured_SyncIsAProFeature()
+    {
+        var sync = CreateViewModel(new FakeEntitlementService(), syncConfigured: true).Features.Single(f => f.Title == "ProFeatureSync");
+
+        sync.Pro.Should().Be("ProFeatureSyncPro");
     }
 
     [TestMethod]
@@ -226,6 +232,6 @@ public sealed class ProViewModelTests
         return viewModel;
     }
 
-    private static ProViewModel CreateViewModel(FakeEntitlementService service, RecordingLauncher? launcher = null) =>
-        new(service, new FakeStringLocalizer(), new RecordingNavigationService(), launcher ?? new RecordingLauncher(), new ProLinks(new Uri("https://example.com/terms"), new Uri("https://example.com/privacy")), NullLogger<ProViewModel>.Instance);
+    private static ProViewModel CreateViewModel(FakeEntitlementService service, RecordingLauncher? launcher = null, bool syncConfigured = false) =>
+        new(service, new FakeStringLocalizer(), new RecordingNavigationService(), launcher ?? new RecordingLauncher(), new ProLinks(new Uri("https://example.com/terms"), new Uri("https://example.com/privacy")), new CloudSyncAvailability(() => syncConfigured), NullLogger<ProViewModel>.Instance);
 }

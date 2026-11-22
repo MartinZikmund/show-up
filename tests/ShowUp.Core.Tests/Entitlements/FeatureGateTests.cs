@@ -10,6 +10,16 @@ public sealed class FeatureGateTests
     private static readonly DateTimeOffset Now = new(2026, 11, 21, 12, 0, 0, TimeSpan.Zero);
 
     [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void IsAvailable_CloudSync_FollowsTheSupabaseConfiguration(bool configured) =>
+        FeatureGate.IsAvailable(ProFeature.CloudSync, new CloudSyncAvailability(() => configured)).Should().Be(configured);
+
+    [TestMethod]
+    public void IsAvailable_OtherFeatures_AlwaysAvailable() =>
+        FeatureGate.IsAvailable(ProFeature.CustomSchedules, new CloudSyncAvailability(() => false)).Should().BeTrue();
+
+    [TestMethod]
     public void CanUse_FreeCustomSchedules_IsFalse() =>
         FeatureGate.CanUse(ProFeature.CustomSchedules, isPro: false).Should().BeFalse();
 

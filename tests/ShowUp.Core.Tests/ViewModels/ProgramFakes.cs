@@ -61,6 +61,9 @@ internal sealed class StubConfirmationDialogService : IConfirmationDialogService
         Asked.Add((title, text));
         return Task.FromResult(Result);
     }
+
+    public Task<DialogChoice> ChooseAsync(string title, string text, string primary, string secondary) =>
+        throw new NotSupportedException();
 }
 
 /// <summary>Records the write calls; <see cref="All"/> (or <see cref="Active"/> for one) is what the getters return.</summary>

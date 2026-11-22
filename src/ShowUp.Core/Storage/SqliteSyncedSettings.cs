@@ -3,6 +3,9 @@ namespace ShowUp.Core.Storage;
 public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, IUserScope user, IDeviceIdProvider device)
     : SqliteRepositoryBase(db, time, user, device), ISyncedSettings
 {
+    /// <summary>The version a seeded default carries.</summary>
+    public static readonly DateTimeOffset SeedStamp = DateTimeOffset.UnixEpoch;
+
     private static string KeyOf(string key) => $"k:{key}";
 
     public async Task<string?> GetAsync(string key)
@@ -33,7 +36,7 @@ public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, I
             var existing = NewestFirst(Query<SyncedSettingEntity>(c, s => s.SubjectKey == subject)).ToList();
             if (existing.Count == 0)
             {
-                c.Insert(Stamp(new SyncedSettingEntity { SubjectKey = subject, Key = key, Value = value }));
+                Insert(c, Stamp(new SyncedSettingEntity { SubjectKey = subject, Key = key, Value = value }));
                 return;
             }
 
@@ -44,6 +47,24 @@ public sealed class SqliteSyncedSettings(ShowUpDatabase db, TimeProvider time, I
             }
 
             Tombstone(c, existing.Skip(1));
+        });
+    }
+
+    public async Task SeedAsync(string key, string value)
+    {
+        string subject = KeyOf(key);
+        var connection = await ConnectAsync();
+        await connection.RunInTransactionAsync(c =>
+        {
+            if (Query<SyncedSettingEntity>(c, s => s.SubjectKey == subject).Count > 0)
+            {
+                return;
+            }
+
+            var seed = Stamp(new SyncedSettingEntity { SubjectKey = subject, Key = key, Value = value });
+            seed.CreatedAt = SeedStamp;
+            seed.UpdatedAt = SeedStamp;
+            Insert(c, seed);
         });
     }
 }
