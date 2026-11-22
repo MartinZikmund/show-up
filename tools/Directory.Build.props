@@ -1,0 +1,8 @@
+<Project>
+
+  <!-- Same reason as tests/Directory.Build.props: keep a stray Directory.Packages.props above the repo from applying. -->
+  <PropertyGroup>
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+  </PropertyGroup>
+
+</Project>
