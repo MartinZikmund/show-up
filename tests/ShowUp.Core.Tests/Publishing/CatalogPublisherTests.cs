@@ -23,26 +23,38 @@ public class CatalogPublisherTests
     {
         var (publisher, handler, _) = Create(Server(3, _workouts, [Program("p", 1)]));
 
-        var code = await publisher.RunAsync(Local(_workouts, [Program("p", 1), Program("p", 2, "Fixed")]), dryRun: false);
+        var code = await publisher.RunAsync(Local([.. _workouts, Workout("c")], [Program("p", 1), Program("p", 2, "Fixed")]), dryRun: false);
 
         code.Should().Be(CatalogPublisher.Published);
         handler.Writes.Should().Equal("catalog_workouts", "catalog_programs", "catalog_versions");
     }
 
     [TestMethod]
-    public async Task RunAsync_Changes_BumpsEveryWorkoutAndOnlyNewProgramRevisionsToTheNewVersion()
+    public async Task RunAsync_Changes_BumpsOnlyNewAndChangedWorkoutsAndNewProgramRevisions()
     {
         var (publisher, handler, _) = Create(Server(3, _workouts, [Program("p", 1)]));
 
-        await publisher.RunAsync(Local(_workouts, [Program("p", 1), Program("p", 2, "Fixed")]), dryRun: false);
+        await publisher.RunAsync(
+            Local([Workout("a"), Workout("b", "Renamed"), Workout("c")], [Program("p", 1), Program("p", 2, "Fixed")]),
+            dryRun: false);
 
         var writes = handler.Requests.Where(r => r.Method == HttpMethod.Post).ToList();
-        writes[0].Body.Should().Contain("\"id\":\"a\"").And.Contain("\"id\":\"b\"");
+        writes[0].Body.Should().Contain("\"id\":\"b\"").And.Contain("\"id\":\"c\"").And.NotContain("\"id\":\"a\"");
         writes[0].Body.Split("\"version\":4").Length.Should().Be(3);
         writes[0].Request.Headers.GetValues("Prefer").Should().ContainSingle().Which.Should().Contain("merge-duplicates");
         writes[1].Body.Should().Contain("\"revision\":2").And.NotContain("\"revision\":1");
         writes[1].Request.Headers.GetValues("Prefer").Should().ContainSingle().Which.Should().Contain("ignore-duplicates");
         writes[2].Body.Should().Be("[{\"version\":4}]");
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OnlyAProgramChanged_LeavesEveryWorkoutRowAlone()
+    {
+        var (publisher, handler, _) = Create(Server(3, _workouts, [Program("p", 1)]));
+
+        await publisher.RunAsync(Local(_workouts, [Program("p", 1), Program("p", 2, "Fixed")]), dryRun: false);
+
+        handler.Writes.Should().Equal("catalog_programs", "catalog_versions");
     }
 
     [TestMethod]
@@ -119,7 +131,7 @@ public class CatalogPublisherTests
             File.Delete(hero.FilePath);
         }
 
-        handler.Writes.Should().Equal("storage:p-abc.webp", "catalog_workouts", "catalog_programs", "catalog_versions");
+        handler.Writes.Should().Equal("storage:p-abc.webp", "catalog_programs", "catalog_versions");
     }
 
     [TestMethod]
@@ -131,7 +143,7 @@ public class CatalogPublisherTests
 
         await publisher.RunAsync(Local(_workouts, [Program("p", 1, hero: hero)]), dryRun: false);
 
-        handler.Writes.Should().Equal("catalog_workouts", "catalog_programs", "catalog_versions");
+        handler.Writes.Should().Equal("catalog_programs", "catalog_versions");
     }
 
     [TestMethod]
@@ -142,7 +154,7 @@ public class CatalogPublisherTests
         StringWriter log = new();
         CatalogPublisher flaky = new(new(new(failing), Url, SecretKey), log);
 
-        var code = await flaky.RunAsync(Local(_workouts, [Program("p", 1)]), dryRun: false);
+        var code = await flaky.RunAsync(Local([.. _workouts, Workout("c")], [Program("p", 1)]), dryRun: false);
 
         code.Should().Be(CatalogPublisher.Failed);
         handler.Writes.Should().Equal("catalog_workouts");
