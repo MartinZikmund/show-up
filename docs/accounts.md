@@ -13,7 +13,8 @@ Settings → Account, hidden when the build has no Supabase project (`SupabaseOp
   so focus stays) while a call runs. "Send a new code" waits 30 s after each code. Errors are localized (not an
   email, wrong or expired code, rate limited, can't reach the server) and announced to screen readers, also when one
   error replaces another.
-- **Signed in:** the email, **Sign out**, and a "Sync · Pro feature, coming soon" row until the sync engine lands.
+- **Signed in:** the email, **Sign out**, and the sync row: its status ("Last synced 5 minutes ago", "Offline — will retry",
+  "Paused · Sync is a Pro feature", ...) and **Sync now** (see [sync.md](./sync.md)).
 
 The card is `AccountViewModel` (Core), exposed as `SettingsViewModel.Account`. The flow behind it is `AccountService`.
 
@@ -65,8 +66,7 @@ offered them, and can never upload them.
 ## Signing out
 
 Nothing local is deleted. If `ISyncStatus.HasUnsyncedChangesAsync()` says some changes haven't reached the account,
-the app warns first. Until the sync engine lands `NoSyncStatus` answers false (nothing is ever deleted, so nothing is
-lost). After sign-out the scope is signed out again and the signed-out rows are back.
+the app asks first: **Sync now** (signs out once everything went up), **Sign out anyway** or **Cancel**. After sign-out the scope is signed out again and the signed-out rows are back.
 
 ## Trying it without a Supabase project
 
