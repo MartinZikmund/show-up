@@ -6,6 +6,13 @@ namespace ShowUp.Core.Sync;
 
 public sealed record SyncResult(int Pushed, int Applied);
 
+public sealed class SyncProgress
+{
+    public int Pushed { get; set; }
+
+    public int Applied { get; set; }
+}
+
 /// <summary>One sync pass for one account: per table, push the pending rows, then pull what changed on the server (docs/sync.md).</summary>
 public sealed class SyncEngine
 {
@@ -25,21 +32,21 @@ public sealed class SyncEngine
 
     public IReadOnlyList<ISyncTable> Tables { get; }
 
-    public async Task<SyncResult> SyncAsync(string userId, CancellationToken ct = default)
+    /// <param name="progress">Counts as it goes, so a sync that fails halfway still tells what it applied.</param>
+    public async Task<SyncResult> SyncAsync(string userId, SyncProgress? progress = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
+        progress ??= new();
         var connection = await _db.GetConnectionAsync();
-        int pushed = 0;
-        int applied = 0;
         foreach (var table in Tables)
         {
             var push = await table.PushAsync(connection, _rest, userId, ct);
-            pushed += push.Pushed;
-            applied += push.Applied;
-            applied += await table.PullAsync(connection, _rest, userId, ct);
+            progress.Pushed += push.Pushed;
+            progress.Applied += push.Applied;
+            progress.Applied += await table.PullAsync(connection, _rest, userId, ct);
         }
 
-        return new(pushed, applied);
+        return new(progress.Pushed, progress.Applied);
     }
 
     /// <summary>Rows of <paramref name="userId"/> changed here that the server hasn't confirmed yet.</summary>
