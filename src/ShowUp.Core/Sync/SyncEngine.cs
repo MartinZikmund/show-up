@@ -6,6 +6,13 @@ namespace ShowUp.Core.Sync;
 
 public sealed record SyncResult(int Pushed, int Applied);
 
+/// <summary>Some tables could not sync; the others did.</summary>
+public sealed class SyncTablesFailedException(IReadOnlyList<(string Table, Exception Error)> failures)
+    : AggregateException($"Syncing {string.Join(", ", failures.Select(f => f.Table))} failed.", failures.Select(f => f.Error))
+{
+    public IReadOnlyList<string> Tables { get; } = [.. failures.Select(f => f.Table)];
+}
+
 public sealed class SyncProgress
 {
     public int Pushed { get; set; }
@@ -22,11 +29,13 @@ public sealed class SyncEngine
 
     private readonly ShowUpDatabase _db;
     private readonly ISupabaseRest _rest;
+    private readonly ILogger<SyncEngine> _logger;
 
     public SyncEngine(ShowUpDatabase db, ISupabaseRest rest, ILogger<SyncEngine> logger)
     {
         _db = db;
         _rest = rest;
+        _logger = logger;
         Tables = CreateTables(logger);
     }
 
@@ -41,16 +50,41 @@ public sealed class SyncEngine
         progress ??= new();
         SyncPass pass = new(userId, isCurrent, ct);
         var connection = await _db.GetConnectionAsync();
+        List<(string Table, Exception Error)> failed = [];
         foreach (var table in Tables)
         {
-            var push = await table.PushAsync(connection, _rest, pass);
-            progress.Pushed += push.Pushed;
-            progress.Applied += push.Applied;
-            progress.Applied += await table.PullAsync(connection, _rest, pass);
+            try
+            {
+                var push = await table.PushAsync(connection, _rest, pass);
+                progress.Pushed += push.Pushed;
+                progress.Applied += push.Applied;
+                progress.Applied += await table.PullAsync(connection, _rest, pass);
+            }
+            catch (Exception ex) when (IsTableFailure(ex))
+            {
+                // A stale pass is no table's fault: stop instead.
+                pass.EnsureCurrent();
+                _logger.LogWarning(ex, "Syncing {Table} failed; carrying on with the other tables.", table.RemoteName);
+                failed.Add((table.RemoteName, ex));
+            }
+        }
+
+        if (failed.Count > 0)
+        {
+            throw new SyncTablesFailedException(failed);
         }
 
         return new(progress.Pushed, progress.Applied);
     }
+
+    // The server rejected this table's rows (a constraint, a bad answer); offline, an ended session or a cancel stop the whole pass.
+    private static bool IsTableFailure(Exception ex) => ex switch
+    {
+        SupabaseException { Kind: SupabaseErrorKind.Validation or SupabaseErrorKind.Forbidden or SupabaseErrorKind.NotFound
+            or SupabaseErrorKind.Conflict or SupabaseErrorKind.InvalidResponse } => true,
+        OperationCanceledException or SupabaseException => false,
+        _ => true,
+    };
 
     /// <summary>Rows of <paramref name="userId"/> changed here that the server hasn't confirmed yet.</summary>
     public async Task<int> CountPendingAsync(string userId)

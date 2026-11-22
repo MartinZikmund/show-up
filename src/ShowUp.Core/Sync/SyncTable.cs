@@ -182,6 +182,11 @@ public sealed class SyncTable<TEntity, TRow>(
         }
 
         var local = c.Find<TEntity>(row.Id);
+        if (local is not null && local.UserId != userId)
+        {
+            return false;
+        }
+
         if (local is not null)
         {
             var remoteAt = Timestamps.Truncate(row.UpdatedAt);

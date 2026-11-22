@@ -67,15 +67,18 @@ public sealed class SqliteTrackingRepository(
     public async Task EndEnrollmentAsync(Guid enrollmentId, EnrollmentEndReason reason)
     {
         var connection = await ConnectAsync();
-        var row = await connection.FindAsync<EnrollmentEntity>(enrollmentId);
-        if (row is null || !IsVisible(row))
+        // Read inside the write: a sync may have replaced the row since any earlier read.
+        await connection.RunInTransactionAsync(c =>
         {
-            return;
-        }
+            if (c.Find<EnrollmentEntity>(enrollmentId) is not { } row || !IsVisible(row))
+            {
+                return;
+            }
 
-        row.EndedAt = UtcNow;
-        row.EndReason = reason;
-        await connection.RunInTransactionAsync(c => Touch(c, row));
+            row.EndedAt = UtcNow;
+            row.EndReason = reason;
+            Touch(c, row);
+        });
     }
 
     public async Task CrossSessionAsync(Guid enrollmentId, int dayIndex, int sessionIndex, DateOnly dayDate, string? inkJson = null, Guid? completionId = null)
@@ -114,8 +117,10 @@ public sealed class SqliteTrackingRepository(
     {
         var connection = await ConnectAsync();
         await RequireActiveEnrollmentAsync(connection, enrollmentId);
-        var rows = await MatchingCompletionsAsync(connection, enrollmentId, dayIndex, sessionIndex);
-        await connection.RunInTransactionAsync(c => Tombstone(c, rows));
+        // Every live row of the session, including one a sync brought in since the caller looked.
+        await connection.RunInTransactionAsync(c => Tombstone(
+            c,
+            Query<CompletionEntity>(c, x => x.EnrollmentId == enrollmentId && x.DayIndex == dayIndex && x.SessionIndex == sessionIndex)));
     }
 
     public async Task<IReadOnlySet<(int Day, int Session)>> GetCompletedSessionsAsync(Guid enrollmentId)
@@ -216,14 +221,13 @@ public sealed class SqliteTrackingRepository(
     public async Task RemoveBonusAsync(Guid id)
     {
         var connection = await ConnectAsync();
-        var row = await connection.FindAsync<BonusWorkoutEntity>(id);
-        if (row is null || !IsVisible(row))
-        {
-            return;
-        }
-
         await connection.RunInTransactionAsync(c =>
         {
+            if (c.Find<BonusWorkoutEntity>(id) is not { } row || !IsVisible(row))
+            {
+                return;
+            }
+
             Touch(c, row, delete: true);
             Tombstone(c, Query<MetricEntryEntity>(c, m => m.BonusWorkoutId == id));
         });

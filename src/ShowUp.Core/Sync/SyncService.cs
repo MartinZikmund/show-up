@@ -36,6 +36,9 @@ public sealed class SyncService : ISyncStatus, IDisposable
 {
     public static readonly TimeSpan Debounce = TimeSpan.FromSeconds(5);
     public static readonly TimeSpan ResumeInterval = TimeSpan.FromMinutes(1);
+    /// <summary>The longest a server's Retry-After can hold sync back.</summary>
+    public static readonly TimeSpan MaxRetryAfter = TimeSpan.FromMinutes(15);
+
     public static readonly IReadOnlyList<TimeSpan> Backoff =
         [TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15)];
 
@@ -271,7 +274,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
         var delay = Backoff[Math.Min(failures, Backoff.Count) - 1];
         if (retryAfter > delay)
         {
-            delay = retryAfter.Value;
+            delay = retryAfter.Value < MaxRetryAfter ? retryAfter.Value : MaxRetryAfter;
         }
 
         _retry.Change(delay, Timeout.InfiniteTimeSpan);
