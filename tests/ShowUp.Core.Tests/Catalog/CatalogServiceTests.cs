@@ -181,6 +181,22 @@ public class CatalogServiceTests
     }
 
     [TestMethod]
+    public async Task Invalidate_DropsPinnedRevisionsOfThePreviousAccount()
+    {
+        FakeCustomProgramRepository custom = new();
+        var (id, first) = await custom.SaveNewRevisionAsync(CustomJson("custom-a", "Old"), "custom-a");
+        await custom.SaveNewRevisionAsync(CustomJson("custom-a", "New"), id);
+        CatalogService service = new(new FakeSource([]), custom, NullLogger<CatalogService>.Instance);
+        (await service.GetProgramAsync(id, first)).Should().NotBeNull();
+
+        custom.Clear();
+        service.Invalidate();
+
+        (await service.GetProgramAsync(id, first)).Should().BeNull();
+        (await service.GetCatalogAsync()).WorkoutsById.Should().NotContainKey("custom-a-1");
+    }
+
+    [TestMethod]
     public async Task GetCatalog_InvalidCustomProgram_IsSkipped()
     {
         FakeCustomProgramRepository custom = new();
