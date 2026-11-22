@@ -224,6 +224,14 @@ public sealed class OtaCatalogTests : StorageTestBase
     [DataRow("http://abc.supabase.co/a.png", "abc.supabase.co", false)]
     [DataRow("//abc.supabase.co/a.png", "abc.supabase.co", false)]
     [DataRow("https://other.example/a.png", "abc.supabase.co", false)]
+    [DataRow("Assets/heroes/x.webp", "abc.supabase.co", true)]
+    [DataRow("https:/evil.com/a.png", "abc.supabase.co", false)]
+    [DataRow("https:\\\\evil.com\\a.png", "abc.supabase.co", false)]
+    [DataRow("//evil.com/a.png", "abc.supabase.co", false)]
+    [DataRow("\\\\evil\\a.png", "abc.supabase.co", false)]
+    [DataRow("javascript:x", "abc.supabase.co", false)]
+    [DataRow("ms-appx:///Assets/x.png", "abc.supabase.co", false)]
+    [DataRow("/Assets/x.png", "abc.supabase.co", false)]
     public void HeroImagePolicy_IsAllowed_OnlyBundledPathsAndHttpsOnTheHost(string? hero, string? host, bool expected) =>
         HeroImagePolicy.IsAllowed(hero, host).Should().Be(expected);
 
