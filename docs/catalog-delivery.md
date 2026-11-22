@@ -101,7 +101,9 @@ What it does, in order:
 Requests carry the secret key in the `apikey` header only (secret keys are not JWTs: no bearer token), and the key is
 never printed. Exit codes: 0 published or nothing to do, 1 refused or invalid, 2 request failed.
 
-**Heroes.** `catalog/heroes/` (not there yet) holds the images, at most 2 MiB each, webp, png or jpeg. A program whose
+**Heroes.** The first publish that carries a hero is the first real test of the Storage upload (unit tests use a fake
+server), so check the URL opens. The host of the app's `Supabase:Url` must equal the host of `SUPABASE_URL`, or the
+app drops the image. `catalog/heroes/` (not there yet) holds the images, at most 2 MiB each, webp, png or jpeg. A program whose
 `heroImage` is a bundled path such as `Assets/heroes/t25.webp` with a file of that name in `catalog/heroes/` is published
 with `heroImage` rewritten to the public Storage URL
 `https://<ref>.supabase.co/storage/v1/object/public/catalog-heroes/t25-<hash>.webp` (the hash is of the file content, so

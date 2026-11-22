@@ -258,14 +258,18 @@ Nothing in the repo touches a hosted project by itself. These are the steps you 
      raise the rate limits to match. Set this up before the first public build.
 5. **Keys for the app.** Put the project URL and the **publishable** key (`sb_publishable_...`) in
    `appsettings.json` as `Supabase:Url` and `Supabase:PublishableKey` (or the build's configuration source).
+   The host of `Supabase:Url` must equal the host of the `SUPABASE_URL` secret: the app only loads hero images
+   from its own Supabase host, so a mismatch drops every remote hero.
    Never the secret key. Empty values keep every Supabase feature hidden.
-6. **Keys for CI.** In GitHub, Settings, Environments, create `catalog` (add required reviewers if you want a
-   manual gate on every publish) and add the secrets `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
+6. **Keys for CI.** In GitHub, Settings, Environments, create `catalog`, set *Deployment branches* to `main` only (the
+   workflow also refuses to publish from any other branch), and add required reviewers if you want a
+   manual gate on every publish. Then add the secrets `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
    (`sb_secret_...`, from Settings, API Keys; create a dedicated one so it can be rotated alone). Without them
    the publish workflow just prints a notice. Any CLI token CI ever needs must be a scoped access token
    limited to this project, never a classic one.
 7. **First publish.** Run the *Catalog publish* workflow by hand with *dry run* ticked, read the plan, then run
-   it again without. See [catalog-delivery.md](./catalog-delivery.md#publishing).
+   it again without. Storage uploads are only exercised by the first publish that carries a hero image, so treat that one
+   as the real test of the bucket: check the image opens at its public URL. See [catalog-delivery.md](./catalog-delivery.md#publishing).
 
 The secret key maps to the `service_role` role and bypasses RLS; the grants still apply, which is why the
 catalog tables give it write access and the user tables give it none.

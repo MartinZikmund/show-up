@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(8);
+select plan(9);
 
 select is(
   (select public from storage.buckets where id = 'catalog-heroes'), true,
@@ -21,6 +21,11 @@ select is_empty($$
     and (roles && array['anon', 'authenticated']::name[] or roles && array['public']::name[])
 $$, 'no storage.objects policy for anon or authenticated (no writes, no listing)');
 
+-- An object that exists, so the "can't list" checks below mean something.
+insert into storage.objects (bucket_id, name) values ('catalog-heroes', 'seed.png');
+select is((select count(*)::int from storage.objects where bucket_id = 'catalog-heroes'), 1,
+  'the seeded hero is visible to the table owner');
+
 set local role anon;
 select set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
 select throws_ok(
@@ -35,12 +40,12 @@ select throws_ok(
   $$insert into storage.objects (bucket_id, name) values ('catalog-heroes', 'x.png')$$,
   '42501'::char(5), null::text, 'authenticated cannot upload a hero');
 select is((select count(*)::int from storage.objects where bucket_id = 'catalog-heroes'), 0,
-  'authenticated cannot list the bucket');
+  'authenticated cannot list an existing hero');
 
 reset role;
 set local role anon;
 select is((select count(*)::int from storage.objects where bucket_id = 'catalog-heroes'), 0,
-  'anon cannot list the bucket');
+  'anon cannot list an existing hero');
 
 select * from finish();
 rollback;
