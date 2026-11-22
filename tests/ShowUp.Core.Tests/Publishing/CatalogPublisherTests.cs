@@ -172,6 +172,51 @@ public class CatalogPublisherTests
         output.ToString().Should().NotContain(SecretKey);
     }
 
+    [TestMethod]
+    public async Task RunAsync_ServerPagesShorterThanTheLimit_AreStillReadToTheEnd()
+    {
+        LocalWorkout[] many = [.. Enumerable.Range(0, 5).Select(i => Workout($"w{i}"))];
+        var (publisher, handler, output) = Create(Server(1, many, []));
+        handler.PageCap = 2;
+
+        var code = await publisher.RunAsync(Local(many, []), dryRun: false);
+
+        code.Should().Be(CatalogPublisher.Published);
+        handler.Writes.Should().BeEmpty("all five workouts were read, so nothing looks removed or new");
+        output.ToString().Should().Contain("no new version");
+    }
+
+    [TestMethod]
+    public async Task RunAsync_PublishedProgramWithoutLocalFile_WarnsButPublishes()
+    {
+        var (publisher, handler, output) = Create(Server(1, _workouts, [Program("old", 1)]));
+
+        var code = await publisher.RunAsync(Local([.. _workouts, Workout("c")], []), dryRun: false);
+
+        code.Should().Be(CatalogPublisher.Published);
+        output.ToString().Should().Contain("Warning: Program 'old' is published");
+        handler.Writes.Should().Contain("catalog_versions");
+    }
+
+    [TestMethod]
+    public async Task RunAsync_HeroUpload_IsCachedForAYearAsImmutable()
+    {
+        HeroUpload hero = new("p-abc.webp", Path.GetTempFileName(), "image/webp", CatalogLoader.HeroPublicUrl(Url, "p-abc.webp"));
+        var (publisher, handler, _) = Create(Server(1, _workouts, []));
+
+        try
+        {
+            await publisher.RunAsync(Local(_workouts, [Program("p", 1, hero: hero)]), dryRun: false);
+        }
+        finally
+        {
+            File.Delete(hero.FilePath);
+        }
+
+        var upload = handler.Requests.Single(r => r.Uri.AbsolutePath.Contains("/storage/v1/object/catalog-heroes/"));
+        upload.Request.Headers.GetValues("cache-control").Should().ContainSingle().Which.Should().Be("max-age=31536000, immutable");
+    }
+
     // Lets everything through except writes to catalog_programs.
     private sealed class FailingHandler(FakeSupabaseHandler inner) : DelegatingHandler(inner)
     {

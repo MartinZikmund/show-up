@@ -34,6 +34,9 @@ internal sealed class FakeSupabaseHandler(ServerState state) : HttpMessageHandle
 
     public bool HeroExists { get; set; }
 
+    /// <summary>Like PostgREST max-rows: a page can hold fewer rows than the requested limit.</summary>
+    public int PageCap { get; set; } = int.MaxValue;
+
     public IEnumerable<string> Writes => Requests
         .Where(r => r.Method == HttpMethod.Post)
         .Select(r => (r.Uri.AbsolutePath.Contains("/storage/") ? "storage:" : "") + r.Uri.AbsolutePath.Split('/')[^1]);
@@ -43,7 +46,8 @@ internal sealed class FakeSupabaseHandler(ServerState state) : HttpMessageHandle
         var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
         Requests.Add((request.Method, request.RequestUri!, body, request));
         var path = request.RequestUri!.AbsolutePath;
-        var offset = request.RequestUri.Query.Contains("offset=0");
+        var offsetMatch = System.Text.RegularExpressions.Regex.Match(request.RequestUri.Query, "offset=([0-9]+)");
+        var offset = offsetMatch.Success ? int.Parse(offsetMatch.Groups[1].Value) : 0;
 
         if (request.Method == HttpMethod.Head)
         {
@@ -55,8 +59,8 @@ internal sealed class FakeSupabaseHandler(ServerState state) : HttpMessageHandle
             var rows = path switch
             {
                 _ when path.EndsWith("catalog_versions") => state.Version == 0 ? "[]" : $"[{{\"version\":{state.Version}}}]",
-                _ when path.EndsWith("catalog_workouts") && offset => "[" + string.Join(',', state.Workouts.Select(w => $"{{\"id\":\"{w.Key}\",\"json\":{w.Value.GetRawText()}}}")) + "]",
-                _ when path.EndsWith("catalog_programs") && offset => "[" + string.Join(',', state.Programs.Select(p => $"{{\"id\":\"{p.Id}\",\"revision\":{p.Revision},\"json\":{p.Json.GetRawText()}}}")) + "]",
+                _ when path.EndsWith("catalog_workouts") => "[" + string.Join(',', state.Workouts.Skip(offset).Take(PageCap).Select(w => $"{{\"id\":\"{w.Key}\",\"json\":{w.Value.GetRawText()}}}")) + "]",
+                _ when path.EndsWith("catalog_programs") => "[" + string.Join(',', state.Programs.Skip(offset).Take(PageCap).Select(p => $"{{\"id\":\"{p.Id}\",\"revision\":{p.Revision},\"json\":{p.Json.GetRawText()}}}")) + "]",
                 _ => "[]",
             };
             return new(HttpStatusCode.OK) { Content = new StringContent(rows, Encoding.UTF8, "application/json") };

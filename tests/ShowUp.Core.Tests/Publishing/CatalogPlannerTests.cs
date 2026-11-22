@@ -96,6 +96,18 @@ public class CatalogPlannerTests
     }
 
     [TestMethod]
+    public void Plan_JsonWithDuplicateKeys_ComparesTheLastValue()
+    {
+        LocalProgram local = new("p", 1, Json.Parse("""{"id":"p","revision":1,"n":"old","n":"new"}"""), null);
+        LocalProgram server = new("p", 1, Json.Parse("""{"id":"p","revision":1,"n":"new"}"""), null);
+
+        var plan = CatalogPlanner.Plan(Local(_workouts, [local]), Server(2, _workouts, [server]));
+
+        plan.IsRefused.Should().BeFalse();
+        plan.HasChanges.Should().BeFalse();
+    }
+
+    [TestMethod]
     public void Plan_HeroOnNewProgram_IsPlannedForUpload()
     {
         HeroUpload hero = new("p-abc.webp", "p.webp", "image/webp", "https://x.supabase.co/storage/v1/object/public/catalog-heroes/p-abc.webp");
