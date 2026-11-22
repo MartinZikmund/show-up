@@ -1,0 +1,10 @@
+| T3 → T4/T5/T6 | v4 tables + repos (reminders, custom programs, synced settings) | consistent; T2 needs synced settings for primary/selected enrollment → Ruling: T3 runs BEFORE T2 |
+Ruling: execution order T1, T3, T2, T4, T5, T6, T7 (T2 depends on T3's synced settings) — cost if wrong: none.
+Ruling: custom program Revision = max(currentMax+1, seconds since 2026-01-01Z) to avoid offline collisions; deletes write synced 'custom-deleted:{id}' marker to prevent resurrection — cost if wrong: revision numbers look large in UI (display as v1..vN by order)
+Ruling: custom program delete = hide only (marker), revisions kept so pinned enrollments' history resolves via Get(id, revision) — cost if wrong: deleted programs' JSON remains in storage/sync (small)
+Ruling: selected (viewed) enrollment is a per-device preference (IAppPreferences), primary-enrollment stays synced — viewing on one device must not flip another — cost if wrong: trivial
+Task 2: fix rounds 1-2/5 (all addressed). Ruling: round 2 (timeouts/async-void/hint) implemented exactly as the re-reviewer prescribed with tests — no further re-review — cost if wrong: small
+Task 6: implementer duplicated the #67 crash fix (branch predated it) — rebase onto origin/main dropping 583d051. Rulings: delete own custom program allowed without Pro; optional-only day allowed (acts as rest)
+Ruling: lapsed user's primary running custom program stays crossable; edit/start Pro-only — cost if wrong: small
+Final review: with fixes (6 must-fix). Ruling: catalog workout ids append-only (CI lock file) + custom programs tolerate unknown workout ids via placeholder — cost if wrong: retired workouts linger in catalog. One fix wave on feature/plan3-hardening (stacked on feature/history).
+Final fix wave: approved; controller verified desktop startup (DI) and fixed README link. Carried into Plan 4: SetUserAsync atomic within refresh single-flight + LapseCoordinator gated on IsConfirmed; SyncedPersonalization reload falls back to current value + re-applies marker brush; LiveRefresher DataChanged ordering independent of handler order; coalesce DataChanged per sync pull.

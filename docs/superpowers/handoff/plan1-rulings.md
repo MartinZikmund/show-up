@@ -1,0 +1,6 @@
+| T1 self | flag names `--appId`/`--githubRepo` | Real CLI uses `--app-id`, `--github-repo`, space-separated `--platforms`. Ruling: used actual flags — no cost. |
+Ruling: work on sequential feature branches in the main checkout D:/Personal/show-up (no extra worktree) — tasks are strictly sequential and the repo is fresh — cost if wrong: none, no parallel edits.
+Ruling: catalog optional-session support added to Plan 2 Task 1 — T25 optional Friday double printed optional by official PDF — cost if wrong: small model change
+Ruling: ShiftScheduleAsync clamps the effective fromDate to the day after the last crossed day (never moves an X) and requires 1 <= days <= 30 — keeps "shift from today" safe — cost if wrong: users can't shift a block that includes crossed days (they'd uncross first).
+Ruling: calendar grid rows are program weeks (Day N, date as secondary label); gap days are not drawn — paper-calendar feel — cost if wrong: date-oriented users must read the small date label.
+Ruling: Release-WASM trimming check + Windows-head persistence check deferred to before first WASM deploy (tracked as issue) — not a Plan 2 blocker — cost if wrong: a trimmed build may break storage, caught before shipping.
