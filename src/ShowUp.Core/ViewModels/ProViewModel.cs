@@ -30,6 +30,7 @@ public partial class ProViewModel : ViewModelBase
         INavigationService navigation,
         ILauncherService launcher,
         ProLinks links,
+        CloudSyncAvailability cloudSync,
         ILogger<ProViewModel> logger)
     {
         _entitlements = entitlements;
@@ -46,7 +47,7 @@ public partial class ProViewModel : ViewModelBase
             Row("ProFeatureHistory"),
             Row("ProFeatureCustom"),
             Row("ProFeaturePersonalization"),
-            FeatureGate.IsAvailable(ProFeature.CloudSync)
+            FeatureGate.IsAvailable(ProFeature.CloudSync, cloudSync)
                 ? Row("ProFeatureSync")
                 : new(_localizer["ProFeatureSync"], _localizer["ProFeatureSyncFree"], _localizer["ProFeatureSyncSoon"]),
         ];

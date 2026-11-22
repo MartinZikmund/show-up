@@ -49,7 +49,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
     private readonly IPreferences _preferences;
     private readonly TimeProvider _time;
     private readonly ILogger<SyncService> _logger;
-    private readonly Func<bool> _isAvailable;
+    private readonly CloudSyncAvailability _availability;
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
     private readonly RefreshThrottle _resumeThrottle;
     private readonly ITimer _debounce;
@@ -71,7 +71,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
         IPreferences preferences,
         TimeProvider time,
         ILogger<SyncService> logger,
-        Func<bool> isAvailable)
+        CloudSyncAvailability availability)
     {
         _engine = engine;
         _db = db;
@@ -81,7 +81,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
         _preferences = preferences;
         _time = time;
         _logger = logger;
-        _isAvailable = isAvailable;
+        _availability = availability;
         _resumeThrottle = new(time, ResumeInterval);
         _debounce = time.CreateTimer(_ => _ = RequestSyncAsync(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         _retry = time.CreateTimer(_ => _ = RequestSyncAsync(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -252,7 +252,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
 
     private SyncState? Gate()
     {
-        if (!_isAvailable())
+        if (!FeatureGate.IsAvailable(ProFeature.CloudSync, _availability))
         {
             return SyncState.Off;
         }

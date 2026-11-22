@@ -335,6 +335,7 @@ public partial class App : Application, IApplication
 #else
         Func<IServiceProvider, bool> isAvailable = _ => options.IsConfigured;
 #endif
+        services.AddSingleton(sp => new CloudSyncAvailability(() => isAvailable(sp)));
         services.AddSingleton(sp => new AccountService(
             sp.GetRequiredService<ISupabaseAuth>(),
             sp.GetRequiredService<UserScope>(),
@@ -371,7 +372,7 @@ public partial class App : Application, IApplication
             sp.GetRequiredService<MZikmund.Toolkit.WinUI.Services.IPreferences>(),
             sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<ILogger<SyncService>>(),
-            () => isAvailable(sp)));
+            sp.GetRequiredService<CloudSyncAvailability>()));
         services.AddSingleton<ISyncStatus>(sp => sp.GetRequiredService<SyncService>());
     }
 

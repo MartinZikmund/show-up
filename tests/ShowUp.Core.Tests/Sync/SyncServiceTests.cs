@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
+using ShowUp.Core.Entitlements;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Supabase;
 using ShowUp.Core.Sync;
@@ -281,6 +282,6 @@ public sealed class SyncServiceTests
             _preferences,
             device.Clock,
             NullLogger<SyncService>.Instance,
-            () => _available);
+            new CloudSyncAvailability(() => _available));
     }
 }
