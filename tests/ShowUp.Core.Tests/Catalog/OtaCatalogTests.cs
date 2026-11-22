@@ -116,7 +116,116 @@ public sealed class OtaCatalogTests : StorageTestBase
         (await service.GetWorkoutAsync("yoga")).Should().BeNull();
         _log.Entries.Should().Contain(e => e.Level == LogLevel.Warning && e.Text.Contains("abs"));
         _memoryCache.Saved!.WorkoutsJson.Should().BeNull();
+        (await service.GetProgramAsync("sample"))!.Revision.Should().Be(2, "a valid program still lands");
+        (await service.GetCatalogAsync()).Version.Should().Be(1, "the version is not recorded");
     }
+
+    [TestMethod]
+    public async Task Remote_WorkoutsRejected_ProgramUsingNewWorkoutIsSkipped()
+    {
+        var (service, updates) = Create(_memoryCache);
+        var usesYoga = Program("other", 1, name: "Other").Replace("\"fit-test\"", "\"yoga\"");
+        _remote.Publish(2, [NewWorkout, .. Workouts().Where(w => !w.Contains("\"abs\""))], [usesYoga, Program("sample", 2, name: "Sample v2")]);
+
+        await updates.StartAsync();
+
+        (await service.GetProgramAsync("other")).Should().BeNull();
+        (await service.GetProgramAsync("sample"))!.Revision.Should().Be(2);
+    }
+
+    [TestMethod]
+    public async Task Remote_VersionMovesDuringDownload_AppliesNothingAndRetries()
+    {
+        var (service, updates) = Create(_memoryCache);
+        _remote.Publish(2, [NewWorkout, .. Workouts()], [Program("sample", 2, name: "Sample v2")]);
+        _remote.OnDownload = () => _remote.Publish(3, [NewWorkout, .. Workouts()], [Program("sample", 3, name: "Sample v3")]);
+
+        await updates.StartAsync();
+
+        (await service.GetProgramAsync("sample"))!.Revision.Should().Be(1);
+        _memoryCache.Saved.Should().BeNull();
+        _remote.OnDownload = null;
+        await updates.ResumeAsync();
+        (await service.GetProgramAsync("sample"))!.Revision.Should().Be(3);
+    }
+
+    [TestMethod]
+    public async Task Apply_LowerOrEqualVersion_ChangesNothing()
+    {
+        var (service, _) = Create(_memoryCache);
+
+        (await service.ApplyAsync(new RemoteCatalog(1, [], [new("sample", 2, Program("sample", 2, "x"))]))).Should().BeFalse();
+
+        _memoryCache.Saved.Should().BeNull();
+        (await service.GetProgramAsync("sample"))!.Revision.Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Refresh_TwoAtOnce_RunsOneCheck()
+    {
+        var (_, updates) = Create(_memoryCache);
+        TaskCompletionSource gate = new();
+        _remote.Gate = gate;
+
+        var first = updates.StartAsync();
+        var second = updates.StartAsync();
+        await second;
+        gate.SetResult();
+        await first;
+
+        _remote.Checks.Should().Be(1);
+    }
+
+    [TestMethod]
+    [DataRow("https://evil.example/hero.png")]
+    [DataRow("http://abc.supabase.co/storage/hero.png")]
+    [DataRow("https://abc.supabase.co.evil.example/hero.png")]
+    [DataRow("file:///C:/hero.png")]
+    public async Task Hero_NotAnHttpsSupabaseUrl_IsDroppedButTheProgramStays(string hero)
+    {
+        var (service, updates) = Create(_memoryCache, options: Supabase());
+        _remote.Publish(2, [NewWorkout, .. Workouts()], [Program("sample", 2, name: "Sample v2", hero: hero)]);
+
+        await updates.StartAsync();
+
+        var program = await service.GetProgramAsync("sample");
+        program!.Revision.Should().Be(2);
+        program.HeroImage.Should().Be("Assets/Heroes/sample.png", "the bundled art is the fallback");
+        _log.Entries.Should().Contain(e => e.Level == LogLevel.Warning && e.Text.Contains("hero image"));
+    }
+
+    [TestMethod]
+    public async Task Hero_SupabaseStorageUrl_IsKept()
+    {
+        var (service, updates) = Create(_memoryCache, options: Supabase());
+        const string url = "https://abc.supabase.co/storage/v1/object/public/heroes/sample.png";
+        _remote.Publish(2, [NewWorkout, .. Workouts()], [Program("sample", 2, name: "Sample v2", hero: url)]);
+
+        await updates.StartAsync();
+
+        (await service.GetProgramAsync("sample"))!.HeroImage.Should().Be(url);
+    }
+
+    [TestMethod]
+    public async Task Hero_NoSupabaseConfigured_RemoteUrlIsDroppedOnLoad()
+    {
+        _memoryCache.Saved = new(2, null, [new("sample", 2, 2, Program("sample", 2, name: "Cached", hero: "https://abc.supabase.co/h.png"))]);
+        var (service, _) = Create(_memoryCache);
+
+        (await service.GetProgramAsync("sample"))!.HeroImage.Should().Be("Assets/Heroes/sample.png");
+    }
+
+    [TestMethod]
+    [DataRow(null, null, true)]
+    [DataRow("Assets/Heroes/a.png", null, true)]
+    [DataRow("https://abc.supabase.co/a.png", "abc.supabase.co", true)]
+    [DataRow("https://ABC.supabase.co/a.png", "abc.supabase.co", true)]
+    [DataRow("https://abc.supabase.co/a.png", null, false)]
+    [DataRow("http://abc.supabase.co/a.png", "abc.supabase.co", false)]
+    [DataRow("//abc.supabase.co/a.png", "abc.supabase.co", false)]
+    [DataRow("https://other.example/a.png", "abc.supabase.co", false)]
+    public void HeroImagePolicy_IsAllowed_OnlyBundledPathsAndHttpsOnTheHost(string? hero, string? host, bool expected) =>
+        HeroImagePolicy.IsAllowed(hero, host).Should().Be(expected);
 
     [TestMethod]
     public async Task Remote_NewProgramUsingNewWorkout_IsAccepted()
@@ -142,6 +251,7 @@ public sealed class OtaCatalogTests : StorageTestBase
         (await service.GetProgramAsync("sample"))!.Revision.Should().Be(1);
         (await service.GetWorkoutAsync("yoga")).Should().BeNull();
         (await service.GetCatalogAsync()).Version.Should().Be(1);
+        _log.Entries.Should().Contain(e => e.Level == LogLevel.Warning && e.Text.Contains("Saving catalog version"));
     }
 
     [TestMethod]
@@ -270,6 +380,24 @@ public sealed class OtaCatalogTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task SupabaseRemote_TableLongerThanTheCeiling_Fails()
+    {
+        FakeHandler handler = new();
+        SupabaseOptions options = new() { Url = "https://abc.supabase.co", PublishableKey = "k" };
+        SupabaseCatalogRemote remote = new(new SupabaseRest(new HttpClient(handler), options, new NoTokens()), options);
+        string page = "[" + string.Join(',', Enumerable.Range(0, SupabaseCatalogRemote.PageSize).Select(i => $$"""{"id":"w{{i}}","json":{"id":"w{{i}}"},"version":2}""")) + "]";
+        for (int i = 0; i < SupabaseCatalogRemote.MaxPages + 1; i++)
+        {
+            handler.Enqueue(HttpStatusCode.OK, page);
+        }
+
+        Func<Task> act = () => remote.DownloadAsync(2);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        handler.Requests.Should().HaveCount(SupabaseCatalogRemote.MaxPages);
+    }
+
+    [TestMethod]
     public async Task SupabaseRemote_NoVersionsPublished_ReturnsNull()
     {
         FakeHandler handler = new();
@@ -280,9 +408,9 @@ public sealed class OtaCatalogTests : StorageTestBase
         (await remote.GetLatestVersionAsync()).Should().BeNull();
     }
 
-    private (CatalogService Service, CatalogUpdateService Updates) Create(ICatalogCache cache, ICatalogRemote? remote = null, TimeProvider? time = null)
+    private (CatalogService Service, CatalogUpdateService Updates) Create(ICatalogCache cache, ICatalogRemote? remote = null, TimeProvider? time = null, SupabaseOptions? options = null)
     {
-        CatalogService service = new(new BundledSource(), new FakeCustomProgramRepository(), _log.For<CatalogService>(), _messenger, cache);
+        CatalogService service = new(new BundledSource(), new FakeCustomProgramRepository(), _log.For<CatalogService>(), _messenger, cache, options);
         var enrollments = TestEnrollments.Create(new FakeTrackingRepository(Time), service, _messenger);
         DataChangeAnnouncer announcer = new(enrollments, service, _messenger);
         return (service, new(remote ?? _remote, service, announcer, time ?? Time, _log.For<CatalogUpdateService>()));
@@ -295,7 +423,10 @@ public sealed class OtaCatalogTests : StorageTestBase
         .Select(e => e.GetRawText())
         .ToList();
 
-    private static string Program(string id, int revision, string name) => Fixture("sample-program.json")
+    private static SupabaseOptions Supabase() => new() { Url = "https://abc.supabase.co", PublishableKey = "sb_publishable_x" };
+
+    private static string Program(string id, int revision, string name, string? hero = null) => Fixture("sample-program.json")
+        .Replace("\"heroImage\": null", hero is null ? "\"heroImage\": null" : $"\"heroImage\": \"{hero}\"")
         .Replace("\"id\": \"sample\"", $"\"id\": \"{id}\"")
         .Replace("\"revision\": 1", $"\"revision\": {revision}")
         .Replace("\"name\": \"Sample\"", $"\"name\": \"{name}\"");
@@ -304,7 +435,7 @@ public sealed class OtaCatalogTests : StorageTestBase
     {
         public Task<string> ReadWorkoutsAsync() => Task.FromResult(Fixture("sample-workouts.json"));
 
-        public Task<IReadOnlyList<string>> ReadProgramsAsync() => Task.FromResult<IReadOnlyList<string>>([Fixture("sample-program.json")]);
+        public Task<IReadOnlyList<string>> ReadProgramsAsync() => Task.FromResult<IReadOnlyList<string>>([Fixture("sample-program.json").Replace("\"heroImage\": null", "\"heroImage\": \"Assets/Heroes/sample.png\"")]);
     }
 
     private sealed class FakeRemote : ICatalogRemote
@@ -317,6 +448,10 @@ public sealed class OtaCatalogTests : StorageTestBase
         public Exception? Fail { get; set; }
 
         public Exception? FailDownload { get; set; }
+
+        public TaskCompletionSource? Gate { get; set; }
+
+        public Action? OnDownload { get; set; }
 
         public int Checks { get; private set; }
 
@@ -331,15 +466,21 @@ public sealed class OtaCatalogTests : StorageTestBase
                 [.. programs.Select(json => ToRow(json))]);
         }
 
-        public Task<int?> GetLatestVersionAsync(CancellationToken ct = default)
+        public async Task<int?> GetLatestVersionAsync(CancellationToken ct = default)
         {
             Checks++;
-            return Fail is { } error ? Task.FromException<int?>(error) : Task.FromResult(_version);
+            if (Gate is { } gate)
+            {
+                await gate.Task;
+            }
+
+            return Fail is { } error ? throw error : _version;
         }
 
         public Task<RemoteCatalog> DownloadAsync(int version, CancellationToken ct = default)
         {
             Downloads++;
+            OnDownload?.Invoke();
             return FailDownload is { } error ? Task.FromException<RemoteCatalog>(error) : Task.FromResult(_catalog!);
         }
 
