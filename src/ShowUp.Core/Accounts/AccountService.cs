@@ -145,8 +145,14 @@ public sealed class AccountService
                 _scope.Set(userId);
                 // Together with the scope: a read or write meanwhile must not use the previous account's cached rows.
                 _announcer.InvalidateCaches();
-                await SetStoreUserAsync(userId);
-                _announcer.Announce();
+                try
+                {
+                    await SetStoreUserAsync(userId);
+                }
+                finally
+                {
+                    _announcer.Announce();
+                }
             }
         }
         finally
@@ -166,6 +172,10 @@ public sealed class AccountService
         catch (TimeoutException)
         {
             _logger.LogWarning("The store didn't take the new user within {Timeout}; carrying on.", StoreUserTimeout);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "The store failed to take the new user; carrying on.");
         }
     }
 
