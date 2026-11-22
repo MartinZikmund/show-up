@@ -227,6 +227,22 @@ public sealed class AccountServiceTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task SignIn_StoreThrows_StillSwitchesAnnouncesOnceAndRaisesChanged()
+    {
+        _entitlements.SetUserGate = Task.FromException(new InvalidOperationException("store broke"));
+        var announced = 0;
+        var changed = 0;
+        _messenger.Register<DataChangedMessage>(this, (_, _) => announced++);
+        _account.Changed += (_, _) => changed++;
+
+        await _account.SignInAsync(Alice, FakeSupabaseAuth.GoodCode, Answer(yes: true));
+
+        _scope.CurrentUserId.Should().Be(FakeSupabaseAuth.UserIdOf(Alice));
+        announced.Should().Be(1);
+        changed.Should().BeGreaterThan(0);
+    }
+
+    [TestMethod]
     public async Task SignOut_ReturnsToAnonymousAndKeepsEveryRow()
     {
         await _tracking.EnrollAsync("p", 1, "t", new DateOnly(2026, 12, 1));
