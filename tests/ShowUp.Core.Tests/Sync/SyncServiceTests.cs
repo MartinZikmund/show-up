@@ -170,6 +170,45 @@ public sealed class SyncServiceTests
     }
 
     [TestMethod]
+    public async Task OneTableRejected_ShowsFailedAndRetries()
+    {
+        var phone = _world.AddDevice("phone");
+        await phone.Reminders.AddAsync(60, 1);
+        phone.Rest.Fault = (op, table, _) => op == "upsert" && table == "reminders"
+            ? new SupabaseException(SupabaseErrorKind.Validation, "violates check constraint", 400, "23514")
+            : null;
+        var service = Create(phone);
+
+        await service.StartAsync();
+        await service.WaitForIdleAsync();
+        service.State.Should().Be(SyncState.Failed);
+        phone.Rest.Fault = null;
+        phone.Clock.Advance(SyncService.Backoff[0]);
+        await service.WaitForIdleAsync();
+
+        service.State.Should().Be(SyncState.Idle);
+    }
+
+    [TestMethod]
+    public async Task RateLimited_LongRetryAfter_IsCapped()
+    {
+        var phone = _world.AddDevice("phone");
+        int calls = 0;
+        phone.Rest.Fault = (_, _, _) => calls++ == 0
+            ? new SupabaseException(SupabaseErrorKind.RateLimited, "slow down", 429, retryAfter: TimeSpan.FromHours(2))
+            : null;
+        var service = Create(phone);
+        await service.StartAsync();
+        await service.WaitForIdleAsync();
+        service.State.Should().Be(SyncState.Offline);
+
+        phone.Clock.Advance(SyncService.MaxRetryAfter);
+        await service.WaitForIdleAsync();
+
+        service.State.Should().Be(SyncState.Idle);
+    }
+
+    [TestMethod]
     public async Task Unauthorized_AsksToSignInAgainAndKeepsTheRows()
     {
         var phone = _world.AddDevice("phone");

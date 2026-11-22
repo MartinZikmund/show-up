@@ -354,6 +354,65 @@ public sealed class SyncEngineTests
     }
 
     [TestMethod]
+    public async Task Sync_OneTableRejected_TheOthersStillSync()
+    {
+        var phone = _world.AddDevice("phone");
+        await phone.Reminders.AddAsync(60, 1);
+        await phone.Settings.SetAsync("MarkerColor", "red");
+        phone.Rest.Fault = (op, table, _) => op == "upsert" && table == "reminders"
+            ? new SupabaseException(SupabaseErrorKind.Validation, "violates check constraint", 400, "23514")
+            : null;
+
+        var act = phone.SyncAsync;
+
+        (await act.Should().ThrowAsync<SyncTablesFailedException>()).Which.Tables.Should().Equal("reminders");
+        _world.Server.Rows("synced_settings").Should().ContainSingle();
+        (await phone.Engine.CountPendingAsync("alice")).Should().Be(1, "only the rejected reminder waits");
+    }
+
+    [TestMethod]
+    public async Task Sync_Offline_StopsTheWholePass()
+    {
+        var phone = _world.AddDevice("phone");
+        await phone.Settings.SetAsync("MarkerColor", "red");
+        phone.Rest.Fault = (_, _, _) => new SupabaseException(SupabaseErrorKind.Network, "offline");
+
+        var act = phone.SyncAsync;
+
+        (await act.Should().ThrowAsync<SupabaseException>()).Which.Kind.Should().Be(SupabaseErrorKind.Network);
+        (phone.Rest.Upserts + phone.Rest.Selects).Should().Be(1, "no point asking the other tables");
+    }
+
+    [TestMethod]
+    public async Task Pull_LocalRowOfAnotherAccount_IsLeftAlone()
+    {
+        var laptop = _world.AddDevice("laptop");
+        Guid shared = Guid.NewGuid();
+        var connection = await laptop.Db.GetConnectionAsync();
+        await connection.InsertAsync(new ReminderEntity
+        {
+            Id = shared,
+            UserId = "bob",
+            DeviceId = "laptop",
+            CreatedAt = SyncWorld.Start,
+            UpdatedAt = SyncWorld.Start,
+            MinutesOfDay = 60,
+            DaysMask = 1,
+        });
+        var alice = _world.Server.ClientFor(() => "alice");
+        var row = Reminder("alice", 300);
+        row.Id = shared;
+        row.UpdatedAt = SyncWorld.Start.AddMinutes(5);
+        await alice.UpsertAsync("reminders", [row], SyncJsonContext.Default.ReminderRow);
+
+        await laptop.SyncAsync();
+
+        var local = (await laptop.AllRowsAsync<ReminderEntity>()).Single();
+        local.UserId.Should().Be("bob");
+        local.MinutesOfDay.Should().Be(60);
+    }
+
+    [TestMethod]
     public async Task Push_OnlySendsTheSignedInUsersRows()
     {
         var phone = _world.AddDevice("phone", userId: "alice");
