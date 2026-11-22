@@ -34,9 +34,9 @@ jobs:
         with:
           version: 3.2.0
 
-      # Only Postgres, Auth (auth schema/auth.uid()), the API gateway, PostgREST and postgres-meta.
+      # Postgres, Auth (auth.uid()), the API gateway, PostgREST, postgres-meta and Storage (the hero bucket lives in its schema).
       - name: Start local stack
-        run: supabase start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+        run: supabase start -x realtime,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
 
       - name: Apply migrations from scratch
         run: supabase db reset
