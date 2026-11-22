@@ -21,6 +21,7 @@ public enum CustomProgramProblem
     NoWeeks,
     TooManyWeeks,
     EmptyDay,
+    TooLarge,
 }
 
 /// <param name="Week">1-based, for <see cref="CustomProgramProblem.EmptyDay"/>.</param>
@@ -34,6 +35,9 @@ public static class CustomProgramFactory
     public const int MaxWeeks = 26;
     public const int DaysPerWeek = 7;
     public const int MaxNameLength = 60;
+
+    /// <summary>Stored program JSON; the server rejects a bigger row, which would fail the sync forever.</summary>
+    public const int MaxJsonBytes = 256 * 1024;
     public const string RestWorkoutId = "rest";
     public const string TrackId = "main";
 
@@ -84,6 +88,11 @@ public static class CustomProgramFactory
             }
         }
 
+        if (errors.Count == 0 && System.Text.Encoding.UTF8.GetByteCount(Serialize(Build(draft, DateOnly.MinValue))) > MaxJsonBytes)
+        {
+            errors.Add(new(CustomProgramProblem.TooLarge));
+        }
+
         return errors;
     }
 
@@ -98,6 +107,11 @@ public static class CustomProgramFactory
             throw new ArgumentException($"The schedule isn't valid: {string.Join(", ", errors)}.", nameof(draft));
         }
 
+        return Build(draft, savedOn);
+    }
+
+    private static WorkoutProgram Build(CustomProgramDraft draft, DateOnly savedOn)
+    {
         string trimmed = draft.Name.Trim();
         string name = trimmed.Length > MaxNameLength ? trimmed[..MaxNameLength] : trimmed;
         List<ScheduleWeek> weeks =

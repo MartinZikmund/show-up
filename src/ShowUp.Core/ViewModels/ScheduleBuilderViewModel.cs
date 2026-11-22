@@ -347,6 +347,11 @@ public partial class ScheduleBuilderViewModel : ViewModelBase
             messages.Add(_localizer.Format("BuilderErrorEmptyDays", emptyDays));
         }
 
+        if (errors.Any(e => e.Problem == CustomProgramProblem.TooLarge))
+        {
+            messages.Add(_localizer["BuilderErrorTooLarge"].Value);
+        }
+
         ValidationMessages = messages;
         OnPropertyChanged(nameof(HasValidationMessages));
         OnPropertyChanged(nameof(CanSave));

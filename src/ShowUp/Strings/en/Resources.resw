@@ -1183,6 +1183,9 @@
   <data name="BuilderErrorNoWeeks" xml:space="preserve">
     <value>A schedule needs at least one week.</value>
   </data>
+  <data name="BuilderErrorTooLarge" xml:space="preserve">
+    <value>This schedule is too big to save. Remove some workouts or weeks.</value>
+  </data>
   <data name="BuilderErrorTooManyWeeks" xml:space="preserve">
     <value>A schedule can have at most {0} weeks.</value>
   </data>
