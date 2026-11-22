@@ -225,4 +225,17 @@ public class CatalogPublisherTests
                 ? Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError) { Content = new StringContent("boom") })
                 : base.SendAsync(request, cancellationToken);
     }
+
+    [TestMethod]
+    public async Task RunAsync_OrphanRowsFromAFailedRun_InsertsTheMissingVersionRow()
+    {
+        var (publisher, handler, output) = Create(Server(3, _workouts, [], maxRowVersion: 4));
+
+        var code = await publisher.RunAsync(Local(_workouts, []), dryRun: false);
+
+        code.Should().Be(CatalogPublisher.Published);
+        handler.Writes.Should().Equal("catalog_versions");
+        handler.Requests.Single(r => r.Method == HttpMethod.Post).Body.Should().Be("[{\"version\":4}]");
+        output.ToString().Should().Contain("recovering version 4");
+    }
 }

@@ -116,4 +116,25 @@ public class CatalogPlannerTests
 
         plan.Heroes.Should().Equal(hero);
     }
+
+    [TestMethod]
+    public void Plan_RowsAboveTheRecordedVersion_RecoversThatVersionEvenWithNothingElseChanged()
+    {
+        var plan = CatalogPlanner.Plan(Local(_workouts, []), Server(3, _workouts, [], maxRowVersion: 4));
+
+        plan.IsRefused.Should().BeFalse();
+        plan.Recovering.Should().BeTrue();
+        plan.NewVersion.Should().Be(4);
+        plan.HasChanges.Should().BeTrue();
+        CatalogPlanner.Describe(plan).Should().Contain("recovering version 4");
+    }
+
+    [TestMethod]
+    public void Plan_RowsAtTheRecordedVersion_IsNotRecovery()
+    {
+        var plan = CatalogPlanner.Plan(Local(_workouts, []), Server(3, _workouts, [], maxRowVersion: 3));
+
+        plan.Recovering.Should().BeFalse();
+        plan.HasChanges.Should().BeFalse();
+    }
 }
