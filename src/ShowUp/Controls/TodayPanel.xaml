@@ -304,6 +304,8 @@
                                 </StackPanel>
                                 <Button
                                     Grid.Column="2"
+                                    MinWidth="40"
+                                    MinHeight="40"
                                     AutomationProperties.AutomationId="RemoveBonusButton"
                                     AutomationProperties.Name="{markup:Localize Key=TodayBonusRemove}"
                                     Click="RemoveBonus_Click"
