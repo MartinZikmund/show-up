@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
 using Path = Microsoft.UI.Xaml.Shapes.Path;
 using ShowUp.Core.Marking;
-using Windows.UI.ViewManagement;
 
 namespace ShowUp.Controls;
 
@@ -142,21 +141,7 @@ public sealed partial class MarkerCrossControl : Control
 
     private static int ClampStrokes(int value) => Math.Clamp(value, 0, 2);
 
-    private static readonly Lazy<UISettings?> _uiSettings = new(CreateUISettings);
-
-    private static bool AnimationsEnabled => _uiSettings.Value?.AnimationsEnabled ?? true;
-
-    private static UISettings? CreateUISettings()
-    {
-        try
-        {
-            return new UISettings();
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    private static bool AnimationsEnabled => App.Current.Services.GetService<IMotionPreference>()?.AnimationsEnabled ?? true;
 
     protected override void OnApplyTemplate()
     {

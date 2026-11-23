@@ -205,6 +205,7 @@ public partial class App : Application, IApplication
         services.AddSingleton<ICatalogService>(sp => sp.GetRequiredService<CatalogService>());
         services.AddSingleton<ICatalogUpdateTarget>(sp => sp.GetRequiredService<CatalogService>());
         services.AddSingleton<IMarkingFeedback, MarkingFeedback>();
+        services.AddSingleton<IMotionPreference, MotionPreference>();
         services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
         services.AddSingleton<MarkerBrushUpdater>();
         services.AddSingleton<IActiveEnrollmentService, ActiveEnrollmentService>();

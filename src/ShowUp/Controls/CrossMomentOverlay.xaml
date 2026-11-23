@@ -157,6 +157,16 @@
                         IsHitTestVisible="False"
                         Opacity="0"
                         Spacing="8">
+                        <!--  "Week 3 done": only when this cross finished a week, a phase or the program  -->
+                        <TextBlock
+                            x:Name="MilestoneText"
+                            HorizontalAlignment="Center"
+                            AutomationProperties.AccessibilityView="Raw"
+                            Foreground="{ThemeResource MarkerBrush}"
+                            Style="{StaticResource SectionHeaderTextBlockStyle}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
                         <StackPanel
                             HorizontalAlignment="Center"
                             Orientation="Horizontal"
@@ -211,7 +221,26 @@
                     PointerExited="LogResultsButton_PointerExited"
                     Style="{StaticResource AccentButtonStyle}"
                     Visibility="Collapsed" />
+                <!--  A finished program is the one moment that waits for an answer  -->
+                <StackPanel
+                    x:Name="FinishPanel"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="Collapsed">
+                    <Button
+                        x:Name="FinishProgramButton"
+                        AutomationProperties.AutomationId="CrossMomentFinishButton"
+                        Click="FinishProgramButton_Click"
+                        Content="{markup:Localize Key=FinishProgram}"
+                        Style="{StaticResource AccentButtonStyle}" />
+                    <Button
+                        AutomationProperties.AutomationId="CrossMomentKeepOpenButton"
+                        Click="KeepOpenButton_Click"
+                        Content="{markup:Localize Key=FinishProgramLater}" />
+                </StackPanel>
             </StackPanel>
+            <controls:ConfettiBurst x:Name="Confetti" Ink="{ThemeResource MarkerBrush}" />
         </Grid>
 
         <VisualStateManager.VisualStateGroups>
