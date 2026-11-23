@@ -133,6 +133,13 @@ Uno.Sdk 7.0.0-dev.179). The same publish with none of the settings below is 405.
   `InitializeComponent` with `Markup extension could not provide value` (`0xc000027b`). The real
   CommunityToolkit packages kept them alive by accident. The descriptor costs 0.1 MB. Delete it, and its
   `TrimmerRootDescriptor` item, when the packages are back, and check that the app still launches.
+- **`TrimmerRoots.xml` also keeps the `INotifyCollectionChanged` vtable in `WinRT.Runtime`.** CsWinRT builds
+  the COM wrapper for a collection by reflection, and the trimmer removed the nested `Vftbl` it looks up. Any
+  `ObservableCollection<T>` given to a control (`ItemsSource`) then threw `NullReferenceException` in
+  `TypeExtensions.GetAbiToProjectionVftblPtr`, and the app died with `0xc000027b`. Calendar, Reminders and the
+  schedule builder all did this, in Release only. This root stays even when the toolkit packages are back.
+  A launch does not catch it: after touching trimming, open the Calendar of a started program in a Release
+  package.
 - **Drop the Skia prunes** once `MZikmund.Toolkit.WinUI` stops depending on `SkiaSharp.Views.WinUI`; an Uno
   change will not remove those natives.
 
