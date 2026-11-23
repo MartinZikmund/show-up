@@ -95,6 +95,44 @@ public class JournalRepositoriesTests : StorageTestBase
         (await connection.Table<MetricEntryEntity>().ToListAsync()).Should().ContainSingle().Which.DeletedAt.Should().NotBeNull();
     }
 
+    // An emoji is two UTF-16 units; cutting between them stores half a character (#85).
+    [TestMethod]
+    public async Task Notes_LimitInsideEmoji_DropsTheWholeEmoji()
+    {
+        var notes = CreateNotesRepository();
+        var text = new string('a', SqliteNotesRepository.MaxLength - 1) + "😀";
+
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, text)]);
+
+        var stored = (await notes.GetNotesAsync(_enrollment)).Single().Text;
+        stored.Should().Be(new string('a', SqliteNotesRepository.MaxLength - 1));
+    }
+
+    [TestMethod]
+    public async Task Notes_EmojiEndsExactlyAtTheLimit_IsKept()
+    {
+        var notes = CreateNotesRepository();
+        var text = new string('a', SqliteNotesRepository.MaxLength - 2) + "😀" + "tail";
+
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, text)]);
+
+        var stored = (await notes.GetNotesAsync(_enrollment)).Single().Text;
+        stored.Should().Be(new string('a', SqliteNotesRepository.MaxLength - 2) + "😀");
+    }
+
+    [TestMethod]
+    public async Task Metrics_TextLimitInsideEmoji_DropsTheWholeEmoji()
+    {
+        var metrics = CreateMetricsRepository();
+        var bonusId = Guid.NewGuid();
+        var text = new string('a', SqliteMetricsRepository.MaxTextLength - 1) + "😀";
+
+        await metrics.SetValuesAsync(MetricTarget.ForBonus(bonusId, "w"), new Dictionary<string, MetricValue> { ["note"] = new MetricValue(null, text) });
+
+        var stored = (await metrics.GetBonusEntriesAsync([bonusId])).Single().TextValue;
+        stored.Should().Be(new string('a', SqliteMetricsRepository.MaxTextLength - 1));
+    }
+
     [TestMethod]
     public async Task Metrics_BonusAndSession_AreKeptApart()
     {
