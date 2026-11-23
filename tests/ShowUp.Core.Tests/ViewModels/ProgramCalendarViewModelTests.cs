@@ -495,6 +495,63 @@ public sealed class ProgramCalendarViewModelTests
     private static CalendarDayViewModel Day(ProgramCalendarViewModel viewModel, int index) =>
         viewModel.Weeks.SelectMany(w => w.Days).Single(d => d.DayIndex == index);
 
+    [TestMethod]
+    public async Task CanFinish_EveryRequiredSessionCrossed_IsTrue()
+    {
+        var viewModel = await LoadAsync(_today.AddDays(-2), "run", "rest", "run+abs?");
+        await _repository.CrossSessionAsync(_enrollmentId, 0, 0, _today.AddDays(-2));
+        viewModel.CanFinish.Should().BeFalse();
+
+        await _repository.CrossSessionAsync(_enrollmentId, 2, 0, _today);
+        await viewModel.RefreshAsync();
+
+        viewModel.CanFinish.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task CanFinish_ReadOnlyProgram_IsFalse()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        await _repository.CrossSessionAsync(_enrollmentId, 0, 0, _today);
+        var other = await _repository.EnrollAsync("p", 1, "t", _today);
+        _service!.Invalidate();
+        await _service.SetPrimaryAsync(other.Id);
+        await _service.SelectAsync(_enrollmentId);
+        _entitlements.IsPro = false;
+
+        await viewModel.RefreshAsync();
+
+        // Complete, but a lapsed non-primary program can't be written to.
+        (viewModel.IsReadOnly, viewModel.CanFinish).Should().Be((true, false));
+    }
+
+    [TestMethod]
+    public async Task Finish_EndsTheProgramAsFinished_AndOpensHistory()
+    {
+        var viewModel = await LoadAsync(_today, "run");
+        await _repository.CrossSessionAsync(_enrollmentId, 0, 0, _today);
+        await viewModel.RefreshAsync();
+
+        await viewModel.FinishCommand.ExecuteAsync(null);
+
+        var ended = (await _service!.GetHistoryAsync()).Should().ContainSingle().Subject.Enrollment;
+        ended.EndReason.Should().Be(EnrollmentEndReason.Finished);
+        _navigator.Sections.Should().Equal(NavigationSection.History);
+    }
+
+    [TestMethod]
+    public async Task Finish_ProgramNotComplete_DoesNothing()
+    {
+        var viewModel = await LoadAsync(_today.AddDays(-1), "run", "run");
+        await _repository.CrossSessionAsync(_enrollmentId, 0, 0, _today.AddDays(-1));
+        await viewModel.RefreshAsync();
+
+        await viewModel.FinishCommand.ExecuteAsync(null);
+
+        (await _service!.GetAllAsync()).Should().ContainSingle();
+        _navigator.Sections.Should().BeEmpty();
+    }
+
     private async Task<ProgramCalendarViewModel> LoadAsync(DateOnly start, params string[] days)
     {
         var program = TestCatalog.Program("p", 1, days);

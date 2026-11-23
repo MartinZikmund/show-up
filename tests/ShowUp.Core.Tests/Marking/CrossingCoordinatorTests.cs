@@ -224,6 +224,29 @@ public sealed class CrossingCoordinatorTests
         _crossMoment.Shown.Should().ContainSingle();
     }
 
+    [TestMethod]
+    public async Task Cross_CompletesProgram_MomentOffersToFinishIt()
+    {
+        Enroll("run+abs");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+        await _crossMoment.Shown.Single().Finish!();
+
+        _enrollments.Calls.Should().Contain("Finish");
+    }
+
+    [TestMethod]
+    public async Task Cross_CompletesOnlyAWeek_DoesNotOfferToFinish()
+    {
+        Enroll("run+abs", "run");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+
+        _crossMoment.Shown.Single().Finish.Should().BeNull();
+    }
+
     // Day 0 is the two-session day every Target() crosses; each string is a one-day week.
     private void Enroll(params string[] oneDayWeeks)
     {
