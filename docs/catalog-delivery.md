@@ -103,10 +103,10 @@ never printed. Exit codes: 0 published or nothing to do, 1 refused or invalid, 2
 
 **Heroes.** The first publish that carries a hero is the first real test of the Storage upload (unit tests use a fake
 server), so check the URL opens. The host of the app's `Supabase:Url` must equal the host of `SUPABASE_URL`, or the
-app drops the image. `catalog/heroes/` (not there yet) holds the images, at most 2 MiB each, webp, png or jpeg. A program whose
-`heroImage` is a bundled path such as `Assets/heroes/t25.webp` with a file of that name in `catalog/heroes/` is published
+app drops the image. `catalog/heroes/` holds the images (generated, see [`tools/hero-art`](../tools/hero-art/README.md)), at most 2 MiB each, webp, png or jpeg; the bundled set is JPEG and kept under 150 KB each. A program whose
+`heroImage` is a bundled path such as `Assets/heroes/t25.jpg` with a file of that name in `catalog/heroes/` is published
 with `heroImage` rewritten to the public Storage URL
-`https://<ref>.supabase.co/storage/v1/object/public/catalog-heroes/t25-<hash>.webp` (the hash is of the file content, so
+`https://<ref>.supabase.co/storage/v1/object/public/catalog-heroes/t25-<hash>.jpg` (the hash is of the file content, so
 an object never changes and caches never go stale). The JSON in `catalog/programs/` stays as authored, which keeps the
 bundled fallback. Changing a published hero is a program JSON change and needs a revision bump like any other.
 
