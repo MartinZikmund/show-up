@@ -247,6 +247,51 @@ public sealed class CrossingCoordinatorTests
         _crossMoment.Shown.Single().Finish.Should().BeNull();
     }
 
+    [TestMethod]
+    public async Task Finish_OfferedBeforeTheWrite_WaitsForTheWrite()
+    {
+        // Draw-it-yourself shows the caption (and the offer) as soon as the X is drawn, before the cross is saved.
+        Enroll("run+abs");
+        TaskCompletionSource writeGate = new();
+        Task? finishing = null;
+        CrossHooks hooks = new(
+            async write =>
+            {
+                finishing = _crossMoment.Shown.Concat(_crossMoment.DrawRequests.Select(r => r.Info)).Single().Finish!();
+                await Task.Yield();
+                _enrollments.Calls.Should().NotContain("Finish", "the program isn't complete until the cross is written");
+                await write();
+                await writeGate.Task;
+            },
+            () => Task.CompletedTask,
+            _ => { });
+        _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
+        var coordinator = Create();
+
+        var crossing = coordinator.CrossAsync(Target(session: 1, done: [0]), hooks);
+        writeGate.SetResult();
+        await crossing;
+        await finishing!;
+
+        _enrollments.Calls.Should().Contain("Finish");
+    }
+
+    [TestMethod]
+    public async Task Finish_WriteFailed_DoesNotFinish()
+    {
+        Enroll("run+abs");
+        CrossHooks hooks = new(_ => Task.FromException(new InvalidOperationException("ended under the page")), () => Task.CompletedTask, _ => { });
+        _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
+        var coordinator = Create();
+
+        Func<Task> crossing = () => coordinator.CrossAsync(Target(session: 1, done: [0]), hooks);
+        await crossing.Should().ThrowAsync<InvalidOperationException>();
+        Func<Task> finishing = () => _crossMoment.DrawRequests.Single().Info.Finish!();
+
+        await finishing.Should().ThrowAsync<InvalidOperationException>();
+        _enrollments.Calls.Should().NotContain("Finish");
+    }
+
     // Day 0 is the two-session day every Target() crosses; each string is a one-day week.
     private void Enroll(params string[] oneDayWeeks)
     {

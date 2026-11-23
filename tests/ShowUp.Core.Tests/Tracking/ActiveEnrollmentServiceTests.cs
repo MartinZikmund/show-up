@@ -352,7 +352,7 @@ public sealed class ActiveEnrollmentServiceTests
     }
 
     [TestMethod]
-    public async Task Finish_ReadOnlyEnrollment_Throws()
+    public async Task Finish_ReadOnlyButCompleteEnrollment_Finishes()
     {
         var a = await EnrollAsync("p");
         var b = await EnrollAsync("q", daysAgo: 1);
@@ -361,9 +361,10 @@ public sealed class ActiveEnrollmentServiceTests
         await _service.SetPrimaryAsync(a.Id);
         _entitlements.SetPro(false);
 
-        Func<Task> act = () => _service.FinishAsync(b.Id);
+        // Like stopping it, finishing is allowed after a lapse: it records what was done, it changes no tracking.
+        (await _service.FinishAsync(b.Id)).Should().BeTrue();
 
-        await act.Should().ThrowAsync<EnrollmentReadOnlyException>();
+        (await _service.GetHistoryAsync()).Single(e => e.Id == b.Id).Enrollment.EndReason.Should().Be(EnrollmentEndReason.Finished);
     }
 
     [TestMethod]

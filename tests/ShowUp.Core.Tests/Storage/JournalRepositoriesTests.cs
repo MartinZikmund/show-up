@@ -109,6 +109,20 @@ public class JournalRepositoriesTests : StorageTestBase
     }
 
     [TestMethod]
+    public async Task Notes_LimitInsideAJoinedEmoji_DropsAllOfIt()
+    {
+        // A family emoji is three people joined by zero-width joiners: eight UTF-16 units, one thing on screen.
+        const string family = "\U0001F468\u200D\U0001F469\u200D\U0001F467";
+        var notes = CreateNotesRepository();
+        var text = new string('a', SqliteNotesRepository.MaxLength - 3) + family;
+
+        await notes.SetNotesAsync(_enrollment, [new NoteEdit(0, null, text)]);
+
+        var stored = (await notes.GetNotesAsync(_enrollment)).Single().Text;
+        stored.Should().Be(new string('a', SqliteNotesRepository.MaxLength - 3));
+    }
+
+    [TestMethod]
     public async Task Notes_EmojiEndsExactlyAtTheLimit_IsKept()
     {
         var notes = CreateNotesRepository();
