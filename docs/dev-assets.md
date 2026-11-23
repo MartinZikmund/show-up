@@ -96,3 +96,26 @@ A cosmetic badge never fails the build.
 
 - [versioning.md](./versioning.md): the Dev/Prod `AppChannel` model this hooks into.
 - [worktree-identity.md](./worktree-identity.md): why the worktree name stays out of the icon.
+
+## This app's artwork
+
+Show Up's mark is a calendar page crossed off with a marker: a paper page (`#FFFDF7`) with a marker-red header
+(`#D9372B`, the light theme's `MarkerBrush`), two binder rings, and a hand-drawn X that pokes out of the page.
+It is original artwork; nothing in it comes from a program publisher.
+
+| File | What it is |
+|---|---|
+| `Assets/Icons/icon_foreground.svg` | The mark, on a transparent 512 × 512 canvas. |
+| `Assets/Splash/splash_screen.svg` | The same mark; keep the two files identical. |
+| `Assets/Icons/icon.svg` | Opaque background for iOS, tvOS and Android: the paper colour `#F6F1E6`. |
+| `Assets/Icons/icon_transparent.svg` | Transparent background for Windows, Desktop and WebAssembly. |
+
+Rules the mark was drawn to, and that a replacement should keep:
+
+- No letters, and only solid fills and fat round strokes, so it survives 16 px (the X and the red band remain).
+- Everything sits inside the central two thirds of the canvas, so Android's circular mask (foreground scale 0.6)
+  never clips it.
+- It carries its own paper page, so it reads on a light taskbar, a dark one, and on the paper splash.
+
+The WebAssembly manifest (`Platforms/WebAssembly/manifest.webmanifest`) uses the same paper colour for
+`background_color` and `theme_color`.
