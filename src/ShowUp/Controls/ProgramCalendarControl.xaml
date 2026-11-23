@@ -130,6 +130,22 @@
                     </StackPanel>
                 </Border>
 
+                <!--  Every required session is crossed; finishing is offered, never automatic  -->
+                <InfoBar
+                    Title="{markup:Localize Key=CalendarFinishTitle}"
+                    AutomationProperties.AutomationId="CalendarFinishBanner"
+                    IsClosable="False"
+                    IsOpen="{x:Bind ViewModel.CanFinish, Mode=OneWay}"
+                    Message="{markup:Localize Key=CalendarFinishMessage}"
+                    Severity="Success">
+                    <InfoBar.ActionButton>
+                        <Button
+                            AutomationProperties.AutomationId="CalendarFinishButton"
+                            Command="{x:Bind ViewModel.FinishCommand, Mode=OneTime}"
+                            Content="{markup:Localize Key=FinishProgram}" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
                 <ItemsRepeater
                     x:Name="WeeksRepeater"
                     ElementClearing="WeeksRepeater_ElementClearing"

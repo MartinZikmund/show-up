@@ -1558,4 +1558,28 @@
   <data name="StatsHours" xml:space="preserve">
     <value>{0} h</value>
   </data>
+  <data name="CrossMomentMilestoneWeek" xml:space="preserve">
+    <value>Week {0} done</value>
+  </data>
+  <data name="CrossMomentMilestonePhase" xml:space="preserve">
+    <value>{0} done</value>
+  </data>
+  <data name="CrossMomentMilestoneProgram" xml:space="preserve">
+    <value>Program finished</value>
+  </data>
+  <data name="FinishProgram" xml:space="preserve">
+    <value>Finish program</value>
+  </data>
+  <data name="FinishProgramLater" xml:space="preserve">
+    <value>Keep it open</value>
+  </data>
+  <data name="CalendarFinishTitle" xml:space="preserve">
+    <value>Every day is crossed off</value>
+  </data>
+  <data name="CalendarFinishMessage" xml:space="preserve">
+    <value>Finish the program to move it to your history. Until then you can still change it.</value>
+  </data>
+  <data name="CrossMomentProgramComplete" xml:space="preserve">
+    <value>You showed up. All the way through.</value>
+  </data>
 </root>
