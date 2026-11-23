@@ -168,7 +168,9 @@ public partial class StatsViewModel : ViewModelBase
                 ShortDate(w.WeekStart),
                 Fraction(w.Workouts, busiest),
                 w.Workouts.ToString("N0", culture),
-                _localizer["StatsWeekName", w.WeekStart.ToString("M", culture), w.Workouts, w.Minutes].Value)),
+                w.Minutes > 0
+                    ? _localizer["StatsWeekName", w.WeekStart.ToString("M", culture), w.Workouts, w.Minutes].Value
+                    : _localizer["StatsWeekNameNoTime", w.WeekStart.ToString("M", culture), w.Workouts].Value)),
         ];
 
         // Bars follow the workout count; time is a second line, only where the length is known.
@@ -182,7 +184,7 @@ public partial class StatsViewModel : ViewModelBase
                     kind,
                     Fraction(k.Workouts, most),
                     k.Workouts.ToString("N0", culture),
-                    _localizer["StatsKindName", kind, k.Workouts, k.Minutes].Value,
+                    k.Minutes > 0 ? _localizer["StatsKindName", kind, k.Workouts, k.Minutes].Value : _localizer["StatsKindNameNoTime", kind, k.Workouts].Value,
                     k.Minutes > 0 ? Duration(k.Minutes) : "");
             }),
         ];
