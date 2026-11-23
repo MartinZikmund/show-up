@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using ShowUp.Core.Accounts;
 using ShowUp.Core.Catalog;
 using ShowUp.Core.CustomPrograms;
@@ -8,6 +8,7 @@ using ShowUp.Core.Marking;
 using ShowUp.Core.Messages;
 using ShowUp.Core.Reminders;
 using ShowUp.Core.Services;
+using ShowUp.Core.Stats;
 using ShowUp.Core.Storage;
 using ShowUp.Core.Supabase;
 using ShowUp.Core.Sync;
@@ -219,6 +220,7 @@ public partial class App : Application, IApplication
         services.AddSingleton<ICustomProgramService, CustomProgramService>();
         services.AddSingleton<IJournalService, JournalService>();
         services.AddSingleton<IScheduleQuery, ScheduleQuery>();
+        services.AddSingleton<IStatsService, StatsService>();
         services.AddSingleton<LapseCoordinator>();
         RegisterReminderScheduler(services);
         services.AddSingleton<IReminderDayProvider, ReminderDayProvider>();
@@ -255,6 +257,7 @@ public partial class App : Application, IApplication
             service.RegisterView(typeof(Views.ProgramDetailView), typeof(ProgramDetailViewModel));
             service.RegisterView(typeof(Views.ProgramResultsView), typeof(ProgramResultsViewModel));
             service.RegisterView(typeof(Views.HistoryView), typeof(HistoryViewModel));
+            service.RegisterView(typeof(Views.StatsView), typeof(StatsViewModel));
             service.RegisterView(typeof(Views.SettingsView), typeof(SettingsViewModel));
             service.RegisterView(typeof(Views.ProView), typeof(ProViewModel));
             service.RegisterView(typeof(Views.RemindersView), typeof(RemindersViewModel));
@@ -274,6 +277,7 @@ public partial class App : Application, IApplication
         services.AddTransient<DayDetailViewModel>();
         services.AddTransient<LogResultsViewModel>();
         services.AddTransient<HistoryViewModel>();
+        services.AddTransient<StatsViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<AccountViewModel>();
         services.AddTransient<ProViewModel>();

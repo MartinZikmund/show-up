@@ -1501,6 +1501,63 @@
   <data name="AccountSyncBusy" xml:space="preserve">
     <value>Syncing</value>
   </data>
+  <data name="Statistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="StatsTotalWorkouts" xml:space="preserve">
+    <value>Workouts</value>
+  </data>
+  <data name="StatsTotalTime" xml:space="preserve">
+    <value>Time logged</value>
+  </data>
+  <data name="StatsActiveDays" xml:space="preserve">
+    <value>Active days</value>
+  </data>
+  <data name="StatsWeeksHeader" xml:space="preserve">
+    <value>Workouts per week</value>
+  </data>
+  <data name="StatsKindsHeader" xml:space="preserve">
+    <value>Workouts by kind</value>
+  </data>
+  <data name="StatsHeatmapHeader" xml:space="preserve">
+    <value>Consistency</value>
+  </data>
+  <data name="StatsHeatmapHint" xml:space="preserve">
+    <value>The last 26 weeks, one column per week. A stronger square means more workouts that day.</value>
+  </data>
+  <data name="StatsProgramsHeader" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="StatsWeekName" xml:space="preserve">
+    <value>Week of {0}. Workouts: {1}. Minutes: {2}.</value>
+  </data>
+  <data name="StatsKindName" xml:space="preserve">
+    <value>{0}. Workouts: {1}. Minutes: {2}.</value>
+  </data>
+  <data name="StatsDayName" xml:space="preserve">
+    <value>{0}. Workouts: {1}.</value>
+  </data>
+  <data name="StatsMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="StatsHoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="StatsProgramDetail" xml:space="preserve">
+    <value>{0} of {1} days · best streak {2}</value>
+  </data>
+  <data name="StatsGateLink" xml:space="preserve">
+    <value>Unlock Pro for all your statistics</value>
+  </data>
+  <data name="StatsEmptyTitle" xml:space="preserve">
+    <value>No workouts yet</value>
+  </data>
+  <data name="StatsEmpty" xml:space="preserve">
+    <value>Cross off a workout and the numbers show up here.</value>
+  </data>
+  <data name="StatsHours" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
   <data name="CrossMomentMilestoneWeek" xml:space="preserve">
     <value>Week {0} done</value>
   </data>
