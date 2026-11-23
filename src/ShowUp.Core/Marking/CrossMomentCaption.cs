@@ -10,7 +10,7 @@ public sealed record CrossMomentCaption(string Day, string? Streak, string Progr
     public string Headline => Streak is null ? Day : $"{Day}, {Streak}";
 
     /// <summary>One sentence for the live-region announcement.</summary>
-    public string Announcement => Milestone is null ? $"{Headline}. {Progress}" : $"{Milestone.TrimEnd('.')}. {Headline}. {Progress}";
+    public string Announcement => Milestone is null ? $"{Headline}. {Progress}" : $"{Milestone}. {Headline}. {Progress}";
 
     public static CrossMomentCaption Create(CrossMomentInfo info, IStringLocalizer localizer)
     {
@@ -19,7 +19,8 @@ public sealed record CrossMomentCaption(string Day, string? Streak, string Progr
 
         var day = localizer["CrossMomentDayFormat", info.DayNumber, info.TotalDays].Value;
         var streak = info.CurrentStreak > 0 ? localizer["CrossMomentStreakFormat", info.CurrentStreak].Value : null;
-        var progress = info.SessionsDone < info.SessionsRequired
+        var progress = info.Milestone is { Kind: MilestoneKind.Program } ? localizer["CrossMomentProgramComplete"].Value
+            : info.SessionsDone < info.SessionsRequired
             ? localizer["CrossMomentProgressFormat", info.SessionsDone, info.SessionsRequired].Value
             : localizer["CrossMomentDayComplete"].Value;
 

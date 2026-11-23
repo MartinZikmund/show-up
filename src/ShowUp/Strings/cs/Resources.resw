@@ -1501,4 +1501,28 @@
   <data name="AccountSyncBusy" xml:space="preserve">
     <value>Synchronizuji</value>
   </data>
+  <data name="CrossMomentMilestoneWeek" xml:space="preserve">
+    <value>Týden {0} hotový</value>
+  </data>
+  <data name="CrossMomentMilestonePhase" xml:space="preserve">
+    <value>{0}: hotovo</value>
+  </data>
+  <data name="CrossMomentMilestoneProgram" xml:space="preserve">
+    <value>Program dokončen</value>
+  </data>
+  <data name="FinishProgram" xml:space="preserve">
+    <value>Dokončit program</value>
+  </data>
+  <data name="FinishProgramLater" xml:space="preserve">
+    <value>Nechat otevřený</value>
+  </data>
+  <data name="CalendarFinishTitle" xml:space="preserve">
+    <value>Všechny dny jsou odškrtnuté</value>
+  </data>
+  <data name="CalendarFinishMessage" xml:space="preserve">
+    <value>Dokončením se program přesune do historie. Do té doby ho můžete upravovat.</value>
+  </data>
+  <data name="CrossMomentProgramComplete" xml:space="preserve">
+    <value>Dorazili jste. Až do konce.</value>
+  </data>
 </root>

@@ -7,7 +7,6 @@ using Microsoft.UI.Xaml.Media.Animation;
 using ShowUp.Core.Marking;
 using ShowUp.Services.Localization;
 using VirtualKey = Windows.System.VirtualKey;
-using Windows.UI.ViewManagement;
 
 namespace ShowUp.Controls;
 
@@ -54,7 +53,14 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         _dismissTimer = DispatcherQueue.CreateTimer();
         _dismissTimer.IsRepeating = false;
         _dismissTimer.Interval = AutoDismissDelay;
-        _dismissTimer.Tick += (_, _) => Dismiss();
+        // A finished program waits for an answer; everything else gets out of the way on its own.
+        _dismissTimer.Tick += (_, _) =>
+        {
+            if (FinishPanel.Visibility != Visibility.Visible)
+            {
+                Dismiss();
+            }
+        };
 
         _captionTimer = DispatcherQueue.CreateTimer();
         _captionTimer.IsRepeating = false;
@@ -129,6 +135,8 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         Visibility = Visibility.Collapsed;
         SetShellAccessible(true);
         StopFades();
+        Confetti.Stop();
+        FinishPanel.Visibility = Visibility.Collapsed;
         HideCaptionFromAutomation();
 
         // The cell keeps the final X only while open; the next show starts from its own StrokesBefore.
@@ -138,21 +146,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         shown.TrySetResult();
     }
 
-    private static readonly Lazy<UISettings?> _uiSettings = new(CreateUISettings);
-
-    private static bool AnimationsEnabled => _uiSettings.Value?.AnimationsEnabled ?? true;
-
-    private static UISettings? CreateUISettings()
-    {
-        try
-        {
-            return new UISettings();
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    private static bool AnimationsEnabled => App.Current.Services.GetService<IMotionPreference>()?.AnimationsEnabled ?? true;
 
     private void SetShellAccessible(bool accessible)
     {
@@ -175,6 +169,10 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         StreakText.Text = caption.Streak ?? string.Empty;
         StreakPanel.Visibility = caption.Streak is null ? Visibility.Collapsed : Visibility.Visible;
         ProgressText.Text = caption.Progress;
+        MilestoneText.Text = caption.Milestone ?? string.Empty;
+        MilestoneText.Visibility = caption.Milestone is null ? Visibility.Collapsed : Visibility.Visible;
+        FinishPanel.Visibility = Visibility.Collapsed;
+        Confetti.Stop();
         HideCaptionFromAutomation();
         CaptionPanel.Opacity = 0;
         BelowCell.MinHeight = 0;
@@ -262,7 +260,45 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         {
             LogResultsButton.Visibility = Visibility.Visible;
         }
+
+        if (_info is { Milestone: not null } celebrated)
+        {
+            App.Current.Services.GetService<IMarkingFeedback>()?.SessionTicked();
+            if (AnimationsEnabled)
+            {
+                Confetti.Play(celebrated.Seed);
+            }
+        }
+
+        if (_info?.Finish is not null)
+        {
+            _dismissTimer.Stop();
+            FinishPanel.Visibility = Visibility.Visible;
+            FinishProgramButton.Focus(FocusState.Programmatic);
+        }
     }
+
+    private async void FinishProgramButton_Click(object sender, RoutedEventArgs e)
+    {
+        var finish = _info?.Finish;
+        Dismiss();
+        if (finish is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await finish();
+        }
+        catch (Exception ex)
+        {
+            App.Current.Services.GetService<ILogger<CrossMomentOverlay>>()?.LogError(ex, "Finishing the program failed.");
+        }
+    }
+
+    // The program stays active; the Calendar keeps offering to finish it.
+    private void KeepOpenButton_Click(object sender, RoutedEventArgs e) => Dismiss();
 
     private async void LogResultsButton_Click(object sender, RoutedEventArgs e)
     {
