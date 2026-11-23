@@ -83,8 +83,10 @@ public class CrossMomentCaptionTests
 
         var caption = CrossMomentCaption.Create(info, new FormattingLocalizer());
 
-        caption.Milestone.Should().Be("Program finished. You showed up.");
-        caption.Announcement.Should().Be("Program finished. You showed up. Day 10 of 60, 9-day streak. Crossed off.");
+        caption.Milestone.Should().Be("Program finished");
+        // Not "show up again tomorrow": there is no tomorrow in this program.
+        caption.Progress.Should().Be("You showed up. All the way through.");
+        caption.Announcement.Should().Be("Program finished. Day 10 of 60, 9-day streak. You showed up. All the way through.");
     }
 
     private static CrossMomentInfo Info(int sessionsDone, int streak) =>
@@ -101,7 +103,8 @@ public class CrossMomentCaptionTests
             ["CrossMomentDayComplete"] = "Crossed off.",
             ["CrossMomentMilestoneWeek"] = "Week {0} done",
             ["CrossMomentMilestonePhase"] = "{0} done",
-            ["CrossMomentMilestoneProgram"] = "Program finished. You showed up.",
+            ["CrossMomentMilestoneProgram"] = "Program finished",
+            ["CrossMomentProgramComplete"] = "You showed up. All the way through.",
         };
 
         public LocalizedString this[string name] => new(name, _strings[name]);
