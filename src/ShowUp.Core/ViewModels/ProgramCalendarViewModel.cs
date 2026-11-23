@@ -455,12 +455,11 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         foreach (var week in _days.GroupBy(d => track.Locate(d.DayIndex) is var l ? (l.PhaseName, l.WeekNumber) : default))
         {
             var (phase, number) = week.Key;
-            Weeks.Add(new CalendarWeekViewModel(
-                phase,
-                number,
-                phase != previousPhase,
-                _localizer["CalendarWeekFormat", number].Value,
-                [.. week]));
+            string label = _localizer["CalendarWeekFormat", number].Value;
+
+            // Some programs name each phase after its only week; the same words twice is noise.
+            bool showsPhase = phase != previousPhase && !string.Equals(phase, label, StringComparison.CurrentCultureIgnoreCase);
+            Weeks.Add(new CalendarWeekViewModel(phase, number, showsPhase, label, [.. week]));
             previousPhase = phase;
         }
     }
