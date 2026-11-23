@@ -1565,7 +1565,7 @@
     <value>{0} done</value>
   </data>
   <data name="CrossMomentMilestoneProgram" xml:space="preserve">
-    <value>Program finished</value>
+    <value>Program complete</value>
   </data>
   <data name="FinishProgram" xml:space="preserve">
     <value>Finish program</value>
@@ -1581,5 +1581,11 @@
   </data>
   <data name="CrossMomentProgramComplete" xml:space="preserve">
     <value>You showed up. All the way through.</value>
+  </data>
+  <data name="StatsWeekNameNoTime" xml:space="preserve">
+    <value>Week of {0}. Workouts: {1}.</value>
+  </data>
+  <data name="StatsKindNameNoTime" xml:space="preserve">
+    <value>{0}. Workouts: {1}.</value>
   </data>
 </root>

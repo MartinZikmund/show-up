@@ -93,8 +93,10 @@ public sealed partial class ProgramCalendarControl : UserControl
     // Tab lands on today, not on day 1 of a 90-day program.
     private void WeeksRepeater_GettingFocus(UIElement sender, GettingFocusEventArgs args)
     {
-        // Only keyboard focus arriving from outside the grid: arrow moves and restored focus are left alone.
+        // Only Tab arriving from outside the grid: arrow moves, and focus restored after a dialog or the cross
+        // moment closes, are left where they are.
         if (args.InputDevice != FocusInputDeviceKind.Keyboard
+            || args.Direction is not (FocusNavigationDirection.Next or FocusNavigationDirection.Previous)
             || CellOf(args.OldFocusedElement) is not null
             || ViewModel is not { } viewModel)
         {
@@ -106,7 +108,8 @@ public sealed partial class ProgramCalendarControl : UserControl
             int day = viewModel.Weeks[week].Days.ToList().FindIndex(d => d.IsToday);
             if (day >= 0)
             {
-                if (WeeksRepeater.TryGetElement(week) is { } element && CellsOf(element) is { } cells
+                // Today's week may be scrolled far away and not realized.
+                if ((WeeksRepeater.TryGetElement(week) ?? WeeksRepeater.GetOrCreateElement(week)) is { } element && CellsOf(element) is { } cells
                     && day < cells.Children.Count && !ReferenceEquals(cells.Children[day], args.NewFocusedElement))
                 {
                     args.TrySetNewFocusedElement(cells.Children[day]);

@@ -26,9 +26,9 @@ public sealed class MilestoneDetectorTests
     }
 
     [TestMethod]
-    public void Detect_WeekCompletedEarlier_ReturnsNull()
+    public void Detect_CrossIntoAWeekThatStaysOpen_ReturnsNull()
     {
-        // The week is already complete; crossing in the next one finishes nothing.
+        // Week 1 is complete already and week 2 still has a day left: this cross finishes nothing.
         var milestone = Detect(_onePhase, before: [(0, 0), (1, 0)], crossed: (2, 0));
 
         milestone.Should().BeNull();

@@ -12,7 +12,6 @@
         <DataTemplate x:Key="BarTemplate" x:DataType="vm:StatsBarViewModel">
             <Grid
                 MinHeight="28"
-                AutomationProperties.Name="{x:Bind AutomationName}"
                 ColumnSpacing="12"
                 ToolTipService.ToolTip="{x:Bind AutomationName}">
                 <Grid.ColumnDefinitions>
@@ -20,9 +19,9 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" MinWidth="32" />
                 </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw">
+                <StackPanel VerticalAlignment="Center">
                     <TextBlock
-                        AutomationProperties.AccessibilityView="Raw"
+                        AutomationProperties.Name="{x:Bind AutomationName}"
                         Foreground="{ThemeResource MutedTextBrush}"
                         Style="{StaticResource CaptionTextBlockStyle}"
                         Text="{x:Bind Label}"
@@ -57,9 +56,10 @@
             <Grid
                 Width="12"
                 Height="12"
-                AutomationProperties.Name="{x:Bind AutomationName}"
                 Opacity="{x:Bind local:StatsView.CellOpacity(IsFuture)}"
                 ToolTipService.ToolTip="{x:Bind AutomationName}">
+                <!--  Panels have no automation peer: this empty text is what a screen reader finds for the square.  -->
+                <TextBlock AutomationProperties.Name="{x:Bind AutomationName}" />
                 <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" CornerRadius="2" />
                 <Border
                     Background="{ThemeResource MarkerBrush}"
@@ -77,17 +77,15 @@
         </DataTemplate>
 
         <DataTemplate x:Key="ProgramTemplate" x:DataType="vm:StatsProgramViewModel">
-            <StackPanel
-                AutomationProperties.AutomationId="{x:Bind AutomationId}"
-                AutomationProperties.Name="{x:Bind AutomationName}"
-                Spacing="4">
+            <StackPanel Spacing="4">
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock
-                        AutomationProperties.AccessibilityView="Raw"
+                        AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                        AutomationProperties.Name="{x:Bind AutomationName}"
                         Style="{StaticResource BodyStrongTextBlockStyle}"
                         Text="{x:Bind Name}"
                         TextWrapping="Wrap" />

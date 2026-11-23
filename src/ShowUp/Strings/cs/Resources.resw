@@ -1565,7 +1565,7 @@
     <value>{0}: hotovo</value>
   </data>
   <data name="CrossMomentMilestoneProgram" xml:space="preserve">
-    <value>Program dokončen</value>
+    <value>Program je hotový</value>
   </data>
   <data name="FinishProgram" xml:space="preserve">
     <value>Dokončit program</value>
@@ -1581,5 +1581,11 @@
   </data>
   <data name="CrossMomentProgramComplete" xml:space="preserve">
     <value>Dorazili jste. Až do konce.</value>
+  </data>
+  <data name="StatsWeekNameNoTime" xml:space="preserve">
+    <value>Týden od {0}. Tréninky: {1}.</value>
+  </data>
+  <data name="StatsKindNameNoTime" xml:space="preserve">
+    <value>{0}. Tréninky: {1}.</value>
   </data>
 </root>

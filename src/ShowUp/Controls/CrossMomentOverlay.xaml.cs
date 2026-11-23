@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Media.Animation;
 using ShowUp.Core.Marking;
 using ShowUp.Services.Localization;
 using VirtualKey = Windows.System.VirtualKey;
+using Windows.UI.ViewManagement;
 
 namespace ShowUp.Controls;
 
@@ -148,6 +149,20 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
 
     private static bool AnimationsEnabled => App.Current.Services.GetService<IMotionPreference>()?.AnimationsEnabled ?? true;
 
+    private static readonly Lazy<AccessibilitySettings?> _accessibility = new(() =>
+    {
+        try
+        {
+            return new AccessibilitySettings();
+        }
+        catch
+        {
+            return null;
+        }
+    });
+
+    private static bool IsHighContrast => _accessibility.Value?.HighContrast ?? false;
+
     private void SetShellAccessible(bool accessible)
     {
         if (ShellContent is { } shell)
@@ -264,7 +279,7 @@ public sealed partial class CrossMomentOverlay : UserControl, ICrossMoment
         if (_info is { Milestone: not null } celebrated)
         {
             App.Current.Services.GetService<IMarkingFeedback>()?.SessionTicked();
-            if (AnimationsEnabled)
+            if (AnimationsEnabled && !IsHighContrast)
             {
                 Confetti.Play(celebrated.Seed);
             }

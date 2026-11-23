@@ -110,7 +110,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
     public bool IsEditable => HasEnrollment && !IsReadOnly;
 
-    /// <summary>Every required session is crossed: the program can be ended as finished.</summary>
+    /// <summary>Every required session is crossed: the program can be ended as finished, also when it is read-only.</summary>
     [ObservableProperty]
     public partial bool CanFinish { get; private set; }
 
@@ -233,7 +233,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             ProgramName = active.Program.Name;
             SyncPrograms(all, active);
             IsReadOnly = _enrollments.IsReadOnly(active);
-            CanFinish = !IsReadOnly && MilestoneDetector.IsProgramComplete(statuses);
+            CanFinish = MilestoneDetector.IsProgramComplete(statuses);
             CurrentStreak = StreakCalculator.Current(statuses, today);
             LongestStreak = StreakCalculator.Longest(statuses, today);
             StreakText = _localizer["CrossMomentStreakFormat", CurrentStreak].Value;
@@ -486,7 +486,10 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             string label = _localizer["CalendarWeekFormat", number].Value;
 
             // Some programs name each phase after its only week; the same words twice is noise.
-            bool showsPhase = phase != previousPhase && !string.Equals(phase, label, StringComparison.CurrentCultureIgnoreCase);
+            // The catalog writes "Week 1" in English whatever the UI language, so both spellings count.
+            bool namedLikeItsWeek = string.Equals(phase, label, StringComparison.CurrentCultureIgnoreCase)
+                || string.Equals(phase, FormattableString.Invariant($"Week {number}"), StringComparison.OrdinalIgnoreCase);
+            bool showsPhase = phase != previousPhase && !namedLikeItsWeek;
             Weeks.Add(new CalendarWeekViewModel(phase, number, showsPhase, label, [.. week]));
             previousPhase = phase;
         }

@@ -73,7 +73,7 @@ public interface IActiveEnrollmentService
 
     Task EndAsync(Guid enrollmentId, EnrollmentEndReason reason);
 
-    /// <summary>Ends the enrollment as finished, but only once every required session is crossed.</summary>
+    /// <summary>Ends the enrollment as finished, but only once every required session is crossed. Works on a read-only enrollment too.</summary>
     /// <returns>False, with nothing changed, while a day is still open.</returns>
     Task<bool> FinishAsync(Guid enrollmentId);
 

@@ -502,14 +502,15 @@ public sealed class ProgramCalendarViewModelTests
         static ProgramPhase Phase(string name) => new(name, [new ScheduleWeek([new ScheduleDay([new ScheduledSession("run")])])]);
         var program = TestCatalog.Program("p", 1, "run") with
         {
-            Tracks = [new ProgramTrack("t", "Track", [Phase("CalendarWeekFormat(1)"), Phase("calendarweekformat(2)"), Phase("Recovery")])],
+            // The third is the catalog's own English name, which a Czech week label ("T\u00fdden 3") would never equal.
+            Tracks = [new ProgramTrack("t", "Track", [Phase("CalendarWeekFormat(1)"), Phase("calendarweekformat(2)"), Phase("Week 3"), Phase("Recovery")])],
         };
         var viewModel = CreateViewModel(new FakeCatalogService(program));
         await _repository.EnrollAsync("p", 1, "t", _today);
 
         await viewModel.LoadAsync();
 
-        viewModel.Weeks.Select(w => w.IsPhaseStart).Should().Equal(false, false, true);
+        viewModel.Weeks.Select(w => w.IsPhaseStart).Should().Equal(false, false, false, true);
     }
 
     [TestMethod]
@@ -526,7 +527,7 @@ public sealed class ProgramCalendarViewModelTests
     }
 
     [TestMethod]
-    public async Task CanFinish_ReadOnlyProgram_IsFalse()
+    public async Task CanFinish_ReadOnlyButCompleteProgram_IsStillTrue()
     {
         var viewModel = await LoadAsync(_today, "run");
         await _repository.CrossSessionAsync(_enrollmentId, 0, 0, _today);
@@ -538,8 +539,8 @@ public sealed class ProgramCalendarViewModelTests
 
         await viewModel.RefreshAsync();
 
-        // Complete, but a lapsed non-primary program can't be written to.
-        (viewModel.IsReadOnly, viewModel.CanFinish).Should().Be((true, false));
+        // Read-only stops crossing, not finishing: accountability is never paywalled.
+        (viewModel.IsReadOnly, viewModel.CanFinish).Should().Be((true, true));
     }
 
     [TestMethod]

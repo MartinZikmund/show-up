@@ -23,6 +23,8 @@ public sealed class StatsServiceTests
         TestCatalog.Program("old", 1, "run", "run", "abs", "run", "run", "rest", "rest"),
         TestCatalog.Program("new", 1, "run", "rest", "abs", "run", "run", "rest", "rest"));
 
+    private readonly CultureInfo _culture = CultureInfo.CurrentCulture;
+
     public StatsServiceTests()
     {
         CultureInfo.CurrentCulture = new CultureInfo("en-GB");
@@ -30,11 +32,15 @@ public sealed class StatsServiceTests
         _repository = new(_time);
     }
 
+    [TestCleanup]
+    public void RestoreCulture() => CultureInfo.CurrentCulture = _culture;
+
     [TestMethod]
     public async Task Free_ReadsOnlyPrimaryAndLast28Days()
     {
-        var old = await _repository.EnrollAsync("old", 1, "t", _today.AddDays(-40));
-        await _repository.CrossSessionAsync(old.Id, 0, 0, _today.AddDays(-40));
+        // The old program's cross is inside the 28 days, so only "current program only" can keep it out.
+        var old = await _repository.EnrollAsync("old", 1, "t", _today.AddDays(-10));
+        await _repository.CrossSessionAsync(old.Id, 0, 0, _today.AddDays(-10));
         var current = await _repository.ReplaceEnrollmentAsync(old.Id, EnrollmentEndReason.Abandoned, "new", 1, "t", _today.AddDays(-3));
         await _repository.CrossSessionAsync(current.Id, 0, 0, _today.AddDays(-3));
         await _repository.LogBonusAsync(null, "Long ago", _today.AddDays(-28), 20);

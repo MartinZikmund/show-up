@@ -22,11 +22,16 @@ public sealed class StatsViewModelTests
     private readonly RecordingNavigationService _navigation = new();
     private readonly FakeStatsService _stats = new();
 
+    private readonly CultureInfo _culture = CultureInfo.CurrentCulture;
+
     public StatsViewModelTests()
     {
         CultureInfo.CurrentCulture = new CultureInfo("en-US");
         _time.SetLocalTimeZone(TimeZoneInfo.Utc);
     }
+
+    [TestCleanup]
+    public void RestoreCulture() => CultureInfo.CurrentCulture = _culture;
 
     [TestMethod]
     public async Task Free_AsksForTheLimitedHistory_AndShowsTheGate()
@@ -82,6 +87,7 @@ public sealed class StatsViewModelTests
         await viewModel.LoadAsync();
 
         viewModel.WeekBars.Select(b => b.Fraction).Should().Equal(0, 0.5, 1);
+        viewModel.WeekBars[0].AutomationName.Should().Be("StatsWeekNameNoTime(November 2,0)", "a week with no known time must not say Minutes: 0");
         viewModel.WeekBars[^1].Should().Be(new StatsBarViewModel("Nov 16", 1, "4", "StatsWeekName(November 16,4,150)"));
     }
 
@@ -109,7 +115,7 @@ public sealed class StatsViewModelTests
             new StatsBarViewModel("WorkoutKind_Cardio", 1, "4", "StatsKindName(WorkoutKind_Cardio,4,90)", "StatsHoursMinutes(1,30)"),
             new StatsBarViewModel("WorkoutKind_Abs", 0.5, "2", "StatsKindName(WorkoutKind_Abs,2,30)", "StatsMinutes(30)"),
             // No known length: no detail line, never "0 min".
-            new StatsBarViewModel("WorkoutKind_Strength", 0.25, "1", "StatsKindName(WorkoutKind_Strength,1,0)"));
+            new StatsBarViewModel("WorkoutKind_Strength", 0.25, "1", "StatsKindNameNoTime(WorkoutKind_Strength,1)"));
         viewModel.KindBars.Select(b => b.HasDetail).Should().Equal(true, true, false);
         viewModel.HasKinds.Should().BeTrue();
         viewModel.ShowEmptyState.Should().BeFalse();

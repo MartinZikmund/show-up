@@ -155,11 +155,17 @@ public sealed partial class ProgramHero : UserControl
             return;
         }
 
-        Backdrop.Background = new ImageBrush
+        // Bundled art. If a head can't decode it, the gradient comes back rather than an empty card.
+        string bundled = HeroImage;
+        BitmapImage local = new(new Uri($"ms-appx:///{bundled.TrimStart('/')}"));
+        local.ImageFailed += (_, _) =>
         {
-            ImageSource = new BitmapImage(new Uri($"ms-appx:///{HeroImage.TrimStart('/')}")),
-            Stretch = Stretch.UniformToFill,
+            if (HeroImage == bundled)
+            {
+                Backdrop.Background = gradient;
+            }
         };
+        Backdrop.Background = new ImageBrush { ImageSource = local, Stretch = Stretch.UniformToFill };
     }
 
     private LinearGradientBrush AccentGradient()
