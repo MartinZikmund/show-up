@@ -496,6 +496,23 @@ public sealed class ProgramCalendarViewModelTests
         viewModel.Weeks.SelectMany(w => w.Days).Single(d => d.DayIndex == index);
 
     [TestMethod]
+    public async Task Weeks_PhaseNamedLikeItsWeek_ShowsTheHeadingOnce()
+    {
+        // 21 Day Fix style: phases called "Week 1", "Week 2", one week each. The fake localizer's week label is "CalendarWeekFormat(n)".
+        static ProgramPhase Phase(string name) => new(name, [new ScheduleWeek([new ScheduleDay([new ScheduledSession("run")])])]);
+        var program = TestCatalog.Program("p", 1, "run") with
+        {
+            Tracks = [new ProgramTrack("t", "Track", [Phase("CalendarWeekFormat(1)"), Phase("calendarweekformat(2)"), Phase("Recovery")])],
+        };
+        var viewModel = CreateViewModel(new FakeCatalogService(program));
+        await _repository.EnrollAsync("p", 1, "t", _today);
+
+        await viewModel.LoadAsync();
+
+        viewModel.Weeks.Select(w => w.IsPhaseStart).Should().Equal(false, false, true);
+    }
+
+    [TestMethod]
     public async Task CanFinish_EveryRequiredSessionCrossed_IsTrue()
     {
         var viewModel = await LoadAsync(_today.AddDays(-2), "run", "rest", "run+abs?");

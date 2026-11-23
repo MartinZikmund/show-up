@@ -55,7 +55,7 @@ public sealed class SqliteMetricsRepository(ShowUpDatabase db, TimeProvider time
 
     private void Set(SQLite.SQLiteConnection c, MetricTarget target, List<MetricEntryEntity> existing, string metricId, MetricValue value)
     {
-        var text = value.Text?.Trim() is { Length: > 0 } t ? t[..Math.Min(t.Length, MaxTextLength)] : null;
+        var text = value.Text?.Trim() is { Length: > 0 } t ? TextLimit.Truncate(t, MaxTextLength) : null;
         if (value.Number is null && text is null)
         {
             Tombstone(c, existing);

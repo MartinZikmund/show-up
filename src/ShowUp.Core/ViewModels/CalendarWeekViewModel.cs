@@ -7,7 +7,7 @@ public sealed class CalendarWeekViewModel(string phaseName, int weekNumber, bool
 
     public int WeekNumber { get; } = weekNumber;
 
-    /// <summary>The first week of its phase, which carries the phase header.</summary>
+    /// <summary>The first week of its phase, which carries the phase header, unless the phase is named exactly like the week.</summary>
     public bool IsPhaseStart { get; } = isPhaseStart;
 
     public string WeekLabel { get; } = weekLabel;

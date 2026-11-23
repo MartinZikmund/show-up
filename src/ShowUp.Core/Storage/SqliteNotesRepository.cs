@@ -65,6 +65,6 @@ public sealed class SqliteNotesRepository(ShowUpDatabase db, TimeProvider time, 
     private static string Clean(string? text)
     {
         var trimmed = text?.Trim() ?? "";
-        return trimmed.Length > MaxLength ? trimmed[..MaxLength] : trimmed;
+        return TextLimit.Truncate(trimmed, MaxLength);
     }
 }
