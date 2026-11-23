@@ -168,7 +168,7 @@ moment, set the in-cell X without animation.
 ## Milestones: a finished week, phase or program
 
 A cross that completes a week, a phase or the whole program gets a headline in the moment ("Week 3 done",
-"Month 1 done", "Program finished"), a short fall of marker-coloured paper bits and one extra tick.
+"Month 1 done", "Program complete"), a short fall of marker-coloured paper bits and one extra tick.
 
 - **What counts.** `MilestoneDetector.Detect` compares the days before and after the cross and returns the
   largest unit that cross completed. Rest days and optional sessions never hold a unit open, so a week whose
@@ -179,8 +179,8 @@ A cross that completes a week, a phase or the whole program gets a headline in t
 - **When the moment shows.** `CrossMomentPolicy.ShouldShow(mode, isToday, milestone)`: a finished program
   always shows; a finished week or phase shows unless moments are set to `Never`, also for a past day under
   `OnlyToday`.
-- **Reduced motion.** With animations off (`IMotionPreference`, the system setting) there are no paper bits;
-  the headline carries it. The tick goes through `IMarkingFeedback`, so the sound and haptics toggles apply.
+- **Reduced motion and high contrast.** With animations off (`IMotionPreference`, the system setting), or in
+  high contrast, there are no paper bits; the headline carries it. The tick goes through `IMarkingFeedback`, so the sound and haptics toggles apply.
 - **Screen readers.** The headline is the first sentence of the caption's announcement.
 
 ### Finishing a program
@@ -189,8 +189,10 @@ Finishing is **offered, never automatic**. Crossing the last required session le
 mis-tapped last cross can still be undone and a synced device never ends a program on its own.
 
 - The moment that completed the program shows *Finish program* and *Keep it open*, and waits: it is the one
-  moment that does not dismiss itself.
+  moment that does not dismiss itself. When you draw the X yourself the offer appears before the cross is saved;
+  *Finish program* waits for the save.
 - While a program is complete but not finished, the Calendar shows a banner with the same *Finish program*
   button (`ProgramCalendarViewModel.CanFinish`).
 - `IActiveEnrollmentService.FinishAsync` ends it as `EnrollmentEndReason.Finished`, but only when every
-  required session is crossed. History then shows it as **Finished**.
+  required session is crossed. History then shows it as **Finished**. It works on a program that went read-only
+  after Pro lapsed too: finishing records what you did, and that is never paywalled.
