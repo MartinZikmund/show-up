@@ -49,10 +49,12 @@ public sealed class CrossingCoordinator(
         // The id is made up front: a day's first completion picks the wobble, and the moment must draw the same X.
         var completionId = Guid.NewGuid();
         var seed = target.DayCompletions.Count == 0 ? MarkerGeometry.SeedFrom(completionId) : target.DaySeed;
+        var milestone = await MilestoneAsync(target);
         var info = MomentInfo(target, before, afterAuto, seed) with
         {
             LogResults = await LogResultsAsync(target),
-            Milestone = await MilestoneAsync(target),
+            Milestone = milestone,
+            Finish = milestone is { Kind: MilestoneKind.Program } ? () => enrollments.FinishAsync(target.EnrollmentId) : null,
         };
 
         if (preferences.CrossOffStyle == CrossOffStyle.DrawYourself)

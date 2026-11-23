@@ -2,6 +2,7 @@ using System.Globalization;
 using AwesomeAssertions;
 using Microsoft.Extensions.Localization;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Tracking;
 
 namespace ShowUp.Core.Tests.Marking;
 
@@ -50,6 +51,44 @@ public class CrossMomentCaptionTests
         caption.Announcement.Should().Be("Day 10 of 60. Crossed off.");
     }
 
+    [TestMethod]
+    public void Create_NoMilestone_HasNoMilestoneLine()
+    {
+        var caption = CrossMomentCaption.Create(Info(sessionsDone: 2, streak: 9), new FormattingLocalizer());
+
+        caption.Milestone.Should().BeNull();
+        caption.Announcement.Should().Be("Day 10 of 60, 9-day streak. Crossed off.");
+    }
+
+    [TestMethod]
+    public void Create_WeekMilestone_NamesTheWeek()
+    {
+        var info = Info(sessionsDone: 2, streak: 9) with { Milestone = new Milestone(MilestoneKind.Week, "Month 1", 3) };
+
+        CrossMomentCaption.Create(info, new FormattingLocalizer()).Milestone.Should().Be("Week 3 done");
+    }
+
+    [TestMethod]
+    public void Create_PhaseMilestone_NamesThePhase()
+    {
+        var info = Info(sessionsDone: 2, streak: 9) with { Milestone = new Milestone(MilestoneKind.Phase, "Month 1", 4) };
+
+        CrossMomentCaption.Create(info, new FormattingLocalizer()).Milestone.Should().Be("Month 1 done");
+    }
+
+    [TestMethod]
+    public void Create_ProgramMilestone_IsAnnouncedFirst()
+    {
+        var info = Info(sessionsDone: 2, streak: 9) with { Milestone = new Milestone(MilestoneKind.Program, "Month 2", 9) };
+
+        var caption = CrossMomentCaption.Create(info, new FormattingLocalizer());
+
+        caption.Milestone.Should().Be("Program finished");
+        // Not "show up again tomorrow": there is no tomorrow in this program.
+        caption.Progress.Should().Be("You showed up. All the way through.");
+        caption.Announcement.Should().Be("Program finished. Day 10 of 60, 9-day streak. You showed up. All the way through.");
+    }
+
     private static CrossMomentInfo Info(int sessionsDone, int streak) =>
         new(DayNumber: 10, TotalDays: 60, Title: "Cardio + Core", StrokesBefore: 0, StrokesAfter: 2, Seed: 1,
             SessionsDone: sessionsDone, SessionsRequired: 2, CurrentStreak: streak);
@@ -62,6 +101,10 @@ public class CrossMomentCaptionTests
             ["CrossMomentStreakFormat"] = "{0}-day streak",
             ["CrossMomentProgressFormat"] = "{0} of {1} done",
             ["CrossMomentDayComplete"] = "Crossed off.",
+            ["CrossMomentMilestoneWeek"] = "Week {0} done",
+            ["CrossMomentMilestonePhase"] = "{0} done",
+            ["CrossMomentMilestoneProgram"] = "Program finished",
+            ["CrossMomentProgramComplete"] = "You showed up. All the way through.",
         };
 
         public LocalizedString this[string name] => new(name, _strings[name]);

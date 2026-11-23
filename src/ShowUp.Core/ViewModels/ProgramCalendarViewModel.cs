@@ -110,6 +110,32 @@ public partial class ProgramCalendarViewModel : ViewModelBase
 
     public bool IsEditable => HasEnrollment && !IsReadOnly;
 
+    /// <summary>Every required session is crossed: the program can be ended as finished.</summary>
+    [ObservableProperty]
+    public partial bool CanFinish { get; private set; }
+
+    [RelayCommand]
+    private async Task FinishAsync()
+    {
+        if (_active is not { } active || !CanFinish)
+        {
+            return;
+        }
+
+        try
+        {
+            if (await _enrollments.FinishAsync(active.Id))
+            {
+                _navigator.NavigateToSection(NavigationSection.History);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Ended or went read-only under the page: the refresh that follows shows the new state.
+            await RefreshAsync();
+        }
+    }
+
     [ObservableProperty]
     public partial int CurrentStreak { get; private set; }
 
@@ -207,6 +233,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
             ProgramName = active.Program.Name;
             SyncPrograms(all, active);
             IsReadOnly = _enrollments.IsReadOnly(active);
+            CanFinish = !IsReadOnly && MilestoneDetector.IsProgramComplete(statuses);
             CurrentStreak = StreakCalculator.Current(statuses, today);
             LongestStreak = StreakCalculator.Longest(statuses, today);
             StreakText = _localizer["CrossMomentStreakFormat", CurrentStreak].Value;
@@ -419,6 +446,7 @@ public partial class ProgramCalendarViewModel : ViewModelBase
         SelectedProgram = null;
         _syncingSelection = false;
         IsReadOnly = false;
+        CanFinish = false;
         CurrentStreak = 0;
         LongestStreak = 0;
         StreakText = "";

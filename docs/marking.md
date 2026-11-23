@@ -164,3 +164,33 @@ padded content, so it covers the tab bar and safe areas.
 Callers decide whether to show it with `CrossMomentPolicy.ShouldShow(mode, isToday)` and the
 user's `IAppPreferences.CrossMomentMode` (`OnlyToday` by default, or `Always` / `Never`). After the
 moment, set the in-cell X without animation.
+
+## Milestones: a finished week, phase or program
+
+A cross that completes a week, a phase or the whole program gets a headline in the moment ("Week 3 done",
+"Month 1 done", "Program finished"), a short fall of marker-coloured paper bits and one extra tick.
+
+- **What counts.** `MilestoneDetector.Detect` compares the days before and after the cross and returns the
+  largest unit that cross completed. Rest days and optional sessions never hold a unit open, so a week whose
+  last two days are rest is done when its last *training* day is crossed. A one-phase program has no phase
+  milestone.
+- **Only your own cross.** The milestone is worked out in `CrossingCoordinator`, so a completion that arrives
+  by sync never celebrates.
+- **When the moment shows.** `CrossMomentPolicy.ShouldShow(mode, isToday, milestone)`: a finished program
+  always shows; a finished week or phase shows unless moments are set to `Never`, also for a past day under
+  `OnlyToday`.
+- **Reduced motion.** With animations off (`IMotionPreference`, the system setting) there are no paper bits;
+  the headline carries it. The tick goes through `IMarkingFeedback`, so the sound and haptics toggles apply.
+- **Screen readers.** The headline is the first sentence of the caption's announcement.
+
+### Finishing a program
+
+Finishing is **offered, never automatic**. Crossing the last required session leaves the program active, so a
+mis-tapped last cross can still be undone and a synced device never ends a program on its own.
+
+- The moment that completed the program shows *Finish program* and *Keep it open*, and waits: it is the one
+  moment that does not dismiss itself.
+- While a program is complete but not finished, the Calendar shows a banner with the same *Finish program*
+  button (`ProgramCalendarViewModel.CanFinish`).
+- `IActiveEnrollmentService.FinishAsync` ends it as `EnrollmentEndReason.Finished`, but only when every
+  required session is crossed. History then shows it as **Finished**.
