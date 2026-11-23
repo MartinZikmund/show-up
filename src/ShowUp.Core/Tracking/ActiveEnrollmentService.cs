@@ -205,6 +205,21 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
         NotifyChanged();
     }
 
+    public async Task<bool> FinishAsync(Guid enrollmentId)
+    {
+        var active = await RequireWritableAsync(enrollmentId);
+        var workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
+        var completed = await _repository.GetCompletedSessionsAsync(active.Id);
+        if (!MilestoneDetector.IsProgramComplete(ProgressCalculator.Build(active.Track, workouts, active.Calendar, completed)))
+        {
+            return false;
+        }
+
+        await _repository.EndEnrollmentAsync(active.Id, EnrollmentEndReason.Finished);
+        NotifyChanged();
+        return true;
+    }
+
     public async Task CrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null)
     {
         var active = await RequireWritableAsync(enrollmentId);

@@ -73,6 +73,10 @@ public interface IActiveEnrollmentService
 
     Task EndAsync(Guid enrollmentId, EnrollmentEndReason reason);
 
+    /// <summary>Ends the enrollment as finished, but only once every required session is crossed.</summary>
+    /// <returns>False, with nothing changed, while a day is still open.</returns>
+    Task<bool> FinishAsync(Guid enrollmentId);
+
     /// <param name="inkJson">The drawn cross (<c>InkCodec</c> JSON), or null for the marker X.</param>
     /// <param name="completionId">The new completion's id, generated up front so the cross moment can use its seed.</param>
     Task CrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex, string? inkJson = null, Guid? completionId = null);
