@@ -1183,6 +1183,9 @@
   <data name="BuilderErrorNoWeeks" xml:space="preserve">
     <value>A schedule needs at least one week.</value>
   </data>
+  <data name="BuilderErrorTooLarge" xml:space="preserve">
+    <value>This schedule is too big to save. Remove some workouts or weeks.</value>
+  </data>
   <data name="BuilderErrorTooManyWeeks" xml:space="preserve">
     <value>A schedule can have at most {0} weeks.</value>
   </data>
@@ -1305,6 +1308,9 @@
   </data>
   <data name="AccountHeader" xml:space="preserve">
     <value>Account</value>
+  </data>
+  <data name="AccountSessionEnded" xml:space="preserve">
+    <value>Your session ended. Sign in again to keep syncing.</value>
   </data>
   <data name="AccountSignedOutDescription" xml:space="preserve">
     <value>Optional. Sign in with your email to get ready for sync across your devices.</value>

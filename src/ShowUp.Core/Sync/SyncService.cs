@@ -215,7 +215,7 @@ public sealed class SyncService : ISyncStatus, IDisposable
             if (_scope.CurrentUserId == uid)
             {
                 _preferences.Set(LastSyncedKey + AccountProCache.KeySuffix(uid), _time.GetUtcNow().UtcTicks);
-                SetState(SyncState.Idle);
+                SetState(Gate() ?? SyncState.Idle);
             }
         }
         // A request already out with the next account's token fails RLS instead: just as stale.

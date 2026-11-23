@@ -24,6 +24,24 @@ public sealed class AccountViewModelTests
     }
 
     [TestMethod]
+    public async Task SessionRevoked_ShowsTheSessionEndedNoteUntilDismissed()
+    {
+        _viewModel.Email = "alice@example.com";
+        await _viewModel.SendCodeCommand.ExecuteAsync(null);
+        _viewModel.Code = FakeSupabaseAuth.GoodCode;
+        await _viewModel.VerifyCommand.ExecuteAsync(null);
+        _viewModel.HasSessionEnded.Should().BeFalse();
+
+        _auth.ForceSignOut();
+        _viewModel.Update();
+        _viewModel.HasSessionEnded.Should().BeTrue();
+
+        _viewModel.DismissSessionEndedCommand.Execute(null);
+
+        _viewModel.HasSessionEnded.Should().BeFalse();
+    }
+
+    [TestMethod]
     public async Task SendCode_ValidEmail_AsksForTheCode()
     {
         _viewModel.Email = " alice@example.com ";

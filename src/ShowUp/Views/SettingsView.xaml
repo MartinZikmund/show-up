@@ -57,6 +57,13 @@
                         MaxWidth="400"
                         HorizontalAlignment="Left"
                         Spacing="12">
+                        <InfoBar
+                            AutomationProperties.AutomationId="AccountSessionEndedBar"
+                            CloseButtonCommand="{x:Bind ViewModel.Account.DismissSessionEndedCommand}"
+                            IsClosable="True"
+                            IsOpen="{x:Bind ViewModel.Account.HasSessionEnded, Mode=OneWay}"
+                            Message="{markup:Localize Key=AccountSessionEnded}"
+                            Severity="Informational" />
                         <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.Account.IsEnteringEmail, Mode=OneWay}">
                             <TextBox
                                 MinWidth="280"

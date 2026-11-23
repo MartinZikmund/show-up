@@ -34,6 +34,7 @@ Add a new numbered step there; never edit a shipped one.
 | 3 | `NoteEntity` (program, day and session notes) and `MetricEntryEntity` (logged results), see [results.md](./results.md) |
 | 4 | `ReminderEntity`, `CustomProgramEntity` and `SyncedSettingEntity` (frozen DDL, one transaction) |
 | 5 | `sync_state` (pull cursors per table and account) and `SyncPending` on every synced table, existing rows pending; see [sync.md](./sync.md) |
+| 6 | `catalog_cache_state` and `catalog_cache_program`: the newest downloaded catalog and every program revision ever downloaded, see [catalog-delivery.md](./catalog-delivery.md) |
 
 ## WebAssembly: the async file system catch
 

@@ -1,6 +1,6 @@
 # Accounts
 
-Signing in is optional. The app works fully signed out; an account is what cross-device sync (Pro) will hang off.
+Signing in is optional. The app works fully signed out; an account is what cross-device sync (Pro) hangs off.
 Sign-in is an emailed 6-digit code through Supabase Auth (see [supabase.md](./supabase.md) for the client and where
 tokens live).
 
@@ -74,3 +74,9 @@ Debug builds have **Settings → Debugging → Simulate sign-in**. It swaps in `
 any email, code `123456`; the same email is always the same account. Emails starting with `ratelimit` or `offline`
 fake those failures. The simulated session survives a restart, so restoring at startup can be tried too. Switching it
 signs out first.
+
+## Session ended
+
+When the server ends the session (a revoked refresh token), the app drops to signed out and the Settings account card
+shows "Your session ended. Sign in again to keep syncing." (`AccountService.SessionEnded`). It clears on the next
+sign-in or when dismissed. A sign-out you start yourself never sets it.

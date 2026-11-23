@@ -27,17 +27,23 @@ public sealed class SupabaseAdmin
         var versions = await GetArrayAsync("catalog_versions?select=version&order=version.desc&limit=1", ct);
         int version = versions.Count == 0 ? 0 : versions[0].GetProperty("version").GetInt32();
 
+        int maxRowVersion = 0;
         Dictionary<string, JsonElement> workouts = new();
-        foreach (var row in await GetAllAsync("catalog_workouts?select=id,json&order=id.asc", ct))
+        foreach (var row in await GetAllAsync("catalog_workouts?select=id,json,version&order=id.asc", ct))
         {
             workouts[row.GetProperty("id").GetString()!] = row.GetProperty("json");
+            maxRowVersion = Math.Max(maxRowVersion, row.GetProperty("version").GetInt32());
         }
 
-        var programs = (await GetAllAsync("catalog_programs?select=id,revision,json&order=id.asc,revision.asc", ct))
-            .Select(r => new ServerProgram(r.GetProperty("id").GetString()!, r.GetProperty("revision").GetInt32(), r.GetProperty("json")))
+        var programs = (await GetAllAsync("catalog_programs?select=id,revision,json,version&order=id.asc,revision.asc", ct))
+            .Select(r =>
+            {
+                maxRowVersion = Math.Max(maxRowVersion, r.GetProperty("version").GetInt32());
+                return new ServerProgram(r.GetProperty("id").GetString()!, r.GetProperty("revision").GetInt32(), r.GetProperty("json"));
+            })
             .ToList();
 
-        return new(version, workouts, programs);
+        return new(version, workouts, programs, maxRowVersion);
     }
 
     public async Task<bool> HeroExistsAsync(HeroUpload hero, CancellationToken ct)

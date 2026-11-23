@@ -49,6 +49,7 @@ public sealed class CatalogService : ICatalogService, ICatalogUpdateTarget
     {
         Interlocked.Increment(ref _bundledGeneration);
         Volatile.Write(ref _bundled, null);
+        _pinned.Clear();
         InvalidateCustomPrograms();
     }
 

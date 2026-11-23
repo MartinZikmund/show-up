@@ -56,6 +56,15 @@ public sealed class AccountService
 
     public Session? Current => _auth.Current;
 
+    /// <summary>The server ended the session (e.g. a revoked refresh token): the card says "sign in again" until the next sign-in or <see cref="DismissSessionEnded"/>.</summary>
+    public bool SessionEnded { get; private set; }
+
+    public void DismissSessionEnded()
+    {
+        SessionEnded = false;
+        Raise(() => Changed?.Invoke(this, EventArgs.Empty));
+    }
+
     /// <summary>Signed in or out, on the thread that built this service when it had one.</summary>
     public event EventHandler? Changed;
 
@@ -138,6 +147,11 @@ public sealed class AccountService
         await _switchGate.WaitAsync();
         try
         {
+            if (userId is not null)
+            {
+                SessionEnded = false;
+            }
+
             if (_scope.CurrentUserId != userId)
             {
                 // Pending writes belong to the account that made them.
@@ -145,8 +159,14 @@ public sealed class AccountService
                 _scope.Set(userId);
                 // Together with the scope: a read or write meanwhile must not use the previous account's cached rows.
                 _announcer.InvalidateCaches();
-                await SetStoreUserAsync(userId);
-                _announcer.Announce();
+                try
+                {
+                    await SetStoreUserAsync(userId);
+                }
+                finally
+                {
+                    _announcer.Announce();
+                }
             }
         }
         finally
@@ -167,6 +187,10 @@ public sealed class AccountService
         {
             _logger.LogWarning("The store didn't take the new user within {Timeout}; carrying on.", StoreUserTimeout);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "The store failed to take the new user; carrying on.");
+        }
     }
 
     // A session change that arrived during our own sign-in or sign-out (e.g. a revocation) is applied once it's done.
@@ -184,6 +208,11 @@ public sealed class AccountService
         if (Volatile.Read(ref _interactive) > 0)
         {
             return;
+        }
+
+        if (session is null && _scope.CurrentUserId is not null)
+        {
+            SessionEnded = true;
         }
 
         Raise(async () =>

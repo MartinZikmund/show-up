@@ -10,12 +10,12 @@ public class CatalogPlannerTests
     private static readonly LocalWorkout[] _workouts = [Workout("a"), Workout("b")];
 
     [TestMethod]
-    public void Plan_EmptyServer_PublishesVersionOneWithEverything()
+    public void Plan_EmptyServer_PublishesVersionAfterTheBundledOneWithEverything()
     {
         var plan = CatalogPlanner.Plan(Local(_workouts, [Program("p", 1)]), EmptyServer);
 
         plan.IsRefused.Should().BeFalse();
-        plan.NewVersion.Should().Be(1);
+        plan.NewVersion.Should().Be(2);
         plan.NewWorkouts.Should().Equal("a", "b");
         plan.NewPrograms.Should().ContainSingle();
     }
@@ -115,5 +115,34 @@ public class CatalogPlannerTests
         var plan = CatalogPlanner.Plan(Local(_workouts, [Program("p", 1, hero: hero)]), Server(1, _workouts, []));
 
         plan.Heroes.Should().Equal(hero);
+    }
+
+    [TestMethod]
+    public void Plan_RowsAboveTheRecordedVersion_RecoversThatVersionEvenWithNothingElseChanged()
+    {
+        var plan = CatalogPlanner.Plan(Local(_workouts, []), Server(3, _workouts, [], maxRowVersion: 4));
+
+        plan.IsRefused.Should().BeFalse();
+        plan.Recovering.Should().BeTrue();
+        plan.NewVersion.Should().Be(4);
+        plan.HasChanges.Should().BeTrue();
+        CatalogPlanner.Describe(plan).Should().Contain("recovering version 4");
+    }
+
+    [TestMethod]
+    public void Plan_RowsAtTheRecordedVersion_IsNotRecovery()
+    {
+        var plan = CatalogPlanner.Plan(Local(_workouts, []), Server(3, _workouts, [], maxRowVersion: 3));
+
+        plan.Recovering.Should().BeFalse();
+        plan.HasChanges.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void Plan_ServerBehindTheBundledCatalog_NeverPlansTheBundledVersion()
+    {
+        var plan = CatalogPlanner.Plan(Local(_workouts, []), EmptyServer);
+
+        plan.NewVersion.Should().BeGreaterThan(ShowUp.Core.Catalog.CatalogService.BundledCatalogVersion);
     }
 }

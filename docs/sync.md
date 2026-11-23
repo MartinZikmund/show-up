@@ -35,6 +35,9 @@ Server side (tables, RLS, `keep_newest_row`, `server_updated_at`): [supabase.md]
   `UpdatedAt = max(now, previous + 1 µs)` (`Timestamps.Next`). An edit always beats the version it replaces, even
   if this device's clock is behind the one that wrote it. `DeletedAt` takes the same stamp as the tombstone's
   `UpdatedAt`.
+- **Row contexts serialize every key.** Never use `DefaultIgnoreCondition = WhenWritingNull` on the row
+  `JsonSerializerContext`: a batch upsert whose rows have different key sets fails with PostgREST `PGRST102`, and a
+  null has to reach the server to clear a column such as `deleted_at`.
 - **`ShowUpDatabase.LocalChanged`** fires on every repository write. The engine writes through the connection
   directly, so rows it applies never raise it: a sync can't trigger itself.
 

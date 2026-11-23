@@ -10,6 +10,13 @@ internal sealed class FakeCustomProgramRepository : ICustomProgramRepository
 
     public int GetAllCalls { get; private set; }
 
+    /// <summary>Like switching to an account that owns nothing.</summary>
+    public void Clear()
+    {
+        _rows.Clear();
+        _deleted.Clear();
+    }
+
     /// <summary>When set, <see cref="GetAllAsync"/> signals <see cref="GetAllEntered"/> and waits for it.</summary>
     public TaskCompletionSource? GetAllGate { get; set; }
 

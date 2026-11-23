@@ -91,6 +91,23 @@ public sealed class SyncServiceTests
     }
 
     [TestMethod]
+    public async Task ProLapsesMidPass_StaysPausedWhenThePassEnds()
+    {
+        var phone = _world.AddDevice("phone");
+        phone.Rest.Fault = (_, _, _) =>
+        {
+            _entitlements.SetPro(false);
+            return null;
+        };
+        var service = Create(phone);
+
+        await service.StartAsync();
+        await service.WaitForIdleAsync();
+
+        service.State.Should().Be(SyncState.Paused);
+    }
+
+    [TestMethod]
     [DataRow(false, null, SyncState.Off)]
     [DataRow(true, null, SyncState.SignedOut)]
     public async Task Start_NotPossible_SaysWhy(bool available, string? user, SyncState expected)

@@ -65,6 +65,17 @@ public sealed class CustomProgramFactoryTests
     }
 
     [TestMethod]
+    public void Validate_ProgramJsonOverTheServerLimit_IsTooLarge()
+    {
+        var workouts = Enumerable.Range(1, 3000).Select(i => new Workout($"custom-a-{i}", new string('x', 100), 5, WorkoutKind.Abs, null)).ToList();
+        CustomProgramDraft big = new("custom-a", "Mine", "#000000", [Enumerable.Repeat<IReadOnlyList<CustomSession>>([new CustomSession("rest")], 7).ToList()], workouts);
+        CustomProgramDraft small = big with { Workouts = workouts.Take(10).ToList() };
+
+        CustomProgramFactory.Validate(big).Should().Equal(new CustomProgramError(CustomProgramProblem.TooLarge));
+        CustomProgramFactory.Validate(small).Should().BeEmpty();
+    }
+
+    [TestMethod]
     public void Create_Invalid_Throws()
     {
         CustomProgramDraft draft = new("custom-a", "Mine", "#000000", [], []);
