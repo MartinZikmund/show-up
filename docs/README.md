@@ -41,6 +41,7 @@ One page per topic. Keep it that way.
 - [deployment.md](./deployment.md) — hosting the WebAssembly head on Cloudflare Workers: production, PR previews, one-time setup.
 - [release-pipeline.md](./release-pipeline.md) — what each workflow builds and publishes, environments, secrets, fork behaviour.
 - [release-runbook.md](./release-runbook.md) — cutting a release, shipping a patch, halting a bad rollout.
+- [store-listing.md](./store-listing.md) — where the store text lives, its limits, and what still blocks a first submission.
 - [versioning.md](./versioning.md) — the Dev/Prod channel model, git-height versions, side-by-side identity.
 - [windows-packaging.md](./windows-packaging.md) — the MSIX path, Store identity, and Microsoft Store submission.
 
