@@ -14,7 +14,7 @@ A *workout* is a crossed session that isn't rest, or a bonus workout. A session 
 
 ## Why bars count workouts, not minutes
 
-The catalog verifies calendars, not durations: about two thirds of its workouts have no known length (most of Insanity and P90X among them). Minutes would rank those programs at zero, so bars and totals count workouts. Time is shown only where it is known: the catalog length of a session, or what you entered for a bonus workout. That is why the tile says *Time logged*, and why a kind with no known length has no time line instead of "0 min".
+The catalog verifies calendars, not durations: about two thirds of its workouts have no known length (most of Insanity and P90X among them). Minutes would rank those programs at zero, so bars and totals count workouts. Time is shown only where it is known: the catalog length of a session, or what you entered for a bonus workout. That is why the tile says *Time logged* and is hidden while nothing counted has a known length, and why a kind with no known length has no time line instead of "0 min".
 
 ## Free and Pro
 
