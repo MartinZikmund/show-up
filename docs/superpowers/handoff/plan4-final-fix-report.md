@@ -1,6 +1,6 @@
 # Plan 4 final fix wave report
 
-Branch fix/plan4-final-wave, 18 commits (fix then test per bug; docs and ci separate), not pushed.
+Branch fix/plan4-final-wave, 18 commits (fix then test per bug; docs and ci separate), merged as #82.
 
 1. Partial-publish recovery: ServerState.MaxRowVersion; orphan rows above the recorded version make the plan recover that version and always insert catalog_versions (Describe says "recovering version N"). Planner + publisher tests.
 2. docs/supabase.md: `{{ .Token }}` in Magic Link and Confirm signup, verify by signing up a fresh address.
