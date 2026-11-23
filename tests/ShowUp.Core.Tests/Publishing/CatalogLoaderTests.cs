@@ -16,7 +16,8 @@ public class CatalogLoaderTests
         local.Errors.Should().BeEmpty();
         local.Programs.Should().NotBeEmpty();
         local.Workouts.Select(w => w.Id).Should().BeEquivalentTo(local.LockedWorkoutIds);
-        local.Programs.Should().OnlyContain(p => p.Hero == null);
+        // Every program ships bundled hero art, which a publish uploads under a content-hashed name.
+        local.Programs.Should().OnlyContain(p => p.Hero != null && File.Exists(p.Hero.FilePath) && p.Hero.PublicUrl.EndsWith(".jpg", StringComparison.Ordinal));
     }
 
     [TestMethod]
