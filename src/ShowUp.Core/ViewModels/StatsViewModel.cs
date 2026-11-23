@@ -10,7 +10,11 @@ using ShowUp.Core.Stats;
 namespace ShowUp.Core.ViewModels;
 
 /// <param name="Fraction">0 to 1, the bar's length against the longest one.</param>
-public sealed record StatsBarViewModel(string Label, double Fraction, string ValueText, string AutomationName);
+/// <param name="DetailText">A second line under the label (time, where known); empty for none.</param>
+public sealed record StatsBarViewModel(string Label, double Fraction, string ValueText, string AutomationName, string DetailText = "")
+{
+    public bool HasDetail => DetailText.Length > 0;
+}
 
 /// <param name="Level">0 (nothing) to 3 (three workouts or more); the count is in <paramref name="AutomationName"/>, never only in the colour.</param>
 /// <param name="IsFuture">A day of the current week that hasn't come yet.</param>
@@ -140,6 +144,9 @@ public partial class StatsViewModel : ViewModelBase
     [RelayCommand]
     private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
+    [RelayCommand]
+    private void GoBack() => _navigation.GoBack();
+
     private void Show(StatsSummary summary, bool isPro)
     {
         var today = Today;
@@ -159,13 +166,19 @@ public partial class StatsViewModel : ViewModelBase
                 _localizer["StatsWeekName", w.WeekStart.ToString("M", culture), w.Workouts, w.Minutes].Value)),
         ];
 
-        int longest = summary.ByKind.Count == 0 ? 0 : summary.ByKind.Max(k => k.Minutes);
+        // Bars follow the workout count; time is a second line, only where the length is known.
+        int most = summary.ByKind.Count == 0 ? 0 : summary.ByKind.Max(k => k.Workouts);
         KindBars =
         [
             .. summary.ByKind.Select(k =>
             {
                 string kind = _localizer[$"WorkoutKind_{k.Kind}"].Value;
-                return new StatsBarViewModel(kind, Fraction(k.Minutes, longest), Duration(k.Minutes), _localizer["StatsKindName", kind, k.Workouts, k.Minutes].Value);
+                return new StatsBarViewModel(
+                    kind,
+                    Fraction(k.Workouts, most),
+                    k.Workouts.ToString("N0", culture),
+                    _localizer["StatsKindName", kind, k.Workouts, k.Minutes].Value,
+                    k.Minutes > 0 ? Duration(k.Minutes) : "");
             }),
         ];
 
@@ -195,9 +208,9 @@ public partial class StatsViewModel : ViewModelBase
     }
 
     private string Duration(int minutes) =>
-        minutes >= 60
-            ? _localizer["StatsHoursMinutes", minutes / 60, minutes % 60].Value
-            : _localizer["StatsMinutes", minutes].Value;
+        minutes < 60 ? _localizer["StatsMinutes", minutes].Value
+        : minutes % 60 == 0 ? _localizer["StatsHours", minutes / 60].Value
+        : _localizer["StatsHoursMinutes", minutes / 60, minutes % 60].Value;
 
     private static double Fraction(int value, int max) => max <= 0 ? 0 : (double)value / max;
 

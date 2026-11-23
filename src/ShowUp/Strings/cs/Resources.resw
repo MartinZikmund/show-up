@@ -1501,4 +1501,61 @@
   <data name="AccountSyncBusy" xml:space="preserve">
     <value>Synchronizuji</value>
   </data>
+  <data name="Statistics" xml:space="preserve">
+    <value>Statistiky</value>
+  </data>
+  <data name="StatsTotalWorkouts" xml:space="preserve">
+    <value>Tréninky</value>
+  </data>
+  <data name="StatsTotalTime" xml:space="preserve">
+    <value>Zaznamenaný čas</value>
+  </data>
+  <data name="StatsActiveDays" xml:space="preserve">
+    <value>Aktivní dny</value>
+  </data>
+  <data name="StatsWeeksHeader" xml:space="preserve">
+    <value>Tréninky za týden</value>
+  </data>
+  <data name="StatsKindsHeader" xml:space="preserve">
+    <value>Tréninky podle typu</value>
+  </data>
+  <data name="StatsHeatmapHeader" xml:space="preserve">
+    <value>Pravidelnost</value>
+  </data>
+  <data name="StatsHeatmapHint" xml:space="preserve">
+    <value>Posledních 26 týdnů, jeden sloupec na týden. Výraznější čtverec znamená víc tréninků v daný den.</value>
+  </data>
+  <data name="StatsProgramsHeader" xml:space="preserve">
+    <value>Programy</value>
+  </data>
+  <data name="StatsWeekName" xml:space="preserve">
+    <value>Týden od {0}. Tréninky: {1}. Minuty: {2}.</value>
+  </data>
+  <data name="StatsKindName" xml:space="preserve">
+    <value>{0}. Tréninky: {1}. Minuty: {2}.</value>
+  </data>
+  <data name="StatsDayName" xml:space="preserve">
+    <value>{0}. Tréninky: {1}.</value>
+  </data>
+  <data name="StatsMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="StatsHoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="StatsProgramDetail" xml:space="preserve">
+    <value>{0} z {1} dní · nejdelší série {2}</value>
+  </data>
+  <data name="StatsGateLink" xml:space="preserve">
+    <value>Odemkněte Pro pro všechny statistiky</value>
+  </data>
+  <data name="StatsEmptyTitle" xml:space="preserve">
+    <value>Zatím žádné tréninky</value>
+  </data>
+  <data name="StatsEmpty" xml:space="preserve">
+    <value>Odškrtněte trénink a čísla se objeví tady.</value>
+  </data>
+  <data name="StatsHours" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
 </root>

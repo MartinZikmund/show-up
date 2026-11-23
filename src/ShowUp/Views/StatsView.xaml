@@ -1,0 +1,363 @@
+﻿<local:StatsViewBase
+    x:Class="ShowUp.Views.StatsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ShowUp.Controls"
+    xmlns:local="using:ShowUp.Views"
+    xmlns:markup="using:ShowUp.Markup"
+    xmlns:vm="using:ShowUp.Core.ViewModels">
+
+    <local:StatsViewBase.Resources>
+        <!--  One labelled bar: a week ("Nov 16") or a workout kind ("Cardio").  -->
+        <DataTemplate x:Key="BarTemplate" x:DataType="vm:StatsBarViewModel">
+            <Grid
+                MinHeight="28"
+                AutomationProperties.Name="{x:Bind AutomationName}"
+                ColumnSpacing="12"
+                ToolTipService.ToolTip="{x:Bind AutomationName}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="88" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" MinWidth="32" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw">
+                    <TextBlock
+                        AutomationProperties.AccessibilityView="Raw"
+                        Foreground="{ThemeResource MutedTextBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Label}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        AutomationProperties.AccessibilityView="Raw"
+                        Foreground="{ThemeResource MutedTextBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind DetailText}"
+                        TextTrimming="CharacterEllipsis"
+                        Visibility="{x:Bind HasDetail}" />
+                </StackPanel>
+                <ProgressBar
+                    Grid.Column="1"
+                    MinHeight="8"
+                    VerticalAlignment="Center"
+                    AutomationProperties.AccessibilityView="Raw"
+                    Foreground="{ThemeResource MarkerBrush}"
+                    Maximum="1"
+                    Value="{x:Bind Fraction}" />
+                <TextBlock
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    AutomationProperties.AccessibilityView="Raw"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="{x:Bind ValueText}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HeatCellTemplate" x:DataType="vm:StatsHeatCellViewModel">
+            <Grid
+                Width="12"
+                Height="12"
+                AutomationProperties.Name="{x:Bind AutomationName}"
+                Opacity="{x:Bind local:StatsView.CellOpacity(IsFuture)}"
+                ToolTipService.ToolTip="{x:Bind AutomationName}">
+                <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" CornerRadius="2" />
+                <Border
+                    Background="{ThemeResource MarkerBrush}"
+                    CornerRadius="2"
+                    Opacity="{x:Bind local:StatsView.HeatOpacity(Level)}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HeatWeekTemplate" x:DataType="vm:StatsHeatWeekViewModel">
+            <ItemsRepeater ItemTemplate="{StaticResource HeatCellTemplate}" ItemsSource="{x:Bind Days}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="3" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ProgramTemplate" x:DataType="vm:StatsProgramViewModel">
+            <StackPanel
+                AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                AutomationProperties.Name="{x:Bind AutomationName}"
+                Spacing="4">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        AutomationProperties.AccessibilityView="Raw"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind Name}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Grid.Column="1"
+                        AutomationProperties.AccessibilityView="Raw"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind RateText}" />
+                </Grid>
+                <ProgressBar
+                    MinHeight="8"
+                    AutomationProperties.AccessibilityView="Raw"
+                    Foreground="{ThemeResource MarkerBrush}"
+                    Maximum="1"
+                    Value="{x:Bind Fraction}" />
+                <TextBlock
+                    AutomationProperties.AccessibilityView="Raw"
+                    Foreground="{ThemeResource MutedTextBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind DetailText}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </DataTemplate>
+
+        <Style x:Key="StatTileStyle" TargetType="Border">
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Background" Value="{ThemeResource CalendarCellBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CalendarCellBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{ThemeResource OverlayCornerRadius}" />
+        </Style>
+    </local:StatsViewBase.Resources>
+
+    <ScrollViewer>
+        <!--  The star column caps the page at 1040 and keeps it left-aligned; a left-aligned panel would shrink the bars to nothing.  -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MaxWidth="1088" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel
+                x:Name="ContentPanel"
+                Padding="{StaticResource PagePadding}"
+                Spacing="20">
+                <Button
+                    Margin="-8,0,0,-12"
+                    HorizontalAlignment="Left"
+                    AutomationProperties.AutomationId="StatsBackButton"
+                    Command="{x:Bind ViewModel.GoBackCommand, Mode=OneTime}"
+                    Style="{StaticResource SubtleButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="12" Glyph="&#xE72B;" />
+                        <TextBlock Text="{markup:Localize Key=Back}" />
+                    </StackPanel>
+                </Button>
+
+                <TextBlock
+                    AutomationProperties.AutomationId="StatsHeader"
+                    AutomationProperties.HeadingLevel="Level1"
+                    Style="{StaticResource SectionHeaderTextBlockStyle}"
+                    Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
+
+                <StackPanel
+                    AutomationProperties.AutomationId="StatsEmpty"
+                    Spacing="4"
+                    Visibility="{x:Bind ViewModel.ShowEmptyState, Mode=OneWay}">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{markup:Localize Key=StatsEmptyTitle}" />
+                    <TextBlock
+                        Foreground="{ThemeResource MutedTextBrush}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        Text="{markup:Localize Key=StatsEmpty}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Grid
+                    x:Name="Totals"
+                    ColumnSpacing="12"
+                    RowSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="ThirdTileColumn" Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border AutomationProperties.AutomationId="StatsTotalWorkouts" Style="{StaticResource StatTileStyle}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource DisplayNumberLargeTextBlockStyle}" Text="{x:Bind ViewModel.TotalWorkoutsText, Mode=OneWay}" />
+                            <TextBlock
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsTotalWorkouts}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                    <Border
+                        x:Name="TimeTile"
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="StatsTotalTime"
+                        Style="{StaticResource StatTileStyle}">
+                        <StackPanel>
+                            <TextBlock
+                                Style="{StaticResource DisplayNumberLargeTextBlockStyle}"
+                                Text="{x:Bind ViewModel.TotalTimeText, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsTotalTime}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                    <Border
+                        x:Name="DaysTile"
+                        Grid.Column="2"
+                        AutomationProperties.AutomationId="StatsActiveDays"
+                        Style="{StaticResource StatTileStyle}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource DisplayNumberLargeTextBlockStyle}" Text="{x:Bind ViewModel.ActiveDaysText, Mode=OneWay}" />
+                            <TextBlock
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsActiveDays}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid
+                    x:Name="Columns"
+                    ColumnSpacing="32"
+                    RowSpacing="24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="SecondColumn" Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel x:Name="BarsPanel" Spacing="24">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                AutomationProperties.AutomationId="StatsWeeksHeader"
+                                AutomationProperties.HeadingLevel="Level2"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsWeeksHeader}" />
+                            <ItemsRepeater
+                                AutomationProperties.AutomationId="StatsWeekBars"
+                                ItemTemplate="{StaticResource BarTemplate}"
+                                ItemsSource="{x:Bind ViewModel.WeekBars, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="2" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.HasKinds, Mode=OneWay}">
+                            <TextBlock
+                                AutomationProperties.AutomationId="StatsKindsHeader"
+                                AutomationProperties.HeadingLevel="Level2"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsKindsHeader}" />
+                            <ItemsRepeater
+                                AutomationProperties.AutomationId="StatsKindBars"
+                                ItemTemplate="{StaticResource BarTemplate}"
+                                ItemsSource="{x:Bind ViewModel.KindBars, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="2" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel
+                        x:Name="DetailPanel"
+                        Grid.Column="1"
+                        Spacing="24">
+                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.HasHeatmap, Mode=OneWay}">
+                            <TextBlock
+                                AutomationProperties.AutomationId="StatsHeatmapHeader"
+                                AutomationProperties.HeadingLevel="Level2"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsHeatmapHeader}" />
+                            <ScrollViewer
+                                x:Name="HeatScroll"
+                                Padding="0,0,0,12"
+                                HorizontalScrollBarVisibility="Auto"
+                                HorizontalScrollMode="Auto"
+                                VerticalScrollBarVisibility="Disabled"
+                                VerticalScrollMode="Disabled">
+                                <ItemsRepeater
+                                    x:Name="HeatWeeks"
+                                    AutomationProperties.AutomationId="StatsHeatmap"
+                                    ItemTemplate="{StaticResource HeatWeekTemplate}"
+                                    ItemsSource="{x:Bind ViewModel.HeatWeeks, Mode=OneWay}"
+                                    SizeChanged="HeatWeeks_SizeChanged">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Orientation="Horizontal" Spacing="3" />
+                                    </ItemsRepeater.Layout>
+                                </ItemsRepeater>
+                            </ScrollViewer>
+                            <TextBlock
+                                Foreground="{ThemeResource MutedTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsHeatmapHint}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.HasPrograms, Mode=OneWay}">
+                            <TextBlock
+                                AutomationProperties.AutomationId="StatsProgramsHeader"
+                                AutomationProperties.HeadingLevel="Level2"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                Text="{markup:Localize Key=StatsProgramsHeader}" />
+                            <ItemsRepeater ItemTemplate="{StaticResource ProgramTemplate}" ItemsSource="{x:Bind ViewModel.Programs, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="16" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <Border
+                    Padding="12,4"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource CalendarCellBackgroundBrush}"
+                    BorderBrush="{ThemeResource CalendarCellBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{ThemeResource ControlCornerRadius}"
+                    Visibility="{x:Bind ViewModel.ShowGate, Mode=OneWay}">
+                    <controls:ProGateHint
+                        Margin="8,0,0,0"
+                        Command="{x:Bind ViewModel.OpenProCommand, Mode=OneTime}"
+                        Text="{markup:Localize Key=StatsGateLink}" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WidthStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.Padding" Value="16,12,16,24" />
+                        <!--  Three tiles don't fit a phone: counts side by side, time on its own row.  -->
+                        <Setter Target="ThirdTileColumn.Width" Value="0" />
+                        <Setter Target="Totals.ColumnSpacing" Value="6" />
+                        <Setter Target="DaysTile.(Grid.Column)" Value="1" />
+                        <Setter Target="TimeTile.(Grid.Column)" Value="0" />
+                        <Setter Target="TimeTile.(Grid.Row)" Value="1" />
+                        <Setter Target="TimeTile.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="Columns.ColumnSpacing" Value="0" />
+                        <Setter Target="SecondColumn.Width" Value="0" />
+                        <Setter Target="DetailPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="DetailPanel.(Grid.Row)" Value="1" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1008" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </ScrollViewer>
+</local:StatsViewBase>

@@ -40,8 +40,8 @@ public static class StatsCalculator
             .. entries
                 .GroupBy(e => e.Kind)
                 .Select(g => new KindBucket(g.Key, g.Count(), g.Sum(e => e.Minutes)))
-                .OrderByDescending(k => k.Minutes)
-                .ThenByDescending(k => k.Workouts)
+                .OrderByDescending(k => k.Workouts)
+                .ThenByDescending(k => k.Minutes)
                 .ThenBy(k => k.Kind),
         ];
 
