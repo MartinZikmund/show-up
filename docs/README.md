@@ -26,6 +26,7 @@ One page per topic. Keep it that way.
 - [programs.md](./programs.md) — browsing the catalog, the program detail page, starting a program, and the hero fallback.
 - [reminders.md](./reminders.md) — planning notifications for the next 14 days, delivery on each head, and the Free limit after a lapse.
 - [results.md](./results.md) — notes, logging Fit Test and Max Out results, the day detail sheet and the results table.
+- [statistics.md](./statistics.md) — workouts per week and by kind, the consistency heatmap, program comparison, and why bars count workouts rather than minutes.
 - [storage.md](./storage.md) — where the SQLite database lives per head, migrations, and the WebAssembly persistence fix.
 - [supabase.md](./supabase.md) — the Supabase schema mirroring local storage, RLS and grants, pgTAP tests, the CI job, and the local↔server column mapping, and the thin client (config keys, where tokens live per head).
 - [sync-classification.md](./sync-classification.md) — which settings and rows follow the user across devices and which stay on this one.

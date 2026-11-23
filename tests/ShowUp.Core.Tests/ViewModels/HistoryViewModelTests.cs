@@ -367,6 +367,14 @@ public sealed class HistoryViewModelTests
         program.ResultsAutomationId.Should().Be($"HistoryResults_{program.EnrollmentId}");
     }
 
+    [TestMethod]
+    public void OpenStats_NavigatesToStatistics()
+    {
+        Create().OpenStatsCommand.Execute(null);
+
+        _navigation.Navigations.Should().ContainSingle().Which.Should().Be((typeof(StatsViewModel), (object?)null));
+    }
+
     private HistoryViewModel Create()
     {
         _service = TestEnrollments.Create(_repository, _catalog, _messenger, _settings, _entitlements);

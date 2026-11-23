@@ -218,6 +218,9 @@ public partial class HistoryViewModel : ViewModelBase
     [RelayCommand]
     private void OpenPro() => _navigation.Navigate<ProViewModel>();
 
+    [RelayCommand]
+    private void OpenStats() => _navigation.Navigate<StatsViewModel>();
+
     private HistoryProgramViewModel ToProgram(ActiveEnrollment active, IReadOnlyList<CompletedSession> completions, IReadOnlyDictionary<string, Workout> workouts, DateOnly today)
     {
         var enrollment = active.Enrollment;

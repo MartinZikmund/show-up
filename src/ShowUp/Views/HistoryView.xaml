@@ -175,6 +175,16 @@
                 Style="{StaticResource SectionHeaderTextBlockStyle}"
                 Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}" />
 
+            <Button
+                HorizontalAlignment="Left"
+                AutomationProperties.AutomationId="HistoryStatsButton"
+                Command="{x:Bind ViewModel.OpenStatsCommand, Mode=OneTime}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="16" Glyph="&#xE9D2;" />
+                    <TextBlock Text="{markup:Localize Key=Statistics}" />
+                </StackPanel>
+            </Button>
+
             <StackPanel
                 AutomationProperties.AutomationId="HistoryEmpty"
                 Spacing="4"

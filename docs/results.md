@@ -31,4 +31,4 @@ Everything is saved only on an explicit Save; Cancel discards the edits.
 - `ResultsTable.Build`: the pure table builder.
 - `DayDetailViewModel`, `LogResultsViewModel`, `ProgramResultsViewModel`: the view models; `IJournalDialogs` opens the dialogs.
 
-Free: notes, logging results, the table. Charts and trends come later with statistics.
+Free: notes, logging results, the table. Workout counts and the heatmap are on the [Statistics](./statistics.md) page; charts of the logged results themselves are not built.
