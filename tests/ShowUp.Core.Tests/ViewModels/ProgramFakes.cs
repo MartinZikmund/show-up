@@ -193,6 +193,14 @@ internal sealed class RecordingEnrollmentService : IActiveEnrollmentService
         return Task.CompletedTask;
     }
 
+    public Task<bool> FinishAsync(Guid enrollmentId)
+    {
+        Calls.Add("Finish");
+        return Task.FromResult(FinishResult);
+    }
+
+    public bool FinishResult { get; set; } = true;
+
     public Task UncrossAsync(Guid enrollmentId, int dayIndex, int sessionIndex) => Task.CompletedTask;
 
     public Task ShiftAsync(Guid enrollmentId, DateOnly fromDate, int days) => Task.CompletedTask;
