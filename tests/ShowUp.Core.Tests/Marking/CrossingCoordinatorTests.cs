@@ -1,5 +1,7 @@
 using AwesomeAssertions;
+using ShowUp.Core.Catalog;
 using ShowUp.Core.Marking;
+using ShowUp.Core.Storage;
 using ShowUp.Core.Tests.Tracking;
 using ShowUp.Core.Tests.ViewModels;
 using ShowUp.Core.Tracking;
@@ -150,6 +152,93 @@ public sealed class CrossingCoordinatorTests
         await coordinator.CrossAsync(Target(), Hooks());
 
         _crossMoment.DrawRequests.Should().ContainSingle().Which.Info.LogResults.Should().NotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Cross_CompletesWeek_MomentCarriesMilestone()
+    {
+        Enroll("run+abs", "run");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+
+        _crossMoment.Shown.Should().ContainSingle().Which.Milestone.Should().Be(new Milestone(MilestoneKind.Week, "Phase", 1));
+    }
+
+    [TestMethod]
+    public async Task Cross_DoesNotCompleteAnything_MomentHasNoMilestone()
+    {
+        Enroll("run+abs", "run");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(), Hooks());
+
+        _crossMoment.Shown.Should().ContainSingle().Which.Milestone.Should().BeNull();
+    }
+
+    [TestMethod]
+    public async Task Cross_DrawMode_DrawMomentCarriesMilestone()
+    {
+        _preferences.CrossOffStyle = CrossOffStyle.DrawYourself;
+        Enroll("run+abs", "run");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+
+        _crossMoment.DrawRequests.Should().ContainSingle().Which.Info.Milestone!.Kind.Should().Be(MilestoneKind.Week);
+    }
+
+    [TestMethod]
+    public async Task Cross_ModeNever_WeekMilestone_NoMoment()
+    {
+        _preferences.CrossMomentMode = CrossMomentMode.Never;
+        Enroll("run+abs", "run");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+
+        _crossMoment.Shown.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Cross_ModeNever_ProgramMilestone_ShowsMoment()
+    {
+        _preferences.CrossMomentMode = CrossMomentMode.Never;
+        Enroll("run+abs");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, done: [0]), Hooks());
+
+        _crossMoment.Shown.Should().ContainSingle().Which.Milestone!.Kind.Should().Be(MilestoneKind.Program);
+    }
+
+    [TestMethod]
+    public async Task Cross_OnlyTodayPastDay_WeekMilestone_ShowsMoment()
+    {
+        _preferences.CrossMomentMode = CrossMomentMode.OnlyToday;
+        Enroll("run+abs", "run");
+        var coordinator = Create();
+
+        await coordinator.CrossAsync(Target(session: 1, isToday: false, done: [0]), Hooks());
+
+        _crossMoment.Shown.Should().ContainSingle();
+    }
+
+    // Day 0 is the two-session day every Target() crosses; each string is a one-day week.
+    private void Enroll(params string[] oneDayWeeks)
+    {
+        ProgramTrack track = new("t", "Track",
+        [
+            new ProgramPhase("Phase",
+            [
+                .. oneDayWeeks.Select(day => new ScheduleWeek([new ScheduleDay([.. day.Split('+').Select(w => new ScheduledSession(w))])])),
+            ]),
+        ]);
+        var program = TestCatalog.Program("p", 1, "run") with { Tracks = [track] };
+        _enrollments.All =
+        [
+            new ActiveEnrollment(new EnrollmentEntity { Id = _enrollmentId }, program, track, new EnrollmentCalendar(_today, oneDayWeeks.Length, [])),
+        ];
     }
 
     private CrossingCoordinator Create() => new(_preferences, _crossMoment, new FakeMarkingFeedback(), _enrollments, _journal, _journalDialogs);

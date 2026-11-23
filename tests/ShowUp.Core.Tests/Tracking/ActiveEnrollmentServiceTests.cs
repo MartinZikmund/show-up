@@ -323,9 +323,66 @@ public sealed class ActiveEnrollmentServiceTests
         (await _service.GetAllAsync()).Select(e => e.Id).Should().Contain(b.Id);
     }
 
-    private async Task<ActiveEnrollment> EnrollAsync(string programId)
+    [TestMethod]
+    public async Task Finish_AllRequiredCrossed_EndsAsFinished()
+    {
+        var active = await EnrollAsync("q", daysAgo: 1);
+        await _service.CrossAsync(active.Id, 0, 0);
+        await _service.CrossAsync(active.Id, 1, 0);
+
+        var finished = await _service.FinishAsync(active.Id);
+
+        finished.Should().BeTrue();
+        (await _service.GetAllAsync()).Should().BeEmpty();
+        var ended = (await _service.GetHistoryAsync()).Should().ContainSingle().Subject.Enrollment;
+        ended.EndReason.Should().Be(EnrollmentEndReason.Finished);
+        ended.EndedAt.Should().NotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Finish_DayMissing_ReturnsFalseAndStaysActive()
+    {
+        var active = await EnrollAsync("q", daysAgo: 1);
+        await _service.CrossAsync(active.Id, 1, 0);
+
+        var finished = await _service.FinishAsync(active.Id);
+
+        finished.Should().BeFalse();
+        (await _service.GetAllAsync()).Should().ContainSingle().Which.Id.Should().Be(active.Id);
+    }
+
+    [TestMethod]
+    public async Task Finish_ReadOnlyEnrollment_Throws()
+    {
+        var a = await EnrollAsync("p");
+        var b = await EnrollAsync("q", daysAgo: 1);
+        await _service.CrossAsync(b.Id, 0, 0);
+        await _service.CrossAsync(b.Id, 1, 0);
+        await _service.SetPrimaryAsync(a.Id);
+        _entitlements.SetPro(false);
+
+        Func<Task> act = () => _service.FinishAsync(b.Id);
+
+        await act.Should().ThrowAsync<EnrollmentReadOnlyException>();
+    }
+
+    [TestMethod]
+    public async Task Finish_SendsOneTrackingChangedMessage()
+    {
+        var active = await EnrollAsync("q", daysAgo: 1);
+        await _service.CrossAsync(active.Id, 0, 0);
+        await _service.CrossAsync(active.Id, 1, 0);
+        var messages = 0;
+        _messenger.Register<TrackingChangedMessage>(this, (_, _) => messages++);
+
+        await _service.FinishAsync(active.Id);
+
+        messages.Should().Be(1);
+    }
+
+    private async Task<ActiveEnrollment> EnrollAsync(string programId, int daysAgo = 0)
     {
         var program = (await _catalog.GetProgramAsync(programId))!;
-        return await _service.EnrollAsync(program, program.Tracks[0], _today);
+        return await _service.EnrollAsync(program, program.Tracks[0], _today.AddDays(-daysAgo));
     }
 }
