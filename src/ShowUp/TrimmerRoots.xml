@@ -3,4 +3,11 @@
     <namespace fullname="Microsoft.UI.Xaml.Markup" />
     <namespace fullname="ABI.Microsoft.UI.Xaml.Markup" />
   </assembly>
+
+  <!-- CsWinRT finds this vtable by reflection when an ObservableCollection reaches a control; without it
+       setting ItemsSource throws NullReferenceException and the app dies with 0xc000027b. -->
+  <assembly fullname="WinRT.Runtime">
+    <type fullname="ABI.System.Collections.Specialized.INotifyCollectionChanged" preserve="all" />
+    <type fullname="ABI.System.Collections.Specialized.INotifyCollectionChanged/Vftbl" preserve="all" />
+  </assembly>
 </linker>
