@@ -4,7 +4,7 @@
   "name": "P90X2",
   "family": "P90X",
   "description": "The follow-up to P90X, built around balance, core and athletic performance in Foundation, Strength and Performance phases.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/p90x2.jpg",
   "accentColor": "#1F6FB2",
   "verification": "official",
   "sources": [

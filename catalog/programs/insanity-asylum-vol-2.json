@@ -4,7 +4,7 @@
   "name": "Insanity: The Asylum Vol. 2",
   "family": "Insanity",
   "description": "Shaun T four-week follow-up to the Asylum with agility, upper body, legs and abs, capped each Saturday by a Sudden Death fit test.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/insanity-asylum-vol-2.jpg",
   "accentColor": "#C92A2A",
   "verification": "official",
   "sources": [

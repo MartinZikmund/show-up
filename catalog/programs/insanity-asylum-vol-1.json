@@ -4,7 +4,7 @@
   "name": "Insanity: The Asylum Vol. 1",
   "family": "Insanity",
   "description": "Shaun T 30-day sports performance program built around speed, agility, strength and plyometrics, finishing with a fit test.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/insanity-asylum-vol-1.jpg",
   "accentColor": "#F2C500",
   "verification": "official",
   "sources": [

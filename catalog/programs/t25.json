@@ -4,7 +4,7 @@
   "name": "Focus T25",
   "family": "Focus T25",
   "description": "Shaun T's 25-minute daily program: five weeks of Alpha for the foundation, then five weeks of Beta for the core. Friday is an optional double day and STATurday is for measurements.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/t25.jpg",
   "accentColor": "#FFD400",
   "verification": "official",
   "sources": [

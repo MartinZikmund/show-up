@@ -4,7 +4,7 @@
   "name": "21 Day Fix",
   "family": "21 Day Fix",
   "description": "Three weeks of a different 30-minute workout every day, paired with a portion-container eating plan. The same seven-day rotation repeats each week, with an optional doubles week at the end.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/21-day-fix.jpg",
   "accentColor": "#2E9E6B",
   "verification": "official",
   "sources": [

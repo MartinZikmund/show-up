@@ -4,7 +4,7 @@
   "name": "Insanity",
   "family": "Insanity",
   "description": "The original 60-day Shaun T cardio program: two months of max-effort intervals with a recovery week between them and Fit Tests along the way.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/insanity.jpg",
   "accentColor": "#E8590C",
   "verification": "official",
   "sources": [

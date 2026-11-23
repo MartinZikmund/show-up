@@ -4,7 +4,7 @@
   "name": "Core De Force",
   "family": "Core De Force",
   "description": "Joel Freeman and Jericho McMatthews' MMA-inspired 30-day program: punch-and-kick cardio rounds mixed with bodyweight strength, core finishers, and an active recovery day every week.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/core-de-force.jpg",
   "accentColor": "#1FA5D6",
   "verification": "official",
   "sources": [

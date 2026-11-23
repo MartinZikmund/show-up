@@ -58,6 +58,50 @@ public class CatalogFolderTests
         lines.Should().BeInAscendingOrder(StringComparer.Ordinal).And.OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
+    public void EveryProgram_HasABundledHeroThatExists()
+    {
+        var catalogDir = FindCatalogDir();
+        var catalog = LoadCatalog(catalogDir);
+
+        foreach (var program in catalog.Programs)
+        {
+            program.HeroImage.Should().Be($"Assets/heroes/{program.Id}.jpg", $"{program.Id} needs hero art");
+            File.Exists(Path.Combine(catalogDir, "heroes", $"{program.Id}.jpg")).Should().BeTrue($"catalog/heroes/{program.Id}.jpg must exist");
+        }
+    }
+
+    [TestMethod]
+    public void EveryHero_PassesHeroImagePolicy()
+    {
+        LoadCatalog(FindCatalogDir()).Programs.Should().OnlyContain(p => p.HeroImage != null && HeroImagePolicy.IsAllowed(p.HeroImage, null));
+    }
+
+    [TestMethod]
+    public void EveryHero_IsAJpegOfAtMost150KB_AndBelongsToAProgram()
+    {
+        var catalogDir = FindCatalogDir();
+        var ids = LoadCatalog(catalogDir).Programs.Select(p => p.Id).ToHashSet();
+        var heroes = Directory.Exists(Path.Combine(catalogDir, "heroes")) ? Directory.GetFiles(Path.Combine(catalogDir, "heroes")) : [];
+
+        heroes.Should().NotBeEmpty();
+        foreach (var hero in heroes)
+        {
+            ids.Should().Contain(Path.GetFileNameWithoutExtension(hero), "a hero without a program is dead weight in every package");
+            Path.GetExtension(hero).Should().Be(".jpg");
+            new FileInfo(hero).Length.Should().BeLessThanOrEqualTo(150 * 1024, Path.GetFileName(hero));
+
+            // JPEG files start with FF D8 FF.
+            File.ReadAllBytes(hero).Take(3).Should().Equal((byte)0xFF, (byte)0xD8, (byte)0xFF);
+        }
+    }
+
+    private static WorkoutCatalog LoadCatalog(string catalogDir) =>
+        CatalogParser.Parse(
+            1,
+            File.ReadAllText(Path.Combine(catalogDir, "workouts.json")),
+            Directory.GetFiles(Path.Combine(catalogDir, "programs"), "*.json").Select(File.ReadAllText));
+
     private static string FindCatalogDir()
     {
         for (DirectoryInfo? dir = new(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)

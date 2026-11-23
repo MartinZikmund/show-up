@@ -4,7 +4,7 @@
   "name": "Insanity MAX:30",
   "family": "Insanity",
   "description": "Shaun T 60-day program of 30-minute all-out workouts: a month of building up, then a month of beating your own Max Out times.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/insanity-max-30.jpg",
   "accentColor": "#00B4CC",
   "verification": "official",
   "sources": [
