@@ -142,6 +142,20 @@ public sealed class StatsViewModelTests
     }
 
     [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(1, true)]
+    public async Task TimeTile_ShowsOnlyWhenSomeTimeIsKnown(int minutes, bool expected)
+    {
+        // Most catalog workouts have no length; "0 min" beside a crossed workout would be wrong.
+        _stats.Summary = Summary() with { TotalWorkouts = 3, TotalMinutes = minutes };
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.HasTime.Should().Be(expected);
+    }
+
+    [TestMethod]
     public async Task ProLapses_NextLoadAsksForTheLimitedHistory()
     {
         var viewModel = Create();
