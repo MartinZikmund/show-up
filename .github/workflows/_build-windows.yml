@@ -283,14 +283,34 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or -not $app.ProcessId) { throw "winapp run failed ($LASTEXITCODE)" }
           try {
             $started = Get-Date
-            Start-Sleep -Seconds 15
-            if (-not (Get-Process -Id $app.ProcessId -ErrorAction SilentlyContinue)) {
+            function Stop-Smoke([string]$why) {
               Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $started.AddSeconds(-5) } -ErrorAction SilentlyContinue |
                 Where-Object ProviderName -in 'Application Error', '.NET Runtime' | Select-Object -First 2 |
                 ForEach-Object { Write-Host $_.Message }
-              Write-Host "::error::the packaged app exited within 15 s of launch"
+              Write-Host "::error::$why"
               exit 1
             }
+            Start-Sleep -Seconds 15
+            if (-not (Get-Process -Id $app.ProcessId -ErrorAction SilentlyContinue)) {
+              Stop-Smoke 'the packaged app exited within 15 s of launch'
+            }
+
+            # A launch is not enough: a trimmed package once started fine and died on the first
+            # ObservableCollection handed to a control. Starting a program lands on its Calendar,
+            # which binds one.
+            foreach ($id in 'Nav_Programs', 'ProgramCard_10-rounds', 'ProgramStartButton') {
+              winapp ui wait-for $id -a $app.ProcessId --timeout 30000
+              if ($LASTEXITCODE -ne 0) { Stop-Smoke "smoke: '$id' never appeared" }
+              winapp ui invoke $id -a $app.ProcessId
+              if ($LASTEXITCODE -ne 0) { Stop-Smoke "smoke: could not invoke '$id'" }
+            }
+            winapp ui wait-for 'CalendarDay1' -a $app.ProcessId --timeout 30000
+            if ($LASTEXITCODE -ne 0) { Stop-Smoke 'smoke: the Calendar of a started program never appeared' }
+            Start-Sleep -Seconds 3
+            if (-not (Get-Process -Id $app.ProcessId -ErrorAction SilentlyContinue)) {
+              Stop-Smoke 'smoke: the packaged app died on the Calendar of a started program'
+            }
+
             winapp ui screenshot -a $app.ProcessId --output (Join-Path $env:RUNNER_TEMP 'stage/smoke.png')
             if ($LASTEXITCODE -ne 0) { Write-Host "::warning::smoke screenshot failed" }
           }
