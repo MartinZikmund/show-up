@@ -86,21 +86,22 @@ public sealed class StatsCalculatorTests
     }
 
     [TestMethod]
-    public void Build_ByKind_SortedByMinutes_EmptyKindsOmitted()
+    public void Build_ByKind_SortedByWorkouts_EmptyKindsOmitted()
     {
         ActivityEntry[] entries =
         [
             new(_today, 30, WorkoutKind.Cardio, false),
             new(_today.AddDays(-1), 15, WorkoutKind.Abs, false),
             new(_today.AddDays(-2), 30, WorkoutKind.Cardio, false),
-            new(_today.AddDays(-3), 50, WorkoutKind.Yoga, true),
+            new(_today.AddDays(-3), 90, WorkoutKind.Yoga, true),
         ];
 
         var summary = Build(entries);
 
+        // Most workouts first: many catalog workouts have no known length, so minutes can't rank them.
         summary.ByKind.Should().Equal(
             new KindBucket(WorkoutKind.Cardio, 2, 60),
-            new KindBucket(WorkoutKind.Yoga, 1, 50),
+            new KindBucket(WorkoutKind.Yoga, 1, 90),
             new KindBucket(WorkoutKind.Abs, 1, 15));
     }
 

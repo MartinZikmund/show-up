@@ -98,16 +98,19 @@ public sealed class StatsViewModelTests
     }
 
     [TestMethod]
-    public async Task KindBars_NameTheKindAndScaleByMinutes()
+    public async Task KindBars_NameTheKindAndScaleByWorkouts()
     {
-        _stats.Summary = Summary(byKind: [new(WorkoutKind.Cardio, 3, 90), new(WorkoutKind.Abs, 2, 30)]) with { TotalWorkouts = 5, TotalMinutes = 120 };
+        _stats.Summary = Summary(byKind: [new(WorkoutKind.Cardio, 4, 90), new(WorkoutKind.Abs, 2, 30), new(WorkoutKind.Strength, 1, 0)]) with { TotalWorkouts = 7, TotalMinutes = 120 };
         var viewModel = Create();
 
         await viewModel.LoadAsync();
 
         viewModel.KindBars.Should().Equal(
-            new StatsBarViewModel("WorkoutKind_Cardio", 1, "StatsHoursMinutes(1,30)", "StatsKindName(WorkoutKind_Cardio,3,90)"),
-            new StatsBarViewModel("WorkoutKind_Abs", 30d / 90, "StatsMinutes(30)", "StatsKindName(WorkoutKind_Abs,2,30)"));
+            new StatsBarViewModel("WorkoutKind_Cardio", 1, "4", "StatsKindName(WorkoutKind_Cardio,4,90)", "StatsHoursMinutes(1,30)"),
+            new StatsBarViewModel("WorkoutKind_Abs", 0.5, "2", "StatsKindName(WorkoutKind_Abs,2,30)", "StatsMinutes(30)"),
+            // No known length: no detail line, never "0 min".
+            new StatsBarViewModel("WorkoutKind_Strength", 0.25, "1", "StatsKindName(WorkoutKind_Strength,1,0)"));
+        viewModel.KindBars.Select(b => b.HasDetail).Should().Equal(true, true, false);
         viewModel.HasKinds.Should().BeTrue();
         viewModel.ShowEmptyState.Should().BeFalse();
     }
@@ -121,6 +124,21 @@ public sealed class StatsViewModelTests
         await viewModel.LoadAsync();
 
         (viewModel.TotalWorkoutsText, viewModel.TotalTimeText, viewModel.ActiveDaysText).Should().Be(("1,234", "StatsHoursMinutes(2,30)", "40"));
+    }
+
+    [TestMethod]
+    [DataRow(240, "StatsHours(4)")]
+    [DataRow(241, "StatsHoursMinutes(4,1)")]
+    [DataRow(59, "StatsMinutes(59)")]
+    [DataRow(0, "StatsMinutes(0)")]
+    public async Task TotalTime_OmitsZeroMinutesAfterWholeHours(int minutes, string expected)
+    {
+        _stats.Summary = Summary() with { TotalMinutes = minutes };
+        var viewModel = Create();
+
+        await viewModel.LoadAsync();
+
+        viewModel.TotalTimeText.Should().Be(expected);
     }
 
     [TestMethod]
@@ -142,6 +160,14 @@ public sealed class StatsViewModelTests
         Create().OpenProCommand.Execute(null);
 
         _navigation.Navigations.Should().ContainSingle().Which.Should().Be((typeof(ProViewModel), (object?)null));
+    }
+
+    [TestMethod]
+    public void GoBack_GoesBack()
+    {
+        Create().GoBackCommand.Execute(null);
+
+        _navigation.BackCount.Should().Be(1);
     }
 
     private StatsViewModel Create() =>
