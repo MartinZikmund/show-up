@@ -150,7 +150,10 @@
                     x:Name="WeeksRepeater"
                     ElementClearing="WeeksRepeater_ElementClearing"
                     ElementPrepared="WeeksRepeater_ElementPrepared"
-                    ItemsSource="{x:Bind ViewModel.Weeks, Mode=OneWay}">
+                    GettingFocus="WeeksRepeater_GettingFocus"
+                    ItemsSource="{x:Bind ViewModel.Weeks, Mode=OneWay}"
+                    KeyDown="WeeksRepeater_KeyDown"
+                    TabFocusNavigation="Once">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="8" />
                     </ItemsRepeater.Layout>
