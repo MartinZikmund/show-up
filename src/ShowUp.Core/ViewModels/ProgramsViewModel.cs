@@ -38,8 +38,10 @@ public partial class ProgramsViewModel : ViewModelBase
         _logger = logger;
         CanCreateSchedule = customPrograms.CanEdit;
         PageTitle = localizer["Programs"];
-        FamilyOptions = [new FamilyOption(null, localizer["ProgramsAllFamilies"])];
-        SelectedFamilyOption = FamilyOptions[0];
+        // A concrete List: the compiler's one-item read-only list throws from IList.IndexOf for a foreign item.
+        List<FamilyOption> options = [new(null, localizer["ProgramsAllFamilies"])];
+        FamilyOptions = options;
+        SelectedFamilyOption = options[0];
     }
 
     [ObservableProperty]
@@ -123,8 +125,9 @@ public partial class ProgramsViewModel : ViewModelBase
 
         string[] families = [.. _all.Select(p => p.Family).Distinct().Order(StringComparer.CurrentCultureIgnoreCase)];
         Families = families;
-        FamilyOptions = [FamilyOptions[0], .. families.Select(f => new FamilyOption(f, f))];
-        SelectedFamilyOption = FamilyOptions[0];
+        List<FamilyOption> options = [FamilyOptions[0], .. families.Select(f => new FamilyOption(f, f))];
+        FamilyOptions = options;
+        SelectedFamilyOption = options[0];
         ApplyFilter();
     }
 

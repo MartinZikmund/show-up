@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Globalization;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -166,12 +167,34 @@ public sealed class ProgramsViewModelTests
         viewModel.ShowScheduleGate.Should().BeTrue();
     }
 
+    // A ComboBox asks its ItemsSource for the index of its own containers (#68).
+    [TestMethod]
+    public void FamilyOptions_BeforeLoad_ToleratesForeignItemLookups()
+    {
+        var options = (IList)Create().FamilyOptions;
+
+        options.IndexOf(new object()).Should().Be(-1);
+        options.Contains(new object()).Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task FamilyOptions_AfterLoad_ToleratesForeignItemLookups()
+    {
+        var options = (IList)(await LoadAsync(Program("insanity", "Insanity", "Insanity"))).FamilyOptions;
+
+        options.IndexOf(new object()).Should().Be(-1);
+        options.Contains(new object()).Should().BeFalse();
+    }
+
     private static WorkoutProgram Program(string id, string name, string family) =>
         TestCatalog.Program(id, 1, "run", "run") with { Name = name, Family = family };
 
+    private ProgramsViewModel Create(params WorkoutProgram[] programs) =>
+        new(new PassThroughLocalizer(), new FakeCatalogService(programs), _customPrograms, _entitlements, _navigation, NullLogger<ProgramsViewModel>.Instance);
+
     private async Task<ProgramsViewModel> LoadAsync(params WorkoutProgram[] programs)
     {
-        ProgramsViewModel viewModel = new(new PassThroughLocalizer(), new FakeCatalogService(programs), _customPrograms, _entitlements, _navigation, NullLogger<ProgramsViewModel>.Instance);
+        var viewModel = Create(programs);
         await viewModel.LoadAsync();
         return viewModel;
     }
