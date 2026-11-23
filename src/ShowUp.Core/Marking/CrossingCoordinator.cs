@@ -49,7 +49,11 @@ public sealed class CrossingCoordinator(
         // The id is made up front: a day's first completion picks the wobble, and the moment must draw the same X.
         var completionId = Guid.NewGuid();
         var seed = target.DayCompletions.Count == 0 ? MarkerGeometry.SeedFrom(completionId) : target.DaySeed;
-        var info = MomentInfo(target, before, afterAuto, seed) with { LogResults = await LogResultsAsync(target) };
+        var info = MomentInfo(target, before, afterAuto, seed) with
+        {
+            LogResults = await LogResultsAsync(target),
+            Milestone = await MilestoneAsync(target),
+        };
 
         if (preferences.CrossOffStyle == CrossOffStyle.DrawYourself)
         {
@@ -66,7 +70,7 @@ public sealed class CrossingCoordinator(
             return true;
         }
 
-        var showMoment = CrossMomentPolicy.ShouldShow(preferences.CrossMomentMode, target.IsToday);
+        var showMoment = CrossMomentPolicy.ShouldShow(preferences.CrossMomentMode, target.IsToday, info.Milestone);
         hooks.SetAnimateMarks(!showMoment);
         await hooks.Write(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, completionId: completionId));
         await hooks.Refresh();
@@ -87,12 +91,24 @@ public sealed class CrossingCoordinator(
             ? () => journalDialogs.LogResultsAsync(target.EnrollmentId, target.DayIndex, target.Session)
             : null;
 
-    private static CrossMomentInfo MomentInfo(CrossTarget target, int before, int afterAuto, int seed)
+    // Only this cross can earn a milestone: a completion that arrives by sync never passes through here.
+    private async Task<Milestone?> MilestoneAsync(CrossTarget target) =>
+        await enrollments.GetAsync(target.EnrollmentId) is { } active
+            ? MilestoneDetector.Detect(active.Track, target.AllStatuses, StatusesAfter(target), target.DayIndex)
+            : null;
+
+    private static List<DayStatus> StatusesAfter(CrossTarget target)
     {
         var status = target.Status;
-        var after = status with { CompletedSessions = new HashSet<int>(status.CompletedSessions) { target.Session } };
-        List<DayStatus> statusesAfter = [.. target.AllStatuses];
-        statusesAfter[target.DayIndex] = after;
+        List<DayStatus> statuses = [.. target.AllStatuses];
+        statuses[target.DayIndex] = status with { CompletedSessions = new HashSet<int>(status.CompletedSessions) { target.Session } };
+        return statuses;
+    }
+
+    private static CrossMomentInfo MomentInfo(CrossTarget target, int before, int afterAuto, int seed)
+    {
+        var statusesAfter = StatusesAfter(target);
+        var after = statusesAfter[target.DayIndex];
 
         return new CrossMomentInfo(
             target.DayIndex + 1,

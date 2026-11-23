@@ -541,6 +541,8 @@ public sealed class ProgramCalendarViewModelTests
 
         public Task<IReadOnlyList<ActiveEnrollment>> GetHistoryAsync() => inner.GetHistoryAsync();
 
+        public Task<bool> FinishAsync(Guid enrollmentId) => inner.FinishAsync(enrollmentId);
+
         public Task<IReadOnlyList<CompletedSession>> GetHistoryCompletionsAsync(Guid enrollmentId) => inner.GetHistoryCompletionsAsync(enrollmentId);
 
         public Task<ActiveEnrollment?> GetSelectedAsync()
