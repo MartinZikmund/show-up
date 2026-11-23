@@ -4,7 +4,7 @@
   "name": "10 Rounds",
   "family": "10 Rounds",
   "description": "Joel Freeman's six-week boxing program: three boxing workouts and two lifting workouts a week, built on ten three-minute rounds. Days are in order but you choose when to train and rest.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/10-rounds.jpg",
   "accentColor": "#E5202E",
   "verification": "official",
   "sources": [

@@ -4,7 +4,7 @@
   "name": "INSANITY: Unhinged",
   "family": "Insanity",
   "description": "A 100-day hybrid training program with dumbbells: six training days and a recovery day each week, repeated in two-week cycles, with a Primer recovery week closing each phase. Also offered as a shorter 50-day calendar.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/insanity-unhinged.jpg",
   "accentColor": "#E6007E",
   "verification": "official",
   "sources": [

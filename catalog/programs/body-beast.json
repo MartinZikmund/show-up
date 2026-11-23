@@ -4,7 +4,7 @@
   "name": "Body Beast",
   "family": "Body Beast",
   "description": "Sagi Kalev's muscle-building program: a Build block, a long Bulk block, then a Beast block that adds cardio and abs. Pick the Huge calendar to gain size or Lean to get cut.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/body-beast.jpg",
   "accentColor": "#6BA539",
   "verification": "official",
   "sources": [

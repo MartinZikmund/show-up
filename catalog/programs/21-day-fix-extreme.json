@@ -4,7 +4,7 @@
   "name": "21 Day Fix Extreme",
   "family": "21 Day Fix",
   "description": "A tougher sequel to the Fix: seven 30-minute workouts, one per day of the week, repeated for three weeks.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/21-day-fix-extreme.jpg",
   "accentColor": "#D6402B",
   "verification": "official",
   "sources": [

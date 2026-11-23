@@ -4,7 +4,7 @@
   "name": "LIIFT4",
   "family": "LIIFT4",
   "description": "Joel Freeman's eight-week plan: four lifting-plus-cardio sessions a week, six weeks of Build It, then two weeks of Shred It.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/liift4.jpg",
   "accentColor": "#1B6CA8",
   "verification": "official",
   "sources": [

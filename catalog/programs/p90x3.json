@@ -4,7 +4,7 @@
   "name": "P90X3",
   "family": "P90X",
   "description": "Thirty-minute workouts in three 4-week blocks plus a Victory Week, with an optional Elite block of complex training after.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/p90x3.jpg",
   "accentColor": "#F28C28",
   "verification": "official",
   "sources": [

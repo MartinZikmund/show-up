@@ -4,7 +4,7 @@
   "name": "P90X",
   "family": "P90X",
   "description": "The original 13-week muscle-confusion program: resistance, plyometrics, yoga and martial-arts cardio, rotated in three blocks that each end with a recovery week.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/p90x.jpg",
   "accentColor": "#C8102E",
   "verification": "community",
   "sources": [

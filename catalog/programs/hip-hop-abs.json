@@ -4,7 +4,7 @@
   "name": "Hip Hop Abs",
   "family": "Hip Hop Abs",
   "description": "Shaun T's dance-based ab program, run as the official eight-week schedule with cardio, ab sculpting, and from week three the Total Body Burn and Hips, Buns, and Thighs workouts.",
-  "heroImage": null,
+  "heroImage": "Assets/heroes/hip-hop-abs.jpg",
   "accentColor": "#FF7A00",
   "verification": "official",
   "sources": [

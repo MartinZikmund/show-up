@@ -68,6 +68,8 @@
 
     <ItemGroup>
         <Content Include="..\..\catalog\**\*.json" Exclude="..\..\catalog\schema\**" Link="Assets\Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
+        <!-- Bundled hero art (tools/hero-art); a program's heroImage "Assets/heroes/x.jpg" resolves to it. -->
+        <Content Include="..\..\catalog\heroes\*.jpg" Link="Assets\heroes\%(Filename)%(Extension)" />
     </ItemGroup>
 
     <ItemGroup>
