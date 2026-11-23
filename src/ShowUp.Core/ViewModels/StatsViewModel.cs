@@ -71,6 +71,10 @@ public partial class StatsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string ActiveDaysText { get; private set; } = "";
 
+    /// <summary>False while no counted workout has a known length: the time tile is hidden rather than showing 0.</summary>
+    [ObservableProperty]
+    public partial bool HasTime { get; private set; }
+
     [ObservableProperty]
     public partial IReadOnlyList<StatsBarViewModel> WeekBars { get; private set; } = [];
 
@@ -154,6 +158,7 @@ public partial class StatsViewModel : ViewModelBase
 
         TotalWorkoutsText = summary.TotalWorkouts.ToString("N0", culture);
         TotalTimeText = Duration(summary.TotalMinutes);
+        HasTime = summary.TotalMinutes > 0;
         ActiveDaysText = summary.ActiveDays.ToString("N0", culture);
 
         int busiest = summary.Weeks.Count == 0 ? 0 : summary.Weeks.Max(w => w.Workouts);

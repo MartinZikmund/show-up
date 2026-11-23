@@ -175,9 +175,12 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Border AutomationProperties.AutomationId="StatsTotalWorkouts" Style="{StaticResource StatTileStyle}">
+                    <Border Style="{StaticResource StatTileStyle}">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource DisplayNumberLargeTextBlockStyle}" Text="{x:Bind ViewModel.TotalWorkoutsText, Mode=OneWay}" />
+                            <TextBlock
+                                AutomationProperties.AutomationId="StatsTotalWorkouts"
+                                Style="{StaticResource DisplayNumberLargeTextBlockStyle}"
+                                Text="{x:Bind ViewModel.TotalWorkoutsText, Mode=OneWay}" />
                             <TextBlock
                                 Foreground="{ThemeResource MutedTextBrush}"
                                 Style="{StaticResource CaptionTextBlockStyle}"
@@ -187,11 +190,12 @@
                     </Border>
                     <Border
                         x:Name="TimeTile"
-                        Grid.Column="1"
-                        AutomationProperties.AutomationId="StatsTotalTime"
-                        Style="{StaticResource StatTileStyle}">
+                        Grid.Column="2"
+                        Style="{StaticResource StatTileStyle}"
+                        Visibility="{x:Bind ViewModel.HasTime, Mode=OneWay}">
                         <StackPanel>
                             <TextBlock
+                                AutomationProperties.AutomationId="StatsTotalTime"
                                 Style="{StaticResource DisplayNumberLargeTextBlockStyle}"
                                 Text="{x:Bind ViewModel.TotalTimeText, Mode=OneWay}"
                                 TextWrapping="Wrap" />
@@ -204,11 +208,13 @@
                     </Border>
                     <Border
                         x:Name="DaysTile"
-                        Grid.Column="2"
-                        AutomationProperties.AutomationId="StatsActiveDays"
+                        Grid.Column="1"
                         Style="{StaticResource StatTileStyle}">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource DisplayNumberLargeTextBlockStyle}" Text="{x:Bind ViewModel.ActiveDaysText, Mode=OneWay}" />
+                            <TextBlock
+                                AutomationProperties.AutomationId="StatsActiveDays"
+                                Style="{StaticResource DisplayNumberLargeTextBlockStyle}"
+                                Text="{x:Bind ViewModel.ActiveDaysText, Mode=OneWay}" />
                             <TextBlock
                                 Foreground="{ThemeResource MutedTextBrush}"
                                 Style="{StaticResource CaptionTextBlockStyle}"
@@ -342,7 +348,6 @@
                         <!--  Three tiles don't fit a phone: counts side by side, time on its own row.  -->
                         <Setter Target="ThirdTileColumn.Width" Value="0" />
                         <Setter Target="Totals.ColumnSpacing" Value="6" />
-                        <Setter Target="DaysTile.(Grid.Column)" Value="1" />
                         <Setter Target="TimeTile.(Grid.Column)" Value="0" />
                         <Setter Target="TimeTile.(Grid.Row)" Value="1" />
                         <Setter Target="TimeTile.(Grid.ColumnSpan)" Value="2" />
