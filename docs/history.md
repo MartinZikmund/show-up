@@ -17,4 +17,4 @@ Free sees the current program, which is the primary one (the most recent ended p
 - `HistoryViewModel` (Core) builds the cards and months and reloads on `TrackingChangedMessage` and at midnight (`LiveRefresher`).
 - `IActiveEnrollmentService.GetHistoryAsync()` returns every enrollment with its pinned program revision (ended ones included, via `ITrackingRepository.GetAllEnrollmentsAsync()`); `GetHistoryCompletionsAsync(id)` loads one enrollment's crossed sessions, so Free never loads the ones it hides.
 - Dates follow the culture: short date for programs, `MonthDayPattern` and `YearMonthPattern` for bonus workouts and month headers.
-- Charts and statistics are tracked in #22.
+- The **Statistics** button opens [statistics.md](./statistics.md).
