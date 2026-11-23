@@ -50,12 +50,36 @@ public sealed class CrossingCoordinator(
         var completionId = Guid.NewGuid();
         var seed = target.DayCompletions.Count == 0 ? MarkerGeometry.SeedFrom(completionId) : target.DaySeed;
         var milestone = await MilestoneAsync(target);
+
+        // Drawing shows the caption, and the offer to finish, before the cross is saved: finishing waits for the write.
+        TaskCompletionSource written = new(TaskCreationOptions.RunContinuationsAsynchronously);
         var info = MomentInfo(target, before, afterAuto, seed) with
         {
             LogResults = await LogResultsAsync(target),
             Milestone = milestone,
-            Finish = milestone is { Kind: MilestoneKind.Program } ? () => enrollments.FinishAsync(target.EnrollmentId) : null,
+            Finish = milestone is { Kind: MilestoneKind.Program }
+                ? async () =>
+                {
+                    await written.Task;
+                    await enrollments.FinishAsync(target.EnrollmentId);
+                }
+                : null,
         };
+
+        async Task WriteAsync(Func<Task> write)
+        {
+            try
+            {
+                await hooks.Write(write);
+                written.TrySetResult();
+            }
+            catch (Exception ex)
+            {
+                written.TrySetException(ex);
+                _ = written.Task.Exception;
+                throw;
+            }
+        }
 
         if (preferences.CrossOffStyle == CrossOffStyle.DrawYourself)
         {
@@ -67,14 +91,14 @@ public sealed class CrossingCoordinator(
             }
 
             hooks.SetAnimateMarks(false);
-            await hooks.Write(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, result.InkJson, completionId));
+            await WriteAsync(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, result.InkJson, completionId));
             await hooks.Refresh();
             return true;
         }
 
         var showMoment = CrossMomentPolicy.ShouldShow(preferences.CrossMomentMode, target.IsToday, info.Milestone);
         hooks.SetAnimateMarks(!showMoment);
-        await hooks.Write(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, completionId: completionId));
+        await WriteAsync(() => enrollments.CrossAsync(target.EnrollmentId, target.DayIndex, target.Session, completionId: completionId));
         await hooks.Refresh();
         if (showMoment)
         {

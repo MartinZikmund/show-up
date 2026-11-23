@@ -141,7 +141,7 @@
                     <InfoBar.ActionButton>
                         <Button
                             AutomationProperties.AutomationId="CalendarFinishButton"
-                            Command="{x:Bind ViewModel.FinishCommand, Mode=OneTime}"
+                            Command="{x:Bind ViewModel.FinishCommand, Mode=OneWay}"
                             Content="{markup:Localize Key=FinishProgram}" />
                     </InfoBar.ActionButton>
                 </InfoBar>

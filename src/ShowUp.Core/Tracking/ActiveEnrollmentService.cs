@@ -207,7 +207,8 @@ public sealed class ActiveEnrollmentService : IActiveEnrollmentService
 
     public async Task<bool> FinishAsync(Guid enrollmentId)
     {
-        var active = await RequireWritableAsync(enrollmentId);
+        // Like EndAsync, allowed while read-only: it records what was done and changes no tracking.
+        var active = await RequireAsync(enrollmentId);
         var workouts = (await _catalog.GetCatalogAsync()).WorkoutsById;
         var completed = await _repository.GetCompletedSessionsAsync(active.Id);
         if (!MilestoneDetector.IsProgramComplete(ProgressCalculator.Build(active.Track, workouts, active.Calendar, completed)))
